@@ -5,9 +5,8 @@ const Resume: React.FC = () => {
   return (
     <div>
       <Suspense fallback={<div>Loading Skills...</div>}>
-        <Skills />
+        {/* <Skills /> */}
       </Suspense>
-      {/* Add other sections like Experience, Education, etc. */}
     </div>
   );
 };
