@@ -1,20 +1,27 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Box, Button, Typography, Tooltip } from '@mui/material';
 import { SVGFolder, SVGSinfo } from '../assets/svgs';
-import LoadingOverlay from './Loading';
+import LoadingOverlay from '../components/Loading';
+import { login as googleLogin, handleRedirect } from '../tools/auth'; // Import your auth functions
 
-export function Login() {
+const Login = () => {
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate(); // For navigation
+
+  // Check and handle redirect if coming back from Google OAuth
+  useEffect(() => {
+    if (window.location.hash) {
+      setLoading(true); // Show loading while processing
+      handleRedirect({ navigate }); // Pass navigate to redirect logic
+      setLoading(false); // Hide loading after processing
+    }
+  }, [navigate]);
+
+  // Handle the login button click
   const handleGoogleLogin = () => {
-    const clientId = process.env.REACT_APP_GOOGLE_CLIENT_ID;
-    const redirectUri = 'http://localhost:3000'; // Update for production
-    const scope = 'https://www.googleapis.com/auth/drive.file';
-
-    const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?response_type=token&client_id=${clientId}&redirect_uri=${encodeURIComponent(
-      redirectUri
-    )}&scope=${encodeURIComponent(scope)}&prompt=consent`;
-
-    window.location.href = authUrl;
+    setLoading(true); // Show loading while redirecting
+    googleLogin();
   };
 
   return (
@@ -79,7 +86,7 @@ export function Login() {
       <Button
         variant="text"
         color="primary"
-        onClick={() => (window.location.hash = '#step1')}
+        onClick={() => navigate('/')} // Skip login and go to home page
         sx={{
           fontSize: '14px',
           fontWeight: 600,
@@ -97,4 +104,6 @@ export function Login() {
       />
     </Box>
   );
-}
+};
+
+export default Login;
