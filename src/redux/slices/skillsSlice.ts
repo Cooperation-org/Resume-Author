@@ -1,5 +1,4 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { Skill } from '../../types/resume.d';
 
 interface SkillsState {
   skills: Skill[];

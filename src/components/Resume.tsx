@@ -1,5 +1,4 @@
 import React, { Suspense, lazy } from 'react';
-const Skills = lazy(() => import('./Skills'));
 
 const Resume: React.FC = () => {
   return (
