@@ -1,0 +1,169 @@
+{
+  "id": "res_123456789",
+  "userId": "user_987654321",
+  "lastUpdated": "2024-03-04T15:30:00Z",
+  "version": 1,
+
+  "contact": {
+    "fullName": "Sarah J. Thompson",
+    "email": "sarah.thompson@email.com",
+    "phone": "+1 (555) 123-4567",
+    "location": {
+      "city": "San Francisco",
+      "state": "CA",
+      "country": "USA"
+    },
+    "socialLinks": {
+      "linkedin": "linkedin.com/in/sarahthompson",
+      "github": "github.com/sarahdev"
+    }
+  },
+
+  "summary": "Full Stack Developer with 5+ years of experience building scalable web applications. Passionate about clean code, user experience, and emerging technologies.",
+
+  "experience": {
+    "items": [
+      {
+        "id": "exp_1",
+        "company": "TechCorp Inc",
+        "position": "Senior Software Engineer",
+        "startDate": "2020-06",
+        "endDate": "present",
+        "location": "San Francisco, CA",
+        "description": "Leading full-stack development team for cloud-based enterprise solutions",
+        "achievements": [
+          "Reduced system latency by 40%",
+          "Led team of 5 developers"
+        ],
+        "verificationStatus": "verified",
+        "verifiedCredentials": [
+          {
+            "vcId": "vc_tech_123",
+            "issuer": {
+              "id": "techcorp_123",
+              "name": "TechCorp Inc",
+              "type": "organization",
+              "verificationURL": "https://verify.techcorp.com"
+            },
+            "dateVerified": "2024-02-01T00:00:00Z",
+            "status": "valid"
+          }
+        ]
+      },
+      {
+        "id": "exp_2",
+        "company": "StartupXYZ",
+        "position": "Software Engineer",
+        "startDate": "2018-03",
+        "endDate": "2020-05",
+        "description": "Full-stack development for SaaS platform",
+        "achievements": [
+          "Developed core product features",
+          "Implemented OAuth authentication"
+        ],
+        "verificationStatus": "unverified"
+      }
+    ]
+  },
+
+  "education": {
+    "items": [
+      {
+        "id": "edu_1",
+        "institution": "University of California",
+        "degree": "Bachelor of Science",
+        "field": "Computer Science",
+        "startDate": "2014",
+        "endDate": "2018",
+        "location": "Berkeley, CA",
+        "gpa": "3.8",
+        "verificationStatus": "verified",
+        "verifiedCredentials": [
+          {
+            "vcDid": "did:edu:ucb:123",
+            "issuer": {
+              "id": "ucb_123",
+              "name": "UC Berkeley",
+              "type": "institution"
+            },
+            "dateVerified": "2024-01-15T00:00:00Z",
+            "status": "valid"
+          }
+        ]
+      }
+    ]
+  },
+
+  "skills": {
+    "items": [
+      {
+        "id": "skill_1",
+        "name": "React",
+        "category": "Frontend",
+        "level": "Expert",
+        "yearsOfExperience": 4,
+        "verificationStatus": "verified",
+        "verifiedCredentials": [
+          {
+            "vcId": "vc_meta_123",
+            "issuer": {
+              "id": "meta_123",
+              "name": "Meta",
+              "type": "organization"
+            },
+            "dateVerified": "2023-12-01T00:00:00Z",
+            "status": "valid"
+          }
+        ]
+      },
+      {
+        "id": "skill_2",
+        "name": "Node.js",
+        "category": "Backend",
+        "level": "Advanced",
+        "yearsOfExperience": 3,
+        "verificationStatus": "unverified"
+      }
+    ]
+  },
+
+  "certifications": {
+    "items": [
+      {
+        "id": "cert_1",
+        "name": "AWS Certified Solutions Architect",
+        "issuer": "Amazon Web Services",
+        "issueDate": "2023-01",
+        "expiryDate": "2026-01",
+        "credentialId": "AWS-123456",
+        "verificationStatus": "verified",
+        "verifiedCredentials": [
+          {
+            "vcId": "vc_aws_123",
+            "issuer": {
+              "id": "aws_123",
+              "name": "AWS",
+              "type": "organization",
+              "verificationURL": "https://aws.amazon.com/verify"
+            },
+            "dateVerified": "2023-01-15T00:00:00Z",
+            "status": "valid"
+          }
+        ]
+      }
+    ]
+  },
+
+  "projects": {
+    "items": [
+      {
+        "id": "proj_1",
+        "name": "E-commerce Platform",
+        "description": "Built a full-stack e-commerce platform using React, Node.js, and MongoDB",
+        "url": "github.com/sarahdev/ecommerce",
+        "technologies": ["React", "Node.js", "MongoDB", "AWS"],
+        "verificationStatus": "unverified"
+      }
+    ]
+  }
+}
