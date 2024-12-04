@@ -8,7 +8,7 @@ interface IssuerInfo {
 }
 
 interface VerificationCredential {
-  vcId?: string; // Google Drive ID
+  vcId?: string; // Google Drive ID OR DID if using decentralized storage
   vcDid?: string; // DID if using decentralized storage
   issuer: IssuerInfo;
   dateVerified: string;
