@@ -1,12 +1,10 @@
 // redux/store.ts
 import { configureStore } from '@reduxjs/toolkit';
-import skillsReducer from './slices/skillsSlice';
-// Import other slices for experience, education, etc.
+import resumeReducer from './slices/resume';
 
 const store = configureStore({
   reducer: {
-    skills: skillsReducer,
-    // Add other slices: experienceReducer, educationReducer, etc.
+    resume: resumeReducer,
   },
 });
 

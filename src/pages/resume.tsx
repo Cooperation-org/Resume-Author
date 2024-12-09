@@ -1,7 +1,11 @@
-import React from 'react';
+import ResumeEditor from '../components/Editor';
 
 const Resume = () => {
-  return <div>Resume</div>;
+  return (
+    <div>
+      <ResumeEditor />
+    </div>
+  );
 };
 
 export default Resume;
