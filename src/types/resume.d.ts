@@ -20,6 +20,8 @@ interface VerifiableItem {
   id: string;
   verificationStatus: 'unverified' | 'pending' | 'verified';
   verifiedCredentials?: VerificationCredential[];
+
+  isVisible?: boolean;
 }
 
 // Resume Section Interfaces
