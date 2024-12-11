@@ -6,7 +6,7 @@ import {
   VisibilityOff,
 } from '@mui/icons-material';
 import { Paper, Box, Typography, IconButton } from '@mui/material';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import {
   removeSection,
@@ -24,15 +24,21 @@ interface SectionProps {
 }
 
 const Section = ({ type, title, content }: SectionProps) => {
-  const [isEditing, setIsEditing] = useState(false);
+  const [isEditing, setIsEditing] = useState(true);
   const [editContent, setEditContent] = useState(content);
   const dispatch = useDispatch();
   const isVisible = useSelector(
     (state: RootState) => state.resume.sectionVisibility[type]
   );
+  const resume = useSelector((state: RootState) => state.resume.resume);
+
+  useEffect(() => {
+    console.log('Current Resume State:', resume);
+  }, [resume]);
 
   const handleSave = () => {
     dispatch(updateSection({ sectionId: type, content: editContent }));
+    console.log('resume', resume);
     setIsEditing(false);
   };
 
