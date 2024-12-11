@@ -3,12 +3,14 @@ import ReactDOM from 'react-dom/client';
 import './styles/index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
+import SessionDialog from './components/ResumeList';
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
 );
 root.render(
   <React.StrictMode>
+    <SessionDialog />
     <App />
   </React.StrictMode>
 );
