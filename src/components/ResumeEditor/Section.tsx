@@ -1,53 +1,48 @@
-import {
-  Save,
-  Edit,
-  Visibility,
-  Delete,
-  VisibilityOff,
-} from '@mui/icons-material';
+import { Save, Edit, Visibility, VisibilityOff } from '@mui/icons-material';
 import { Paper, Box, Typography, IconButton } from '@mui/material';
-import { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import {
-  removeSection,
-  setSectionVisibility,
-  updateSection,
-} from '../../redux/slices/resume';
-import SectionContent from './SectionContent';
 import { RootState } from '../../redux/store';
+import { setSectionVisibility, updateSection } from '../../redux/slices/resume';
+import SectionContent from './SectionContent';
 
 interface SectionProps {
-  type: string;
+  type: keyof Resume;
   title: string;
-  content: any;
-  onEdit?: (content: any) => void;
 }
 
-const Section = ({ type, title, content }: SectionProps) => {
-  const [isEditing, setIsEditing] = useState(true);
-  const [editContent, setEditContent] = useState(content);
+const Section = ({ type, title }: SectionProps) => {
   const dispatch = useDispatch();
+
+  // Fetch the current content from Redux
+  const contentFromRedux = useSelector((state: RootState) => {
+    const resume = state.resume.resume;
+    return resume ? resume[type] : '';
+  });
+
   const isVisible = useSelector(
     (state: RootState) => state.resume.sectionVisibility[type]
   );
-  const resume = useSelector((state: RootState) => state.resume.resume);
 
+  // Local state for editing
+  const [isEditing, setIsEditing] = useState(false);
+  const [localContent, setLocalContent] = useState(contentFromRedux);
+
+  // Sync local state with Redux when the Redux state changes
   useEffect(() => {
-    console.log('Current Resume State:', resume);
-  }, [resume]);
+    setLocalContent(contentFromRedux);
+  }, [contentFromRedux]);
 
   const handleSave = () => {
-    dispatch(updateSection({ sectionId: type, content: editContent }));
-    console.log('resume', resume);
+    // Dispatch the updated content to Redux
+    dispatch(updateSection({ sectionId: type, content: localContent }));
     setIsEditing(false);
   };
 
-  const handleDelete = () => {
-    dispatch(removeSection(type));
-  };
-
-  const handleVisibility = () => {
-    dispatch(setSectionVisibility(type));
+  const handleCancel = () => {
+    // Reset local content to the original Redux state and exit edit mode
+    setLocalContent(contentFromRedux);
+    setIsEditing(false);
   };
 
   return (
@@ -56,27 +51,29 @@ const Section = ({ type, title, content }: SectionProps) => {
         <Typography variant="h6">{title}</Typography>
         <Box sx={{ ml: 'auto' }}>
           {isEditing ? (
-            <IconButton onClick={handleSave}>
-              <Save />
-            </IconButton>
+            <>
+              <IconButton onClick={handleSave}>
+                <Save />
+              </IconButton>
+              <IconButton onClick={handleCancel}>
+                <Edit /> {/* Use this as a cancel icon */}
+              </IconButton>
+            </>
           ) : (
             <IconButton onClick={() => setIsEditing(true)}>
               <Edit />
             </IconButton>
           )}
-          <IconButton onClick={handleVisibility}>
+          <IconButton onClick={() => dispatch(setSectionVisibility(type))}>
             {isVisible ? <Visibility /> : <VisibilityOff />}
-          </IconButton>
-          <IconButton onClick={handleDelete}>
-            <Delete />
           </IconButton>
         </Box>
       </Box>
       <SectionContent
         type={type}
-        content={editContent}
+        content={localContent} // Pass local content
         isEditing={isEditing}
-        onContentChange={setEditContent}
+        onContentChange={setLocalContent} // Update local state
       />
     </Paper>
   );
