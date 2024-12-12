@@ -1,30 +1,33 @@
-import { Typography } from '@mui/material';
-import Summary from '../Sections/Summary';
+import { Box, TextField, Typography } from '@mui/material';
+
+interface SectionContentProps {
+  type: keyof Resume;
+  content: any;
+  isEditing: boolean;
+  onContentChange: (content: any) => void;
+}
 
 const SectionContent = ({
   type,
   content,
   isEditing,
   onContentChange,
-}: {
-  type: string;
-  content: any;
-  isEditing: boolean;
-  onContentChange: (content: any) => void;
-}) => {
-  switch (type) {
-    case 'summary':
-      return (
-        <Summary
-          content={content}
-          isEditing={isEditing}
-          onContentChange={onContentChange}
+}: SectionContentProps) => {
+  return (
+    <Box>
+      {isEditing ? (
+        <TextField
+          multiline
+          fullWidth
+          value={content}
+          onChange={e => onContentChange(e.target.value)} // Update local state
+          variant="outlined"
         />
-      );
-
-    default:
-      return <Typography>{content}</Typography>;
-  }
+      ) : (
+        <Typography>{content || 'Add content here...'}</Typography>
+      )}
+    </Box>
+  );
 };
 
 export default SectionContent;

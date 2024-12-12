@@ -1,6 +1,7 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import { initialState } from './initialResumeState';
 
-interface ResumeState {
+export interface ResumeState {
   resume: Resume | null;
   status: 'idle' | 'loading' | 'succeeded' | 'failed';
   error: string | null;
@@ -11,20 +12,6 @@ interface ResumeState {
   isDirty: boolean; // tracks whether the resume has unsaved changes.
   sectionVisibility: { [key: string]: boolean }; // tracks the visibility of each section.
 }
-
-const initialState: ResumeState = {
-  resume: null,
-  status: 'idle',
-  error: null,
-  activeSection: null,
-  highlightedText: null,
-  pendingVerifications: [],
-  isDirty: false,
-  sectionVisibility: {
-    summary: true,
-  },
-  selectedCredentials: [],
-};
 
 export const fetchResume = createAsyncThunk(
   'resume/fetchResume',
@@ -67,21 +54,23 @@ const resumeSlice = createSlice({
     },
     updateSection: (state, action) => {
       if (!state.resume) return;
+
       const { sectionId, content } = action.payload;
 
-      // Type guard to check if sectionId is valid key of Resume
       if (sectionId in state.resume) {
-        const section = state.resume[sectionId as keyof Resume] as any;
-        if (section) {
-          if ('items' in section) {
-            (section as any).items = content;
-          } else {
-            (state.resume as any)[sectionId] = content;
-          }
-          state.isDirty = true;
+        const section = state.resume[sectionId as keyof Resume];
+
+        if (section && typeof section === 'object' && 'items' in section) {
+          // If the section has an 'items' property, update it
+          (section as any).items = content;
+        } else {
+          // Otherwise, directly update the section
+          (state.resume as any)[sectionId] = content;
         }
+        state.isDirty = true;
       }
     },
+
     removeSection: (state, action) => {
       if (!state.resume) return;
       const sectionId = action.payload;
@@ -121,6 +110,10 @@ const resumeSlice = createSlice({
     resetDirtyState: state => {
       state.isDirty = false;
     },
+    setSelectedResume: (state, action) => {
+      state.resume = action.payload; // Set the selected resume as the current resume
+      state.isDirty = false; // Reset the dirty state
+    },
   },
 });
 
@@ -136,6 +129,7 @@ export const {
   addPendingVerification,
   removePendingVerification,
   resetDirtyState,
+  setSelectedResume, // Exported here
 } = resumeSlice.actions;
 
 export default resumeSlice.reducer;
