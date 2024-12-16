@@ -25,10 +25,6 @@ export const initialState: ResumeState = {
       },
     },
     summary: '',
-    executiveSummary: '',
-    executiveQualifications: {
-      items: [],
-    },
     experience: {
       items: [],
     },
@@ -38,12 +34,7 @@ export const initialState: ResumeState = {
     skills: {
       items: [],
     },
-    conferences: {
-      items: [],
-    },
-    accomplishments: {
-      items: [],
-    },
+
     awards: {
       items: [],
     },
@@ -65,16 +56,6 @@ export const initialState: ResumeState = {
     },
     testimonials: {
       items: [],
-    },
-    privacy: {
-      isPublic: true,
-      sharedWith: [],
-    },
-    settings: {
-      template: 'default',
-      fontSize: '12pt',
-      fontFamily: 'Arial',
-      color: '#000000',
     },
   },
   status: 'idle',

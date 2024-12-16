@@ -3,7 +3,7 @@ import { Box } from '@mui/material';
 import Nav from '../components/Nav';
 import Hero from '../components/Hero';
 
-const ResumeAuthorLanding: React.FC = () => {
+const Landing: React.FC = () => {
   return (
     <Box sx={{ bgcolor: '#4527A0' }}>
       <Nav />
@@ -12,4 +12,4 @@ const ResumeAuthorLanding: React.FC = () => {
   );
 };
 
-export default ResumeAuthorLanding;
+export default Landing;
