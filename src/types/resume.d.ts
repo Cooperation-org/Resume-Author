@@ -146,23 +146,6 @@ interface Language extends VerifiableItem {
   readingLevel?: string;
 }
 
-interface Testimonial {
-  id: string;
-  author: string;
-  position?: string;
-  company?: string;
-  relationship?: string;
-  content: string;
-  date: string;
-}
-
-interface ExecutiveQualification extends VerifiableItem {
-  category: string;
-  description: string;
-  examples: string[];
-  skills?: string[];
-}
-
 // Main Resume Interface
 interface Resume {
   id: string;
@@ -172,10 +155,6 @@ interface Resume {
 
   contact: Contact;
   summary: string;
-  executiveSummary?: string;
-  executiveQualifications?: {
-    items: ExecutiveQualification[];
-  };
 
   experience: {
     items: WorkExperience[];
@@ -185,12 +164,6 @@ interface Resume {
   };
   skills: {
     items: Skill[];
-  };
-  conferences: {
-    items: Conference[];
-  };
-  accomplishments: {
-    items: string[];
   };
   awards: {
     items: Award[];
@@ -213,17 +186,5 @@ interface Resume {
   };
   testimonials: {
     items: Testimonial[];
-  };
-
-  // Metadata
-  privacy?: {
-    isPublic: boolean;
-    sharedWith?: string[];
-  };
-  settings?: {
-    template?: string;
-    fontSize?: string;
-    fontFamily?: string;
-    color?: string;
   };
 }
