@@ -6,8 +6,12 @@ import {
   Typography,
   IconButton,
   Paper,
+  Divider,
+  List,
+  ListItem,
+  ListItemText,
 } from '@mui/material';
-import { Plus, Trash2 } from 'lucide-react';
+import { Edit, Eye, Plus, Trash2 } from 'lucide-react';
 import { useDispatch } from 'react-redux';
 import { updateSection } from '../../redux/slices/resume';
 
@@ -19,107 +23,150 @@ interface SectionContentProps {
 const SectionContent = ({ sectionId, sectionData }: SectionContentProps) => {
   const dispatch = useDispatch();
 
-  // Handle strings directly
+  // Local states
   const [localValue, setLocalValue] = useState(
     typeof sectionData === 'string' ? sectionData : ''
   );
-
-  // Handle arrays (e.g., items)
   const [items, setItems] = useState(
     Array.isArray(sectionData?.items) ? [...sectionData.items] : []
   );
+  const [newItemValue, setNewItemValue] = useState('');
+  const [editingIndex, setEditingIndex] = useState<number | null>(null);
 
-  // Update string field
+  // Update single string section
   const handleStringChange = (value: string) => {
+    console.log(value);
     setLocalValue(value);
     dispatch(updateSection({ sectionId, content: value }));
   };
 
-  // Update array items
-  const handleItemChange = (index: number, value: string) => {
+  // Add a new item
+  const handleAddNewItem = () => {
+    if (newItemValue.trim()) {
+      const updatedItems = [...items, newItemValue.trim()];
+      console.log('🚀 ~ handleAddNewItem ~ updatedItems:', updatedItems);
+      setItems(updatedItems);
+
+      // Dispatch the update with the correct 'items' format
+      dispatch(
+        updateSection({
+          sectionId,
+          content: { items: updatedItems }, // Correct format
+        })
+      );
+
+      setNewItemValue(''); // Reset input
+    }
+  };
+
+  // Update an existing item
+  const handleUpdateItem = (index: number, value: string) => {
     const updatedItems = [...items];
     updatedItems[index] = value;
     setItems(updatedItems);
     dispatch(updateSection({ sectionId, content: { items: updatedItems } }));
   };
 
-  // Add a new input field
-  const handleAddItem = () => {
-    const updatedItems = [...items, ''];
-    setItems(updatedItems);
-    dispatch(updateSection({ sectionId, content: { items: updatedItems } }));
-  };
-
-  // Remove an input field
+  // Remove an item
   const handleRemoveItem = (index: number) => {
     const updatedItems = items.filter((_, i) => i !== index);
     setItems(updatedItems);
     dispatch(updateSection({ sectionId, content: { items: updatedItems } }));
   };
 
+  const sectionsName = sectionId.charAt(0).toUpperCase() + sectionId.slice(1);
+
   return (
     <Box>
-      {/* If the sectionData is a string */}
+      {/* Section Header */}
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
+        <Typography
+          variant="h6"
+          fontWeight="600"
+        >
+          {sectionsName}
+        </Typography>
+      </Box>
+      <Divider sx={{ mb: 2 }} />
+
+      {/* If section is a string */}
       {typeof sectionData === 'string' && (
         <TextField
           fullWidth
-          variant="outlined"
-          label="Edit Content"
+          multiline
+          rows={4}
           value={localValue}
           onChange={e => handleStringChange(e.target.value)}
-          placeholder="Enter content..."
+          placeholder="Enter content here..."
         />
       )}
 
-      {/* If the sectionData has items */}
+      {/* If section has items */}
       {Array.isArray(sectionData?.items) && (
         <Box>
+          {/* Display current items */}
           <Typography
             variant="body1"
             fontWeight="600"
-            mb={1}
           >
-            Items
+            Current {sectionsName}s:
           </Typography>
-          {items.map((item, index) => (
-            <Paper
-              key={index}
-              sx={{ display: 'flex', alignItems: 'center', mb: 2, p: 2 }}
-            >
-              <TextField
-                fullWidth
-                label={`Item ${index + 1}`}
-                value={item}
-                onChange={e => handleItemChange(index, e.target.value)}
-                placeholder="Enter item content..."
-              />
-              <IconButton
-                size="small"
-                onClick={() => handleRemoveItem(index)}
-                sx={{ ml: 1 }}
+          <List>
+            {items.map((item, index) => (
+              <ListItem
+                key={index}
+                sx={{ display: 'flex', alignItems: 'center', gap: 2 }}
               >
-                <Trash2 size={16} />
-              </IconButton>
-            </Paper>
-          ))}
+                <ListItemText
+                  primary={
+                    editingIndex === index ? (
+                      <TextField
+                        fullWidth
+                        value={item}
+                        onChange={e => handleUpdateItem(index, e.target.value)}
+                        onBlur={() => setEditingIndex(null)} // Finish editing
+                        autoFocus
+                      />
+                    ) : (
+                      sectionId.charAt(0).toUpperCase() + sectionId.slice(1)
+                    )
+                  }
+                />
+                <Box>
+                  <IconButton onClick={() => setEditingIndex(index)}>
+                    <Edit size={16} />
+                  </IconButton>
+                  <IconButton onClick={() => handleRemoveItem(index)}>
+                    <Trash2 size={16} />
+                  </IconButton>
+                </Box>
+              </ListItem>
+            ))}
+          </List>
 
-          {/* Add new item button */}
-          <Button
-            variant="outlined"
-            startIcon={<Plus />}
-            onClick={handleAddItem}
-            sx={{ mt: 1 }}
-          >
-            Add Item
-          </Button>
+          {/* Add New Item */}
+          <Box sx={{ display: 'flex', gap: 2, mt: 2 }}>
+            <TextField
+              fullWidth
+              placeholder={
+                'Add new' +
+                ' ' +
+                sectionId.charAt(0).toUpperCase() +
+                sectionId.slice(1)
+              }
+              value={newItemValue}
+              onChange={e => setNewItemValue(e.target.value)}
+            />
+            <Button
+              variant="contained"
+              startIcon={<Plus />}
+              onClick={handleAddNewItem}
+            >
+              Add
+            </Button>
+          </Box>
         </Box>
       )}
-
-      {/* Default fallback */}
-      {!(typeof sectionData === 'string') &&
-        !Array.isArray(sectionData?.items) && (
-          <Typography>No editable content available</Typography>
-        )}
     </Box>
   );
 };

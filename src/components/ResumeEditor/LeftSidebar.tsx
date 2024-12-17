@@ -1,15 +1,11 @@
 import { Box, Paper, Typography, IconButton } from '@mui/material';
-import { Edit, Eye, Trash2 } from 'lucide-react';
+import { Edit } from 'lucide-react';
 import { useDispatch } from 'react-redux';
-import { setSectionVisibility, removeSection } from '../../redux/slices/resume';
+import { removeSection } from '../../redux/slices/resume';
 
-interface LeftSidebarProps {
-  sectionOrder: (keyof Resume)[];
-}
-
+export const leftSections: (keyof Resume)[] = ['contact', 'languages'];
 const LeftSidebar = () => {
   const dispatch = useDispatch();
-  const sectionOrder: (keyof Resume)[] = ['contact', 'languages'];
   return (
     <Box sx={{ width: 240 }}>
       <Typography
@@ -18,7 +14,7 @@ const LeftSidebar = () => {
       >
         Sections
       </Typography>
-      {sectionOrder.map(key => {
+      {leftSections.map(key => {
         return (
           <Paper
             key={key}
