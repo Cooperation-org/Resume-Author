@@ -3,7 +3,6 @@ import { ResumeState } from './resume';
 export const initialState: ResumeState = {
   resume: {
     id: '', // Set during resume creation or loading
-    userId: '', // Set during user session initialization
     lastUpdated: new Date().toISOString(),
     version: 1,
     contact: {
@@ -63,7 +62,7 @@ export const initialState: ResumeState = {
   activeSection: null,
   highlightedText: null,
   pendingVerifications: [],
-  isDirty: false,
+  isDirty: true,
   sectionVisibility: {
     summary: true,
     contact: true,

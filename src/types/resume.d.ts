@@ -149,7 +149,6 @@ interface Language extends VerifiableItem {
 // Main Resume Interface
 interface Resume {
   id: string;
-  userId: string;
   lastUpdated: string;
   version?: number;
 

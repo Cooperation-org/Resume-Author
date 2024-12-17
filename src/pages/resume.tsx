@@ -12,7 +12,7 @@ const Resume = () => {
   return (
     <div>
       <PrevResumesList
-        open={open}
+        open={false}
         onClose={handleClose}
       />
       <ResumeEditor />
