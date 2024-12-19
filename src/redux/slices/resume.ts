@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import { initialState } from './initialResumeState';
+import { initialState } from '../../initialResumeState';
 
 export interface ResumeState {
   resume: Resume | null;
