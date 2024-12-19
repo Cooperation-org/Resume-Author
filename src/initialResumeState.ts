@@ -1,4 +1,4 @@
-import { ResumeState } from './resume';
+import { ResumeState } from './redux/slices/resume';
 
 export const initialState: ResumeState = {
   resume: {
