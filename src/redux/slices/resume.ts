@@ -61,8 +61,8 @@ const resumeSlice = createSlice({
         const section = state.resume[sectionId as keyof Resume];
 
         if (section && typeof section === 'object' && 'items' in section) {
-          // If the section has an 'items' property, update it
-          (section as any).items = content;
+          // If the content has an 'items' property, update it properly
+          (section as any).items = content.items || [];
         } else {
           // Otherwise, directly update the section
           (state.resume as any)[sectionId] = content;
@@ -70,7 +70,6 @@ const resumeSlice = createSlice({
         state.isDirty = true;
       }
     },
-
     removeSection: (state, action) => {
       if (!state.resume) return;
       const sectionId = action.payload;

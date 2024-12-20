@@ -7,6 +7,7 @@ import store from './redux/store';
 import Resume from './pages/resume';
 import ImportPage from './pages/importPage';
 import Error404 from './pages/error404';
+import './styles/App.css';
 
 const App = () => {
   return (

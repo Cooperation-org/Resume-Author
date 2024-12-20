@@ -1,11 +1,10 @@
-import { Box, Paper, Typography, IconButton } from '@mui/material';
-import { Edit } from 'lucide-react';
-import { useDispatch } from 'react-redux';
-import { removeSection } from '../../redux/slices/resume';
+import React from 'react';
+import { Box, Paper, Typography } from '@mui/material';
+import SectionContent from './SectionContent'; // Import the reusable SectionContent component
 
 export const leftSections: (keyof Resume)[] = ['contact', 'languages'];
+
 const LeftSidebar = () => {
-  const dispatch = useDispatch();
   return (
     <Box sx={{ width: 240 }}>
       <Typography
@@ -14,33 +13,15 @@ const LeftSidebar = () => {
       >
         Sections
       </Typography>
-      {leftSections.map(key => {
-        return (
-          <Paper
-            key={key}
-            sx={{
-              mb: 2,
-              p: 2,
-              display: 'flex',
-              justifyContent: 'space-between',
-            }}
-          >
-            <Typography
-              variant="body1"
-              fontWeight="500"
-            >
-              {key}
-            </Typography>
-
-            <IconButton
-              size="small"
-              onClick={() => dispatch(removeSection(key))}
-            >
-              <Edit size={16} />
-            </IconButton>
-          </Paper>
-        );
-      })}
+      {leftSections.map(sectionId => (
+        <Paper
+          key={sectionId}
+          sx={{ mb: 2, p: 2, borderRadius: 2 }}
+        >
+          {/* Use SectionContent for each section */}
+          <SectionContent sectionId={sectionId} />
+        </Paper>
+      ))}
     </Box>
   );
 };

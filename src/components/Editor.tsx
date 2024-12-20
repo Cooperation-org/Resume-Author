@@ -11,7 +11,7 @@ import Section from './ResumeEditor/Section';
 import { useSelector } from 'react-redux';
 import { RootState } from '../redux/store';
 import { Plus } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 const nonVisibleSections = [
   ...leftSections,
@@ -33,6 +33,9 @@ const ResumeEditor = () => {
   ]);
 
   const resume = useSelector((state: RootState) => state.resume.resume);
+  useEffect(() => {
+    console.log('🚀 ~ resume', resume);
+  }, [resume]);
 
   const AllSections = Object.keys(resume as Resume).filter(
     sec =>
@@ -77,7 +80,6 @@ const ResumeEditor = () => {
               <Section
                 key={key}
                 sectionId={key}
-                sectionData={resume[key]}
               />
             ))}
         </Box>
@@ -87,7 +89,7 @@ const ResumeEditor = () => {
           <Button
             variant="outlined"
             startIcon={<Plus />}
-            sx={{ mb: 2, fontSize: '1rem' }}
+            sx={{ mb: 2, fontSize: '1rem', borderRadius: 5 }}
             onClick={() => setAddSectionOpen(true)}
           >
             Add Section
@@ -119,9 +121,9 @@ const ResumeEditor = () => {
               fullWidth
             />
             <Button
-              variant="contained"
               onClick={handleAddSelectedSection}
               disabled={!selectedSection}
+              sx={{ borderRadius: 5 }}
             >
               Add
             </Button>
