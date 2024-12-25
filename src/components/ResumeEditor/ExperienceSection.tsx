@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef } from 'react'
+import React, { useState, useCallback } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import {
   Box,
@@ -9,19 +9,22 @@ import {
   Dialog,
   DialogTitle,
   DialogContent,
-  DialogActions
+  DialogActions,
+  Menu,
+  MenuItem
 } from '@mui/material'
-import {
-  Trash2,
-  EyeOff,
-  HelpCircle,
-  MoreVertical,
-  Plus,
-  BadgeCheck,
-  Edit
-} from 'lucide-react'
-import type { RootState } from '../../redux/store'
 
+import MoreVertIcon from '@mui/icons-material/MoreVert'
+import VisibilityOffIcon from '@mui/icons-material/VisibilityOff'
+import DeleteIcon from '@mui/icons-material/Delete'
+import AddCircleIcon from '@mui/icons-material/AddCircle'
+import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline'
+import AddToPhotosIcon from '@mui/icons-material/AddToPhotos'
+import EditIcon from '@mui/icons-material/Edit'
+import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp'
+import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown'
+
+import type { RootState } from '../../redux/store'
 import {
   addExperience,
   updateExperience,
@@ -118,8 +121,20 @@ const ExperienceSection: React.FC = () => {
   const [isAdding, setIsAdding] = useState(false)
   const [formData, setFormData] = useState<ExperienceFormData>(defaultFormData)
   const [editingId, setEditingId] = useState<string | null>(null)
-  const dragItem = useRef<number | null>(null)
-  const dragOverItem = useRef<number | null>(null)
+  const [isViewing, setIsViewing] = useState(false)
+  const [viewingExp, setViewingExp] = useState<WorkExperience | null>(null)
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
+  const [menuIndex, setMenuIndex] = useState<number | null>(null)
+  const menuOpen = Boolean(anchorEl)
+
+  const handleMenuClick = (event: React.MouseEvent<HTMLElement>, index: number) => {
+    setAnchorEl(event.currentTarget)
+    setMenuIndex(index)
+  }
+  const handleMenuClose = () => {
+    setAnchorEl(null)
+    setMenuIndex(null)
+  }
 
   const handleAddExperience = useCallback(() => {
     setFormData({
@@ -192,29 +207,38 @@ const ExperienceSection: React.FC = () => {
     }))
   }, [])
 
-  const handleDragStart = useCallback((index: number) => {
-    dragItem.current = index
-  }, [])
+  const handleView = (experience: WorkExperience) => {
+    setViewingExp(experience)
+    setIsViewing(true)
+  }
+  const handleCloseView = () => {
+    setViewingExp(null)
+    setIsViewing(false)
+  }
 
-  const handleDragEnter = useCallback((index: number) => {
-    dragOverItem.current = index
-  }, [])
+  const handleMoveUp = useCallback(
+    (index: number) => {
+      if (index <= 0) return
+      const reordered = [...experiences]
+      const temp = reordered[index]
+      reordered[index] = reordered[index - 1]
+      reordered[index - 1] = temp
+      dispatch(reorderExperiences(reordered))
+    },
+    [dispatch, experiences]
+  )
 
-  const handleDragEnd = useCallback(() => {
-    const dragFrom = dragItem.current
-    const dragTo = dragOverItem.current
-
-    if (dragFrom === null || dragTo === null || dragFrom === dragTo) return
-
-    const reorderedExperiences = Array.from(experiences)
-    const [movedItem] = reorderedExperiences.splice(dragFrom, 1)
-    reorderedExperiences.splice(dragTo, 0, movedItem)
-
-    dispatch(reorderExperiences(reorderedExperiences))
-
-    dragItem.current = null
-    dragOverItem.current = null
-  }, [dispatch, experiences])
+  const handleMoveDown = useCallback(
+    (index: number) => {
+      if (index >= experiences.length - 1) return
+      const reordered = [...experiences]
+      const temp = reordered[index]
+      reordered[index] = reordered[index + 1]
+      reordered[index + 1] = temp
+      dispatch(reorderExperiences(reordered))
+    },
+    [dispatch, experiences]
+  )
 
   return (
     <Box
@@ -224,7 +248,7 @@ const ExperienceSection: React.FC = () => {
         background: '#FFFFFF',
         height: experiences.length === 0 ? 196 : 'auto',
         alignSelf: 'stretch',
-        borderRadius: 4,
+        borderRadius: '4px',
         pt: '30px',
         px: '20px',
         boxShadow: '0px 2px 20px rgba(0, 0, 0, 0.1)',
@@ -238,90 +262,143 @@ const ExperienceSection: React.FC = () => {
           mb: '28px'
         }}
       >
-        <Typography sx={{ color: '#000000', fontSize: 24, mr: '15px' }}>
+        <Typography
+          sx={{
+            fontWeight: 500,
+            color: '#000000',
+            fontSize: 24,
+            mr: '15px'
+          }}
+        >
           Experience
         </Typography>
-
-        <HelpCircle size={20} style={{ marginRight: '13px' }} />
-
-        <Typography sx={{ color: '#2639E9', fontSize: 14, cursor: 'pointer' }}>
-          Tips
+        <Box sx={{ flex: 1 }} />
+        <IconButton size='small'>
+          <DeleteIcon sx={{ width: 24, height: 24, color: '#4F5C70' }} />
+        </IconButton>
+        <Typography sx={{ color: '#4F5C70', fontSize: 16, mr: '30px' }}>
+          Delete
         </Typography>
 
-        <Box sx={{ flex: 1 }} />
+        <IconButton size='small'>
+          <VisibilityOffIcon sx={{ width: 24, height: 24, color: '#4F5C70' }} />
+        </IconButton>
+        <Typography sx={{ color: '#4F5C70', fontSize: 16, mr: '30px' }}>Hide</Typography>
 
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: '11px' }}>
-          <IconButton size='small'>
-            <Trash2 size={24} color='#4F5C70' />
-          </IconButton>
-          <Typography sx={{ color: '#4F5C70', fontSize: 16, mr: '31px' }}>
-            Delete
-          </Typography>
+        <IconButton size='small'>
+          <AddToPhotosIcon sx={{ width: 24, height: 24, color: '#4F5C70' }} />
+        </IconButton>
+        <Typography sx={{ color: '#4F5C70', fontSize: 16, mr: '16px' }}>
+          Add credentials
+        </Typography>
 
-          <IconButton size='small'>
-            <EyeOff size={24} color='#4F5C70' />
-          </IconButton>
-          <Typography sx={{ color: '#4F5C70', fontSize: 16, mr: '31px' }}>
-            Hide
-          </Typography>
-
-          <IconButton size='small'>
-            <BadgeCheck size={24} color='#4F5C70' />
-          </IconButton>
-          <Typography sx={{ color: '#4F5C70', fontSize: 16, mr: '16px' }}>
-            Add credentials
-          </Typography>
-
-          <IconButton size='small'>
-            <MoreVertical size={20} />
-          </IconButton>
-        </Box>
+        <IconButton size='small'>
+          <MoreVertIcon />
+        </IconButton>
       </Box>
 
       <Box>
         {experiences.map((exp: WorkExperience, index: number) => (
           <Box
             key={exp.id}
-            draggable
-            onDragStart={() => handleDragStart(index)}
-            onDragEnter={() => handleDragEnter(index)}
-            onDragEnd={handleDragEnd}
-            onDragOver={e => e.preventDefault()}
             sx={{
               alignSelf: 'stretch',
               background: '#F7F9FC',
               borderRadius: 4,
               p: '13px',
               mb: '12px',
-              cursor: 'grab',
-              '&:active': {
-                cursor: 'grabbing'
-              }
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between'
             }}
           >
-            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            <Box
+              sx={{ display: 'flex', alignItems: 'center', flex: 1 }}
+              onClick={() => handleView(exp)}
+            >
               <Box sx={{ flex: 1, mr: 1 }}>
-                <Typography sx={{ color: '#4F5C70', fontSize: 14, mb: '5px' }}>
+                <Typography sx={{ color: '#78809A', fontSize: 14, mb: '5px' }}>
                   {exp.employmentHistoryItem.organization.tradeName}
                 </Typography>
                 <Typography sx={{ color: '#2D2D47', fontSize: 16 }}>
                   {exp.employmentHistoryItem.title}
                 </Typography>
               </Box>
-              <Typography sx={{ color: '#4F5C70', fontSize: 14, mr: '50px', flex: 1 }}>
+              <Typography
+                sx={{
+                  color: '#78809A',
+                  fontSize: 14,
+                  mr: '20px'
+                }}
+              >
                 {exp.employmentHistoryItem.duration}
               </Typography>
-              <Box sx={{ display: 'flex', gap: 1 }}>
-                <IconButton size='small' onClick={() => handleEdit(exp)}>
-                  <Edit size={16} />
-                </IconButton>
-                <IconButton size='small' onClick={() => handleDelete(exp.id)}>
-                  <Trash2 size={16} />
-                </IconButton>
-              </Box>
+            </Box>
+
+            <Box>
+              <IconButton size='small' onClick={event => handleMenuClick(event, index)}>
+                <MoreVertIcon />
+              </IconButton>
             </Box>
           </Box>
         ))}
+
+        <Menu
+          anchorEl={anchorEl}
+          open={menuOpen}
+          onClose={handleMenuClose}
+          anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+          transformOrigin={{ vertical: 'top', horizontal: 'left' }}
+        >
+          {menuIndex != null && (
+            <>
+              <MenuItem
+                onClick={() => {
+                  handleMenuClose()
+                  handleView(experiences[menuIndex])
+                }}
+              >
+                View
+              </MenuItem>
+              <MenuItem
+                onClick={() => {
+                  handleMenuClose()
+                  handleEdit(experiences[menuIndex])
+                }}
+              >
+                <EditIcon sx={{ width: 24, height: 24, mr: 1 }} />
+                Edit
+              </MenuItem>
+              <MenuItem
+                onClick={() => {
+                  handleMenuClose()
+                  handleDelete(experiences[menuIndex].id)
+                }}
+              >
+                <DeleteIcon sx={{ width: 24, height: 24, mr: 1 }} />
+                Delete
+              </MenuItem>
+              <MenuItem
+                onClick={() => {
+                  handleMenuClose()
+                  handleMoveUp(menuIndex)
+                }}
+              >
+                <KeyboardArrowUpIcon sx={{ width: 24, height: 24, mr: 1 }} />
+                Move Up
+              </MenuItem>
+              <MenuItem
+                onClick={() => {
+                  handleMenuClose()
+                  handleMoveDown(menuIndex)
+                }}
+              >
+                <KeyboardArrowDownIcon sx={{ width: 24, height: 24, mr: 1 }} />
+                Move Down
+              </MenuItem>
+            </>
+          )}
+        </Menu>
       </Box>
 
       {experiences.length === 0 && !isAdding && (
@@ -341,7 +418,13 @@ const ExperienceSection: React.FC = () => {
             '&:hover': { background: '#F0F4FA' }
           }}
         >
-          <Typography sx={{ color: '#2D2D47', fontSize: 16 }}>
+          <Typography
+            sx={{
+              fontWeight: 500,
+              color: '#2E2E48',
+              fontSize: 16
+            }}
+          >
             + Add Experience
           </Typography>
         </Box>
@@ -354,6 +437,7 @@ const ExperienceSection: React.FC = () => {
             height: 46,
             display: 'flex',
             alignItems: 'center',
+            justifyContent: 'space-between',
             background: '#F7F9FC',
             borderRadius: 4,
             px: 2,
@@ -362,10 +446,19 @@ const ExperienceSection: React.FC = () => {
           }}
           onClick={handleAddExperience}
         >
-          <Typography sx={{ color: '#2D2D47', fontSize: 14, flex: 1 }}>
+          <Typography
+            sx={{
+              fontWeight: 500,
+              color: '#2E2E48',
+              fontSize: 14,
+              flex: 1
+            }}
+          >
             Add Experience
           </Typography>
-          <Plus size={30} />
+          <AddCircleOutlineIcon
+            sx={{ mr: '14px', width: 30, height: 30, color: '#78809A' }}
+          />
         </Box>
       )}
 
@@ -448,14 +541,14 @@ const ExperienceSection: React.FC = () => {
                       onClick={() => handleRemoveJobLevel(level.id)}
                       aria-label='remove job level'
                     >
-                      <Trash2 size={16} />
+                      <DeleteIcon fontSize='small' />
                     </IconButton>
                   )}
                 </Box>
               ))}
               <Button
                 variant='text'
-                startIcon={<Plus size={16} />}
+                startIcon={<AddCircleIcon width={24} height={24} />}
                 onClick={handleAddJobLevel}
               >
                 Add Job Level
@@ -468,6 +561,33 @@ const ExperienceSection: React.FC = () => {
           <Button onClick={handleSave} variant='contained'>
             Save
           </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog open={isViewing} onClose={handleCloseView} maxWidth='md' fullWidth>
+        <DialogTitle>Experience Details</DialogTitle>
+        <DialogContent>
+          {viewingExp && (
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+              <Typography variant='h6'>
+                {viewingExp.employmentHistoryItem.organization.tradeName}
+              </Typography>
+              <Typography>{viewingExp.employmentHistoryItem.title}</Typography>
+              <Typography sx={{ color: '#78809A', fontSize: 14 }}>
+                {viewingExp.employmentHistoryItem.duration}
+              </Typography>
+
+              <Box sx={{ mt: 2 }}>
+                <Typography variant='body2'>
+                  <strong>Location:</strong>{' '}
+                  {viewingExp.employmentHistoryItem.location.city}
+                </Typography>
+              </Box>
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseView}>Close</Button>
         </DialogActions>
       </Dialog>
     </Box>
