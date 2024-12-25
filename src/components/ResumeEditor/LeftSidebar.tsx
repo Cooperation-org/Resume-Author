@@ -1,8 +1,9 @@
 import React from 'react'
 import { Box, Paper, Typography } from '@mui/material'
 import SectionContent from './SectionContent' // Import the reusable SectionContent component
+import { SectionId } from '../../types/resumeTypes'
 
-export const leftSections: (keyof Resume)[] = ['contact', 'languages']
+export const leftSections: SectionId[] = ['contact', 'languages']
 
 const LeftSidebar = () => {
   return (

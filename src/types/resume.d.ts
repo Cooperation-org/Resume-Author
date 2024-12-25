@@ -54,7 +54,29 @@ interface WorkExperience extends VerifiableItem {
   description: string
   achievements: string[]
 }
-
+interface WorkExperience extends VerifiableItem {
+  employmentHistoryItem: {
+    organization: {
+      tradeName: string
+      domainName?: string
+    }
+    title: string
+    location: {
+      city: string
+      postalCode?: string
+      countryCode?: string
+    }
+    organizationUnit: {
+      responsibilityCode?: string
+      name?: string
+    }
+    jobLevels: Array<{ name: string }>
+    duration: string
+  }
+  proof?: {
+    [key: string]: unknown
+  }
+}
 interface Education extends VerifiableItem {
   institution: string
   degree: string
@@ -186,4 +208,10 @@ interface Resume {
   testimonials: {
     items: Testimonial[]
   }
+}
+
+interface Testimonial {
+  id: string
+  author: string
+  content: string
 }

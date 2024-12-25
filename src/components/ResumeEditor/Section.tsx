@@ -1,8 +1,8 @@
 import { Paper } from '@mui/material'
 import SectionContent from './SectionContent'
-
+import { SectionId } from '../../types/resumeTypes'
 interface SectionProps {
-  sectionId: keyof Resume
+  sectionId: SectionId
 }
 
 const Section = ({ sectionId }: SectionProps) => {

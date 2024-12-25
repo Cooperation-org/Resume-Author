@@ -5,7 +5,9 @@ import Section from './ResumeEditor/Section'
 import { useSelector } from 'react-redux'
 import { RootState } from '../redux/store'
 import { Plus } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import ExperienceSection from './ResumeEditor/ExperienceSection'
+import { SectionId } from '../types/resumeTypes'
 
 const nonVisibleSections = [
   ...leftSections,
@@ -20,20 +22,35 @@ const nonVisibleSections = [
 const ResumeEditor = () => {
   const [addSectionOpen, setAddSectionOpen] = useState(false)
   const [selectedSection, setSelectedSection] = useState<string | null>(null)
-  const [sectionOrder, setSectionOrder] = useState<(keyof Resume)[]>([
+  const [sectionOrder, setSectionOrder] = useState<SectionId[]>([
     'summary',
     'experience',
     'education'
   ])
 
   const resume = useSelector((state: RootState) => state.resume.resume)
+
+  const prevExperiencesRef = useRef<WorkExperience[] | undefined>(
+    resume?.experience?.items
+  )
+
+  useEffect(() => {
+    if (
+      resume?.experience?.items &&
+      resume.experience.items !== prevExperiencesRef.current
+    ) {
+      console.log('Experience section was saved or updated:', resume.experience.items)
+
+      prevExperiencesRef.current = resume.experience.items
+    }
+  }, [resume?.experience?.items])
+
   useEffect(() => {
     console.log('🚀 ~ resume', resume)
   }, [resume])
 
   const AllSections = Object.keys(resume as Resume).filter(
-    sec =>
-      !sectionOrder.includes(sec as keyof Resume) && !nonVisibleSections.includes(sec)
+    sec => !sectionOrder.includes(sec as SectionId) && !nonVisibleSections.includes(sec)
   )
 
   const handleSectionSelect = (event: any, value: string | null) => {
@@ -42,8 +59,8 @@ const ResumeEditor = () => {
 
   const handleAddSelectedSection = () => {
     if (selectedSection && AllSections.includes(selectedSection)) {
-      setSectionOrder(prev => [...prev, selectedSection as keyof Resume])
-      setSelectedSection(null) // Reset selection
+      setSectionOrder(prev => [...prev, selectedSection as SectionId])
+      setSelectedSection(null)
     }
     setAddSectionOpen(false)
   }
@@ -64,7 +81,14 @@ const ResumeEditor = () => {
           <Typography variant='h4' fontWeight='600' mb={2}>
             Edit your resume
           </Typography>
-          {resume && sectionOrder.map(key => <Section key={key} sectionId={key} />)}
+          {resume &&
+            sectionOrder.map(key => {
+              if (key === 'experience') {
+                return <ExperienceSection key={key} />
+              } else {
+                return <Section key={key} sectionId={key} />
+              }
+            })}
         </Box>
 
         {/* Add Section Button */}
@@ -81,13 +105,7 @@ const ResumeEditor = () => {
 
         {/* Autocomplete for Adding New Sections */}
         {addSectionOpen && (
-          <Box
-            sx={{
-              display: 'flex',
-              gap: 2,
-              alignItems: 'center'
-            }}
-          >
+          <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
             <Autocomplete
               options={AllSections}
               value={selectedSection}

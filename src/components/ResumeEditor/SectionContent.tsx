@@ -13,9 +13,10 @@ import {
 import { Edit, Eye, Save, Trash2, EyeOff, Plus } from 'lucide-react'
 import { useDispatch, useSelector } from 'react-redux'
 import { updateSection } from '../../redux/slices/resume'
+import { SectionId } from '../../types/resumeTypes'
 
 interface SectionContentProps {
-  sectionId: keyof Resume
+  sectionId: SectionId
 }
 
 const SectionContent: React.FC<SectionContentProps> = ({ sectionId }) => {
@@ -140,7 +141,7 @@ const SectionContent: React.FC<SectionContentProps> = ({ sectionId }) => {
           {/* List of items */}
           {items.length > 0 && (
             <List>
-              {items.map((item: keyof Resume, index: number) => (
+              {items.map((item: SectionId, index: number) => (
                 <ListItem
                   key={item as string}
                   sx={{ display: 'flex', alignItems: 'center', gap: 2 }}
