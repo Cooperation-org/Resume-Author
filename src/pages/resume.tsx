@@ -3,7 +3,9 @@ import ResumeEditor from '../components/Editor'
 import PrevResumesList from '../components/ResumeList'
 
 const Resume = () => {
-  const [open, setOpen] = React.useState(true)
+  // SonarLint: Ignore the unused variable warning
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [open, setOpen] = React.useState(true) // NOSONAR
 
   const handleClose = () => {
     setOpen(false)

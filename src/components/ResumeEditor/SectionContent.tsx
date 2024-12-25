@@ -142,7 +142,7 @@ const SectionContent: React.FC<SectionContentProps> = ({ sectionId }) => {
             <List>
               {items.map((item: keyof Resume, index: number) => (
                 <ListItem
-                  key={index}
+                  key={item as string}
                   sx={{ display: 'flex', alignItems: 'center', gap: 2 }}
                 >
                   <ListItemText

@@ -1,5 +1,5 @@
-import { Resume } from '@cooperation/vc-storage'
-import { Title } from '@mui/icons-material'
+// import { Resume } from '@cooperation/vc-storage'
+// import { Title } from '@mui/icons-material'
 import { Box, Typography, Button, Divider } from '@mui/material'
 import { FileText, Sparkles } from 'lucide-react'
 
