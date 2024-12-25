@@ -1,7 +1,7 @@
-import React, { useCallback, useState } from 'react';
-import { useDispatch } from 'react-redux';
-import { getCookie } from '../tools';
-import { GoogleDriveStorage, Resume } from '@cooperation/vc-storage';
+import React, { useCallback, useState } from 'react'
+import { useDispatch } from 'react-redux'
+import { getCookie } from '../tools'
+import { GoogleDriveStorage, Resume } from '@cooperation/vc-storage'
 
 import {
   Dialog,
@@ -12,75 +12,60 @@ import {
   List,
   ListItem,
   ListItemText,
-  CircularProgress,
-} from '@mui/material';
-import { setSelectedResume } from '../redux/slices/resume';
+  CircularProgress
+} from '@mui/material'
+import { setSelectedResume } from '../redux/slices/resume'
 
-const PrevResumesList = ({
-  open,
-  onClose,
-}: {
-  open: boolean;
-  onClose: () => void;
-}) => {
+const PrevResumesList = ({ open, onClose }: { open: boolean; onClose: () => void }) => {
   const [userSessions, setSessions] = useState<
     { id: string; name: string; content: any }[]
-  >([]);
-  const [loading, setLoading] = useState(false);
-  const dispatch = useDispatch(); // Access the Redux dispatch function
+  >([])
+  const [loading, setLoading] = useState(false)
+  const dispatch = useDispatch() // Access the Redux dispatch function
 
   const getSessions = useCallback(async () => {
     try {
-      const accessToken = getCookie('auth_token');
+      const accessToken = getCookie('auth_token')
       if (!accessToken) {
-        console.error('Access token not found.');
-        return;
+        console.error('Access token not found.')
+        return
       }
 
-      setLoading(true);
-      const storage = new GoogleDriveStorage(accessToken);
-      const resumeManager = new Resume(storage);
-      const nonSignedResumes = await resumeManager.getNonSignedResumes();
+      setLoading(true)
+      const storage = new GoogleDriveStorage(accessToken)
+      const resumeManager = new Resume(storage)
+      const nonSignedResumes = await resumeManager.getNonSignedResumes()
 
-      console.log('🚀 ~ getSessions ~ nonSignedResumes:', nonSignedResumes);
+      console.log('🚀 ~ getSessions ~ nonSignedResumes:', nonSignedResumes)
 
       // Map resumes to the required format for display
       const sessions = nonSignedResumes.map((resume: any) => ({
         id: resume.id,
         name: resume.name || 'Unnamed Resume',
-        content: resume.content, // Include content for dispatching
-      }));
-      setSessions(sessions);
+        content: resume.content // Include content for dispatching
+      }))
+      setSessions(sessions)
     } catch (error) {
-      console.error('Error fetching non-signed resumes:', error);
+      console.error('Error fetching non-signed resumes:', error)
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  }, []);
+  }, [])
 
   React.useEffect(() => {
     if (open) {
-      getSessions();
+      getSessions()
     }
-  }, [open, getSessions]);
+  }, [open, getSessions])
 
-  const handleSelectResume = (resume: {
-    id: string;
-    name: string;
-    content: any;
-  }) => {
-    console.log('Selected resume:', resume);
-    dispatch(setSelectedResume(resume.content)); // Dispatch the selected resume content
-    onClose(); // Close the dialog
-  };
+  const handleSelectResume = (resume: { id: string; name: string; content: any }) => {
+    console.log('Selected resume:', resume)
+    dispatch(setSelectedResume(resume.content)) // Dispatch the selected resume content
+    onClose() // Close the dialog
+  }
 
   return (
-    <Dialog
-      open={open}
-      onClose={onClose}
-      fullWidth
-      maxWidth="sm"
-    >
+    <Dialog open={open} onClose={onClose} fullWidth maxWidth='sm'>
       <DialogTitle>Uncompleted Resumes</DialogTitle>
       <DialogContent dividers>
         {loading ? (
@@ -99,8 +84,8 @@ const PrevResumesList = ({
 
                   '&:hover': {
                     backgroundColor: 'rgba(0, 0, 0, 0.05)',
-                    transform: '0.3s',
-                  },
+                    transform: '0.3s'
+                  }
                 }}
                 key={session.id}
                 onClick={() => handleSelectResume(session)} // Handle resume selection
@@ -112,15 +97,12 @@ const PrevResumesList = ({
         )}
       </DialogContent>
       <DialogActions>
-        <Button
-          onClick={onClose}
-          color="primary"
-        >
+        <Button onClick={onClose} color='primary'>
           Close
         </Button>
       </DialogActions>
     </Dialog>
-  );
-};
+  )
+}
 
-export default PrevResumesList;
+export default PrevResumesList

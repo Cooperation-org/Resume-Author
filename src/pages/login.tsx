@@ -1,28 +1,28 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Box, Button, Typography, Tooltip } from '@mui/material';
-import { SVGFolder, SVGSinfo } from '../assets/svgs';
-import LoadingOverlay from '../components/Loading';
-import { login as googleLogin, handleRedirect } from '../tools/auth'; // Import your auth functions
+import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { Box, Button, Typography, Tooltip } from '@mui/material'
+import { SVGFolder, SVGSinfo } from '../assets/svgs'
+import LoadingOverlay from '../components/Loading'
+import { login as googleLogin, handleRedirect } from '../tools/auth' // Import your auth functions
 
 const Login = () => {
-  const [loading, setLoading] = useState(false);
-  const navigate = useNavigate(); // For navigation
+  const [loading, setLoading] = useState(false)
+  const navigate = useNavigate() // For navigation
 
   // Check and handle redirect if coming back from Google OAuth
   useEffect(() => {
     if (window.location.hash) {
-      setLoading(true); // Show loading while processing
-      handleRedirect({ navigate }); // Pass navigate to redirect logic
-      setLoading(false); // Hide loading after processing
+      setLoading(true) // Show loading while processing
+      handleRedirect({ navigate }) // Pass navigate to redirect logic
+      setLoading(false) // Hide loading after processing
     }
-  }, [navigate]);
+  }, [navigate])
 
   // Handle the login button click
   const handleGoogleLogin = () => {
-    setLoading(true); // Show loading while redirecting
-    googleLogin();
-  };
+    setLoading(true) // Show loading while redirecting
+    googleLogin()
+  }
 
   return (
     <Box
@@ -34,7 +34,7 @@ const Login = () => {
         gap: 3,
         textAlign: 'center',
         height: '60vh',
-        mt: 4,
+        mt: 4
       }}
     >
       {/* Google Drive Icon */}
@@ -44,7 +44,7 @@ const Login = () => {
           height: 100,
           display: 'flex',
           alignItems: 'center',
-          justifyContent: 'center',
+          justifyContent: 'center'
         }}
       >
         <SVGFolder />
@@ -53,7 +53,7 @@ const Login = () => {
       {/* Main text */}
       <Typography
         sx={{
-          fontSize: 24,
+          fontSize: 24
         }}
       >
         First, connect to Google Drive so you can save your data.
@@ -61,8 +61,8 @@ const Login = () => {
 
       {/* Google Login Button */}
       <Button
-        variant="contained"
-        color="primary"
+        variant='contained'
+        color='primary'
         onClick={handleGoogleLogin}
         sx={{
           mt: 2,
@@ -71,11 +71,11 @@ const Login = () => {
           fontSize: '16px',
           borderRadius: 5,
           textTransform: 'none',
-          backgroundColor: '#003FE0',
+          backgroundColor: '#003FE0'
         }}
       >
         Connect to Google Drive{' '}
-        <Tooltip title="You must have a Google Drive account and be able to log in. This is where your credentials will be saved.">
+        <Tooltip title='You must have a Google Drive account and be able to log in. This is where your credentials will be saved.'>
           <Box sx={{ ml: 2, mt: '2px' }}>
             <SVGSinfo />
           </Box>
@@ -84,26 +84,23 @@ const Login = () => {
 
       {/* Skip Login Button */}
       <Button
-        variant="text"
-        color="primary"
+        variant='text'
+        color='primary'
         onClick={() => navigate('/')} // Skip login and go to home page
         sx={{
           fontSize: '14px',
           fontWeight: 600,
           textDecoration: 'underline',
-          textTransform: 'none',
+          textTransform: 'none'
         }}
       >
         Continue without Saving
       </Button>
 
       {/* Loading Overlay */}
-      <LoadingOverlay
-        text="Connecting..."
-        open={loading}
-      />
+      <LoadingOverlay text='Connecting...' open={loading} />
     </Box>
-  );
-};
+  )
+}
 
-export default Login;
+export default Login

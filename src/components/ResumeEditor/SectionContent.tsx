@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react'
 import {
   Box,
   Button,
@@ -8,79 +8,79 @@ import {
   List,
   ListItem,
   ListItemText,
-  IconButton,
-} from '@mui/material';
-import { Edit, Eye, Save, Trash2, EyeOff, Plus } from 'lucide-react';
-import { useDispatch, useSelector } from 'react-redux';
-import { updateSection } from '../../redux/slices/resume';
+  IconButton
+} from '@mui/material'
+import { Edit, Eye, Save, Trash2, EyeOff, Plus } from 'lucide-react'
+import { useDispatch, useSelector } from 'react-redux'
+import { updateSection } from '../../redux/slices/resume'
 
 interface SectionContentProps {
-  sectionId: keyof Resume;
+  sectionId: keyof Resume
 }
 
 const SectionContent: React.FC<SectionContentProps> = ({ sectionId }) => {
-  const dispatch = useDispatch();
-  const resume = useSelector((state: any) => state.resume.resume);
-  const sectionData = resume[sectionId];
+  const dispatch = useDispatch()
+  const resume = useSelector((state: any) => state.resume.resume)
+  const sectionData = resume[sectionId]
 
   // Determine section type
-  const isStringBased = typeof sectionData === 'string';
-  const isListBased = Array.isArray(sectionData?.items);
+  const isStringBased = typeof sectionData === 'string'
+  const isListBased = Array.isArray(sectionData?.items)
 
   // Local states
-  const [content, setContent] = useState(sectionData || '');
-  const [items, setItems] = useState(sectionData?.items || []);
-  const [editing, setEditing] = useState(false);
-  const [newItemValue, setNewItemValue] = useState('');
-  const [isVisible, setIsVisible] = useState(true);
+  const [content, setContent] = useState(sectionData || '')
+  const [items, setItems] = useState(sectionData?.items || [])
+  const [editing, setEditing] = useState(false)
+  const [newItemValue, setNewItemValue] = useState('')
+  const [isVisible, setIsVisible] = useState(true)
 
   // Sync local state with Redux state
   useEffect(() => {
     if (isListBased) {
-      setItems([...sectionData.items]);
+      setItems([...sectionData.items])
     } else {
-      setContent(sectionData || '');
+      setContent(sectionData || '')
     }
-  }, [sectionData, isListBased]);
+  }, [sectionData, isListBased])
 
   // Toggle editing
   const toggleEdit = () => {
     if (editing) {
       // Save changes
-      const updatedContent = isStringBased ? content : { items };
-      dispatch(updateSection({ sectionId, content: updatedContent }));
+      const updatedContent = isStringBased ? content : { items }
+      dispatch(updateSection({ sectionId, content: updatedContent }))
     }
-    setEditing(!editing);
-  };
+    setEditing(!editing)
+  }
 
   // Toggle visibility
   const toggleVisibility = () => {
-    setIsVisible(!isVisible);
-  };
+    setIsVisible(!isVisible)
+  }
 
   // Add new item (for list-based sections)
   const handleAddNewItem = () => {
-    if (!newItemValue.trim() || items.includes(newItemValue.trim())) return;
-    const updatedItems = [...items, newItemValue.trim()];
-    setItems(updatedItems);
-    dispatch(updateSection({ sectionId, content: { items: updatedItems } }));
-    setNewItemValue('');
-  };
+    if (!newItemValue.trim() || items.includes(newItemValue.trim())) return
+    const updatedItems = [...items, newItemValue.trim()]
+    setItems(updatedItems)
+    dispatch(updateSection({ sectionId, content: { items: updatedItems } }))
+    setNewItemValue('')
+  }
 
   // Update an existing item
   const handleUpdateItem = (index: number, value: string) => {
-    const updatedItems = [...items];
-    updatedItems[index] = value;
-    setItems(updatedItems);
-    dispatch(updateSection({ sectionId, content: { items: updatedItems } }));
-  };
+    const updatedItems = [...items]
+    updatedItems[index] = value
+    setItems(updatedItems)
+    dispatch(updateSection({ sectionId, content: { items: updatedItems } }))
+  }
 
   // Remove an item
   const handleRemoveItem = (index: number) => {
-    const updatedItems = items.filter((_: any, i: number) => i !== index);
-    setItems(updatedItems);
-    dispatch(updateSection({ sectionId, content: { items: updatedItems } }));
-  };
+    const updatedItems = items.filter((_: any, i: number) => i !== index)
+    setItems(updatedItems)
+    dispatch(updateSection({ sectionId, content: { items: updatedItems } }))
+  }
 
   return (
     <Box>
@@ -90,13 +90,10 @@ const SectionContent: React.FC<SectionContentProps> = ({ sectionId }) => {
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
-          mb: 2,
+          mb: 2
         }}
       >
-        <Typography
-          variant="h6"
-          fontWeight="600"
-        >
+        <Typography variant='h6' fontWeight='600'>
           {sectionId.charAt(0).toUpperCase() + sectionId.slice(1)}
         </Typography>
         <Box sx={{ display: 'flex', gap: 1 }}>
@@ -114,7 +111,7 @@ const SectionContent: React.FC<SectionContentProps> = ({ sectionId }) => {
       {isStringBased && isVisible && (
         <Box>
           {!editing ? (
-            <Typography variant="body1">
+            <Typography variant='body1'>
               {content || `No ${sectionId} added yet.`}
             </Typography>
           ) : (
@@ -135,10 +132,7 @@ const SectionContent: React.FC<SectionContentProps> = ({ sectionId }) => {
         <Box>
           {/* Warning message when items length is zero */}
           {items.length === 0 && !editing && (
-            <Typography
-              variant="body2"
-              color="textSecondary"
-            >
+            <Typography variant='body2' color='textSecondary'>
               No {sectionId} items added yet. Click edit to add new items.
             </Typography>
           )}
@@ -157,9 +151,7 @@ const SectionContent: React.FC<SectionContentProps> = ({ sectionId }) => {
                         <TextField
                           fullWidth
                           value={item}
-                          onChange={e =>
-                            handleUpdateItem(index, e.target.value)
-                          }
+                          onChange={e => handleUpdateItem(index, e.target.value)}
                           autoFocus
                         />
                       ) : (
@@ -182,12 +174,12 @@ const SectionContent: React.FC<SectionContentProps> = ({ sectionId }) => {
             <Box sx={{ display: 'flex', gap: 2, mt: 2 }}>
               <TextField
                 fullWidth
-                placeholder="Add new item"
+                placeholder='Add new item'
                 value={newItemValue}
                 onChange={e => setNewItemValue(e.target.value)}
               />
               <Button
-                variant="outlined"
+                variant='outlined'
                 sx={{ borderRadius: 5 }}
                 startIcon={<Plus />}
                 onClick={handleAddNewItem}
@@ -199,7 +191,7 @@ const SectionContent: React.FC<SectionContentProps> = ({ sectionId }) => {
         </Box>
       )}
     </Box>
-  );
-};
+  )
+}
 
-export default SectionContent;
+export default SectionContent
