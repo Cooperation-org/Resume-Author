@@ -3,7 +3,6 @@ import { useDispatch, useSelector } from 'react-redux'
 import {
   Box,
   Typography,
-  IconButton,
   TextField,
   Button,
   Dialog,
@@ -15,6 +14,7 @@ import {
 } from '@mui/material'
 
 import MoreVertIcon from '@mui/icons-material/MoreVert'
+import VisibilityIcon from '@mui/icons-material/Visibility'
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff'
 import DeleteIcon from '@mui/icons-material/Delete'
 import AddCircleIcon from '@mui/icons-material/AddCircle'
@@ -123,9 +123,24 @@ const ExperienceSection: React.FC = () => {
   const [editingId, setEditingId] = useState<string | null>(null)
   const [isViewing, setIsViewing] = useState(false)
   const [viewingExp, setViewingExp] = useState<WorkExperience | null>(null)
+  const [isSectionVisible, setIsSectionVisible] = useState(true)
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
   const [menuIndex, setMenuIndex] = useState<number | null>(null)
   const menuOpen = Boolean(anchorEl)
+
+  const handleDeleteAllExperience = useCallback(() => {
+    experiences.forEach(exp => {
+      dispatch(deleteExperience({ id: exp.id }))
+    })
+  }, [dispatch, experiences])
+
+  const handleToggleSectionVisibility = useCallback(() => {
+    setIsSectionVisible(prev => !prev)
+  }, [])
+
+  const handleAddCredentials = useCallback(() => {
+    console.log('Add credentials clicked')
+  }, [])
 
   const handleMenuClick = (event: React.MouseEvent<HTMLElement>, index: number) => {
     setAnchorEl(event.currentTarget)
@@ -146,13 +161,11 @@ const ExperienceSection: React.FC = () => {
 
   const handleSave = useCallback(() => {
     const experienceData = formatToWorkExperience(formData)
-
     if (editingId) {
       dispatch(updateExperience({ experience: experienceData, id: editingId }))
     } else {
       dispatch(addExperience(experienceData))
     }
-
     setIsAdding(false)
     setEditingId(null)
     setFormData(defaultFormData)
@@ -246,22 +259,17 @@ const ExperienceSection: React.FC = () => {
         display: 'flex',
         flexDirection: 'column',
         background: '#FFFFFF',
-        height: experiences.length === 0 ? 196 : 'auto',
+        height: !isSectionVisible ? 110 : experiences.length === 0 ? 166 : 'auto',
         alignSelf: 'stretch',
         borderRadius: '4px',
-        pt: '30px',
+        pt: '20px',
+        pb: '0px',
         px: '20px',
         boxShadow: '0px 2px 20px rgba(0, 0, 0, 0.1)',
         mb: '30px'
       }}
     >
-      <Box
-        sx={{
-          display: 'flex',
-          alignItems: 'center',
-          mb: '28px'
-        }}
-      >
+      <Box sx={{ display: 'flex', alignItems: 'center' }}>
         <Typography
           sx={{
             fontWeight: 500,
@@ -273,192 +281,227 @@ const ExperienceSection: React.FC = () => {
           Experience
         </Typography>
         <Box sx={{ flex: 1 }} />
-        <IconButton size='small'>
-          <DeleteIcon sx={{ width: 24, height: 24, color: '#4F5C70' }} />
-        </IconButton>
-        <Typography sx={{ color: '#4F5C70', fontSize: 16, mr: '30px' }}>
+
+        <Button
+          onClick={handleDeleteAllExperience}
+          startIcon={<DeleteIcon sx={{ width: 24, height: 24, color: '#4F5C70' }} />}
+          variant='text'
+          sx={{
+            color: '#4F5C70',
+            textTransform: 'none',
+            fontSize: 16,
+            mr: '30px'
+          }}
+        >
           Delete
-        </Typography>
+        </Button>
 
-        <IconButton size='small'>
-          <VisibilityOffIcon sx={{ width: 24, height: 24, color: '#4F5C70' }} />
-        </IconButton>
-        <Typography sx={{ color: '#4F5C70', fontSize: 16, mr: '30px' }}>Hide</Typography>
+        <Button
+          onClick={handleToggleSectionVisibility}
+          startIcon={
+            isSectionVisible ? (
+              <VisibilityIcon sx={{ width: 24, height: 24, color: '#4F5C70' }} />
+            ) : (
+              <VisibilityOffIcon sx={{ width: 24, height: 24, color: '#4F5C70' }} />
+            )
+          }
+          variant='text'
+          sx={{
+            color: '#4F5C70',
+            textTransform: 'none',
+            fontSize: 16,
+            mr: '30px'
+          }}
+        >
+          {isSectionVisible ? 'Hide' : 'Show'}
+        </Button>
 
-        <IconButton size='small'>
-          <AddToPhotosIcon sx={{ width: 24, height: 24, color: '#4F5C70' }} />
-        </IconButton>
-        <Typography sx={{ color: '#4F5C70', fontSize: 16, mr: '16px' }}>
+        <Button
+          onClick={handleAddCredentials}
+          startIcon={<AddToPhotosIcon sx={{ width: 24, height: 24, color: '#4F5C70' }} />}
+          variant='text'
+          sx={{
+            color: '#4F5C70',
+            textTransform: 'none',
+            fontSize: 16,
+            mr: '16px'
+          }}
+        >
           Add credentials
-        </Typography>
+        </Button>
 
-        <IconButton size='small'>
+        {/* Add More menu if needed */}
+        {/* <Button variant='text' sx={{ minWidth: 'auto' }}>
           <MoreVertIcon />
-        </IconButton>
+        </Button> */}
       </Box>
 
-      <Box>
-        {experiences.map((exp: WorkExperience, index: number) => (
-          <Box
-            key={exp.id}
-            sx={{
-              alignSelf: 'stretch',
-              background: '#F7F9FC',
-              borderRadius: 4,
-              p: '13px',
-              mb: '12px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between'
-            }}
-          >
+      {isSectionVisible && (
+        <Box sx={{ mb: '12px' }}>
+          {experiences.map((exp: WorkExperience, index: number) => (
             <Box
-              sx={{ display: 'flex', alignItems: 'center', flex: 1 }}
-              onClick={() => handleView(exp)}
+              key={exp.id}
+              sx={{
+                alignSelf: 'stretch',
+                background: '#F7F9FC',
+                borderRadius: 4,
+                p: '13px',
+                mb: '12px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between'
+              }}
             >
-              <Box sx={{ flex: 1, mr: 1 }}>
-                <Typography sx={{ color: '#78809A', fontSize: 14, mb: '5px' }}>
-                  {exp.employmentHistoryItem.organization.tradeName}
-                </Typography>
-                <Typography sx={{ color: '#2D2D47', fontSize: 16 }}>
-                  {exp.employmentHistoryItem.title}
+              <Box
+                sx={{ display: 'flex', alignItems: 'center', flex: 1 }}
+                onClick={() => handleView(exp)}
+              >
+                <Box sx={{ flex: 1, mr: 1 }}>
+                  <Typography sx={{ color: '#78809A', fontSize: 14, mb: '5px' }}>
+                    {exp.employmentHistoryItem.organization.tradeName}
+                  </Typography>
+                  <Typography sx={{ color: '#2D2D47', fontSize: 16 }}>
+                    {exp.employmentHistoryItem.title}
+                  </Typography>
+                </Box>
+                <Typography
+                  sx={{
+                    color: '#78809A',
+                    fontSize: 14,
+                    mr: '20px'
+                  }}
+                >
+                  {exp.employmentHistoryItem.duration}
                 </Typography>
               </Box>
+
+              <Button
+                onClick={event => handleMenuClick(event, index)}
+                variant='text'
+                sx={{ minWidth: 'auto' }}
+              >
+                <MoreVertIcon />
+              </Button>
+            </Box>
+          ))}
+
+          <Menu
+            anchorEl={anchorEl}
+            open={menuOpen}
+            onClose={handleMenuClose}
+            anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+            transformOrigin={{ vertical: 'top', horizontal: 'left' }}
+          >
+            {menuIndex != null && (
+              <>
+                <MenuItem
+                  onClick={() => {
+                    handleMenuClose()
+                    handleView(experiences[menuIndex])
+                  }}
+                >
+                  View
+                </MenuItem>
+                <MenuItem
+                  onClick={() => {
+                    handleMenuClose()
+                    handleEdit(experiences[menuIndex])
+                  }}
+                >
+                  <EditIcon sx={{ width: 24, height: 24, mr: 1 }} />
+                  Edit
+                </MenuItem>
+                <MenuItem
+                  onClick={() => {
+                    handleMenuClose()
+                    handleDelete(experiences[menuIndex].id)
+                  }}
+                >
+                  <DeleteIcon sx={{ width: 24, height: 24, mr: 1 }} />
+                  Delete
+                </MenuItem>
+                <MenuItem
+                  onClick={() => {
+                    handleMenuClose()
+                    handleMoveUp(menuIndex)
+                  }}
+                >
+                  <KeyboardArrowUpIcon sx={{ width: 24, height: 24, mr: 1 }} />
+                  Move Up
+                </MenuItem>
+                <MenuItem
+                  onClick={() => {
+                    handleMenuClose()
+                    handleMoveDown(menuIndex)
+                  }}
+                >
+                  <KeyboardArrowDownIcon sx={{ width: 24, height: 24, mr: 1 }} />
+                  Move Down
+                </MenuItem>
+              </>
+            )}
+          </Menu>
+
+          {experiences.length === 0 && !isAdding && (
+            <Box
+              onClick={handleAddExperience}
+              sx={{
+                alignSelf: 'stretch',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                background: '#F7F9FC',
+                borderRadius: '6px',
+                border: 'none',
+                height: '86px',
+                cursor: 'pointer',
+                '&:hover': { background: '#F0F4FA' }
+              }}
+            >
               <Typography
                 sx={{
-                  color: '#78809A',
-                  fontSize: 14,
-                  mr: '20px'
+                  fontWeight: 500,
+                  color: '#2E2E48',
+                  fontSize: 16
                 }}
               >
-                {exp.employmentHistoryItem.duration}
+                + Add Experience
               </Typography>
             </Box>
-
-            <Box>
-              <IconButton size='small' onClick={event => handleMenuClick(event, index)}>
-                <MoreVertIcon />
-              </IconButton>
-            </Box>
-          </Box>
-        ))}
-
-        <Menu
-          anchorEl={anchorEl}
-          open={menuOpen}
-          onClose={handleMenuClose}
-          anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
-          transformOrigin={{ vertical: 'top', horizontal: 'left' }}
-        >
-          {menuIndex != null && (
-            <>
-              <MenuItem
-                onClick={() => {
-                  handleMenuClose()
-                  handleView(experiences[menuIndex])
-                }}
-              >
-                View
-              </MenuItem>
-              <MenuItem
-                onClick={() => {
-                  handleMenuClose()
-                  handleEdit(experiences[menuIndex])
-                }}
-              >
-                <EditIcon sx={{ width: 24, height: 24, mr: 1 }} />
-                Edit
-              </MenuItem>
-              <MenuItem
-                onClick={() => {
-                  handleMenuClose()
-                  handleDelete(experiences[menuIndex].id)
-                }}
-              >
-                <DeleteIcon sx={{ width: 24, height: 24, mr: 1 }} />
-                Delete
-              </MenuItem>
-              <MenuItem
-                onClick={() => {
-                  handleMenuClose()
-                  handleMoveUp(menuIndex)
-                }}
-              >
-                <KeyboardArrowUpIcon sx={{ width: 24, height: 24, mr: 1 }} />
-                Move Up
-              </MenuItem>
-              <MenuItem
-                onClick={() => {
-                  handleMenuClose()
-                  handleMoveDown(menuIndex)
-                }}
-              >
-                <KeyboardArrowDownIcon sx={{ width: 24, height: 24, mr: 1 }} />
-                Move Down
-              </MenuItem>
-            </>
           )}
-        </Menu>
-      </Box>
 
-      {experiences.length === 0 && !isAdding && (
-        <Box
-          onClick={handleAddExperience}
-          sx={{
-            alignSelf: 'stretch',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            background: '#F7F9FC',
-            borderRadius: 6,
-            border: 'none',
-            height: '86px',
-            cursor: 'pointer',
-            '&:hover': { background: '#F0F4FA' }
-          }}
-        >
-          <Typography
-            sx={{
-              fontWeight: 500,
-              color: '#2E2E48',
-              fontSize: 16
-            }}
-          >
-            + Add Experience
-          </Typography>
-        </Box>
-      )}
-
-      {experiences.length > 0 && !isAdding && (
-        <Box
-          sx={{
-            width: 176,
-            height: 46,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            background: '#F7F9FC',
-            borderRadius: 4,
-            px: 2,
-            cursor: 'pointer',
-            '&:hover': { background: '#F0F4FA' }
-          }}
-          onClick={handleAddExperience}
-        >
-          <Typography
-            sx={{
-              fontWeight: 500,
-              color: '#2E2E48',
-              fontSize: 14,
-              flex: 1
-            }}
-          >
-            Add Experience
-          </Typography>
-          <AddCircleOutlineIcon
-            sx={{ mr: '14px', width: 30, height: 30, color: '#78809A' }}
-          />
+          {experiences.length > 0 && !isAdding && (
+            <Box
+              sx={{
+                width: 176,
+                height: 46,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                background: '#F7F9FC',
+                borderRadius: 4,
+                px: 2,
+                cursor: 'pointer',
+                '&:hover': { background: '#F0F4FA' }
+              }}
+              onClick={handleAddExperience}
+            >
+              <Typography
+                sx={{
+                  fontWeight: 500,
+                  color: '#2E2E48',
+                  fontSize: 14,
+                  flex: 1
+                }}
+              >
+                Add Experience
+              </Typography>
+              <AddCircleOutlineIcon
+                sx={{ mr: '14px', width: 30, height: 30, color: '#78809A' }}
+              />
+            </Box>
+          )}
         </Box>
       )}
 
@@ -536,13 +579,15 @@ const ExperienceSection: React.FC = () => {
                     fullWidth
                   />
                   {formData.jobLevels.length > 1 && (
-                    <IconButton
+                    <Button
                       color='error'
                       onClick={() => handleRemoveJobLevel(level.id)}
                       aria-label='remove job level'
+                      variant='text'
+                      sx={{ minWidth: 'auto' }}
                     >
                       <DeleteIcon fontSize='small' />
-                    </IconButton>
+                    </Button>
                   )}
                 </Box>
               ))}
