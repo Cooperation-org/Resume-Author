@@ -1,14 +1,15 @@
-import { Box, Typography, Button } from "@mui/material";
+import { Box, Typography } from "@mui/material";
 import { styled } from "@mui/system";
+import { useAuth0 } from "@auth0/auth0-react";
 
-const InnerContainer = styled(Box)(({ theme }) => ({
+const InnerContainer = styled(Box)(() => ({
   backgroundColor: "#FFFFFF",
   justifyContent: "space-between",
   paddingTop: "100px",
   width: "100%",
 }));
 
-const Section = styled(Box)(({ theme }) => ({
+const Section = styled(Box)(() => ({
   width: 280,
   display: "flex",
   flexDirection: "column",
@@ -23,21 +24,18 @@ const Section = styled(Box)(({ theme }) => ({
   cursor: "pointer",
 }));
 
-const StyledButton = styled(Button)(({ theme }) => ({
-  padding: "10px 15px",
-  display: "flex",
-  alignItems: "center",
-  borderRadius: 50,
-  justifyContent: "center",
-  backgroundColor: "#6B79F6",
-  "&:hover": {
-    backgroundColor: "#5A68E6",
-  },
-  color: "#FFFFFF",
-  marginTop: "10px",
-}));
-
 export default function ImportPage(props: any) {
+  const { user, isAuthenticated } = useAuth0();
+  console.log(":  LoginButton  user", user);
+
+  const { loginWithRedirect, logout } = useAuth0();
+  const handlesign = () => {
+    if (!isAuthenticated) {
+      loginWithRedirect({});
+    } else {
+      logout();
+    }
+  };
   return (
     <Box
       sx={{
@@ -113,7 +111,10 @@ export default function ImportPage(props: any) {
             </Box>
           </Section>
 
-          <Section sx={{ width: { xs: "280px", md: "430px" } }}>
+          <Section
+            onClick={handlesign}
+            sx={{ width: { xs: "280px", md: "430px" } }}
+          >
             <Typography
               variant="h6"
               sx={{ color: "#07142B", fontWeight: "bold" }}
@@ -138,19 +139,6 @@ export default function ImportPage(props: any) {
           </Section>
         </Box>
       </InnerContainer>
-      <Box
-        sx={{
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "flex-end",
-          backgroundColor: "#FFFFFF",
-          boxShadow: "4px -4px 10px #1456FF40",
-          pr: "20px",
-          pb: "10px",
-        }}
-      >
-        <StyledButton onClick={() => alert("Pressed!")}>Continue</StyledButton>
-      </Box>
     </Box>
   );
 }
