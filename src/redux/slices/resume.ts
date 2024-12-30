@@ -1,16 +1,16 @@
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import { initialState } from '../../initialResumeState';
+import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
+import { initialState } from '../../initialResumeState'
 
 export interface ResumeState {
-  resume: Resume | null;
-  status: 'idle' | 'loading' | 'succeeded' | 'failed';
-  error: string | null;
-  activeSection: string | null; // tracks the section currently being edited.
-  highlightedText: string | null; // tracks the text highlighted by the user.
-  pendingVerifications: string[]; // tracks the credentials pending verification.
-  selectedCredentials: string[]; // tracks the credentials selected for linking to a section.
-  isDirty: boolean; // tracks whether the resume has unsaved changes.
-  sectionVisibility: { [key: string]: boolean }; // tracks the visibility of each section.
+  resume: Resume | null
+  status: 'idle' | 'loading' | 'succeeded' | 'failed'
+  error: string | null
+  activeSection: string | null // tracks the section currently being edited.
+  highlightedText: string | null // tracks the text highlighted by the user.
+  pendingVerifications: string[] // tracks the credentials pending verification.
+  selectedCredentials: string[] // tracks the credentials selected for linking to a section.
+  isDirty: boolean // tracks whether the resume has unsaved changes.
+  sectionVisibility: { [key: string]: boolean } // tracks the visibility of each section.
 }
 
 export const fetchResume = createAsyncThunk(
@@ -18,103 +18,102 @@ export const fetchResume = createAsyncThunk(
   async (resumeId: string) => {
     // get the resume from Google drive if it exists
   }
-);
+)
 
 export const saveResume = createAsyncThunk(
   'resume/saveResume',
   async (resume: Resume) => {
     // save the resume to Google drive
   }
-);
+)
 
 export const linkCredential = createAsyncThunk(
   'resume/linkCredential',
   async ({
     resumeId,
     sectionId,
-    credential,
+    credential
   }: {
-    resumeId: string;
-    sectionId: string;
-    credential: VerificationCredential;
+    resumeId: string
+    sectionId: string
+    credential: VerificationCredential
   }) => {
     // link the credential to the resume section
   }
-);
+)
 
 const resumeSlice = createSlice({
   name: 'resume',
   initialState,
   reducers: {
     setActiveSection: (state, action) => {
-      state.activeSection = action.payload as string;
+      state.activeSection = action.payload as string
     },
     setHighlightedText: (state, action) => {
-      state.highlightedText = action.payload;
+      state.highlightedText = action.payload
     },
     updateSection: (state, action) => {
-      if (!state.resume) return;
+      if (!state.resume) return
 
-      const { sectionId, content } = action.payload;
+      const { sectionId, content } = action.payload
 
       if (sectionId in state.resume) {
-        const section = state.resume[sectionId as keyof Resume];
+        const section = state.resume[sectionId as keyof Resume]
 
         if (section && typeof section === 'object' && 'items' in section) {
           // If the content has an 'items' property, update it properly
-          (section as any).items = content.items || [];
+          ;(section as any).items = content.items || []
         } else {
           // Otherwise, directly update the section
-          (state.resume as any)[sectionId] = content;
+          ;(state.resume as any)[sectionId] = content
         }
-        state.isDirty = true;
+        state.isDirty = true
       }
     },
     removeSection: (state, action) => {
-      if (!state.resume) return;
-      const sectionId = action.payload;
+      if (!state.resume) return
+      const sectionId = action.payload
       if (sectionId in state.resume) {
-        delete state.resume[sectionId as keyof Resume];
-        state.isDirty = true;
+        delete state.resume[sectionId as keyof Resume]
+        state.isDirty = true
       }
     },
     setSectionVisibility: (state, action) => {
-      state.sectionVisibility[action.payload] =
-        !state.sectionVisibility[action.payload];
+      state.sectionVisibility[action.payload] = !state.sectionVisibility[action.payload]
     },
     toggleSectionVisibility: (state, action) => {
-      if (!state.resume) return;
-      const section = state.resume[action.payload as keyof Resume] as any;
+      if (!state.resume) return
+      const section = state.resume[action.payload as keyof Resume] as any
       if (section && 'isVisible' in section) {
-        section.isVisible = !section.isVisible;
-        state.isDirty = true;
+        section.isVisible = !section.isVisible
+        state.isDirty = true
       }
     },
     selectCredential: (state, action) => {
-      state.selectedCredentials.push(action.payload);
+      state.selectedCredentials.push(action.payload)
     },
     unselectCredential: (state, action) => {
       state.selectedCredentials = state.selectedCredentials.filter(
         id => id !== action.payload
-      );
+      )
     },
     addPendingVerification: (state, action) => {
-      state.pendingVerifications.push(action.payload);
+      state.pendingVerifications.push(action.payload)
     },
     removePendingVerification: (state, action) => {
       state.pendingVerifications = state.pendingVerifications.filter(
         id => id !== action.payload
-      );
+      )
     },
     resetDirtyState: state => {
-      state.isDirty = false;
+      state.isDirty = false
     },
     setSelectedResume: (state, action) => {
-      state.resume = action.payload; // Set the selected resume as the current resume
-      state.isDirty = false; // Reset the dirty state
-    },
-  },
-});
+      state.resume = action.payload // Set the selected resume as the current resume
+      state.isDirty = false // Reset the dirty state
+    }
+  }
+})
 
 export const {
   setActiveSection,
@@ -128,7 +127,7 @@ export const {
   addPendingVerification,
   removePendingVerification,
   resetDirtyState,
-  setSelectedResume, // Exported here
-} = resumeSlice.actions;
+  setSelectedResume // Exported here
+} = resumeSlice.actions
 
-export default resumeSlice.reducer;
+export default resumeSlice.reducer

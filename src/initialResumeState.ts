@@ -1,4 +1,4 @@
-import { ResumeState } from './redux/slices/resume';
+import { ResumeState } from './redux/slices/resume'
 
 export const initialState: ResumeState = {
   resume: {
@@ -14,48 +14,48 @@ export const initialState: ResumeState = {
         city: '',
         state: '',
         country: '',
-        postalCode: '',
+        postalCode: ''
       },
       socialLinks: {
         linkedin: '',
         github: '',
         portfolio: '',
-        twitter: '',
-      },
+        twitter: ''
+      }
     },
     summary: '',
     experience: {
-      items: [],
+      items: []
     },
     education: {
-      items: [],
+      items: []
     },
     skills: {
-      items: [],
+      items: []
     },
 
     awards: {
-      items: [],
+      items: []
     },
     publications: {
-      items: [],
+      items: []
     },
     certifications: {
-      items: [],
+      items: []
     },
     professionalAffiliations: {
-      items: [],
+      items: []
     },
     volunteerWork: {
-      items: [],
+      items: []
     },
     hobbiesAndInterests: [],
     languages: {
-      items: [],
+      items: []
     },
     testimonials: {
-      items: [],
-    },
+      items: []
+    }
   },
   status: 'idle',
   error: null,
@@ -76,7 +76,7 @@ export const initialState: ResumeState = {
     professionalAffiliations: true,
     volunteerWork: true,
     languages: true,
-    testimonials: true,
+    testimonials: true
   },
-  selectedCredentials: [],
-};
+  selectedCredentials: []
+}

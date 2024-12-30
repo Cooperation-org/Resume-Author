@@ -1,23 +1,21 @@
-import React from 'react';
-import ResumeEditor from '../components/Editor';
-import PrevResumesList from '../components/ResumeList';
+import React from 'react'
+import ResumeEditor from '../components/Editor'
+import PrevResumesList from '../components/ResumeList'
 
 const Resume = () => {
-  const [open, setOpen] = React.useState(true);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [open, setOpen] = React.useState(true) //NOSONAR
 
   const handleClose = () => {
-    setOpen(false);
-  };
+    setOpen(false)
+  }
 
   return (
     <div>
-      <PrevResumesList
-        open={false}
-        onClose={handleClose}
-      />
+      <PrevResumesList open={false} onClose={handleClose} />
       <ResumeEditor />
     </div>
-  );
-};
+  )
+}
 
-export default Resume;
+export default Resume
