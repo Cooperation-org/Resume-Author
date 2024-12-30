@@ -1,7 +1,7 @@
-import React from 'react';
-import { Box } from '@mui/material';
-import Nav from '../components/Nav';
-import Hero from '../components/Hero';
+import React from 'react'
+import { Box } from '@mui/material'
+import Nav from '../components/Nav'
+import Hero from '../components/Hero'
 
 const Landing: React.FC = () => {
   return (
@@ -9,7 +9,7 @@ const Landing: React.FC = () => {
       <Nav />
       <Hero />
     </Box>
-  );
-};
+  )
+}
 
-export default Landing;
+export default Landing

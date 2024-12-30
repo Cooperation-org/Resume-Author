@@ -1,189 +1,189 @@
 // Base Interfaces for VC
 interface IssuerInfo {
-  id: string;
-  name: string;
-  type: 'organization' | 'institution' | 'individual';
-  verificationURL?: string;
-  logo?: string;
+  id: string
+  name: string
+  type: 'organization' | 'institution' | 'individual'
+  verificationURL?: string
+  logo?: string
 }
 
 interface VerificationCredential {
-  vcId?: string; // Google Drive ID OR DID if using decentralized storage
-  vcDid?: string; // DID if using decentralized storage
-  issuer: IssuerInfo;
-  dateVerified: string;
-  expiryDate?: string;
-  status: 'valid' | 'expired' | 'revoked';
+  vcId?: string // Google Drive ID OR DID if using decentralized storage
+  vcDid?: string // DID if using decentralized storage
+  issuer: IssuerInfo
+  dateVerified: string
+  expiryDate?: string
+  status: 'valid' | 'expired' | 'revoked'
 }
 
 interface VerifiableItem {
-  id: string;
-  verificationStatus: 'unverified' | 'pending' | 'verified';
-  verifiedCredentials?: VerificationCredential[];
+  id: string
+  verificationStatus: 'unverified' | 'pending' | 'verified'
+  verifiedCredentials?: VerificationCredential[]
 
-  isVisible?: boolean;
+  isVisible?: boolean
 }
 
 // Resume Section Interfaces
 interface Contact {
-  fullName: string;
-  email: string;
-  phone?: string;
+  fullName: string
+  email: string
+  phone?: string
   location?: {
-    street?: string;
-    city: string;
-    state?: string;
-    country: string;
-    postalCode?: string;
-  };
+    street?: string
+    city: string
+    state?: string
+    country: string
+    postalCode?: string
+  }
   socialLinks?: {
-    linkedin?: string;
-    github?: string;
-    portfolio?: string;
-    twitter?: string;
-    [key: string]: string | undefined;
-  };
+    linkedin?: string
+    github?: string
+    portfolio?: string
+    twitter?: string
+    [key: string]: string | undefined
+  }
 }
 
 interface WorkExperience extends VerifiableItem {
-  company: string;
-  position: string;
-  startDate: string;
-  endDate?: string;
-  location?: string;
-  description: string;
-  achievements: string[];
+  company: string
+  position: string
+  startDate: string
+  endDate?: string
+  location?: string
+  description: string
+  achievements: string[]
 }
 
 interface Education extends VerifiableItem {
-  institution: string;
-  degree: string;
-  field: string;
-  startDate: string;
-  endDate?: string;
-  location?: string;
-  gpa?: string;
-  honors?: string[];
-  thesis?: string;
-  relevantCourses?: string[];
+  institution: string
+  degree: string
+  field: string
+  startDate: string
+  endDate?: string
+  location?: string
+  gpa?: string
+  honors?: string[]
+  thesis?: string
+  relevantCourses?: string[]
 }
 
 interface Skill extends VerifiableItem {
-  name: string;
-  category?: string;
-  level?: 'Beginner' | 'Intermediate' | 'Advanced' | 'Expert';
-  yearsOfExperience?: number;
+  name: string
+  category?: string
+  level?: 'Beginner' | 'Intermediate' | 'Advanced' | 'Expert'
+  yearsOfExperience?: number
 }
 
 interface Conference extends VerifiableItem {
-  name: string;
-  role: 'Attendee' | 'Speaker' | 'Organizer' | 'Presenter' | 'Panelist';
-  date: string;
-  location: string;
-  description?: string;
-  presentationTitle?: string;
-  url?: string;
+  name: string
+  role: 'Attendee' | 'Speaker' | 'Organizer' | 'Presenter' | 'Panelist'
+  date: string
+  location: string
+  description?: string
+  presentationTitle?: string
+  url?: string
 }
 
 interface Award extends VerifiableItem {
-  title: string;
-  issuer: string;
-  date: string;
-  description?: string;
-  recognition?: string;
+  title: string
+  issuer: string
+  date: string
+  description?: string
+  recognition?: string
 }
 
 interface Publication extends VerifiableItem {
-  title: string;
-  type: 'Journal' | 'Conference' | 'Book' | 'Article' | 'Patent' | 'Other';
-  publishedDate: string;
-  publisher: string;
-  authors: string[];
-  url?: string;
-  doi?: string;
-  citation?: string;
-  abstract?: string;
-  impact?: string;
+  title: string
+  type: 'Journal' | 'Conference' | 'Book' | 'Article' | 'Patent' | 'Other'
+  publishedDate: string
+  publisher: string
+  authors: string[]
+  url?: string
+  doi?: string
+  citation?: string
+  abstract?: string
+  impact?: string
 }
 
 interface Certification extends VerifiableItem {
-  name: string;
-  issuer: string;
-  issueDate: string;
-  expiryDate?: string;
-  credentialId?: string;
-  credentialURL?: string;
-  score?: string;
+  name: string
+  issuer: string
+  issueDate: string
+  expiryDate?: string
+  credentialId?: string
+  credentialURL?: string
+  score?: string
 }
 
 interface ProfessionalAffiliation extends VerifiableItem {
-  organization: string;
-  role?: string;
-  startDate: string;
-  endDate?: string;
-  membershipId?: string;
-  description?: string;
-  benefits?: string[];
+  organization: string
+  role?: string
+  startDate: string
+  endDate?: string
+  membershipId?: string
+  description?: string
+  benefits?: string[]
 }
 
 interface VolunteerWork extends VerifiableItem {
-  organization: string;
-  role: string;
-  startDate: string;
-  endDate?: string;
-  location?: string;
-  description?: string;
-  achievements?: string[];
-  cause?: string;
+  organization: string
+  role: string
+  startDate: string
+  endDate?: string
+  location?: string
+  description?: string
+  achievements?: string[]
+  cause?: string
 }
 
 interface Language extends VerifiableItem {
-  name: string;
-  proficiency: 'Basic' | 'Intermediate' | 'Advanced' | 'Native';
-  certification?: string;
-  writingLevel?: string;
-  speakingLevel?: string;
-  readingLevel?: string;
+  name: string
+  proficiency: 'Basic' | 'Intermediate' | 'Advanced' | 'Native'
+  certification?: string
+  writingLevel?: string
+  speakingLevel?: string
+  readingLevel?: string
 }
 
 // Main Resume Interface
 interface Resume {
-  id: string;
-  lastUpdated: string;
-  version?: number;
+  id: string
+  lastUpdated: string
+  version?: number
 
-  contact: Contact;
-  summary: string;
+  contact: Contact
+  summary: string
 
   experience: {
-    items: WorkExperience[];
-  };
+    items: WorkExperience[]
+  }
   education: {
-    items: Education[];
-  };
+    items: Education[]
+  }
   skills: {
-    items: Skill[];
-  };
+    items: Skill[]
+  }
   awards: {
-    items: Award[];
-  };
+    items: Award[]
+  }
   publications: {
-    items: Publication[];
-  };
+    items: Publication[]
+  }
   certifications: {
-    items: Certification[];
-  };
+    items: Certification[]
+  }
   professionalAffiliations: {
-    items: ProfessionalAffiliation[];
-  };
+    items: ProfessionalAffiliation[]
+  }
   volunteerWork: {
-    items: VolunteerWork[];
-  };
-  hobbiesAndInterests: string[];
+    items: VolunteerWork[]
+  }
+  hobbiesAndInterests: string[]
   languages: {
-    items: Language[];
-  };
+    items: Language[]
+  }
   testimonials: {
-    items: Testimonial[];
-  };
+    items: Testimonial[]
+  }
 }
