@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react'
 import {
   Box,
   Button,
-  TextField,
   Typography,
   Divider,
   List,
@@ -13,9 +12,19 @@ import {
 import { Edit, Eye, Save, Trash2, EyeOff, Plus } from 'lucide-react'
 import { useDispatch, useSelector } from 'react-redux'
 import { updateSection } from '../../redux/slices/resume'
+import TextEditor from '../TextEditor/Texteditor'
 
 interface SectionContentProps {
   sectionId: keyof Resume
+}
+
+const cleanHTML = (htmlContent: string) => {
+  return htmlContent
+    .replace(/<p><br><\/p>/g, '')
+    .replace(/<p><\/p>/g, '')
+    .replace(/<br>/g, '')
+    .replace(/class="[^"]*"/g, '')
+    .replace(/style="[^"]*"/g, '')
 }
 
 const SectionContent: React.FC<SectionContentProps> = ({ sectionId }) => {
@@ -28,8 +37,8 @@ const SectionContent: React.FC<SectionContentProps> = ({ sectionId }) => {
   const isListBased = Array.isArray(sectionData?.items)
 
   // Local states
-  const [content, setContent] = useState(sectionData || '')
-  const [items, setItems] = useState(sectionData?.items || [])
+  const [content, setContent] = useState<string>(sectionData || '')
+  const [items, setItems] = useState<string[]>(sectionData?.items || [])
   const [editing, setEditing] = useState(false)
   const [newItemValue, setNewItemValue] = useState('')
   const [isVisible, setIsVisible] = useState(true)
@@ -60,8 +69,9 @@ const SectionContent: React.FC<SectionContentProps> = ({ sectionId }) => {
 
   // Add new item (for list-based sections)
   const handleAddNewItem = () => {
-    if (!newItemValue.trim() || items.includes(newItemValue.trim())) return
-    const updatedItems = [...items, newItemValue.trim()]
+    const trimmedVal = newItemValue.trim()
+    if (!trimmedVal) return
+    const updatedItems = [...items, trimmedVal]
     setItems(updatedItems)
     dispatch(updateSection({ sectionId, content: { items: updatedItems } }))
     setNewItemValue('')
@@ -77,7 +87,7 @@ const SectionContent: React.FC<SectionContentProps> = ({ sectionId }) => {
 
   // Remove an item
   const handleRemoveItem = (index: number) => {
-    const updatedItems = items.filter((_: any, i: number) => i !== index)
+    const updatedItems = items.filter((_, i) => i !== index)
     setItems(updatedItems)
     dispatch(updateSection({ sectionId, content: { items: updatedItems } }))
   }
@@ -111,18 +121,15 @@ const SectionContent: React.FC<SectionContentProps> = ({ sectionId }) => {
       {isStringBased && isVisible && (
         <Box>
           {!editing ? (
-            <Typography variant='body1'>
-              {content || `No ${sectionId} added yet.`}
-            </Typography>
+            <Box sx={{ whiteSpace: 'pre-wrap' }}>
+              <span
+                dangerouslySetInnerHTML={{
+                  __html: content ? cleanHTML(content) : `No ${sectionId} added yet.`
+                }}
+              />
+            </Box>
           ) : (
-            <TextField
-              fullWidth
-              multiline
-              rows={4}
-              value={content}
-              onChange={e => setContent(e.target.value)}
-              placeholder={`Enter ${sectionId} content here...`}
-            />
+            <TextEditor value={content} onChange={setContent} />
           )}
         </Box>
       )}
@@ -142,23 +149,27 @@ const SectionContent: React.FC<SectionContentProps> = ({ sectionId }) => {
             <List>
               {items.map((item: string, index: number) => (
                 <ListItem
-                  key={item} // Changed from key={index} to key={item}
-                  sx={{ display: 'flex', alignItems: 'center', gap: 2 }}
+                  key={item}
+                  sx={{ display: 'flex', alignItems: 'flex-start', gap: 2 }}
                 >
-                  <ListItemText
-                    primary={
-                      editing ? (
-                        <TextField
-                          fullWidth
-                          value={item}
-                          onChange={e => handleUpdateItem(index, e.target.value)}
-                          autoFocus
+                  {editing ? (
+                    <Box sx={{ width: '100%' }}>
+                      <TextEditor
+                        value={item}
+                        onChange={(val: string) => handleUpdateItem(index, val)}
+                      />
+                    </Box>
+                  ) : (
+                    <ListItemText
+                      primary={
+                        <Box
+                          sx={{ whiteSpace: 'pre-wrap' }}
+                          dangerouslySetInnerHTML={{ __html: cleanHTML(item) }}
                         />
-                      ) : (
-                        item
-                      )
-                    }
-                  />
+                      }
+                    />
+                  )}
+
                   {editing && (
                     <IconButton onClick={() => handleRemoveItem(index)}>
                       <Trash2 size={16} />
@@ -171,16 +182,11 @@ const SectionContent: React.FC<SectionContentProps> = ({ sectionId }) => {
 
           {/* Add New Item */}
           {editing && (
-            <Box sx={{ display: 'flex', gap: 2, mt: 2 }}>
-              <TextField
-                fullWidth
-                placeholder='Add new item'
-                value={newItemValue}
-                onChange={e => setNewItemValue(e.target.value)}
-              />
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 2 }}>
+              <TextEditor value={newItemValue} onChange={setNewItemValue} />
               <Button
                 variant='outlined'
-                sx={{ borderRadius: 5 }}
+                sx={{ borderRadius: 5, alignSelf: 'flex-start' }}
                 startIcon={<Plus />}
                 onClick={handleAddNewItem}
               >
