@@ -171,11 +171,9 @@ const LandingPage = () => {
               textAlign: 'center'
             }}
           >
-            The T3 Innovation Network is dedicated to enabling the digital transformation
-            of the talent marketplace by promoting data interoperability and harmonization
-            across diverse stakeholders. Our mission is to make all learning count, enable
-            competencies and skills to function like currency, and empower learners and
-            workers with data.
+            The T3 Innovation Network is exploring emerging technologies and standards in
+            the talent marketplace to create more equitable and effective learning and
+            career pathways.
           </Typography>
         </Container>
       </Box>
@@ -260,7 +258,7 @@ const LandingPage = () => {
                     }
                   }}
                 >
-                  Learn More
+                  Try Now
                 </Button>
               </CardContent>
             </Card>
