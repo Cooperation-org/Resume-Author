@@ -13,87 +13,155 @@ import {
 import { Edit, Eye, Save, Trash2, EyeOff, Plus } from 'lucide-react'
 import { useDispatch, useSelector } from 'react-redux'
 import { updateSection } from '../../redux/slices/resume'
+import CredentialDialog from '../CredentialDialog'
+import { SVGAdd } from '../../assets/svgs'
 
 interface SectionContentProps {
   sectionId: keyof Resume
 }
 
+// Define types for our items
+type CredentialItem = {
+  text: string
+  credentialId: string
+  verified: boolean
+}
+
+type SectionItem = string | CredentialItem
+
 const SectionContent: React.FC<SectionContentProps> = ({ sectionId }) => {
   const dispatch = useDispatch()
   const resume = useSelector((state: any) => state.resume.resume)
+  const claims = useSelector((state: any) => state.resume.claims)
   const sectionData = resume[sectionId]
 
-  // Determine section type
   const isStringBased = typeof sectionData === 'string'
   const isListBased = Array.isArray(sectionData?.items)
 
-  // Local states
   const [content, setContent] = useState(sectionData || '')
-  const [items, setItems] = useState(sectionData?.items || [])
+  const [items, setItems] = useState<SectionItem[]>(sectionData?.items || [])
   const [editing, setEditing] = useState(false)
   const [newItemValue, setNewItemValue] = useState('')
   const [isVisible, setIsVisible] = useState(true)
+  const [isCredentialDialogOpen, setIsCredentialDialogOpen] = useState(false)
 
-  // Sync local state with Redux state
   useEffect(() => {
     if (isListBased) {
-      setItems([...sectionData.items])
+      setItems(sectionData.items || [])
     } else {
       setContent(sectionData || '')
     }
   }, [sectionData, isListBased])
 
-  // Toggle editing
   const toggleEdit = () => {
     if (editing) {
-      // Save changes
       const updatedContent = isStringBased ? content : { items }
       dispatch(updateSection({ sectionId, content: updatedContent }))
     }
     setEditing(!editing)
   }
 
-  // Toggle visibility
   const toggleVisibility = () => {
     setIsVisible(!isVisible)
   }
 
-  // Add new item (for list-based sections)
   const handleAddNewItem = () => {
-    if (!newItemValue.trim() || items.includes(newItemValue.trim())) return
+    if (!newItemValue.trim()) return
     const updatedItems = [...items, newItemValue.trim()]
     setItems(updatedItems)
     dispatch(updateSection({ sectionId, content: { items: updatedItems } }))
     setNewItemValue('')
   }
 
-  // Update an existing item
-  const handleUpdateItem = (index: number, value: string) => {
+  const handleUpdateItem = (index: number, newValue: string) => {
     const updatedItems = [...items]
-    updatedItems[index] = value
+    const currentItem = updatedItems[index]
+
+    if (typeof currentItem === 'object') {
+      updatedItems[index] = {
+        ...currentItem,
+        text: newValue
+      }
+    } else {
+      updatedItems[index] = newValue
+    }
+
     setItems(updatedItems)
     dispatch(updateSection({ sectionId, content: { items: updatedItems } }))
   }
 
-  // Remove an item
   const handleRemoveItem = (index: number) => {
-    const updatedItems = items.filter((_: any, i: number) => i !== index)
+    const updatedItems = items.filter((_, i) => i !== index)
     setItems(updatedItems)
     dispatch(updateSection({ sectionId, content: { items: updatedItems } }))
+  }
+
+  const handleCredentialsSelected = (selectedClaims: any[]) => {
+    const newCredentialItems: CredentialItem[] = selectedClaims.map(claim => ({
+      text: `${claim[0]?.data?.credentialSubject?.achievement[0]?.name} - ${claim[0]?.data?.credentialSubject?.name}`,
+      credentialId: claim[0]?.id,
+      verified: true
+    }))
+
+    const updatedItems = [...items, ...newCredentialItems]
+    setItems(updatedItems)
+    dispatch(updateSection({ sectionId, content: { items: updatedItems } }))
+  }
+
+  const renderListItem = (item: SectionItem, index: number) => {
+    const itemText = typeof item === 'string' ? item : item.text
+    const isCredential = typeof item === 'object'
+
+    return (
+      <ListItem
+        key={isCredential ? item.credentialId : index}
+        sx={{ display: 'flex', alignItems: 'center', gap: 2 }}
+      >
+        <ListItemText
+          primary={
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+              {editing ? (
+                <TextField
+                  fullWidth
+                  value={itemText}
+                  onChange={(e) => handleUpdateItem(index, e.target.value)}
+                />
+              ) : (
+                <>
+                  <Typography>{itemText}</Typography>
+                  {isCredential && (
+                    // we can remove it or use it as openCreds
+                    <Typography 
+                      component="span"
+                      sx={{
+                        bgcolor: 'success.main',
+                        color: 'white',
+                        px: 1,
+                        py: 0.5,
+                        borderRadius: 1,
+                        fontSize: '0.75rem'
+                      }}
+                    >
+                      Verified  
+                    </Typography>
+                  )}
+                </>
+              )}
+            </Box>
+          }
+        />
+        <IconButton onClick={() => handleRemoveItem(index)}>
+          <Trash2 size={16} />
+        </IconButton>
+        
+      </ListItem>
+    )
   }
 
   return (
     <Box>
-      {/* Section Header */}
-      <Box
-        sx={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          mb: 2
-        }}
-      >
-        <Typography variant='h6' fontWeight='600'>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+        <Typography variant="h6" fontWeight="600">
           {sectionId.charAt(0).toUpperCase() + sectionId.slice(1)}
         </Typography>
         <Box sx={{ display: 'flex', gap: 1 }}>
@@ -103,93 +171,74 @@ const SectionContent: React.FC<SectionContentProps> = ({ sectionId }) => {
           <IconButton onClick={toggleVisibility}>
             {isVisible ? <Eye size={16} /> : <EyeOff size={16} />}
           </IconButton>
+          <IconButton onClick={() => setIsCredentialDialogOpen(true)}>
+            <SVGAdd />
+          </IconButton>
         </Box>
       </Box>
       <Divider sx={{ mb: 2 }} />
 
-      {/* String-based Section */}
-      {isStringBased && isVisible && (
-        <Box>
-          {!editing ? (
-            <Typography variant='body1'>
-              {content || `No ${sectionId} added yet.`}
-            </Typography>
+      {isVisible && (
+        <>
+          {isStringBased ? (
+            <Box>
+              {editing ? (
+                <TextField
+                  fullWidth
+                  multiline
+                  rows={4}
+                  value={content}
+                  onChange={(e) => setContent(e.target.value)}
+                  placeholder={`Enter ${sectionId} content here...`}
+                />
+              ) : (
+                <Typography variant="body1">
+                  {content || `No ${sectionId} added yet.`}
+                </Typography>
+              )}
+            </Box>
           ) : (
-            <TextField
-              fullWidth
-              multiline
-              rows={4}
-              value={content}
-              onChange={e => setContent(e.target.value)}
-              placeholder={`Enter ${sectionId} content here...`}
-            />
-          )}
-        </Box>
-      )}
+            <Box>
+              {items.length === 0 && !editing ? (
+                <Typography variant="body2" color="textSecondary">
+                  No {sectionId} items added yet. Click edit to add new items.
+                </Typography>
+              ) : (
+                <List>
+                  {items.map((item, index) => renderListItem(item, index))}
+                </List>
+              )}
 
-      {/* List-based Section */}
-      {isListBased && isVisible && (
-        <Box>
-          {/* Warning message when items length is zero */}
-          {items.length === 0 && !editing && (
-            <Typography variant='body2' color='textSecondary'>
-              No {sectionId} items added yet. Click edit to add new items.
-            </Typography>
-          )}
-
-          {/* List of items */}
-          {items.length > 0 && (
-            <List>
-              {items.map((item: string, index: number) => (
-                <ListItem
-                  key={item} // Changed from key={index} to key={item}
-                  sx={{ display: 'flex', alignItems: 'center', gap: 2 }}
-                >
-                  <ListItemText
-                    primary={
-                      editing ? (
-                        <TextField
-                          fullWidth
-                          value={item}
-                          onChange={e => handleUpdateItem(index, e.target.value)}
-                          autoFocus
-                        />
-                      ) : (
-                        item
-                      )
-                    }
+              {editing && (
+                <Box sx={{ display: 'flex', gap: 2, mt: 2 }}>
+                  <TextField
+                    fullWidth
+                    placeholder="Add new item"
+                    value={newItemValue}
+                    onChange={(e) => setNewItemValue(e.target.value)}
                   />
-                  {editing && (
-                    <IconButton onClick={() => handleRemoveItem(index)}>
-                      <Trash2 size={16} />
-                    </IconButton>
-                  )}
-                </ListItem>
-              ))}
-            </List>
-          )}
-
-          {/* Add New Item */}
-          {editing && (
-            <Box sx={{ display: 'flex', gap: 2, mt: 2 }}>
-              <TextField
-                fullWidth
-                placeholder='Add new item'
-                value={newItemValue}
-                onChange={e => setNewItemValue(e.target.value)}
-              />
-              <Button
-                variant='outlined'
-                sx={{ borderRadius: 5 }}
-                startIcon={<Plus />}
-                onClick={handleAddNewItem}
-              >
-                Add
-              </Button>
+                  <Button
+                    variant="outlined"
+                    sx={{ borderRadius: 5 }}
+                    startIcon={<Plus />}
+                    onClick={handleAddNewItem}
+                  >
+                    Add
+                  </Button>
+                </Box>
+              )}
             </Box>
           )}
-        </Box>
+        </>
       )}
+
+      <CredentialDialog
+        open={isCredentialDialogOpen}
+        onClose={() => setIsCredentialDialogOpen(false)}
+        claims={claims || []}
+        sectionId={sectionId}
+        onCredentialsSelected={handleCredentialsSelected}
+      />
     </Box>
   )
 }

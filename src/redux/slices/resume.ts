@@ -11,6 +11,7 @@ export interface ResumeState {
   selectedCredentials: string[] // tracks the credentials selected for linking to a section.
   isDirty: boolean // tracks whether the resume has unsaved changes.
   sectionVisibility: { [key: string]: boolean } // tracks the visibility of each section.
+  claims: any[]
 }
 
 export const fetchResume = createAsyncThunk(
@@ -48,6 +49,9 @@ const resumeSlice = createSlice({
   reducers: {
     setActiveSection: (state, action) => {
       state.activeSection = action.payload as string
+    },
+    setVCs: (state, action) => {
+      state.claims = action.payload
     },
     setHighlightedText: (state, action) => {
       state.highlightedText = action.payload
@@ -127,6 +131,7 @@ export const {
   addPendingVerification,
   removePendingVerification,
   resetDirtyState,
+  setVCs,
   setSelectedResume // Exported here
 } = resumeSlice.actions
 
