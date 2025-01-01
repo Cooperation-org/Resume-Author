@@ -37,12 +37,13 @@ export const handleRedirect = ({ navigate }: { navigate: NavigateFunction }) => 
     sameSite: 'strict',
     expires: 7
   })
+  setLocalStorage('auth', token)
 
   // Optionally, fetch user info using the token
   fetchUserInfo(token)
 
   if (navigate) {
-    navigate('/')
+    navigate('/resume/new')
   }
 }
 

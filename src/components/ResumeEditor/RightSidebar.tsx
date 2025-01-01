@@ -17,13 +17,14 @@ import {
 } from 'lucide-react'
 import useGoogleDrive from '../../hooks/useGoogleDrive'
 import { useCallback, useEffect, useState } from 'react'
-import { getCookie, removeCookie, removeLocalStorage } from '../../tools'
+import { getLocalStorage, removeCookie, removeLocalStorage } from '../../tools'
 import { login } from '../../tools/auth'
 
 const RightSidebar = () => {
   const [claims, setClaims] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
-  const accessToken = getCookie('auth_token')
+  const accessToken = getLocalStorage('auth')
+  console.log(":  RightSidebar  accessToken", accessToken)
 
   const { storage } = useGoogleDrive()
 
@@ -64,6 +65,8 @@ const RightSidebar = () => {
   const handleLogout = () => {
     removeCookie('auth_token')
     removeLocalStorage('user_info')
+    removeLocalStorage('auth')
+    setClaims([])
   }
 
   const handleGoogleLogin = () => {
