@@ -16,7 +16,7 @@ const App = () => {
         domain='dev-z2863ou7zzmrmnxc.us.auth0.com'
         clientId='PbToefw6udJDXLf0Eyf1sX3u0oqE5Dzq'
         authorizationParams={{
-          redirect_uri: window.location.origin
+          redirect_uri: `${window.location.origin}/resume/import`,
         }}
       >
         <Router>
