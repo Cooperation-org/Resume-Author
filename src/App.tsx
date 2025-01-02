@@ -7,6 +7,7 @@ import store from './redux/store'
 import Resume from './pages/resume'
 import ImportPage from './pages/importPage'
 import Error404 from './pages/error404'
+import LandingPage from './pages/allskillscoun-org'
 import './styles/App.css'
 
 const App = () => {
@@ -16,7 +17,7 @@ const App = () => {
         domain='dev-z2863ou7zzmrmnxc.us.auth0.com'
         clientId='PbToefw6udJDXLf0Eyf1sX3u0oqE5Dzq'
         authorizationParams={{
-          redirect_uri: window.location.origin
+          redirect_uri: `${window.location.origin}/resume/import`,
         }}
       >
         <Router>
@@ -25,7 +26,7 @@ const App = () => {
             <Route path='/login' element={<Login />} />
             <Route path='/resume/new' element={<Resume />} />
             <Route path='/resume/import' element={<ImportPage />} />
-
+            <Route path='/landing' element={<LandingPage />} />
             <Route path='*' element={<Error404 />} />
           </Routes>
         </Router>

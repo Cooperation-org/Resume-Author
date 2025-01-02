@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react'
 import {
   Box,
   Button,
-  TextField,
   Typography,
   Divider,
   List,
@@ -17,9 +16,19 @@ import type { ResumeState } from '../../redux/slices/resume'
 
 type ReduxResume = NonNullable<ResumeState['resume']>
 type ResumeKey = keyof ReduxResume
+import TextEditor from '../TextEditor/Texteditor'
 
 interface SectionContentProps {
   sectionId: ResumeKey
+}
+
+const cleanHTML = (htmlContent: string) => {
+  return htmlContent
+    .replace(/<p><br><\/p>/g, '')
+    .replace(/<p><\/p>/g, '')
+    .replace(/<br>/g, '')
+    .replace(/class="[^"]*"/g, '')
+    .replace(/style="[^"]*"/g, '')
 }
 
 const SectionContent: React.FC<SectionContentProps> = ({ sectionId }) => {
@@ -152,18 +161,15 @@ const SectionContent: React.FC<SectionContentProps> = ({ sectionId }) => {
       {isStringBased && isVisible && (
         <Box>
           {!editing ? (
-            <Typography variant='body1'>
-              {content || `No ${sectionIdString} added yet.`}
-            </Typography>
+            <Box sx={{ whiteSpace: 'pre-wrap' }}>
+              <span
+                dangerouslySetInnerHTML={{
+                  __html: content ? cleanHTML(content) : `No ${sectionId} added yet.`
+                }}
+              />
+            </Box>
           ) : (
-            <TextField
-              fullWidth
-              multiline
-              rows={4}
-              value={content}
-              onChange={e => setContent(e.target.value)}
-              placeholder={`Enter ${sectionIdString} content here...`}
-            />
+            <TextEditor value={content} onChange={setContent} />
           )}
         </Box>
       )}
@@ -184,22 +190,27 @@ const SectionContent: React.FC<SectionContentProps> = ({ sectionId }) => {
               {items.map((item, index) => (
                 <ListItem
                   key={item}
-                  sx={{ display: 'flex', alignItems: 'center', gap: 2 }}
+
+                  sx={{ display: 'flex', alignItems: 'flex-start', gap: 2 }}
                 >
-                  <ListItemText
-                    primary={
-                      editing ? (
-                        <TextField
-                          fullWidth
-                          value={item}
-                          onChange={e => handleUpdateItem(index, e.target.value)}
-                          autoFocus
+                  {editing ? (
+                    <Box sx={{ width: '100%' }}>
+                      <TextEditor
+                        value={item}
+                        onChange={(val: string) => handleUpdateItem(index, val)}
+                      />
+                    </Box>
+                  ) : (
+                    <ListItemText
+                      primary={
+                        <Box
+                          sx={{ whiteSpace: 'pre-wrap' }}
+                          dangerouslySetInnerHTML={{ __html: cleanHTML(item) }}
                         />
-                      ) : (
-                        item
-                      )
-                    }
-                  />
+                      }
+                    />
+                  )}
+
                   {editing && (
                     <IconButton onClick={() => handleRemoveItem(index)}>
                       <Trash2 size={16} />
@@ -212,16 +223,11 @@ const SectionContent: React.FC<SectionContentProps> = ({ sectionId }) => {
 
           {/* Add New Item */}
           {editing && (
-            <Box sx={{ display: 'flex', gap: 2, mt: 2 }}>
-              <TextField
-                fullWidth
-                placeholder='Add new item'
-                value={newItemValue}
-                onChange={e => setNewItemValue(e.target.value)}
-              />
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 2 }}>
+              <TextEditor value={newItemValue} onChange={setNewItemValue} />
               <Button
                 variant='outlined'
-                sx={{ borderRadius: 5 }}
+                sx={{ borderRadius: 5, alignSelf: 'flex-start' }}
                 startIcon={<Plus />}
                 onClick={handleAddNewItem}
               >
