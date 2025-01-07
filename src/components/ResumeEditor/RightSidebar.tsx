@@ -18,10 +18,12 @@ import {
 import { getCookie, removeCookie, removeLocalStorage } from '../../tools'
 import { login } from '../../tools/auth'
 import { useSelector } from 'react-redux'
+import { useState } from 'react'
 import { RootState } from '../../redux/store'
 
 const RightSidebar = () => {
   const { vcs, status, error } = useSelector((state: RootState) => state.vcReducer)
+
   const accessToken = getCookie('accessToken')
   const handleAuth = () => {
     if (!accessToken) {
@@ -32,6 +34,7 @@ const RightSidebar = () => {
   }
 
   const handleLogout = () => {
+    removeCookie('accessToken')
     removeCookie('accessToken')
     removeLocalStorage('user_info')
   }
@@ -104,11 +107,13 @@ const RightSidebar = () => {
       </Box>
 
       {status === 'loading' ? (
+      {status === 'loading' ? (
         <Box sx={{ display: 'flex', justifyContent: 'center', py: 6 }}>
           <CircularProgress />
         </Box>
       ) : (
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+          {vcs.map(
           {vcs.map(
             claim =>
               isValidClaim(claim) && (

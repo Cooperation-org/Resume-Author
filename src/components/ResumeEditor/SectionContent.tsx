@@ -23,15 +23,21 @@ interface SectionContentProps {
   tooltipPosition: { top: number; left: number } | null
 }
 
-// Define types for our items
-type CredentialItem = {
-  text: string
-  credentialId: string
-  verified: boolean
+const cleanHTML = (htmlContent: string) => {
+  return htmlContent
+    .replace(/<p><br><\/p>/g, '')
+    .replace(/<p><\/p>/g, '')
+    .replace(/<br>/g, '')
+    .replace(/class="[^"]*"/g, '')
+    .replace(/style="[^"]*"/g, '')
 }
 
-type SectionItem = string | CredentialItem
-
+const SectionContent: React.FC<SectionContentProps> = ({
+  sectionId,
+  highlightedText,
+  credentials,
+  tooltipPosition
+}) => {
 const SectionContent: React.FC<SectionContentProps> = ({
   sectionId,
   highlightedText,
@@ -164,6 +170,7 @@ const SectionContent: React.FC<SectionContentProps> = ({
 
   return (
     <Box sx={{ position: 'relative' }}>
+      {/* Section Header */}
       <Box
         sx={{
           display: 'flex',
