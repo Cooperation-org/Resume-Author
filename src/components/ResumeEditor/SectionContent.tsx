@@ -21,6 +21,9 @@ interface SectionContentProps {
   highlightedText: string
   credentials: string[]
   tooltipPosition: { top: number; left: number } | null
+  highlightedText: string
+  credentials: string[]
+  tooltipPosition: { top: number; left: number } | null
 }
 
 const cleanHTML = (htmlContent: string) => {
@@ -32,12 +35,6 @@ const cleanHTML = (htmlContent: string) => {
     .replace(/style="[^"]*"/g, '')
 }
 
-const SectionContent: React.FC<SectionContentProps> = ({
-  sectionId,
-  highlightedText,
-  credentials,
-  tooltipPosition
-}) => {
 const SectionContent: React.FC<SectionContentProps> = ({
   sectionId,
   highlightedText,
