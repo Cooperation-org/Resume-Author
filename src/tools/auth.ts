@@ -32,7 +32,7 @@ export const handleRedirect = ({ navigate }: { navigate: NavigateFunction }) => 
   }
 
   // Save the token in cookies
-  setCookie('auth_token', token, {
+  setCookie('accessToken', token, {
     secure: true,
     sameSite: 'strict',
     expires: 7

@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { GoogleDriveStorage } from '@cooperation/vc-storage'
-import { getLocalStorage } from '../tools'
+import { getCookie } from '../tools'
 
 interface ClaimDetail {
   data: {
@@ -25,7 +25,7 @@ interface ClaimDetail {
 }
 
 const useGoogleDrive = () => {
-  const accessToken = getLocalStorage('auth')
+  const accessToken = getCookie('accessToken')
 
   const [storage, setStorage] = useState<GoogleDriveStorage | null>(null)
 

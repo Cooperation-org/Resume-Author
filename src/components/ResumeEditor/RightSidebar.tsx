@@ -15,51 +15,14 @@ import {
   FileText,
   Sparkles
 } from 'lucide-react'
-import useGoogleDrive from '../../hooks/useGoogleDrive'
-import { useCallback, useEffect, useState } from 'react'
-import { getLocalStorage, removeCookie, removeLocalStorage } from '../../tools'
+import { getCookie, removeCookie, removeLocalStorage } from '../../tools'
 import { login } from '../../tools/auth'
-import { useDispatch } from 'react-redux'
-import { setVCs } from '../../redux/slices/resume'
+import { useSelector } from 'react-redux'
+import { RootState } from '../../redux/store'
 
 const RightSidebar = () => {
-  const dispatch = useDispatch() 
-
-  const [claims, setClaims] = useState<any[]>([])
-  const [loading, setLoading] = useState(true)
-  const accessToken = getLocalStorage('auth')
-
-  const { storage } = useGoogleDrive()
-
-  const getAllClaims = useCallback(async (): Promise<any> => {
-    const claimsData = await storage?.getAllFilesByType('VCs')
-    console.log(':  getAllClaims  claimsData', claimsData)
-    if (!claimsData?.length) return []
-    return claimsData
-  }, [storage])
-
-  const fetchClaims = useCallback(async () => {
-    try {
-      setLoading(true)
-      const claimsData = await getAllClaims()
-      const vcs = claimsData.map((file: any[]) =>
-        file.filter((f: { name: string }) => f.name !== 'RELATIONS')
-      )
-      const validVcs = vcs.filter((claim: any) => isValidClaim(claim))
-
-      setClaims(vcs)
-      dispatch(setVCs(validVcs) as any) 
-    } catch (error) {
-      console.error('Error fetching claims:', error)
-    } finally {
-      setLoading(false)
-    }
-  }, [getAllClaims, dispatch])
-
-  useEffect(() => {
-    fetchClaims()
-  }, [fetchClaims])
-
+  const { vcs, status, error } = useSelector((state: RootState) => state.vcReducer)
+  const accessToken = getCookie('accessToken')
   const handleAuth = () => {
     if (!accessToken) {
       handleGoogleLogin()
@@ -69,14 +32,11 @@ const RightSidebar = () => {
   }
 
   const handleLogout = () => {
-    removeCookie('auth_token')
+    removeCookie('accessToken')
     removeLocalStorage('user_info')
-    removeLocalStorage('auth')
-    setClaims([])
   }
 
   const handleGoogleLogin = () => {
-    setLoading(true)
     login()
   }
 
@@ -143,13 +103,13 @@ const RightSidebar = () => {
         </Button>
       </Box>
 
-      {loading ? (
+      {status === 'loading' ? (
         <Box sx={{ display: 'flex', justifyContent: 'center', py: 6 }}>
           <CircularProgress />
         </Box>
       ) : (
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-          {claims.map(
+          {vcs.map(
             claim =>
               isValidClaim(claim) && (
                 <Paper
