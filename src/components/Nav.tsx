@@ -17,7 +17,7 @@ const Nav = () => {
       handleRedirect({ navigate })
       setLoading(false)
     }
-    const token = getCookie('auth_token')
+    const token = getCookie('accessToken')
     if (token) {
       setIsLogged(true)
     }
@@ -29,7 +29,7 @@ const Nav = () => {
   }
 
   const handleLogout = () => {
-    removeCookie('auth_token')
+    removeCookie('accessToken')
     removeLocalStorage('user_info')
 
     setIsLogged(false)

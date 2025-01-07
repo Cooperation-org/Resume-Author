@@ -25,7 +25,7 @@ interface ClaimDetail {
 }
 
 const useGoogleDrive = () => {
-  const accessToken = getCookie('auth_token')
+  const accessToken = getCookie('accessToken')
 
   const [storage, setStorage] = useState<GoogleDriveStorage | null>(null)
 

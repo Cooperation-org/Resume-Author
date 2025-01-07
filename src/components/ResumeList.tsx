@@ -31,7 +31,7 @@ const PrevResumesList: React.FC<PrevResumesListProps> = ({ open, onClose }) => {
 
   const getSessions = useCallback(async () => {
     try {
-      const accessToken = getCookie('auth_token')
+      const accessToken = getCookie('accessToken')
       if (!accessToken) {
         console.error('Access token not found.')
         return

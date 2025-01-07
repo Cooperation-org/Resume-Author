@@ -15,44 +15,16 @@ import {
   FileText,
   Sparkles
 } from 'lucide-react'
-import useGoogleDrive from '../../hooks/useGoogleDrive'
-import { useCallback, useEffect, useState } from 'react'
 import { getCookie, removeCookie, removeLocalStorage } from '../../tools'
 import { login } from '../../tools/auth'
+import { useSelector } from 'react-redux'
+import { useState } from 'react'
+import { RootState } from '../../redux/store'
 
 const RightSidebar = () => {
-  const [claims, setClaims] = useState<any[]>([])
-  const [loading, setLoading] = useState(true)
-  const accessToken = getCookie('auth_token')
+  const { vcs, status, error } = useSelector((state: RootState) => state.vcReducer)
 
-  const { storage } = useGoogleDrive()
-
-  const getAllClaims = useCallback(async (): Promise<any> => {
-    const claimsData = await storage?.getAllFilesByType('VCs')
-    console.log(':  getAllClaims  claimsData', claimsData)
-    if (!claimsData?.length) return []
-    return claimsData
-  }, [storage])
-
-  const fetchClaims = useCallback(async () => {
-    try {
-      setLoading(true)
-      const claimsData = await getAllClaims()
-      const vcs = claimsData.map((file: any[]) =>
-        file.filter((f: { name: string }) => f.name !== 'RELATIONS')
-      )
-      setClaims(vcs)
-    } catch (error) {
-      console.error('Error fetching claims:', error)
-    } finally {
-      setLoading(false)
-    }
-  }, [getAllClaims])
-
-  useEffect(() => {
-    fetchClaims()
-  }, [fetchClaims])
-
+  const accessToken = getCookie('accessToken')
   const handleAuth = () => {
     if (!accessToken) {
       handleGoogleLogin()
@@ -62,12 +34,11 @@ const RightSidebar = () => {
   }
 
   const handleLogout = () => {
-    removeCookie('auth_token')
+    removeCookie('accessToken')
     removeLocalStorage('user_info')
   }
 
   const handleGoogleLogin = () => {
-    setLoading(true)
     login()
   }
 
@@ -134,13 +105,13 @@ const RightSidebar = () => {
         </Button>
       </Box>
 
-      {loading ? (
+      {status === 'loading' ? (
         <Box sx={{ display: 'flex', justifyContent: 'center', py: 6 }}>
           <CircularProgress />
         </Box>
       ) : (
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-          {claims.map(
+          {vcs.map(
             claim =>
               isValidClaim(claim) && (
                 <Paper

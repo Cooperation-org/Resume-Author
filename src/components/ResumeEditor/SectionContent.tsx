@@ -16,6 +16,9 @@ import TextEditor from '../TextEditor/Texteditor'
 
 interface SectionContentProps {
   sectionId: keyof Resume
+  highlightedText: string
+  credentials: string[]
+  tooltipPosition: { top: number; left: number } | null
 }
 
 const cleanHTML = (htmlContent: string) => {
@@ -27,7 +30,12 @@ const cleanHTML = (htmlContent: string) => {
     .replace(/style="[^"]*"/g, '')
 }
 
-const SectionContent: React.FC<SectionContentProps> = ({ sectionId }) => {
+const SectionContent: React.FC<SectionContentProps> = ({
+  sectionId,
+  highlightedText,
+  credentials,
+  tooltipPosition
+}) => {
   const dispatch = useDispatch()
   const resume = useSelector((state: any) => state.resume.resume)
   const sectionData = resume[sectionId]
@@ -93,7 +101,7 @@ const SectionContent: React.FC<SectionContentProps> = ({ sectionId }) => {
   }
 
   return (
-    <Box>
+    <Box sx={{ position: 'relative' }}>
       {/* Section Header */}
       <Box
         sx={{
