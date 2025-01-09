@@ -74,7 +74,7 @@ const LeftSidebar = () => {
       fontStyle: 'normal',
       fontWeight: 400,
       lineHeight: '20px',
-      opacity: 1 // This ensures the placeholder opacity stays at 100%
+      opacity: 1
     }
   }
 

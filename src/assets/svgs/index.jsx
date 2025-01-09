@@ -1,3 +1,21 @@
+export const SVGLine = () => {
+  return (
+    <div>
+      <svg
+        xmlns='http://www.w3.org/2000/svg'
+        width='20'
+        height='20'
+        viewBox='0 0 20 20'
+        fill='none'
+      >
+        <path
+          d='M0.400024 10.4004H17.8344L15.3172 12.9176L15.8828 13.4832L19.3656 10.0004L15.8828 6.51758L15.3172 7.08318L17.8344 9.60038H0.400024V10.4004Z'
+          fill='black'
+        />
+      </svg>
+    </div>
+  )
+}
 export const SVGAdd = () => {
   return (
     <div>
