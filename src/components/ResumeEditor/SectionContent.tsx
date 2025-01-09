@@ -29,15 +29,6 @@ type CredentialItem = {
 
 type SectionItem = string | CredentialItem
 
-const cleanHTML = (htmlContent: string) => {
-  return htmlContent
-    .replace(/<p><br><\/p>/g, '')
-    .replace(/<p><\/p>/g, '')
-    .replace(/<br>/g, '')
-    .replace(/class="[^"]*"/g, '')
-    .replace(/style="[^"]*"/g, '')
-}
-
 const SectionContent: React.FC<SectionContentProps> = ({ sectionId }) => {
   const dispatch = useDispatch()
   const resume = useSelector((state: any) => state.resume.resume)
@@ -131,18 +122,14 @@ const SectionContent: React.FC<SectionContentProps> = ({ sectionId }) => {
           primary={
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
               {editing ? (
-                <TextField
-                  fullWidth
-                  value={itemText}
-                  onChange={(e) => handleUpdateItem(index, e.target.value)}
-                />
+                <TextEditor value={itemText} onChange={e => handleUpdateItem(index, e)} />
               ) : (
                 <>
                   <Typography>{itemText}</Typography>
                   {isCredential && (
                     // we can remove it or use it as openCreds
-                    <Typography 
-                      component="span"
+                    <Typography
+                      component='span'
                       sx={{
                         bgcolor: 'success.main',
                         color: 'white',
@@ -152,7 +139,7 @@ const SectionContent: React.FC<SectionContentProps> = ({ sectionId }) => {
                         fontSize: '0.75rem'
                       }}
                     >
-                      Verified  
+                      Verified
                     </Typography>
                   )}
                 </>
@@ -163,15 +150,21 @@ const SectionContent: React.FC<SectionContentProps> = ({ sectionId }) => {
         <IconButton onClick={() => handleRemoveItem(index)}>
           <Trash2 size={16} />
         </IconButton>
-        
       </ListItem>
     )
   }
 
   return (
     <Box>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-        <Typography variant="h6" fontWeight="600">
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          mb: 2
+        }}
+      >
+        <Typography variant='h6' fontWeight='600'>
           {sectionId.charAt(0).toUpperCase() + sectionId.slice(1)}
         </Typography>
         <Box sx={{ display: 'flex', gap: 1 }}>
@@ -193,16 +186,9 @@ const SectionContent: React.FC<SectionContentProps> = ({ sectionId }) => {
           {isStringBased ? (
             <Box>
               {editing ? (
-                <TextField
-                  fullWidth
-                  multiline
-                  rows={4}
-                  value={content}
-                  onChange={(e) => setContent(e.target.value)}
-                  placeholder={`Enter ${sectionId} content here...`}
-                />
+                <TextEditor value={content} onChange={e => setContent(e)} />
               ) : (
-                <Typography variant="body1">
+                <Typography variant='body1'>
                   {content || `No ${sectionId} added yet.`}
                 </Typography>
               )}
@@ -210,25 +196,18 @@ const SectionContent: React.FC<SectionContentProps> = ({ sectionId }) => {
           ) : (
             <Box>
               {items.length === 0 && !editing ? (
-                <Typography variant="body2" color="textSecondary">
+                <Typography variant='body2' color='textSecondary'>
                   No {sectionId} items added yet. Click edit to add new items.
                 </Typography>
               ) : (
-                <List>
-                  {items.map((item, index) => renderListItem(item, index))}
-                </List>
+                <List>{items.map((item, index) => renderListItem(item, index))}</List>
               )}
 
               {editing && (
                 <Box sx={{ display: 'flex', gap: 2, mt: 2 }}>
-                  <TextField
-                    fullWidth
-                    placeholder="Add new item"
-                    value={newItemValue}
-                    onChange={(e) => setNewItemValue(e.target.value)}
-                  />
+                  <TextEditor value={newItemValue} onChange={e => setNewItemValue(e)} />
                   <Button
-                    variant="outlined"
+                    variant='outlined'
                     sx={{ borderRadius: 5 }}
                     startIcon={<Plus />}
                     onClick={handleAddNewItem}
