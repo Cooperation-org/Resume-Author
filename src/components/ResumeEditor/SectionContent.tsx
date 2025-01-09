@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react'
 import {
   Box,
   Button,
-  TextField,
   Typography,
   Divider,
   List,
@@ -15,6 +14,7 @@ import { useDispatch, useSelector } from 'react-redux'
 import { updateSection } from '../../redux/slices/resume'
 import CredentialDialog from '../CredentialDialog'
 import { SVGAdd } from '../../assets/svgs'
+import TextEditor from '../TextEditor/Texteditor'
 
 interface SectionContentProps {
   sectionId: keyof Resume
@@ -28,6 +28,15 @@ type CredentialItem = {
 }
 
 type SectionItem = string | CredentialItem
+
+const cleanHTML = (htmlContent: string) => {
+  return htmlContent
+    .replace(/<p><br><\/p>/g, '')
+    .replace(/<p><\/p>/g, '')
+    .replace(/<br>/g, '')
+    .replace(/class="[^"]*"/g, '')
+    .replace(/style="[^"]*"/g, '')
+}
 
 const SectionContent: React.FC<SectionContentProps> = ({ sectionId }) => {
   const dispatch = useDispatch()
@@ -104,6 +113,7 @@ const SectionContent: React.FC<SectionContentProps> = ({ sectionId }) => {
     }))
 
     const updatedItems = [...items, ...newCredentialItems]
+
     setItems(updatedItems)
     dispatch(updateSection({ sectionId, content: { items: updatedItems } }))
   }

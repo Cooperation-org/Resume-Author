@@ -7,6 +7,7 @@ import store from './redux/store'
 import Resume from './pages/resume'
 import ImportPage from './pages/importPage'
 import Error404 from './pages/error404'
+import LandingPage from './pages/allskillscoun-org'
 import './styles/App.css'
 
 const App = () => {
@@ -25,7 +26,7 @@ const App = () => {
             <Route path='/login' element={<Login />} />
             <Route path='/resume/new' element={<Resume />} />
             <Route path='/resume/import' element={<ImportPage />} />
-
+            <Route path='/landing' element={<LandingPage />} />
             <Route path='*' element={<Error404 />} />
           </Routes>
         </Router>
