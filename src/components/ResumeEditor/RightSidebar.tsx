@@ -11,7 +11,6 @@ import {
   InputAdornment,
   Divider
 } from '@mui/material'
-import { FileText, Search, Info } from 'lucide-react'
 import useGoogleDrive from '../../hooks/useGoogleDrive'
 import { useCallback, useEffect, useState } from 'react'
 import { getLocalStorage, removeCookie, removeLocalStorage } from '../../tools'
@@ -165,7 +164,7 @@ const RightSidebar = () => {
           Learn more
         </Button>
       </Box>
-      <Box sx={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+      <Box sx={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '20px' }}>
         <Button
           onClick={handleAuth}
           variant='outlined'
@@ -194,7 +193,7 @@ const RightSidebar = () => {
       </Box>
 
       {/* Credentials Section */}
-      <Box sx={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+      <Box sx={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '15px' }}>
         <Typography
           sx={{
             fontFamily: '"Proxima Nova", "Helvetica Neue", Helvetica, Arial, sans-serif',
