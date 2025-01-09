@@ -7,7 +7,15 @@ interface SectionProps {
 
 const Section = ({ sectionId }: SectionProps) => {
   return (
-    <Paper sx={{ p: 3, mb: 3, borderRadius: 2, boxShadow: 1 }}>
+    <Paper
+      sx={{
+        bgcolor: '#FFF',
+        p: '5px 20px 10px 20px',
+        mb: '30px',
+        borderRadius: '8px',
+        boxShadow: '0px 2px 20px 0px rgba(0, 0, 0, 0.10)'
+      }}
+    >
       <SectionContent sectionId={sectionId} />
     </Paper>
   )
