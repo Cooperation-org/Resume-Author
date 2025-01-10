@@ -26,6 +26,8 @@ interface SectionContentProps {
   tooltipPosition: { top: number; left: number } | null
 }
 
+type CredentialItem = any
+
 const cleanHTML = (htmlContent: string) => {
   return htmlContent
     .replace(/<p><br><\/p>/g, '')
