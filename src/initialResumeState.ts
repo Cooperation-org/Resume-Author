@@ -23,6 +23,7 @@ export const initialState: ResumeState = {
         twitter: ''
       }
     },
+    
     summary: '',
     experience: {
       items: []
@@ -78,5 +79,6 @@ export const initialState: ResumeState = {
     languages: true,
     testimonials: true
   },
-  selectedCredentials: []
+  selectedCredentials: [],
+  claims: []
 }

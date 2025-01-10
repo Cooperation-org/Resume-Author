@@ -151,7 +151,6 @@ interface Resume {
   id: string
   lastUpdated: string
   version?: number
-
   contact: Contact
   summary: string
 

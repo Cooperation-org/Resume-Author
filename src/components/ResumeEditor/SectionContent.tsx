@@ -12,6 +12,8 @@ import {
 import { Edit, Eye, Save, Trash2, EyeOff, Plus } from 'lucide-react'
 import { useDispatch, useSelector } from 'react-redux'
 import { updateSection } from '../../redux/slices/resume'
+import CredentialDialog from '../CredentialDialog'
+import { SVGAdd } from '../../assets/svgs'
 import TextEditor from '../TextEditor/Texteditor'
 
 interface SectionContentProps {
@@ -21,13 +23,11 @@ interface SectionContentProps {
   tooltipPosition: { top: number; left: number } | null
 }
 
-const cleanHTML = (htmlContent: string) => {
-  return htmlContent
-    .replace(/<p><br><\/p>/g, '')
-    .replace(/<p><\/p>/g, '')
-    .replace(/<br>/g, '')
-    .replace(/class="[^"]*"/g, '')
-    .replace(/style="[^"]*"/g, '')
+// Define types for our items
+type CredentialItem = {
+  text: string
+  credentialId: string
+  verified: boolean
 }
 
 const SectionContent: React.FC<SectionContentProps> = ({
@@ -38,66 +38,126 @@ const SectionContent: React.FC<SectionContentProps> = ({
 }) => {
   const dispatch = useDispatch()
   const resume = useSelector((state: any) => state.resume.resume)
+  const claims = useSelector((state: any) => state.resume.claims)
   const sectionData = resume[sectionId]
 
-  // Determine section type
   const isStringBased = typeof sectionData === 'string'
   const isListBased = Array.isArray(sectionData?.items)
 
-  // Local states
-  const [content, setContent] = useState<string>(sectionData || '')
-  const [items, setItems] = useState<string[]>(sectionData?.items || [])
+  const [content, setContent] = useState(sectionData || '')
+  const [items, setItems] = useState<SectionItem[]>(sectionData?.items || [])
   const [editing, setEditing] = useState(false)
   const [newItemValue, setNewItemValue] = useState('')
   const [isVisible, setIsVisible] = useState(true)
+  const [isCredentialDialogOpen, setIsCredentialDialogOpen] = useState(false)
 
-  // Sync local state with Redux state
   useEffect(() => {
     if (isListBased) {
-      setItems([...sectionData.items])
+      setItems(sectionData.items || [])
     } else {
       setContent(sectionData || '')
     }
   }, [sectionData, isListBased])
 
-  // Toggle editing
   const toggleEdit = () => {
     if (editing) {
-      // Save changes
       const updatedContent = isStringBased ? content : { items }
       dispatch(updateSection({ sectionId, content: updatedContent }))
     }
     setEditing(!editing)
   }
 
-  // Toggle visibility
   const toggleVisibility = () => {
     setIsVisible(!isVisible)
   }
 
-  // Add new item (for list-based sections)
   const handleAddNewItem = () => {
-    const trimmedVal = newItemValue.trim()
-    if (!trimmedVal) return
-    const updatedItems = [...items, trimmedVal]
+    if (!newItemValue.trim()) return
+    const updatedItems = [...items, newItemValue.trim()]
     setItems(updatedItems)
     dispatch(updateSection({ sectionId, content: { items: updatedItems } }))
     setNewItemValue('')
   }
 
-  // Update an existing item
-  const handleUpdateItem = (index: number, value: string) => {
+  const handleUpdateItem = (index: number, newValue: string) => {
     const updatedItems = [...items]
-    updatedItems[index] = value
+    const currentItem = updatedItems[index]
+
+    if (typeof currentItem === 'object') {
+      updatedItems[index] = {
+        ...currentItem,
+        text: newValue
+      }
+    } else {
+      updatedItems[index] = newValue
+    }
+
     setItems(updatedItems)
     dispatch(updateSection({ sectionId, content: { items: updatedItems } }))
   }
 
-  // Remove an item
   const handleRemoveItem = (index: number) => {
     const updatedItems = items.filter((_, i) => i !== index)
     setItems(updatedItems)
     dispatch(updateSection({ sectionId, content: { items: updatedItems } }))
+  }
+
+  const handleCredentialsSelected = (selectedClaims: any[]) => {
+    const newCredentialItems: CredentialItem[] = selectedClaims.map(claim => ({
+      text: `${claim[0]?.data?.credentialSubject?.achievement[0]?.name} - ${claim[0]?.data?.credentialSubject?.name}`,
+      credentialId: claim[0]?.id,
+      verified: true
+    }))
+
+    const updatedItems = [...items, ...newCredentialItems]
+
+    setItems(updatedItems)
+    dispatch(updateSection({ sectionId, content: { items: updatedItems } }))
+  }
+
+  const renderListItem = (item: SectionItem, index: number) => {
+    const itemText = typeof item === 'string' ? item : item.text
+    const isCredential = typeof item === 'object'
+
+    return (
+      <ListItem
+        key={isCredential ? item.credentialId : index}
+        sx={{ display: 'flex', alignItems: 'center', gap: 2 }}
+      >
+        <ListItemText
+          primary={
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+              {editing ? (
+                <TextEditor value={itemText} onChange={e => handleUpdateItem(index, e)} />
+              ) : (
+                <>
+                  <Typography>{itemText}</Typography>
+                  {isCredential && (
+                    // we can remove it or use it as openCreds
+                    <Typography
+                      component='span'
+                      sx={{
+                        bgcolor: 'success.main',
+                        color: 'white',
+                        px: 1,
+                        py: 0.5,
+                        borderRadius: 1,
+                        fontSize: '0.75rem'
+                      }}
+                    >
+                      Verified
+                    </Typography>
+                  )}
+                </>
+              )}
+            </Box>
+          }
+        />
+        <IconButton onClick={() => handleRemoveItem(index)}>
+          <Trash2 size={16} />
+        </IconButton>
+      </ListItem>
+    )
   }
 
   return (
@@ -121,89 +181,60 @@ const SectionContent: React.FC<SectionContentProps> = ({
           <IconButton onClick={toggleVisibility}>
             {isVisible ? <Eye size={16} /> : <EyeOff size={16} />}
           </IconButton>
+          <IconButton onClick={() => setIsCredentialDialogOpen(true)}>
+            <SVGAdd />
+          </IconButton>
         </Box>
       </Box>
       <Divider sx={{ mb: 2 }} />
 
-      {/* String-based Section */}
-      {isStringBased && isVisible && (
-        <Box>
-          {!editing ? (
-            <Box sx={{ whiteSpace: 'pre-wrap' }}>
-              <span
-                dangerouslySetInnerHTML={{
-                  __html: content ? cleanHTML(content) : `No ${sectionId} added yet.`
-                }}
-              />
+      {isVisible && (
+        <>
+          {isStringBased ? (
+            <Box>
+              {editing ? (
+                <TextEditor value={content} onChange={e => setContent(e)} />
+              ) : (
+                <Typography variant='body1'>
+                  {content || `No ${sectionId} added yet.`}
+                </Typography>
+              )}
             </Box>
           ) : (
-            <TextEditor value={content} onChange={setContent} />
-          )}
-        </Box>
-      )}
+            <Box>
+              {items.length === 0 && !editing ? (
+                <Typography variant='body2' color='textSecondary'>
+                  No {sectionId} items added yet. Click edit to add new items.
+                </Typography>
+              ) : (
+                <List>{items.map((item, index) => renderListItem(item, index))}</List>
+              )}
 
-      {/* List-based Section */}
-      {isListBased && isVisible && (
-        <Box>
-          {/* Warning message when items length is zero */}
-          {items.length === 0 && !editing && (
-            <Typography variant='body2' color='textSecondary'>
-              No {sectionId} items added yet. Click edit to add new items.
-            </Typography>
-          )}
-
-          {/* List of items */}
-          {items.length > 0 && (
-            <List>
-              {items.map((item: string, index: number) => (
-                <ListItem
-                  key={item}
-                  sx={{ display: 'flex', alignItems: 'flex-start', gap: 2 }}
-                >
-                  {editing ? (
-                    <Box sx={{ width: '100%' }}>
-                      <TextEditor
-                        value={item}
-                        onChange={(val: string) => handleUpdateItem(index, val)}
-                      />
-                    </Box>
-                  ) : (
-                    <ListItemText
-                      primary={
-                        <Box
-                          sx={{ whiteSpace: 'pre-wrap' }}
-                          dangerouslySetInnerHTML={{ __html: cleanHTML(item) }}
-                        />
-                      }
-                    />
-                  )}
-
-                  {editing && (
-                    <IconButton onClick={() => handleRemoveItem(index)}>
-                      <Trash2 size={16} />
-                    </IconButton>
-                  )}
-                </ListItem>
-              ))}
-            </List>
-          )}
-
-          {/* Add New Item */}
-          {editing && (
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 2 }}>
-              <TextEditor value={newItemValue} onChange={setNewItemValue} />
-              <Button
-                variant='outlined'
-                sx={{ borderRadius: 5, alignSelf: 'flex-start' }}
-                startIcon={<Plus />}
-                onClick={handleAddNewItem}
-              >
-                Add
-              </Button>
+              {editing && (
+                <Box sx={{ display: 'flex', gap: 2, mt: 2 }}>
+                  <TextEditor value={newItemValue} onChange={e => setNewItemValue(e)} />
+                  <Button
+                    variant='outlined'
+                    sx={{ borderRadius: 5 }}
+                    startIcon={<Plus />}
+                    onClick={handleAddNewItem}
+                  >
+                    Add
+                  </Button>
+                </Box>
+              )}
             </Box>
           )}
-        </Box>
+        </>
       )}
+
+      <CredentialDialog
+        open={isCredentialDialogOpen}
+        onClose={() => setIsCredentialDialogOpen(false)}
+        claims={claims || []}
+        sectionId={sectionId}
+        onCredentialsSelected={handleCredentialsSelected}
+      />
     </Box>
   )
 }

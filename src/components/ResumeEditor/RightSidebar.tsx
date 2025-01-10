@@ -36,6 +36,8 @@ const RightSidebar = () => {
   const handleLogout = () => {
     removeCookie('accessToken')
     removeLocalStorage('user_info')
+    removeLocalStorage('auth')
+    setClaims([])
   }
 
   const handleGoogleLogin = () => {
