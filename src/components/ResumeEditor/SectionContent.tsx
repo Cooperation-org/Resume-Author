@@ -21,9 +21,6 @@ interface SectionContentProps {
   highlightedText: string
   credentials: string[]
   tooltipPosition: { top: number; left: number } | null
-  highlightedText: string
-  credentials: string[]
-  tooltipPosition: { top: number; left: number } | null
 }
 
 type CredentialItem = any
