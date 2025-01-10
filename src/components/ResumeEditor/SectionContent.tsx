@@ -23,6 +23,8 @@ interface SectionContentProps {
   tooltipPosition: { top: number; left: number } | null
 }
 
+type CredentialItem = any
+
 const cleanHTML = (htmlContent: string) => {
   return htmlContent
     .replace(/<p><br><\/p>/g, '')
@@ -32,12 +34,6 @@ const cleanHTML = (htmlContent: string) => {
     .replace(/style="[^"]*"/g, '')
 }
 
-const SectionContent: React.FC<SectionContentProps> = ({
-  sectionId,
-  highlightedText,
-  credentials,
-  tooltipPosition
-}) => {
 const SectionContent: React.FC<SectionContentProps> = ({
   sectionId,
   highlightedText,
