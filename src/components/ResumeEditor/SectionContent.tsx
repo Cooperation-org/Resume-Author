@@ -47,7 +47,7 @@ const SectionContent: React.FC<SectionContentProps> = ({
   const isListBased = Array.isArray(sectionData?.items)
 
   const [content, setContent] = useState(sectionData || '')
-  const [items, setItems] = useState<SectionItem[]>(sectionData?.items || [])
+  const [items, setItems] = useState<any[]>(sectionData?.items || [])
   const [editing, setEditing] = useState(false)
   const [newItemValue, setNewItemValue] = useState('')
   const [isVisible, setIsVisible] = useState(true)
@@ -117,7 +117,7 @@ const SectionContent: React.FC<SectionContentProps> = ({
     dispatch(updateSection({ sectionId, content: { items: updatedItems } }))
   }
 
-  const renderListItem = (item: SectionItem, index: number) => {
+  const renderListItem = (item: any, index: number) => {
     const itemText = typeof item === 'string' ? item : item.text
     const isCredential = typeof item === 'object'
 
