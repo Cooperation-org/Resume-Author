@@ -18,7 +18,6 @@ import {
 import { getCookie, removeCookie, removeLocalStorage } from '../../tools'
 import { login } from '../../tools/auth'
 import { useSelector } from 'react-redux'
-import { useState } from 'react'
 import { RootState } from '../../redux/store'
 
 const RightSidebar = () => {
@@ -37,7 +36,6 @@ const RightSidebar = () => {
     removeCookie('accessToken')
     removeLocalStorage('user_info')
     removeLocalStorage('auth')
-    setClaims([])
   }
 
   const handleGoogleLogin = () => {
