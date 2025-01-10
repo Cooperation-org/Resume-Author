@@ -107,13 +107,11 @@ const RightSidebar = () => {
       </Box>
 
       {status === 'loading' ? (
-      {status === 'loading' ? (
         <Box sx={{ display: 'flex', justifyContent: 'center', py: 6 }}>
           <CircularProgress />
         </Box>
       ) : (
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-          {vcs.map(
           {vcs.map(
             claim =>
               isValidClaim(claim) && (
