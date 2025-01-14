@@ -10,11 +10,7 @@ interface SectionProps {
 const Section = ({ sectionId, highlightedText, tooltipPosition }: SectionProps) => {
   return (
     <Paper sx={{ p: 3, mb: 3, borderRadius: 2, boxShadow: 1 }}>
-      <SectionContent
-        sectionId={sectionId}
-        highlightedText={highlightedText}
-        tooltipPosition={tooltipPosition}
-      />
+      <SectionContent sectionId={sectionId} highlightedText={highlightedText} />
     </Paper>
   )
 }

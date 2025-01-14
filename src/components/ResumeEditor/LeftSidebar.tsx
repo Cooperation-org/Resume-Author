@@ -4,17 +4,11 @@ import SectionContent from './SectionContent' // Import the reusable SectionCont
 
 interface LeftSidebarProps {
   highlightedText: string
-  credentials: string[]
-  tooltipPosition: { top: number; left: number } | null
 }
 
 export const leftSections: (keyof Resume)[] = ['contact', 'languages']
 
-const LeftSidebar: React.FC<LeftSidebarProps> = ({
-  highlightedText,
-  credentials,
-  tooltipPosition
-}) => {
+const LeftSidebar: React.FC<LeftSidebarProps> = ({ highlightedText }) => {
   return (
     <Box sx={{ width: 240 }}>
       <Typography variant='h6' mb={2}>
@@ -23,11 +17,7 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({
       {leftSections.map(sectionId => (
         <Paper key={sectionId} sx={{ mb: 2, p: 2, borderRadius: 2 }}>
           {/* Use SectionContent for each section and pass tooltip props */}
-          <SectionContent
-            sectionId={sectionId}
-            highlightedText={highlightedText}
-            tooltipPosition={tooltipPosition}
-          />
+          <SectionContent sectionId={sectionId} highlightedText={highlightedText} />
         </Paper>
       ))}
     </Box>

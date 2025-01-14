@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback, useRef } from 'react'
 import {
   Box,
   Button,
@@ -19,27 +19,22 @@ import TextEditor from '../TextEditor/Texteditor'
 interface SectionContentProps {
   sectionId: keyof Resume
   highlightedText: string
-  tooltipPosition: { top: number; left: number } | null | undefined
 }
 
-// Define types for our items
 type CredentialItem = {
   text: string
   credentialId: string
   verified: boolean
 }
 
-type SectionItem = string | CredentialItem
-
 const SectionContent: React.FC<SectionContentProps> = ({
   sectionId,
-  highlightedText,
-  tooltipPosition
+  highlightedText
 }) => {
   const dispatch = useDispatch()
   const resume = useSelector((state: any) => state.resume.resume)
-  const claims = useSelector((state: any) => state.resume.claims)
   const sectionData = resume[sectionId]
+  const contentRef = useRef<HTMLDivElement>(null)
 
   const isStringBased = typeof sectionData === 'string'
   const isListBased = Array.isArray(sectionData?.items)
@@ -50,6 +45,7 @@ const SectionContent: React.FC<SectionContentProps> = ({
   const [newItemValue, setNewItemValue] = useState('')
   const [isVisible, setIsVisible] = useState(true)
   const [isCredentialDialogOpen, setIsCredentialDialogOpen] = useState(false)
+  const [selectedHighlightedText, setSelectedHighlightedText] = useState<string>('')
 
   useEffect(() => {
     if (isListBased) {
@@ -58,6 +54,36 @@ const SectionContent: React.FC<SectionContentProps> = ({
       setContent(sectionData || '')
     }
   }, [sectionData, isListBased])
+
+  // Check if the section is empty
+  const isSectionEmpty = useCallback(() => {
+    if (isStringBased) {
+      return !content.trim()
+    }
+    return items.length === 0
+  }, [isStringBased, content, items])
+
+  // Handle "Add Credential" button click
+  const handleAddCredentialClick = () => {
+    if (isSectionEmpty()) {
+      alert('Please add content to the section before linking credentials.')
+      return
+    }
+
+    // Check if selection is within our section content
+    const selection = window.getSelection()
+    if (!selection) return
+
+    const selectedText = selection.toString().trim()
+    const isSelectionInSection = contentRef.current?.contains(selection.anchorNode)
+
+    if (selectedText && isSelectionInSection) {
+      setSelectedHighlightedText(selectedText)
+      setIsCredentialDialogOpen(true)
+    } else {
+      alert('Please highlight some text within this section to link to a credential.')
+    }
+  }
 
   const toggleEdit = () => {
     if (editing) {
@@ -102,17 +128,24 @@ const SectionContent: React.FC<SectionContentProps> = ({
     dispatch(updateSection({ sectionId, content: { items: updatedItems } }))
   }
 
-  const handleCredentialsSelected = (selectedClaims: any[]) => {
+  const handleCredentialSelection = (selectedClaims: any[]) => {
     const newCredentialItems: CredentialItem[] = selectedClaims.map(claim => ({
       text: `${claim[0]?.data?.credentialSubject?.achievement[0]?.name} - ${claim[0]?.data?.credentialSubject?.name}`,
       credentialId: claim[0]?.id,
       verified: true
     }))
 
-    const updatedItems = [...items, ...newCredentialItems]
+    const updatedItems = [
+      ...items,
+      {
+        text: selectedHighlightedText,
+        linkedCredentials: newCredentialItems
+      }
+    ]
 
     setItems(updatedItems)
     dispatch(updateSection({ sectionId, content: { items: updatedItems } }))
+    setIsCredentialDialogOpen(false)
   }
 
   const renderListItem = (item: any, index: number) => {
@@ -131,9 +164,8 @@ const SectionContent: React.FC<SectionContentProps> = ({
                 <TextEditor value={itemText} onChange={e => handleUpdateItem(index, e)} />
               ) : (
                 <>
-                  <Typography>{itemText}</Typography>
+                  <Typography component='span'>{itemText}</Typography>
                   {isCredential && (
-                    // we can remove it or use it as openCreds
                     <Typography
                       component='span'
                       sx={{
@@ -162,7 +194,6 @@ const SectionContent: React.FC<SectionContentProps> = ({
 
   return (
     <Box sx={{ position: 'relative' }}>
-      {/* Section Header */}
       <Box
         sx={{
           display: 'flex',
@@ -181,7 +212,7 @@ const SectionContent: React.FC<SectionContentProps> = ({
           <IconButton onClick={toggleVisibility}>
             {isVisible ? <Eye size={16} /> : <EyeOff size={16} />}
           </IconButton>
-          <IconButton onClick={() => setIsCredentialDialogOpen(true)}>
+          <IconButton onClick={handleAddCredentialClick}>
             <SVGAdd />
           </IconButton>
         </Box>
@@ -189,13 +220,13 @@ const SectionContent: React.FC<SectionContentProps> = ({
       <Divider sx={{ mb: 2 }} />
 
       {isVisible && (
-        <>
+        <div ref={contentRef}>
           {isStringBased ? (
             <Box>
               {editing ? (
                 <TextEditor value={content} onChange={e => setContent(e)} />
               ) : (
-                <Typography variant='body1'>
+                <Typography variant='body1' component='div'>
                   {content || `No ${sectionId} added yet.`}
                 </Typography>
               )}
@@ -225,15 +256,14 @@ const SectionContent: React.FC<SectionContentProps> = ({
               )}
             </Box>
           )}
-        </>
+        </div>
       )}
 
       <CredentialDialog
         open={isCredentialDialogOpen}
         onClose={() => setIsCredentialDialogOpen(false)}
-        claims={claims || []}
-        sectionId={sectionId}
-        onCredentialsSelected={handleCredentialsSelected}
+        sectionId={highlightedText || sectionId}
+        onCredentialsSelected={handleCredentialSelection}
       />
     </Box>
   )

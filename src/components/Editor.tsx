@@ -1,11 +1,11 @@
+import { useCallback, useEffect, useState } from 'react'
 import { Box, Button, Typography, Autocomplete, TextField } from '@mui/material'
 import LeftSidebar, { leftSections } from './ResumeEditor/LeftSidebar'
 import RightSidebar from './ResumeEditor/RightSidebar'
-import Section from './ResumeEditor/Section'
 import { useSelector } from 'react-redux'
 import { RootState } from '../redux/store'
 import { Plus } from 'lucide-react'
-import { useCallback, useEffect, useState } from 'react'
+import SectionContent from './ResumeEditor/SectionContent'
 
 const nonVisibleSections = [
   ...leftSections,
@@ -25,16 +25,9 @@ const ResumeEditor = () => {
     'experience',
     'education'
   ])
-
-  // Tooltip state
   const [highlightedText, setHighlightedText] = useState<string>('')
-  const [tooltipPosition, setTooltipPosition] = useState<{
-    top: number
-    left: number
-  } | null>(null)
 
   const resume = useSelector((state: RootState) => state.resume.resume)
-  const { vcs, status, error } = useSelector((state: RootState) => state.vcReducer)
 
   const AllSections = Object.keys(resume as Resume).filter(
     sec =>
@@ -48,34 +41,17 @@ const ResumeEditor = () => {
   const handleAddSelectedSection = () => {
     if (selectedSection && AllSections.includes(selectedSection)) {
       setSectionOrder(prev => [...prev, selectedSection as keyof Resume])
-      setSelectedSection(null) // Reset selection
+      setSelectedSection(null)
     }
     setAddSectionOpen(false)
   }
-  // Handle text selection
+
   const handleTextSelection = useCallback(() => {
     const selection = window.getSelection()
     try {
       if (selection && selection.toString().trim() !== '') {
-        const range = selection.getRangeAt(0)
-        const rect = range.getBoundingClientRect()
-
-        // Calculate tooltip position
-        const viewportWidth = window.innerWidth
-        const tooltipWidth = 300 // Approximate width of the tooltip
-        const left = rect.left + window.scrollX
-        const top = rect.bottom + window.scrollY
-
-        // Adjust position if tooltip goes off-screen
-        const adjustedLeft =
-          left + tooltipWidth > viewportWidth ? left - tooltipWidth : left
-
-        setTooltipPosition({ top, left: adjustedLeft })
         setHighlightedText(selection.toString().trim())
-        console.log('Selected text:', selection.toString().trim())
-        console.log('Tooltip Position:', { top, left: adjustedLeft })
       } else {
-        setTooltipPosition(null)
         setHighlightedText('')
       }
     } catch (error) {
@@ -83,7 +59,6 @@ const ResumeEditor = () => {
     }
   }, [])
 
-  // Add event listener for text selection
   useEffect(() => {
     document.addEventListener('mouseup', handleTextSelection)
     return () => {
@@ -93,36 +68,23 @@ const ResumeEditor = () => {
 
   return (
     <Box sx={{ display: 'flex', gap: 4, p: 4, marginBottom: 2 }}>
-      <LeftSidebar
-        highlightedText={highlightedText}
-        credentials={vcs}
-        tooltipPosition={tooltipPosition}
-      />
+      <LeftSidebar highlightedText={highlightedText} />
 
-      {/* Main Content */}
-      <Box
-        sx={{
-          display: 'flex',
-          flexDirection: 'column',
-          flex: 1
-        }}
-      >
+      <Box sx={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
         <Box>
           <Typography variant='h4' fontWeight='600' mb={2}>
             Edit your resume
           </Typography>
           {resume &&
             sectionOrder.map(key => (
-              <Section
+              <SectionContent
                 key={key}
                 sectionId={key}
                 highlightedText={highlightedText}
-                tooltipPosition={tooltipPosition}
               />
             ))}
         </Box>
 
-        {/* Add Section Button */}
         {!addSectionOpen && (
           <Button
             variant='outlined'
@@ -134,15 +96,8 @@ const ResumeEditor = () => {
           </Button>
         )}
 
-        {/* Autocomplete for Adding New Sections */}
         {addSectionOpen && (
-          <Box
-            sx={{
-              display: 'flex',
-              gap: 2,
-              alignItems: 'center'
-            }}
-          >
+          <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
             <Autocomplete
               options={AllSections}
               value={selectedSection}
@@ -169,35 +124,7 @@ const ResumeEditor = () => {
         )}
       </Box>
 
-      {/* Right Sidebar */}
       <RightSidebar />
-
-      {/* Verified Credentials Tooltip */}
-      {tooltipPosition && vcs.some((file: any) => file.length > 0) && (
-        <Box
-          sx={{
-            position: 'absolute',
-            top: tooltipPosition.top,
-            left: tooltipPosition.left,
-            backgroundColor: 'white',
-            border: '1px solid #ccc',
-            borderRadius: '4px',
-            boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-            zIndex: 1000,
-            padding: '8px',
-            width: '300px'
-          }}
-        >
-          <Typography variant='body2' fontWeight='600'>
-            Verified Credentials
-          </Typography>
-          <ul>
-            {vcs.map((credential: any, index: number) => (
-              <li key={index}>{credential[0].name}</li>
-            ))}
-          </ul>
-        </Box>
-      )}
     </Box>
   )
 }
