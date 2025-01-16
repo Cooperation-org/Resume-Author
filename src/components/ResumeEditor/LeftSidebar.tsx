@@ -20,6 +20,12 @@ import {
   SVGInstagram
 } from '../../assets/svgs'
 
+interface LeftSidebarProps {
+  highlightedText: string
+  credentials: string[]
+  tooltipPosition: { top: number; left: number } | null
+}
+
 export const leftSections: (keyof Resume)[] = ['contact', 'languages']
 
 const LeftSidebar = () => {

@@ -3,9 +3,11 @@ import SectionContent from './SectionContent'
 
 interface SectionProps {
   sectionId: keyof Resume
+  highlightedText: string
+  tooltipPosition: { top: number; left: number } | null
 }
 
-const Section = ({ sectionId }: SectionProps) => {
+const Section = ({ sectionId, highlightedText, tooltipPosition }: SectionProps) => {
   return (
     <Paper
       sx={{

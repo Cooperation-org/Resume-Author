@@ -18,6 +18,8 @@ import TextEditor from '../TextEditor/Texteditor'
 
 interface SectionContentProps {
   sectionId: keyof Resume
+  highlightedText: string
+  tooltipPosition: { top: number; left: number } | null | undefined
 }
 
 // Define types for our items
@@ -29,7 +31,11 @@ type CredentialItem = {
 
 type SectionItem = string | CredentialItem
 
-const SectionContent: React.FC<SectionContentProps> = ({ sectionId }) => {
+const SectionContent: React.FC<SectionContentProps> = ({
+  sectionId,
+  highlightedText,
+  tooltipPosition
+}) => {
   const dispatch = useDispatch()
   const resume = useSelector((state: any) => state.resume.resume)
   const claims = useSelector((state: any) => state.resume.claims)
@@ -39,7 +45,7 @@ const SectionContent: React.FC<SectionContentProps> = ({ sectionId }) => {
   const isListBased = Array.isArray(sectionData?.items)
 
   const [content, setContent] = useState(sectionData || '')
-  const [items, setItems] = useState<SectionItem[]>(sectionData?.items || [])
+  const [items, setItems] = useState<any[]>(sectionData?.items || [])
   const [editing, setEditing] = useState(false)
   const [newItemValue, setNewItemValue] = useState('')
   const [isVisible, setIsVisible] = useState(true)
@@ -109,7 +115,7 @@ const SectionContent: React.FC<SectionContentProps> = ({ sectionId }) => {
     dispatch(updateSection({ sectionId, content: { items: updatedItems } }))
   }
 
-  const renderListItem = (item: SectionItem, index: number) => {
+  const renderListItem = (item: any, index: number) => {
     const itemText = typeof item === 'string' ? item : item.text
     const isCredential = typeof item === 'object'
 
@@ -155,7 +161,8 @@ const SectionContent: React.FC<SectionContentProps> = ({ sectionId }) => {
   }
 
   return (
-    <Box>
+    <Box sx={{ position: 'relative' }}>
+      {/* Section Header */}
       <Box
         sx={{
           display: 'flex',
