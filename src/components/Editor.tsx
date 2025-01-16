@@ -129,7 +129,7 @@ const ResumeEditor = () => {
   }, [handleTextSelection])
 
   return (
-    <Box sx={{ p: 4 }}>
+    <Box sx={{ p: 6 }}>
       <Box
         sx={{
           display: 'flex',
