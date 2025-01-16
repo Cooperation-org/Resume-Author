@@ -87,6 +87,20 @@ const Hero = () => {
       <HowItWorksSection />
       <HowResumeAuthorWorks />
       <WhoBenefitsSection />
+      <Box
+        sx={{
+          display: 'flex',
+          flexDirection: 'column',
+          bgcolor: '#FFFFFF'
+        }}
+      >
+        <Box
+          sx={{
+            height: '400px',
+            background: 'linear-gradient(180deg, #361F7D 0%, #414FCD 100%)'
+          }}
+        />
+      </Box>
     </div>
   )
 }
