@@ -458,32 +458,6 @@ export const SVGSinfo = () => {
   )
 }
 
-export const SVGAdd = () => {
-  return (
-    // black sparkle.svg
-    <div>
-      <svg
-        width='16'
-        height='16'
-        viewBox='0 0 24 24'
-        fill='none'
-        xmlns='http://www.w3.org/2000/svg'
-      >
-        <g clip-path='url(#clip0_316_26716)'>
-          <path
-            d='M4 6H2V20C2 21.105 2.895 22 4 22H18V20H4V6ZM20 2H8C6.895 2 6 2.895 6 4V16C6 17.105 6.895 18 8 18H20C21.105 18 22 17.105 22 16V4C22 2.895 21.105 2 20 2ZM19 11H15V15H13V11H9V9H13V5H15V9H19V11Z'
-            fill='#77828F'
-          />
-        </g>
-        <defs>
-          <clipPath id='clip0_316_26716'>
-            <rect width='24' height='24' fill='white' />
-          </clipPath>
-        </defs>
-      </svg>
-    </div>
-  )
-}
 export const SVGFolder = () => {
   return (
     // light gray arrow.svg
