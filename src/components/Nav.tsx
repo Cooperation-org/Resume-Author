@@ -23,44 +23,51 @@ const Nav = () => {
     }
   }, [navigate])
 
-  const handleGoogleLogin = () => {
-    setLoading(true)
-    googleLogin()
-  }
-
-  const handleLogout = () => {
-    removeCookie('auth_token')
-    removeLocalStorage('user_info')
-
-    setIsLogged(false)
-  }
   return (
-    <AppBar position='static' elevation={0} sx={{ bgcolor: 'transparent', pt: 1 }}>
+    <AppBar
+      position='static'
+      elevation={0}
+      sx={{ bgcolor: 'transparent', pt: 1, pr: 5, pl: 4 }}
+    >
       <Toolbar>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexGrow: 1 }}>
           <img src={Logo} alt='Résumé Author' style={{ height: '50px' }} />
           <Typography>Résumé Author</Typography>
         </Box>
-        <Stack direction='row' spacing={2}>
-          <Button color='inherit' sx={{ color: 'white' }}>
+        <Stack direction='row' spacing={5}>
+          <Button
+            color='inherit'
+            sx={{
+              color: 'white',
+              textTransform: 'capitalize',
+              fontWeight: 500,
+              fontSize: '16px'
+            }}
+          >
             How it works
           </Button>
-          <Button color='inherit' sx={{ color: 'white' }}>
+          <Button
+            color='inherit'
+            sx={{
+              color: 'white',
+              textTransform: 'capitalize',
+              fontWeight: 500,
+              fontSize: '16px'
+            }}
+          >
             Why Resume Author?
           </Button>
-          <Button color='inherit' sx={{ color: 'white' }}>
+          <Button
+            color='inherit'
+            sx={{
+              color: 'white',
+              textTransform: 'capitalize',
+              fontWeight: 500,
+              fontSize: '16px'
+            }}
+          >
             Benefits
           </Button>
-
-          {!isLogged ? (
-            <Button onClick={handleGoogleLogin} variant='contained'>
-              Login
-            </Button>
-          ) : (
-            <Button onClick={handleLogout} variant='contained'>
-              Logout
-            </Button>
-          )}
         </Stack>
       </Toolbar>
       <LoadingOverlay open={loading} />
