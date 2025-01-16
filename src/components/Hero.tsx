@@ -2,6 +2,9 @@ import { Container, Box, Typography, Stack, Button } from '@mui/material'
 import React from 'react'
 import HeroImage from '../assets/hero.png'
 import { Link } from 'react-router-dom'
+import HowItWorksSection from './HowItWorksSection'
+import HowResumeAuthorWorks from './HowResumeAuthorWorks'
+import WhoBenefitsSection from './WhoBenefitsSection'
 
 const Hero = () => {
   return (
@@ -25,27 +28,41 @@ const Hero = () => {
                 mb: 2
               }}
             >
-              Prove your skills in a verifiable résumé that employers trust.
+              Prove your skills in a verifiable resume that employers trust.{' '}
             </Typography>
             <Typography sx={{ color: 'white', mb: 4, fontSize: '1.2rem' }}>
-              Résumé Author transforms bullet points into verified proof of your skills,
+              Resume Author transforms bullet points into verified proof of your skills,
               turning your experience into a compelling, interactive story.
             </Typography>
             <Stack direction='row' spacing={2}>
               <Link to='/resume/import'>
                 <Button
                   variant='contained'
-                  sx={{ bgcolor: 'white', color: '#4527A0', py: 1.5, px: 4 }}
+                  sx={{
+                    bgcolor: '#4527A0',
+                    color: 'white',
+                    p: '11px 100px',
+                    borderRadius: '100px',
+                    border: '2px solid #FFF',
+                    textTransform: 'capitalize'
+                  }}
                 >
-                  Import Existing Resume
+                  Sign Up
                 </Button>
               </Link>
               <Link to='/resume/new'>
                 <Button
                   variant='outlined'
-                  sx={{ color: 'white', borderColor: 'white', py: 1.5, px: 4 }}
+                  sx={{
+                    color: '#4527A0',
+                    bgcolor: 'white',
+                    p: '11px 100px',
+                    borderRadius: '100px',
+                    textTransform: 'capitalize',
+                    fontWeight: 700
+                  }}
                 >
-                  Create A New Resume
+                  Login
                 </Button>
               </Link>
             </Stack>
@@ -67,6 +84,9 @@ const Hero = () => {
           </Box>
         </Box>
       </Container>
+      <HowItWorksSection />
+      <HowResumeAuthorWorks />
+      <WhoBenefitsSection />
     </div>
   )
 }
