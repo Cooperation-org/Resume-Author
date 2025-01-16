@@ -14,7 +14,7 @@ import RightSidebar from './ResumeEditor/RightSidebar'
 import Section from './ResumeEditor/Section'
 import { useSelector } from 'react-redux'
 import { RootState } from '../redux/store'
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { SVGEditName } from '../assets/svgs'
 
 const nonVisibleSections = [
@@ -232,7 +232,15 @@ const ResumeEditor = () => {
           }}
         >
           <Box>
-            {resume && sectionOrder.map(key => <Section key={key} sectionId={key} />)}
+            {resume &&
+              sectionOrder.map(key => (
+                <Section
+                  key={key}
+                  sectionId={key}
+                  highlightedText={''}
+                  tooltipPosition={null}
+                />
+              ))}
           </Box>
 
           {/* Autocomplete for Adding New Sections */}
@@ -272,7 +280,6 @@ const ResumeEditor = () => {
 
         <RightSidebar />
       </Box>
-
     </Box>
   )
 }
