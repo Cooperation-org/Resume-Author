@@ -108,29 +108,14 @@ const ResumeEditor = () => {
     <Box sx={{ display: 'flex', gap: 4, p: 4, marginBottom: 2 }}>
       <LeftSidebar />
 
-      <Box sx={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
-        <Box>
-          <Typography variant='h4' fontWeight='600' mb={2}>
-            Edit your resume
-          </Typography>
-          {resume &&
-            sectionOrder.map(key => (
-              <SectionContent
-                key={key}
-                sectionId={key}
-                highlightedText={highlightedText}
-              />
-            ))}
-        </Box>
-
+      <Box sx={{ display: 'flex', flexDirection: 'column', flex: 1, mb: 3 }}>
         {!addSectionOpen && (
-          <Box sx={{ p: 6 }}>
+          <Box sx={{}}>
             <Box
               sx={{
                 display: 'flex',
                 alignItems: 'center',
-                justifyContent: 'space-between',
-                mb: '30px'
+                justifyContent: 'space-between'
               }}
             >
               <Box sx={{ display: 'flex', gap: '15px', flexDirection: 'column' }}>
@@ -244,6 +229,20 @@ const ResumeEditor = () => {
           </Box>
 
           <BorderLinearProgress variant='determinate' value={50} />
+        </Box>
+
+        <Box>
+          <Typography variant='h4' fontWeight='600' mt={2}>
+            Edit your resume
+          </Typography>
+          {resume &&
+            sectionOrder.map(key => (
+              <SectionContent
+                key={key}
+                sectionId={key}
+                highlightedText={highlightedText}
+              />
+            ))}
         </Box>
       </Box>
 
