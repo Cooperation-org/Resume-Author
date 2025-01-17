@@ -13,7 +13,7 @@ import { Edit, Eye, Save, Trash2, EyeOff, Plus } from 'lucide-react'
 import { useDispatch, useSelector } from 'react-redux'
 import { updateSection } from '../../redux/slices/resume'
 import CredentialDialog from '../CredentialDialog'
-import { SVGAdd } from '../../assets/svgs'
+import { SVGAdd, SVGDelete, SVGSectionIcon } from '../../assets/svgs'
 import TextEditor from '../TextEditor/Texteditor'
 
 interface SectionContentProps {
@@ -202,6 +202,7 @@ const SectionContent: React.FC<SectionContentProps> = ({
           mb: 2
         }}
       >
+<!-- <<<<<<< 53-applying-the-list-view-component
         <Typography variant='h6' fontWeight='600'>
           {sectionId.charAt(0).toUpperCase() + sectionId.slice(1)}
         </Typography>
@@ -215,7 +216,17 @@ const SectionContent: React.FC<SectionContentProps> = ({
           <IconButton onClick={handleAddCredentialClick}>
             <SVGAdd />
           </IconButton>
+======= -->
+        <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+          <SVGSectionIcon />
+          <Typography variant='h6' fontWeight='600'>
+            {sectionId.charAt(0).toUpperCase() + sectionId.slice(1)}
+          </Typography>
         </Box>
+        <IconButton>
+          <SVGDelete />
+          <Typography sx={{ ml: 1, fontSize: '16px' }}>Delete</Typography>
+        </IconButton>
       </Box>
       <Divider sx={{ mb: 2 }} />
 
