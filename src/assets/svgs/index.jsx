@@ -45,6 +45,229 @@ export const SVGCopySidebar = () => {
     </div>
   )
 }
+export const SVGDeleteSection = () => {
+  return (
+    <div>
+      <svg
+        xmlns='http://www.w3.org/2000/svg'
+        width='25'
+        height='24'
+        viewBox='0 0 25 24'
+        fill='none'
+      >
+        <path
+          d='M19.7234 6.25312C19.6109 5.83125 19.5359 5.59688 19.5359 5.59688C19.4141 5.16094 19.1047 5.16094 18.6453 5.08594L16.1562 4.77188C15.8469 4.72031 15.8469 4.72031 15.725 4.45312C15.3172 3.53437 15.1906 3 14.7453 3H9.91718C9.47187 3 9.35 3.53437 8.94218 4.45781C8.82031 4.72031 8.82031 4.72031 8.51093 4.77656L6.01718 5.09062C5.5625 5.16562 5.23437 5.20781 5.1125 5.64375C5.1125 5.64375 5.05625 5.83594 4.93906 6.25312C4.78906 6.81094 4.72812 6.75 5.24375 6.75H19.4187C19.9344 6.75469 19.8781 6.81094 19.7234 6.25312ZM18.1156 8.25H6.54687C5.76875 8.25 5.73125 8.35312 5.77812 8.93906L6.65468 20.3109C6.72968 20.8875 6.78593 21.0047 7.475 21.0047H17.1875C17.8766 21.0047 17.9328 20.8875 18.0078 20.3109L18.8844 8.93906C18.9312 8.34844 18.8937 8.25 18.1156 8.25Z'
+          fill='#78809A'
+        />
+      </svg>
+    </div>
+  )
+}
+export const SVGStartFromScratchicon = () => {
+  return (
+    <div>
+      <svg
+        xmlns='http://www.w3.org/2000/svg'
+        width='40'
+        height='40'
+        viewBox='0 0 40 40'
+        fill='none'
+      >
+        <g clip-path='url(#clip0_1059_3263)'>
+          <g filter='url(#filter0_d_1059_3263)'>
+            <path
+              d='M28.333 4.99976C28.7575 4.49815 29.2825 4.08985 29.8747 3.8009C30.4669 3.51194 31.1132 3.34865 31.7724 3.32145C32.4317 3.29425 33.0894 3.40373 33.7036 3.6429C34.3179 3.88208 34.8753 4.24572 35.3402 4.71063C35.8051 5.17554 36.1674 5.73153 36.4039 6.34316C36.6404 6.95479 36.7461 7.60865 36.714 8.26306C36.682 8.91747 36.513 9.55807 36.2178 10.144C35.9227 10.73 35.5078 11.2485 34.9997 11.6664L12.4997 34.1664L3.33301 36.6664L5.83301 27.4998L28.333 4.99976Z'
+              stroke='#2563EB'
+              stroke-width='2'
+              stroke-linecap='round'
+              stroke-linejoin='round'
+              shape-rendering='crispEdges'
+            />
+          </g>
+          <path
+            d='M25 8.33301L31.6667 14.9997'
+            stroke='#2563EB'
+            stroke-linecap='round'
+            stroke-linejoin='round'
+          />
+        </g>
+        <defs>
+          <filter
+            id='filter0_d_1059_3263'
+            x='-0.666992'
+            y='2.31738'
+            width='41.3867'
+            height='42.3486'
+            filterUnits='userSpaceOnUse'
+            color-interpolation-filters='sRGB'
+          >
+            <feFlood flood-opacity='0' result='BackgroundImageFix' />
+            <feColorMatrix
+              in='SourceAlpha'
+              type='matrix'
+              values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0'
+              result='hardAlpha'
+            />
+            <feOffset dy='4' />
+            <feGaussianBlur stdDeviation='1.5' />
+            <feComposite in2='hardAlpha' operator='out' />
+            <feColorMatrix
+              type='matrix'
+              values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.07 0'
+            />
+            <feBlend
+              mode='normal'
+              in2='BackgroundImageFix'
+              result='effect1_dropShadow_1059_3263'
+            />
+            <feBlend
+              mode='normal'
+              in='SourceGraphic'
+              in2='effect1_dropShadow_1059_3263'
+              result='shape'
+            />
+          </filter>
+          <clipPath id='clip0_1059_3263'>
+            <rect width='40' height='40' fill='white' />
+          </clipPath>
+        </defs>
+      </svg>
+    </div>
+  )
+}
+export const SVGAddFiles = () => {
+  return (
+    <div>
+      <svg
+        xmlns='http://www.w3.org/2000/svg'
+        width='25'
+        height='24'
+        viewBox='0 0 25 24'
+        fill='none'
+      >
+        <mask
+          id='mask0_1059_5072'
+          style={{
+            marginRight: '1em',
+            cursor: 'pointer'
+          }}
+          maskUnits='userSpaceOnUse'
+          x='0'
+          y='0'
+          width='25'
+          height='24'
+        >
+          <rect x='0.5' width='24' height='24' fill='#D9D9D9' />
+        </mask>
+        <g mask='url(#mask0_1059_5072)'>
+          <path
+            d='M9.5 18H15.5C15.7833 18 16.0208 17.9042 16.2125 17.7125C16.4042 17.5208 16.5 17.2833 16.5 17C16.5 16.7167 16.4042 16.4792 16.2125 16.2875C16.0208 16.0958 15.7833 16 15.5 16H9.5C9.21667 16 8.97917 16.0958 8.7875 16.2875C8.59583 16.4792 8.5 16.7167 8.5 17C8.5 17.2833 8.59583 17.5208 8.7875 17.7125C8.97917 17.9042 9.21667 18 9.5 18ZM9.5 14H15.5C15.7833 14 16.0208 13.9042 16.2125 13.7125C16.4042 13.5208 16.5 13.2833 16.5 13C16.5 12.7167 16.4042 12.4792 16.2125 12.2875C16.0208 12.0958 15.7833 12 15.5 12H9.5C9.21667 12 8.97917 12.0958 8.7875 12.2875C8.59583 12.4792 8.5 12.7167 8.5 13C8.5 13.2833 8.59583 13.5208 8.7875 13.7125C8.97917 13.9042 9.21667 14 9.5 14ZM6.5 22C5.95 22 5.47917 21.8042 5.0875 21.4125C4.69583 21.0208 4.5 20.55 4.5 20V4C4.5 3.45 4.69583 2.97917 5.0875 2.5875C5.47917 2.19583 5.95 2 6.5 2H13.675C13.9417 2 14.1958 2.05 14.4375 2.15C14.6792 2.25 14.8917 2.39167 15.075 2.575L19.925 7.425C20.1083 7.60833 20.25 7.82083 20.35 8.0625C20.45 8.30417 20.5 8.55833 20.5 8.825V20C20.5 20.55 20.3042 21.0208 19.9125 21.4125C19.5208 21.8042 19.05 22 18.5 22H6.5ZM13.5 8C13.5 8.28333 13.5958 8.52083 13.7875 8.7125C13.9792 8.90417 14.2167 9 14.5 9H18.5L13.5 4V8Z'
+            fill='#78809A'
+          />
+        </g>
+      </svg>
+    </div>
+  )
+}
+export const SVGFromLinkedin = () => {
+  return (
+    <div>
+      <svg
+        width='51'
+        height='38'
+        viewBox='0 0 51 38'
+        fill='none'
+        xmlns='http://www.w3.org/2000/svg'
+      >
+        <circle
+          cx='5.66393'
+          cy='6.70788'
+          r='4.16393'
+          fill='#EFF6FF'
+          stroke='#2563EB'
+          stroke-width='2'
+        />
+        <path
+          d='M16.8281 1.54395H49.8281'
+          stroke='#2563EB'
+          stroke-width='2'
+          stroke-linecap='round'
+        />
+        <path
+          d='M16.8281 6.54395H49.8281'
+          stroke='#2563EB'
+          stroke-width='2'
+          stroke-linecap='round'
+        />
+        <path
+          d='M16.8281 11.5439H49.8281'
+          stroke='#2563EB'
+          stroke-width='2'
+          stroke-linecap='round'
+        />
+        <path
+          d='M16.8281 16.5439H49.8281'
+          stroke='#2563EB'
+          stroke-width='2'
+          stroke-linecap='round'
+        />
+        <path d='M2 27H50' stroke='#2563EB' stroke-width='2' stroke-linecap='round' />
+        <path d='M2 32H50' stroke='#2563EB' stroke-width='2' stroke-linecap='round' />
+        <path d='M2 37H50' stroke='#2563EB' stroke-width='2' stroke-linecap='round' />
+      </svg>
+    </div>
+  )
+}
+export const SVGAddcredential = () => {
+  return (
+    <div>
+      <svg
+        xmlns='http://www.w3.org/2000/svg'
+        width='25'
+        height='24'
+        viewBox='0 0 25 24'
+        fill='none'
+      >
+        <g clip-path='url(#clip0_1059_2564)'>
+          <path
+            d='M4.6665 6H2.6665V20C2.6665 21.105 3.5615 22 4.6665 22H18.6665V20H4.6665V6ZM20.6665 2H8.6665C7.5615 2 6.6665 2.895 6.6665 4V16C6.6665 17.105 7.5615 18 8.6665 18H20.6665C21.7715 18 22.6665 17.105 22.6665 16V4C22.6665 2.895 21.7715 2 20.6665 2ZM19.6665 11H15.6665V15H13.6665V11H9.6665V9H13.6665V5H15.6665V9H19.6665V11Z'
+            fill='#78809A'
+          />
+        </g>
+        <defs>
+          <clipPath id='clip0_1059_2564'>
+            <rect width='24' height='24' fill='white' transform='translate(0.666504)' />
+          </clipPath>
+        </defs>
+      </svg>
+    </div>
+  )
+}
+export const SVGDownIcon = () => {
+  return (
+    <div>
+      <svg
+        xmlns='http://www.w3.org/2000/svg'
+        width='25'
+        height='25'
+        viewBox='0 0 25 25'
+        fill='none'
+      >
+        <g clip-path='url(#clip0_712_12107)'>
+          <path
+            d='M12.5 25C14.9723 25 17.389 24.2669 19.4446 22.8934C21.5002 21.5199 23.1024 19.5676 24.0485 17.2835C24.9946 14.9995 25.2421 12.4861 24.7598 10.0614C24.2775 7.63661 23.087 5.40933 21.3388 3.66117C19.5907 1.91301 17.3634 0.722505 14.9386 0.24019C12.5139 -0.242126 10.0005 0.00541604 7.71645 0.951511C5.43237 1.89761 3.48014 3.49976 2.10662 5.55538C0.733107 7.61099 -5.72205e-06 10.0277 -5.72205e-06 12.5C0.00264168 15.8144 1.32045 18.9923 3.66409 21.3359C6.00772 23.6795 9.1856 24.9974 12.5 25ZM7.70999 9.29001L12.5 14.08L17.29 9.29001L18.7 10.7L13.2 16.2C13.0126 16.3863 12.7592 16.4908 12.495 16.4908C12.2308 16.4908 11.9774 16.3863 11.79 16.2L6.29 10.7L7.70999 9.29001Z'
+            fill='#3A35A2'
+          />
+        </g>
+        <defs>
+          <clipPath id='clip0_712_12107'>
+            <rect width='25' height='25' fill='white' transform='matrix(0 1 -1 0 25 0)' />
+          </clipPath>
+        </defs>
+      </svg>
+    </div>
+  )
+}
 export const SVGAddSidebar = () => {
   return (
     <div>

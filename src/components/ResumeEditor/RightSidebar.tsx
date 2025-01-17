@@ -28,7 +28,8 @@ const paperStyle = {
   alignSelf: 'stretch',
   borderRadius: '8px',
   bgcolor: '#FFF',
-  boxShadow: '0px 2px 20px 0px rgba(0,0,0,0.10)'
+  boxShadow: '0px 2px 20px 0px rgba(0,0,0,0.10)',
+  height: 'fit-content'
 }
 
 const placeholderStyle = {
