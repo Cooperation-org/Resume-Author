@@ -158,25 +158,31 @@ export default function SectionDetails(sectionId: any) {
           </Box>
         )}
         {/* Button Group */}
-        <Box
-          sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
-        >
-          <StyledButton
-            startIcon={<SVGAddcredential />}
-            onClick={() => alert('Pressed!')}
+        {sectionId.sectionId !== 'Professional Summary' && (
+          <Box
+            sx={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center'
+            }}
           >
-            Add credential(s)
-          </StyledButton>
-          <StyledButton startIcon={<SVGAddFiles />} onClick={() => alert('Pressed!')}>
-            Add file(s)
-          </StyledButton>
-          <StyledButton
-            startIcon={<SVGDeleteSection />}
-            onClick={() => alert('Pressed!')}
-          >
-            Delete this item
-          </StyledButton>
-        </Box>
+            <StyledButton
+              startIcon={<SVGAddcredential />}
+              onClick={() => alert('Pressed!')}
+            >
+              Add credential(s)
+            </StyledButton>
+            <StyledButton startIcon={<SVGAddFiles />} onClick={() => alert('Pressed!')}>
+              Add file(s)
+            </StyledButton>
+            <StyledButton
+              startIcon={<SVGDeleteSection />}
+              onClick={() => alert('Pressed!')}
+            >
+              Delete this item
+            </StyledButton>
+          </Box>
+        )}
       </Stack>
     </Box>
   )
