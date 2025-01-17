@@ -1,6 +1,7 @@
-import { Box, Typography } from '@mui/material'
+import { Box, Button, Typography } from '@mui/material'
 import { styled } from '@mui/system'
 import { useAuth0 } from '@auth0/auth0-react'
+import { SVGStartFromScratchicon, SVGFromLinkedin } from '../assets/svgs'
 
 const InnerContainer = styled(Box)(() => ({
   backgroundColor: '#FFFFFF',
@@ -23,6 +24,20 @@ const Section = styled(Box)(() => ({
   minHeight: 160,
   cursor: 'pointer'
 }))
+
+const StyledButton = styled(Button)({
+  color: '#2563EB',
+  textAlign: 'center',
+  fontSize: '20px',
+  fontWeight: 400,
+  textDecorationLine: 'underline',
+  marginTop: '30px',
+  textTransform: 'none',
+  '&:hover': {
+    backgroundColor: 'transparent',
+    color: '#1d4ed8'
+  }
+})
 
 export default function ImportPage(props: any) {
   const { user, isAuthenticated } = useAuth0()
@@ -68,9 +83,18 @@ export default function ImportPage(props: any) {
             mb: { xs: '30px', md: 0 }
           }}
         >
-          <Section sx={{ width: { xs: '280px', md: '430px' } }}>
+          <Section onClick={handlesign} sx={{ width: { xs: '250px', md: '400px' } }}>
             <Typography variant='h6' sx={{ color: '#07142B', fontWeight: 'bold' }}>
-              Choose an existing resume
+              Start from scratch
+            </Typography>
+            <SVGStartFromScratchicon />
+            <Typography variant='body2' sx={{ color: '#1F2937', textAlign: 'center' }}>
+              Build a resume from a blank template
+            </Typography>
+          </Section>
+          <Section sx={{ width: { xs: '250px', md: '400px' } }}>
+            <Typography variant='h6' sx={{ color: '#07142B', fontWeight: 'bold' }}>
+              Upload Resume
             </Typography>
             <Box
               component='img'
@@ -90,40 +114,74 @@ export default function ImportPage(props: any) {
             >
               <Box sx={{ display: 'flex', gap: 1 }}>
                 <Typography variant='body2' sx={{ color: '#1F2937' }}>
-                  Drop your file here or
-                </Typography>
-                <Typography variant='body2' sx={{ color: '#2563EB', cursor: 'pointer' }}>
-                  browse
+                  Supported file types
                 </Typography>
               </Box>
               <Typography
                 variant='caption'
                 sx={{ color: '#9CA3AF', textAlign: 'center', marginX: 12 }}
               >
-                Maximum size: 50MB
+                (doc, docx, pdf, rtf, json, txt)
               </Typography>
             </Box>
           </Section>
 
-          <Section onClick={handlesign} sx={{ width: { xs: '280px', md: '430px' } }}>
+          <Section onClick={handlesign} sx={{ width: { xs: '250px', md: '400px' } }}>
             <Typography variant='h6' sx={{ color: '#07142B', fontWeight: 'bold' }}>
               Import LinkedIn profile
             </Typography>
             <Box
-              component='img'
-              src='https://figma-alpha-api.s3.us-west-2.amazonaws.com/images/3931be67-58fb-4780-bc18-f60c628f1a4a'
               sx={{
-                height: 53,
-                marginX: 'auto',
-                objectFit: 'fill'
+                height: 'fit-content',
+                width: 'fit-content',
+                border: '2px solid #2563EB',
+                p: '4px',
+                borderRadius: '4px'
               }}
-            />
+            >
+              <SVGFromLinkedin />
+            </Box>
+
             <Typography variant='body2' sx={{ color: '#1F2937', textAlign: 'center' }}>
               Must have a LinkedIn account
             </Typography>
           </Section>
         </Box>
+        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+          <StyledButton>Go to My Resumes </StyledButton>
+        </Box>
       </InnerContainer>
+      <Box
+        sx={{
+          width: '100%',
+          bgcolor: '#FFF',
+          height: '80px',
+          boxShadow: ' 4px -4px 10px 2px rgba(20, 86, 255, 0.25)',
+          display: 'flex',
+          justifyContent: 'flex-end',
+          alignItems: 'center'
+        }}
+      >
+        <Button
+          variant='contained'
+          sx={{
+            backgroundColor: '#B5B5B5',
+            color: '#FFFFFF',
+            textTransform: 'none',
+            px: 4,
+            py: 1.5,
+            mr: 6,
+            borderRadius: '100px',
+            border: '3px solid  #B5B5B5',
+            '&:hover': {
+              backgroundColor: '#1E40AF',
+              border: '3px solid  #1E40AF'
+            }
+          }}
+        >
+          Continue
+        </Button>
+      </Box>
     </Box>
   )
 }

@@ -58,9 +58,11 @@ const ResumeEditor = () => {
   const [addSectionOpen, setAddSectionOpen] = useState(false)
   const [selectedSection, setSelectedSection] = useState<string | null>(null)
   const [sectionOrder, setSectionOrder] = useState<(keyof Resume)[]>([
-    'summary',
-    'experience',
-    'education'
+    'Professional Summary' as any,
+    'Work Experience',
+    'Education',
+    'Professional Affiliations',
+    'Skills and Abilities'
   ])
 
   // Tooltip state
@@ -70,7 +72,7 @@ const ResumeEditor = () => {
     left: number
   } | null>(null)
 
-  const resume = useSelector((state: RootState) => state.resume.resume)
+  const resume = useSelector((state: RootState) => state?.resume.resume)
   const { vcs, status, error } = useSelector((state: RootState) => state.vcReducer)
 
   const AllSections = Object.keys(resume as Resume).filter(
