@@ -177,7 +177,7 @@ const RightSidebar = () => {
             borderRadius: '100px'
           }}
         >
-          {claims ? 'Log out' : 'Connect Google Drive'}
+          Connect Google Drive
         </Button>
         <Button
           variant='outlined'
