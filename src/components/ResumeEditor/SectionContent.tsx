@@ -27,6 +27,8 @@ type CredentialItem = {
   verified: boolean
 }
 
+type SectionItem = string | { text: string; linkedCredentials?: CredentialItem[] }
+
 const SectionContent: React.FC<SectionContentProps> = ({
   sectionId,
   highlightedText
@@ -39,13 +41,13 @@ const SectionContent: React.FC<SectionContentProps> = ({
   const isStringBased = typeof sectionData === 'string'
   const isListBased = Array.isArray(sectionData?.items)
 
-  const [content, setContent] = useState(sectionData || '')
-  const [items, setItems] = useState<any[]>(sectionData?.items || [])
+  const [content, setContent] = useState<string>(isStringBased ? sectionData : '')
+  const [items, setItems] = useState<SectionItem[]>(isListBased ? sectionData.items : [])
   const [editing, setEditing] = useState(false)
   const [newItemValue, setNewItemValue] = useState('')
   const [isVisible, setIsVisible] = useState(true)
   const [isCredentialDialogOpen, setIsCredentialDialogOpen] = useState(false)
-  const [selectedHighlightedText, setSelectedHighlightedText] = useState<string>('')
+  const [selectedHighlightedText, setSelectedHighlightedText] = useState('')
 
   useEffect(() => {
     if (isListBased) {
@@ -148,13 +150,13 @@ const SectionContent: React.FC<SectionContentProps> = ({
     setIsCredentialDialogOpen(false)
   }
 
-  const renderListItem = (item: any, index: number) => {
+  const renderListItem = (item: SectionItem, index: number) => {
     const itemText = typeof item === 'string' ? item : item.text
-    const isCredential = typeof item === 'object'
+    const isCredential = typeof item === 'object' && item.linkedCredentials
 
     return (
       <ListItem
-        key={isCredential ? item.credentialId : index}
+        key={isCredential ? item.linkedCredentials?.[0]?.credentialId : index}
         sx={{ display: 'flex', alignItems: 'center', gap: 2 }}
       >
         <ListItemText
@@ -202,10 +204,12 @@ const SectionContent: React.FC<SectionContentProps> = ({
           mb: 2
         }}
       >
-<!-- <<<<<<< 53-applying-the-list-view-component
-        <Typography variant='h6' fontWeight='600'>
-          {sectionId.charAt(0).toUpperCase() + sectionId.slice(1)}
-        </Typography>
+        <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+          <SVGSectionIcon />
+          <Typography variant='h6' fontWeight='600'>
+            {sectionId.charAt(0).toUpperCase() + sectionId.slice(1)}
+          </Typography>
+        </Box>
         <Box sx={{ display: 'flex', gap: 1 }}>
           <IconButton onClick={toggleEdit}>
             {editing ? <Save size={16} /> : <Edit size={16} />}
@@ -216,17 +220,7 @@ const SectionContent: React.FC<SectionContentProps> = ({
           <IconButton onClick={handleAddCredentialClick}>
             <SVGAdd />
           </IconButton>
-======= -->
-        <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
-          <SVGSectionIcon />
-          <Typography variant='h6' fontWeight='600'>
-            {sectionId.charAt(0).toUpperCase() + sectionId.slice(1)}
-          </Typography>
         </Box>
-        <IconButton>
-          <SVGDelete />
-          <Typography sx={{ ml: 1, fontSize: '16px' }}>Delete</Typography>
-        </IconButton>
       </Box>
       <Divider sx={{ mb: 2 }} />
 
