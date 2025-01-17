@@ -106,7 +106,7 @@ const ResumeEditor = () => {
 
   return (
     <Box sx={{ display: 'flex', gap: 4, p: 4, marginBottom: 2 }}>
-      <LeftSidebar highlightedText={highlightedText} />
+      <LeftSidebar />
 
       <Box sx={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
         <Box>
@@ -124,59 +124,63 @@ const ResumeEditor = () => {
         </Box>
 
         {!addSectionOpen && (
-    <Box sx={{ p: 6 }}>
-      <Box
-        sx={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          mb: '30px'
-        }}
-      >
-        <Box sx={{ display: 'flex', gap: '15px', flexDirection: 'column' }}>
-          <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
-            <Typography
+          <Box sx={{ p: 6 }}>
+            <Box
               sx={{
-                color: '#000',
-                fontFamily: 'Poppins',
-                fontSize: '42px',
-                fontStyle: 'normal',
-                fontWeight: 600,
-                lineHeight: '55.88px'
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                mb: '30px'
               }}
             >
-              Alice Parker Resume
-            </Typography>
-            <IconButton>
-              <SVGEditName />
-            </IconButton>
+              <Box sx={{ display: 'flex', gap: '15px', flexDirection: 'column' }}>
+                <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+                  <Typography
+                    sx={{
+                      color: '#000',
+                      fontFamily: 'Poppins',
+                      fontSize: '42px',
+                      fontStyle: 'normal',
+                      fontWeight: 600,
+                      lineHeight: '55.88px'
+                    }}
+                  >
+                    Alice Parker Resume
+                  </Typography>
+                  <IconButton>
+                    <SVGEditName />
+                  </IconButton>
+                </Box>
+                <Typography
+                  sx={{
+                    color: '#2E2E48',
+                    fontFamily: 'DM Sans',
+                    fontSize: '16px',
+                    fontStyle: 'normal',
+                    fontWeight: 500,
+                    lineHeight: 'normal',
+                    letterSpacing: '0.16px'
+                  }}
+                >
+                  Placeholder for instructional text, if needed, TBD
+                </Typography>
+              </Box>
+              <Box sx={{ display: 'flex', gap: '10px' }}>
+                <Button variant='outlined' sx={ButtonStyles}>
+                  Preview
+                </Button>
+                <Button variant='outlined' sx={ButtonStyles}>
+                  Save as Draft
+                </Button>
+                <Button
+                  variant='outlined'
+                  sx={{ ...ButtonStyles, color: 'white', bgcolor: '#614BC4' }}
+                >
+                  Save and Sign
+                </Button>
+              </Box>
+            </Box>
           </Box>
-          <Typography
-            sx={{
-              color: '#2E2E48',
-              fontFamily: 'DM Sans',
-              fontSize: '16px',
-              fontStyle: 'normal',
-              fontWeight: 500,
-              lineHeight: 'normal',
-              letterSpacing: '0.16px'
-            }}
-          >
-            Placeholder for instructional text, if needed, TBD
-          </Typography>
-        </Box>
-        <Box sx={{ display: 'flex', gap: '10px' }}>
-          <Button variant='outlined' sx={ButtonStyles}>
-            Preview
-          </Button>
-          <Button variant='outlined' sx={ButtonStyles}>
-            Save as Draft
-          </Button>
-          <Button
-            variant='outlined'
-            sx={{ ...ButtonStyles, color: 'white', bgcolor: '#614BC4' }}
-          >
-            Save and Sign
         )}
 
         {addSectionOpen && (
@@ -205,105 +209,45 @@ const ResumeEditor = () => {
             </Button>
           </Box>
         )}
-      </Box>
 
-        </Box>
-      </Box>
-      <Box>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-          <Typography
-            sx={{
-              color: '#2E2E48',
-              fontFamily: 'DM Sans',
-              fontSize: '16px',
-              fontStyle: 'normal',
-              fontWeight: 700,
-              lineHeight: 'normal',
-              letterSpacing: '0.16px',
-              mt: 2
-            }}
-          >
-            Progress: 50%
-          </Typography>
-          <Typography
-            sx={{
-              color: '#2E2E48',
-              fontFamily: 'DM Sans',
-              fontSize: '16px',
-              fontStyle: 'normal',
-              fontWeight: 500,
-              lineHeight: 'normal',
-              letterSpacing: '0.16px',
-              mt: 2,
-              pr: 2
-            }}
-          >
-            Add at least 1 credential!{' '}
-          </Typography>
-        </Box>
-
-        <BorderLinearProgress variant='determinate' value={50} />
-      </Box>
-      <Box sx={{ display: 'flex', gap: 4, mt: 2 }}>
-        <LeftSidebar />
-
-        {/* Main Content */}
-        <Box
-          sx={{
-            display: 'flex',
-            flexDirection: 'column',
-            flex: 1
-          }}
-        >
-          <Box>
-            {resume &&
-              sectionOrder.map(key => (
-                <Section
-                  key={key}
-                  sectionId={key}
-                  highlightedText={''}
-                  tooltipPosition={null}
-                />
-              ))}
-          </Box>
-
-          {/* Autocomplete for Adding New Sections */}
-          {addSectionOpen && (
-            <Box
+        <Box>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+            <Typography
               sx={{
-                display: 'flex',
-                gap: 2,
-                alignItems: 'center'
+                color: '#2E2E48',
+                fontFamily: 'DM Sans',
+                fontSize: '16px',
+                fontStyle: 'normal',
+                fontWeight: 700,
+                lineHeight: 'normal',
+                letterSpacing: '0.16px',
+                mt: 2
               }}
             >
-              <Autocomplete
-                options={AllSections}
-                value={selectedSection}
-                onChange={handleSectionSelect}
-                renderInput={params => (
-                  <TextField
-                    {...params}
-                    label='Add Section'
-                    placeholder='Type to search...'
-                    variant='outlined'
-                    fullWidth
-                  />
-                )}
-                fullWidth
-              />
-              <Button
-                onClick={handleAddSelectedSection}
-                disabled={!selectedSection}
-                sx={{ borderRadius: 5 }}
-              >
-                Add
-              </Button>
-            </Box>
-          )}
-        </Box>
+              Progress: 50%
+            </Typography>
+            <Typography
+              sx={{
+                color: '#2E2E48',
+                fontFamily: 'DM Sans',
+                fontSize: '16px',
+                fontStyle: 'normal',
+                fontWeight: 500,
+                lineHeight: 'normal',
+                letterSpacing: '0.16px',
+                mt: 2,
+                pr: 2
+              }}
+            >
+              Add at least 1 credential!
+            </Typography>
+          </Box>
 
-        <RightSidebar />
+          <BorderLinearProgress variant='determinate' value={50} />
+        </Box>
       </Box>
+
+      <RightSidebar />
     </Box>
   )
 }

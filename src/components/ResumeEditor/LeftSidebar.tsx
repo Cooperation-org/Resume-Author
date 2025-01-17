@@ -7,7 +7,6 @@ import {
   InputAdornment,
   FormLabel
 } from '@mui/material'
-
 import {
   SVGSectionIcon,
   SVGMail,
@@ -25,19 +24,6 @@ interface LeftSidebarProps {
 }
 
 export const leftSections: (keyof Resume)[] = ['contact', 'languages']
-
-<!-- const LeftSidebar: React.FC<LeftSidebarProps> = ({ highlightedText }) => { -->
-//   return (
-//     <Box sx={{ width: 240 }}>
-//       <Typography variant='h6' mb={2}>
-//         Sections
-//       </Typography>
-//       {leftSections.map(sectionId => (
-//         <Paper key={sectionId} sx={{ mb: 2, p: 2, borderRadius: 2 }}>
-//           {/* Use SectionContent for each section and pass tooltip props */}
-//           <SectionContent sectionId={sectionId} highlightedText={highlightedText} />
-//         </Paper>
-//       ))}
 
 const LeftSidebar = () => {
   const [input1, setInput1] = useState('')
@@ -72,6 +58,7 @@ const LeftSidebar = () => {
     lineHeight: 'normal',
     letterSpacing: '0.16px'
   }
+
   const boxStyle = {
     width: '24px',
     height: '24px',
