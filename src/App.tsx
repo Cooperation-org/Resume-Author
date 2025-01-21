@@ -12,6 +12,7 @@ import ImportPage from './pages/importPage'
 import Error404 from './pages/error404'
 import LandingPage from './pages/allskillscoun-org'
 import './styles/App.css'
+import MyResumes from './components/MyResumes.tsx'
 
 const App = () => {
   const dispatch: AppDispatch = useDispatch()
@@ -28,6 +29,7 @@ const App = () => {
           <Route path='/login' element={<Login />} />
           <Route path='/resume/new' element={<Resume />} />
           <Route path='/resume/import' element={<ImportPage />} />
+          <Route path='/myresumes' element={<MyResumes />} />
           <Route path='*' element={<Error404 />} />
         </Route>
         {/* Landing page outside of Layout */}

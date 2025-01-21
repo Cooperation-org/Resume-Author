@@ -29,7 +29,7 @@
 }
 
 button {
-  border-radius: '1rem';
+  border-radius: 1rem;
 }
 
 @keyframes App-logo-spin {
@@ -40,4 +40,17 @@ button {
   to {
     transform: rotate(360deg);
   }
+}
+
+.resume-card-actions {
+  border-radius: 8rem;
+  border: solid 1px #3c4599;
+  color: #414FCD;
+}
+
+/* active rightsidebar for chelidren of resume-card-actions class except for the last child */
+
+.resume-card-actions>*:not(:last-child) {
+  border-radius: 0%;
+  border-right: solid 1px #3c4599;
 }
