@@ -11,7 +11,6 @@ import DownloadIcon from '@mui/icons-material/Download'
 import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined'
 import MoreVertIcon from '@mui/icons-material/MoreVert'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
-import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked'
 import Tooltip from '@mui/material/Tooltip'
 import Menu from '@mui/material/Menu'
 import MenuItem from '@mui/material/MenuItem'
@@ -135,7 +134,7 @@ const ResumeCard: React.FC<ResumeCardProps> = ({
                 />
               ) : (
                 <Link
-                  to='/resume/:id'
+                  to={`/resume/${id}`}
                   style={{
                     fontWeight: 500,
                     textDecoration: 'underline',
@@ -174,13 +173,13 @@ const ResumeCard: React.FC<ResumeCardProps> = ({
                 </>
               ) : (
                 <>
-                  <ActionButton
+                  {/* <ActionButton
                     size='small'
                     startIcon={<EditOutlinedIcon />}
                     onClick={handleEditTitle}
                   >
                     Edit
-                  </ActionButton>
+                  </ActionButton> */}
                   <Tooltip title={showCopiedTooltip ? 'Copied!' : 'Copy Link'}>
                     <ActionButton
                       size='small'
