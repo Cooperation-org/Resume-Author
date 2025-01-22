@@ -100,6 +100,7 @@ const Hero = () => {
       </Container>
       <HowItWorksSection />
       <WhoBenefitsSection />
+      <HowResumeAuthorWorks />
       <Box
         sx={{
           display: 'flex',
