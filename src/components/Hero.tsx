@@ -8,6 +8,7 @@ import HowItWorksSection from './HowItWorksSection'
 import HowResumeAuthorWorks from './HowResumeAuthorWorks'
 import WhoBenefitsSection from './WhoBenefitsSection'
 import SelectCards from './SelectCards'
+import MoreAbout from './MoreAboutResumeAuthor'
 
 const Hero = () => {
   return (
@@ -103,6 +104,7 @@ const Hero = () => {
       <WhoBenefitsSection />
       <HowResumeAuthorWorks />
       <SelectCards />
+      <MoreAbout />
       <Box
         sx={{
           display: 'flex',
