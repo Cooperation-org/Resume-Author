@@ -7,6 +7,7 @@ import { Link } from 'react-router-dom'
 import HowItWorksSection from './HowItWorksSection'
 import HowResumeAuthorWorks from './HowResumeAuthorWorks'
 import WhoBenefitsSection from './WhoBenefitsSection'
+import SelectCards from './SelectCards'
 
 const Hero = () => {
   return (
@@ -101,6 +102,7 @@ const Hero = () => {
       <HowItWorksSection />
       <WhoBenefitsSection />
       <HowResumeAuthorWorks />
+      <SelectCards />
       <Box
         sx={{
           display: 'flex',
