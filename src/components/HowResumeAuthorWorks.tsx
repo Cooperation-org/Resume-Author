@@ -52,8 +52,8 @@ const LandingPage = () => {
           display: 'flex',
           justifyContent: 'space-around',
           width: '100%',
-          marginBottom: '48px',
-          p: '0 40px'
+          marginBottom: '48px'
+          // p: '0 40px'
         }}
       >
         <Box

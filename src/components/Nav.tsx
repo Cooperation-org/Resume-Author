@@ -68,6 +68,17 @@ const Nav = () => {
           >
             Benefits
           </Button>
+          <Button
+            color='inherit'
+            sx={{
+              color: 'white',
+              textTransform: 'capitalize',
+              fontWeight: 500,
+              fontSize: '16px'
+            }}
+          >
+            Learn More
+          </Button>
         </Stack>
       </Toolbar>
       <LoadingOverlay open={loading} />
