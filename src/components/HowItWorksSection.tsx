@@ -1,86 +1,86 @@
-import React from 'react'
 import { Box, Typography } from '@mui/material'
-import { SVGPreview, SVGRow } from '../assets/svgs'
-
-const bosxText = [
-  'Import data from your existing resume.',
-  'Add details and link to your credentials.',
-  'Share a verifiable presentation of your resume.'
-]
+import { SVGYellowAdd, SVGResume, SVGFile, SVGVerefied } from '../assets/svgs'
 
 const HowItWorksSection = () => {
+  const sectionData = [
+    {
+      title: 'Import data from your existing resume or start with a blank template.',
+      icon: <SVGFile />,
+      color: '#5BC930'
+    },
+    {
+      title: 'Preview your resume and make any changes before finalizing.',
+      icon: <SVGResume />,
+      color: '#44C4C4'
+    },
+    {
+      title:
+        'Add credentials, recommendations, or evidence of your skills to strengthen your resume.',
+      icon: <SVGYellowAdd />,
+      color: '#EAB037'
+    },
+    {
+      title:
+        'Sign and save a verifiable presentation of your resume to prove it was created by a human.',
+      icon: <SVGVerefied />,
+      color: '#404CC8'
+    }
+  ]
   return (
     <Box
       sx={{
         display: 'flex',
-        flexDirection: 'column',
-        bgcolor: '#FFFFFF',
-        alignItems: 'center',
-        pt: { xs: '80px', sm: '150px' }, // responsive padding
-        pb: { xs: '80px', sm: '150px' },
-        gap: { xs: '20px', sm: '40px' } // responsive gap
+        p: '76px 93px 20px 93px',
+        backgroundColor: '#FFFFFF',
+        justifyContent: 'space-between',
+        alignItems: 'flex-start'
       }}
     >
       <Typography
-        variant='h1'
         sx={{
-          color: '#292489',
-          fontSize: { xs: '32px', sm: '55px' }, // responsive font size
-          fontWeight: 600,
-          textAlign: 'center' // Center text on small screens
+          width: '30%',
+          color: '#282488',
+          fontSize: '55px'
         }}
       >
-        How Resume Author Works
-      </Typography>
-      <Typography
-        variant='h2'
-        sx={{
-          color: '#000',
-          fontSize: { xs: '20px', sm: '32px' }, // responsive font size
-          textAlign: 'center'
-        }}
-      >
-        Just 3 easy steps to get started.
+        A better way to build a resume{' '}
       </Typography>
       <Box
         sx={{
           display: 'flex',
-          flexDirection: { xs: 'column', sm: 'row' }, // Stack items vertically on small screens
-          gap: { xs: '20px', sm: '40px' }, // responsive gap
-          alignItems: 'center',
-          justifyContent: 'center',
-          mt: { xs: '20px', sm: '40px' },
-          mb: { xs: '80px', sm: '150px' }
+          width: '65%',
+          flexWrap: 'wrap',
+          justifyContent: 'space-between'
         }}
       >
-        {bosxText.map((text, index) => (
-          <>
+        {sectionData.map(section => (
+          <Box
+            sx={{
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              gap: '32px',
+              width: '45%',
+              mb: '50px'
+            }}
+          >
             <Box
-              key={index}
               sx={{
-                height: '109px',
-                bgcolor: '#E9E6F8',
-                borderRadius: '20px',
-                p: { xs: '20px', sm: '20px' },
                 display: 'flex',
-                alignItems: 'center',
-                flexDirection: 'column',
-                fontSize: { xs: '18px', sm: '28px' },
                 justifyContent: 'center',
-                maxWidth: { xs: '100%', sm: '340px' }
+                alignItems: 'center',
+                borderRadius: '20px',
+                border: `2px solid ${section.color}`,
+                p: '20px'
               }}
             >
-              {text}
+              {section.icon}
             </Box>
-            {!text.includes('Share a verifiable presentation of your resume.') && (
-              <SVGRow />
-            )}
-          </>
+            <Typography>{section.title}</Typography>
+          </Box>
         ))}
       </Box>
-      <SVGPreview /> {/* Ensure SVG scales correctly */}
     </Box>
   )
 }
-
 export default HowItWorksSection

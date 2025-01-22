@@ -41,7 +41,7 @@ const BenefitsSection = (props: any) => {
         position: 'relative',
         width: '998px',
         paddingTop: '56.25%', // 16:9 Aspect Ratio
-        backgroundColor: '#F7F9FC'
+        backgroundColor: 'red'
       }}
     >
       <Box
