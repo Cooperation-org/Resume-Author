@@ -1,9 +1,13 @@
-import React from 'react'
 import { Box, Typography } from '@mui/material'
 import ResumeCard from './ResumeCard'
 import { Link } from 'react-router-dom'
+import { RootState } from '../redux/store'
+import { useSelector } from 'react-redux'
 
 const ResumeScreen: React.FC = () => {
+  const resumes = useSelector((state: RootState) => state.vcReducer.resumes)
+  const status = useSelector((state: RootState) => state.vcReducer.status)
+
   return (
     <Box
       sx={{
@@ -41,26 +45,33 @@ const ResumeScreen: React.FC = () => {
           Create new resume
         </Link>
       </Box>
-      <ResumeCard
-        id='1'
-        title='Alice Parker Resume'
-        date='January 1, 2025'
-        credentials={3}
-      />
-      <ResumeCard
-        id='2'
-        title='Linguist'
-        date='September 17, 2024'
-        credentials={2}
-        isDraft={true}
-        lastUpdated='2 months ago'
-      />
-      <ResumeCard
-        id='3'
-        title='Product Designer'
-        date='August 30, 2024'
-        credentials={1}
-      />
+
+      {/* Render Signed Resumes */}
+      {resumes.signed.map(resume => (
+        <ResumeCard
+          key={resume.id}
+          id={resume.id}
+          title={resume.content.resume.contact.fullName}
+          date={new Date(resume.content.resume.lastUpdated).toLocaleDateString()}
+          credentials={0} // Update this if you have credentials data
+        />
+      ))}
+
+      {status === 'loading' && <Typography>Loading resumes...</Typography>}
+      {status === 'failed' && <Typography>Failed to load resumes.</Typography>}
+
+      {/* Render Unsigned Resumes */}
+      {resumes.unsigned.map(resume => (
+        <ResumeCard
+          key={resume.id}
+          id={resume.id}
+          title={resume.name}
+          date={new Date().toLocaleDateString()} // Use a default date or fetch from content
+          credentials={0} // Update this if you have credentials data
+          isDraft={true}
+          lastUpdated='2 months ago' // Update this if you have lastUpdated data
+        />
+      ))}
     </Box>
   )
 }
