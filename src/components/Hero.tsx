@@ -99,7 +99,6 @@ const Hero = () => {
         </Box>
       </Container>
       <HowItWorksSection />
-      {/* <HowResumeAuthorWorks /> */}
       <WhoBenefitsSection />
       <Box
         sx={{
