@@ -6,7 +6,8 @@ import vcSlice from './slices/vc'
 const store = configureStore({
   reducer: {
     resume: resumeReducer,
-    vcReducer: vcSlice
+    vcReducer: vcSlice,
+    resumeReducer: resumeReducer
   }
 })
 
