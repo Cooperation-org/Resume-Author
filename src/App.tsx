@@ -3,7 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import { useEffect } from 'react'
 import { useDispatch } from 'react-redux'
 import { AppDispatch } from './redux/store'
-import { fetchVCs } from './redux/slices/vc'
+import { fetchUserResumes, fetchVCs } from './redux/slices/vc'
 import Layout from './components/Layout'
 import Login from './pages/login'
 import Home from './pages/home'
@@ -19,6 +19,7 @@ const App = () => {
 
   useEffect(() => {
     dispatch(fetchVCs())
+    dispatch(fetchUserResumes())
   }, [dispatch])
 
   return (
