@@ -50,7 +50,7 @@ const MoreAbout = () => {
               }}
             >
               <Typography gutterBottom variant='h5' component='div'>
-                Lizard
+                Headline
               </Typography>
               <Typography
                 variant='body2'

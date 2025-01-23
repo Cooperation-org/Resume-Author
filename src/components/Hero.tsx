@@ -9,6 +9,7 @@ import HowResumeAuthorWorks from './HowResumeAuthorWorks'
 import WhoBenefitsSection from './WhoBenefitsSection'
 import SelectCards from './SelectCards'
 import MoreAbout from './MoreAboutResumeAuthor'
+import Footer from './Footer'
 
 const Hero = () => {
   return (
@@ -105,20 +106,7 @@ const Hero = () => {
       <HowResumeAuthorWorks />
       <SelectCards />
       <MoreAbout />
-      <Box
-        sx={{
-          display: 'flex',
-          flexDirection: 'column',
-          bgcolor: '#FFFFFF'
-        }}
-      >
-        <Box
-          sx={{
-            height: '400px',
-            background: 'linear-gradient(180deg, #361F7D 0%, #414FCD 100%)'
-          }}
-        />
-      </Box>
+      <Footer />
     </div>
   )
 }
