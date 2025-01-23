@@ -1,8 +1,8 @@
 import React from 'react'
 import { Box, Typography, Card, CardMedia, CardContent } from '@mui/material'
-import image from '../assets/Resumes.png'
-import image1 from '../assets/Resumes-2.png'
-import image2 from '../assets/Resumes-3.png'
+import image from '../../assets/Resumes.png'
+import image1 from '../../assets/Resumes-2.png'
+import image2 from '../../assets/Resumes-3.png'
 
 const MoreAbout = () => {
   const sectionData = [image, image1, image2]
