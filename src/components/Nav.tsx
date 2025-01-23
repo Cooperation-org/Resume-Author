@@ -32,7 +32,9 @@ const Nav = () => {
       <Toolbar>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexGrow: 1 }}>
           <img src={Logo} alt='Résumé Author' style={{ height: '50px' }} />
-          <Typography>Résumé Author</Typography>
+          <Typography sx={{ fontFamily: 'Poppins', fontSize: '32px', fontWeight: 700 }}>
+            Resume Author
+          </Typography>
         </Box>
         <Stack direction='row' spacing={5}>
           <Button
