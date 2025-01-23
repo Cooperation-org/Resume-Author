@@ -1,6 +1,6 @@
 import React from 'react'
 import { Box, Typography, styled } from '@mui/material'
-import { SVGCopyCheck, SVGLink, SVGMobileImg, SVGline } from '../assets/svgs'
+import { SVGCopyCheck, SVGLink, SVGMobileImg, SVGline } from '../../assets/svgs'
 
 const FeatureCard = styled(Box)({
   display: 'flex',
