@@ -1,6 +1,6 @@
 import React from 'react'
 import { Box, Typography, Divider, Button } from '@mui/material'
-import { SVGGitHub, SVGlisence, SVGCopyWriter } from '../assets/svgs'
+import { SVGGitHub, SVGlisence, SVGCopyWriter } from '../../assets/svgs'
 
 const StyledButton = ({ href, startIcon, children }) => (
   <Button

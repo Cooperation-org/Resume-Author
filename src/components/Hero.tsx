@@ -4,12 +4,12 @@ import HeroImage from '../assets/image 1.png'
 import HeroImage2 from '../assets/Union.png'
 import HeroImage3 from '../assets/Union-2.png'
 import { Link } from 'react-router-dom'
-import HowItWorksSection from './HowItWorksSection'
-import HowResumeAuthorWorks from './HowResumeAuthorWorks'
-import WhoBenefitsSection from './WhoBenefitsSection'
-import SelectCards from './SelectCards'
-import MoreAbout from './MoreAboutResumeAuthor'
-import Footer from './Footer'
+import HowItWorksSection from './landingPageSections/HowItWorksSection'
+import HowResumeAuthorWorks from './landingPageSections/HowResumeAuthorWorks'
+import WhoBenefitsSection from './landingPageSections/WhoBenefitsSection'
+import SelectCards from './landingPageSections/SelectCards'
+import MoreAbout from './landingPageSections/MoreAboutResumeAuthor'
+import Footer from './landingPageSections/Footer'
 
 const Hero = () => {
   return (

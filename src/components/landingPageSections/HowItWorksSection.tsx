@@ -1,5 +1,5 @@
 import { Box, Typography } from '@mui/material'
-import { SVGYellowAdd, SVGResume, SVGFile, SVGVerefied } from '../assets/svgs'
+import { SVGYellowAdd, SVGResume, SVGFile, SVGVerefied } from '../../assets/svgs'
 
 const HowItWorksSection = () => {
   const sectionData = [

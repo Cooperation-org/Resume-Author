@@ -3,7 +3,7 @@ import { Box, Container, Typography, styled } from '@mui/material'
 import image1 from '../assets/Rectangle 5573-2.png'
 import image2 from '../assets/Rectangle 5573-3.png'
 import image3 from '../assets/Rectangle 5573-4.png'
-import { SVGBihVerefied } from '../assets/svgs'
+import { SVGBihVerefied } from '../../assets/svgs'
 
 const BenefitItem = styled(Container)(() => ({
   display: 'flex',
