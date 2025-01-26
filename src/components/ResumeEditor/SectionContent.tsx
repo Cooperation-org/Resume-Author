@@ -3,17 +3,17 @@ import {
   Box,
   Button,
   Typography,
-  Divider,
   List,
   ListItem,
   ListItemText,
   IconButton
 } from '@mui/material'
-import { Edit, Eye, Save, Trash2, EyeOff, Plus } from 'lucide-react'
+import { Trash2, Plus } from 'lucide-react'
 import { useDispatch, useSelector } from 'react-redux'
 import { updateSection } from '../../redux/slices/resume'
 import CredentialDialog from '../CredentialDialog'
-import { SVGAdd, SVGDelete, SVGSectionIcon } from '../../assets/svgs'
+import { SVGSectionIcon } from '../../assets/svgs'
+import SectionDetails from './SectionDetails'
 import TextEditor from '../TextEditor/Texteditor'
 
 interface SectionContentProps {
@@ -28,8 +28,6 @@ type CredentialItem = {
   credentialId: string
   verified: boolean
 }
-
-type SectionItem = string | CredentialItem
 
 const SectionContent: React.FC<SectionContentProps> = ({
   sectionId,
@@ -163,26 +161,15 @@ const SectionContent: React.FC<SectionContentProps> = ({
   return (
     <Box sx={{ position: 'relative' }}>
       {/* Section Header */}
-      <Box
-        sx={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          mb: 2
-        }}
-      >
-        <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
-          <SVGSectionIcon />
-          <Typography variant='h6' fontWeight='600'>
-            {sectionId.charAt(0).toUpperCase() + sectionId.slice(1)}
-          </Typography>
-        </Box>
-        <IconButton>
-          <SVGDelete />
-          <Typography sx={{ ml: 1, fontSize: '16px' }}>Delete</Typography>
-        </IconButton>
+
+      <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', p: '15px 0 20px 10px' }}>
+        <SVGSectionIcon />
+        <Typography variant='h6' fontWeight='600'>
+          {sectionId.charAt(0).toUpperCase() + sectionId.slice(1)}
+        </Typography>
       </Box>
-      <Divider sx={{ mb: 2 }} />
+
+      <SectionDetails sectionId={sectionId} />
 
       {isVisible && (
         <>
@@ -198,11 +185,7 @@ const SectionContent: React.FC<SectionContentProps> = ({
             </Box>
           ) : (
             <Box>
-              {items.length === 0 && !editing ? (
-                <Typography variant='body2' color='textSecondary'>
-                  No {sectionId} items added yet. Click edit to add new items.
-                </Typography>
-              ) : (
+              {items && (
                 <List>{items.map((item, index) => renderListItem(item, index))}</List>
               )}
 

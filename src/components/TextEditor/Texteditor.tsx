@@ -52,21 +52,18 @@ function TextEditor({ value, onChange }: Readonly<TextEditorProps>) {
   const formats = ['bold', 'italic', 'underline', 'strike', 'link', 'list', 'bullet']
 
   return (
-    <Box sx={{ width: '100%', borderRadius: '8px' }}>
-      <FormLabel
-        sx={{ color: '#202e5b', fontFamily: 'Lato', fontSize: 16, fontWeight: 600 }}
-      >
-        What does that entail?
-      </FormLabel>
-      <Box className='text-editor-container' sx={{ borderRadius: '8px' }}>
+    <Box sx={{ width: '100%', borderRadius: '8px', height: 'auto' }}>
+      <Box className='text-editor-container' sx={{ borderRadius: '8px', height: 'auto' }}>
         <ReactQuill
           theme='snow'
           value={value}
           onChange={onChange}
           modules={modules}
           formats={formats}
-          placeholder='Add New description'
-          style={{ marginTop: '4px', borderRadius: '8px' }}
+          placeholder={
+            'Add and edit text here \n\nUse the toolbar to markup your text as follows:\n• Bold\n• Italic\n• Add links\n• Unordered lists\n• Undo / redo\n• Add credentials'
+          }
+          style={{ marginTop: '4px', borderRadius: '8px', height: 'auto' }}
         />
       </Box>
     </Box>

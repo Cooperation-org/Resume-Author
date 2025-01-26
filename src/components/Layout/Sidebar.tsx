@@ -1,6 +1,6 @@
 // src/components/Layout/Sidebar.tsx
 import React from 'react'
-import { Box } from '@mui/material'
+import { Box, IconButton } from '@mui/material'
 import {
   SVGSettings,
   SVGRightLine,
@@ -12,12 +12,22 @@ import {
 const Sidebar = () => {
   const Icons = [
     <Box sx={{ mb: 2 }}>
-      <SVGRightLine />
+      <IconButton>
+        <SVGRightLine />
+      </IconButton>
     </Box>,
-    <SVGCopySidebar />,
-    <SVGAddSidebar />,
-    <SVGSettings />,
-    <SVGLineDown />
+    <IconButton>
+      <SVGCopySidebar />
+    </IconButton>,
+    <IconButton>
+      <SVGAddSidebar />
+    </IconButton>,
+    <IconButton>
+      <SVGSettings />
+    </IconButton>,
+    <IconButton>
+      <SVGLineDown />
+    </IconButton>
   ]
   return (
     <Box
