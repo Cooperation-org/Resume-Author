@@ -48,7 +48,6 @@ const RightSidebar = () => {
 
   const [claims, setClaims] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
-  const [searchInput, setSearchInput] = useState('')
   const [selectedClaims, setSelectedClaims] = useState<string[]>([])
   const accessToken = getLocalStorage('accessToken')
 

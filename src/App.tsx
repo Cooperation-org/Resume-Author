@@ -1,6 +1,6 @@
 // src/App.tsx
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import { useDispatch } from 'react-redux'
 import { AppDispatch } from './redux/store'
 import { fetchUserResumes, fetchVCs } from './redux/slices/vc'
@@ -13,7 +13,7 @@ import Error404 from './pages/error404'
 import LandingPage from './pages/allskillscoun-org'
 import './styles/App.css'
 import MyResumes from './components/MyResumes.tsx'
-import { onAuthStateChanged, User } from 'firebase/auth'
+import { onAuthStateChanged } from 'firebase/auth'
 import { removeCookie, setCookie } from './tools'
 import { auth } from './config/firebase' // Import your Firebase config
 
