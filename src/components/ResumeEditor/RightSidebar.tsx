@@ -14,10 +14,10 @@ import {
 import useGoogleDrive from '../../hooks/useGoogleDrive'
 import { useCallback, useEffect, useState } from 'react'
 import { getLocalStorage, removeCookie, removeLocalStorage } from '../../tools'
-import { login } from '../../tools/auth'
 import { useDispatch } from 'react-redux'
 import { setVCs } from '../../redux/slices/resume'
 import { SVGLine, SVGSearch } from '../../assets/svgs'
+import { signInWithGoogle } from '../../firebase/auth'
 
 const paperStyle = {
   display: 'flex',
@@ -50,7 +50,7 @@ const RightSidebar = () => {
   const [loading, setLoading] = useState(true)
   const [searchInput, setSearchInput] = useState('')
   const [selectedClaims, setSelectedClaims] = useState<string[]>([])
-  const accessToken = getLocalStorage('auth_token')
+  const accessToken = getLocalStorage('accessToken')
 
   const { storage } = useGoogleDrive()
 
@@ -91,16 +91,16 @@ const RightSidebar = () => {
   }
 
   const handleLogout = () => {
-    removeCookie('auth_token')
+    removeCookie('accessToken')
     removeLocalStorage('user_info')
     removeLocalStorage('auth')
     setClaims([])
     setSelectedClaims([])
   }
 
-  const handleGoogleLogin = () => {
+  const handleGoogleLogin = async () => {
     setLoading(true)
-    login()
+    await signInWithGoogle()
   }
 
   const handleClaimToggle = (claimId: string) => {
