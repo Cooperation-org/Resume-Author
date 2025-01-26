@@ -19,6 +19,8 @@ import { removeSection, setSelectedResume, updateSection } from '../redux/slices
 import { TextField } from '@mui/material'
 import { Link } from 'react-router-dom'
 import Logo from '../assets/blue-logo.png'
+import html2canvas from 'html2canvas'
+import jsPDF from 'jspdf'
 
 interface ResumeCardProps {
   id: string
@@ -102,6 +104,23 @@ const ResumeCard: React.FC<ResumeCardProps> = ({
 
   const handleSelectResume = () => {
     dispatch(setSelectedResume({ id, title, date, credentials, isDraft }))
+  }
+
+  const handleDownloadPdf = (id: string) => {
+    const element = document.getElementById(`resume-${id}`)
+
+    if (element) {
+      html2canvas(element).then(canvas => {
+        const imgData = canvas.toDataURL('image/png')
+        const pdf = new jsPDF('p', 'mm', 'a4')
+        const imgWidth = 210 // A4 width in mm
+        const imgHeight = (canvas.height * imgWidth) / canvas.width
+        console.log('🚀 ~ html2canvas ~ imgHeight:', imgHeight)
+
+        pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight)
+        pdf.save(`${id}.pdf`)
+      })
+    }
   }
 
   return (
@@ -189,7 +208,11 @@ const ResumeCard: React.FC<ResumeCardProps> = ({
                       Copy Link
                     </ActionButton>
                   </Tooltip>
-                  <ActionButton size='small' startIcon={<DownloadIcon />}>
+                  <ActionButton
+                    size='small'
+                    startIcon={<DownloadIcon />}
+                    onClick={() => handleDownloadPdf(id)}
+                  >
                     Download PDF
                   </ActionButton>
                   <ActionButton size='small' startIcon={<VisibilityOutlinedIcon />}>

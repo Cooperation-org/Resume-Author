@@ -40,7 +40,7 @@ const initialState: VCState = {
 
 // Async thunk to fetch VCs
 export const fetchVCs = createAsyncThunk('vc/fetchVCs', async () => {
-  const accessToken = getCookie('auth_token')
+  const accessToken = getCookie('accessToken')
   if (!accessToken) {
     console.error('Access token not found')
     throw new Error('Access token not found')
@@ -57,7 +57,7 @@ export const fetchVCs = createAsyncThunk('vc/fetchVCs', async () => {
 
 // Async thunk to fetch resumes
 export const fetchUserResumes = createAsyncThunk('vc/fetchUserResumes', async () => {
-  const accessToken = getCookie('auth_token')
+  const accessToken = getCookie('accessToken')
   if (!accessToken) {
     console.error('Access token not found')
     throw new Error('Access token not found')
