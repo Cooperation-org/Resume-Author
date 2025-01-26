@@ -1,10 +1,9 @@
 import Logo from '../assets/logo.png'
 import { AppBar, Toolbar, Box, Typography, Stack, Button } from '@mui/material'
-import { login as googleLogin, handleRedirect } from '../tools/auth' // Import your auth functions
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import LoadingOverlay from './Loading'
-import { getCookie, removeCookie, removeLocalStorage } from '../tools'
+import { getCookie } from '../tools'
 
 const Nav = () => {
   const [loading, setLoading] = useState(false)
@@ -14,10 +13,10 @@ const Nav = () => {
   useEffect(() => {
     if (window.location.hash) {
       setLoading(true)
-      handleRedirect({ navigate })
+      navigate('/resume/new')
       setLoading(false)
     }
-    const token = getCookie('auth_token')
+    const token = getCookie('access_token')
     if (token) {
       setIsLogged(true)
     }

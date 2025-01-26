@@ -16,6 +16,7 @@ import {
   Box
 } from '@mui/material'
 import { setSelectedResume } from '../redux/slices/resume'
+import { getAuth } from 'firebase/auth'
 
 interface PrevResumesListProps {
   open: boolean
@@ -28,10 +29,23 @@ const PrevResumesList: React.FC<PrevResumesListProps> = ({ open, onClose }) => {
   >([])
   const [loading, setLoading] = useState(false)
   const dispatch = useDispatch() // Access the Redux dispatch function
+  const auth = getAuth()
+  const user = auth.currentUser
+
+  if (user) {
+    user
+      .getIdToken()
+      .then(accessToken => {
+        console.log('Access Token:', accessToken)
+      })
+      .catch(error => {
+        console.error('Error getting access token:', error)
+      })
+  }
 
   const getSessions = useCallback(async () => {
     try {
-      const accessToken = getCookie('auth_token')
+      const accessToken = getCookie('accessToken')
       if (!accessToken) {
         console.error('Access token not found.')
         return
