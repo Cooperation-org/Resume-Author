@@ -101,7 +101,7 @@ const SectionContent: React.FC<SectionContentProps> = ({
 
   const handleCredentialsSelected = (selectedClaims: any[]) => {
     const newCredentialItems: CredentialItem[] = selectedClaims.map(claim => ({
-      text: `${JSON.parse(claim[0].data.body).credentialSubject?.achievement[0]?.name} - ${JSON.parse(claim[0].data.body).credentialSubject?.name}`,
+      text: `${claim.credentialSubject?.achievement[0]?.name} - ${claim.credentialSubject?.name}`,
       credentialId: claim[0]?.id,
       verified: true
     }))
