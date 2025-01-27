@@ -50,9 +50,15 @@ export const fetchVCs = createAsyncThunk('vc/fetchVCs', async () => {
   const claimsData: any[] = await storage.getAllFilesByType('VCs')
 
   // Filter out files where `name` is "RELATIONS"
-  return claimsData.map((file: any[]) =>
+  const filteredData = claimsData.map((file: any[]) =>
     file.filter((f: { name: string }) => f.name !== 'RELATIONS')
   )
+  // return JSON.parse(vc[i]data.body)
+  const vcs = filteredData.map((file: any[]) =>
+    file.map((f: any) => JSON.parse(f.data.body))
+  )
+
+  return vcs.flat() // Adjust the return value based on your VC structure
 })
 
 // Async thunk to fetch resumes

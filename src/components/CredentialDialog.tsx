@@ -74,10 +74,10 @@ const CredentialDialog: React.FC<CredentialDialogProps> = ({
               />
               <Box>
                 <Typography variant='subtitle1' fontWeight='600'>
-                  {JSON.parse(claim[0].data.body).credentialSubject?.achievement[0]?.name}
+                  {claim.credentialSubject?.achievement[0]?.name}
                 </Typography>
                 <Typography variant='body2' color='text.secondary'>
-                  {JSON.parse(claim[0].data.body).credentialSubject?.name}
+                  {claim.credentialSubject?.name}
                 </Typography>
               </Box>
             </Paper>
