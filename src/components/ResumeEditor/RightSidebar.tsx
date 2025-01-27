@@ -79,8 +79,6 @@ const RightSidebar = () => {
   }
 
   const isValidClaim = (claim: any) => {
-    console.log('🚀 ~ isValidClaim ~ claim:', claim)
-    console.log('🚀 ~ isValidClaim ~ claim:', claim)
     return claim.credentialSubject.name && claim.credentialSubject?.name
   }
 
@@ -228,10 +226,7 @@ const RightSidebar = () => {
                           />
                           <Box sx={{ flex: 1 }}>
                             <Typography variant='subtitle2' sx={{ mb: 1 }}>
-                              {
-                                JSON.parse(claim[0].data.claim).credentialSubject
-                                  ?.achievement[0]?.name
-                              }
+                              {claim.credentialSubject?.achievement[0]?.name}
                             </Typography>
                           </Box>
                         </Box>
