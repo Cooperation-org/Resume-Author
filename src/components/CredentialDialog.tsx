@@ -1,4 +1,4 @@
-import React from 'react';
+import React from 'react'
 import {
   Dialog,
   DialogTitle,
@@ -9,16 +9,16 @@ import {
   Checkbox,
   Typography,
   Paper
-} from '@mui/material';
-import { useSelector, useDispatch } from 'react-redux';
-import { selectCredential, unselectCredential } from '../redux/slices/resume';
+} from '@mui/material'
+import { useSelector, useDispatch } from 'react-redux'
+import { selectCredential, unselectCredential } from '../redux/slices/resume'
 
 interface CredentialDialogProps {
-  open: boolean;
-  onClose: () => void;
-  claims: any[];
-  sectionId: string;
-  onCredentialsSelected: (selectedClaims: any[]) => void;
+  open: boolean
+  onClose: () => void
+  claims: any[]
+  sectionId: string
+  onCredentialsSelected: (selectedClaims: any[]) => void
 }
 
 const CredentialDialog: React.FC<CredentialDialogProps> = ({
@@ -28,28 +28,30 @@ const CredentialDialog: React.FC<CredentialDialogProps> = ({
   sectionId,
   onCredentialsSelected
 }) => {
-  console.log(":  claims", claims)
-  const dispatch = useDispatch();
-  const selectedCredentials = useSelector((state: any) => state.resume.selectedCredentials);
+  console.log(':  claims', claims)
+  const dispatch = useDispatch()
+  const selectedCredentials = useSelector(
+    (state: any) => state.resume.selectedCredentials
+  )
 
   const handleToggleCredential = (claimId: string) => {
     if (selectedCredentials.includes(claimId)) {
-      dispatch(unselectCredential(claimId));
+      dispatch(unselectCredential(claimId))
     } else {
-      dispatch(selectCredential(claimId));
+      dispatch(selectCredential(claimId))
     }
-  };
+  }
 
   const handleConfirm = () => {
-    const selectedClaims = claims.filter(claim => 
+    const selectedClaims = claims.filter(claim =>
       selectedCredentials.includes(claim[0]?.id)
-    );
-    onCredentialsSelected(selectedClaims);
-    onClose();
-  };
+    )
+    onCredentialsSelected(selectedClaims)
+    onClose()
+  }
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
+    <Dialog open={open} onClose={onClose} maxWidth='md' fullWidth>
       <DialogTitle>Select Credentials for {sectionId}</DialogTitle>
       <DialogContent>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 2 }}>
@@ -71,11 +73,11 @@ const CredentialDialog: React.FC<CredentialDialogProps> = ({
                 onChange={() => handleToggleCredential(claim[0]?.id)}
               />
               <Box>
-                <Typography variant="subtitle1" fontWeight="600">
-                  {claim[0]?.data?.credentialSubject?.achievement[0]?.name}
+                <Typography variant='subtitle1' fontWeight='600'>
+                  {JSON.parse(claim[0].data.body).credentialSubject?.achievement[0]?.name}
                 </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  {claim[0]?.data?.credentialSubject?.name}
+                <Typography variant='body2' color='text.secondary'>
+                  {JSON.parse(claim[0].data.body).credentialSubject?.name}
                 </Typography>
               </Box>
             </Paper>
@@ -84,12 +86,12 @@ const CredentialDialog: React.FC<CredentialDialogProps> = ({
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose}>Cancel</Button>
-        <Button onClick={handleConfirm} variant="contained">
+        <Button onClick={handleConfirm} variant='contained'>
           Add Selected
         </Button>
       </DialogActions>
     </Dialog>
-  );
-};
+  )
+}
 
-export default CredentialDialog;
+export default CredentialDialog
