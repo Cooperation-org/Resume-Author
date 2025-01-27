@@ -42,7 +42,6 @@ const placeholderStyle = {
   }
 }
 const RightSidebar = () => {
-  const [loading, setLoading] = useState(false)
   const [selectedClaims, setSelectedClaims] = useState<string[]>([])
 
   const { vcs: claims, status } = useSelector((state: any) => state.vcReducer)
@@ -65,7 +64,6 @@ const RightSidebar = () => {
   }
 
   const handleGoogleLogin = async () => {
-    setLoading(true)
     await signInWithGoogle()
   }
 
