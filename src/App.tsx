@@ -13,9 +13,6 @@ import Error404 from './pages/error404'
 import LandingPage from './pages/allskillscoun-org'
 import './styles/App.css'
 import MyResumes from './components/MyResumes.tsx'
-import { onAuthStateChanged } from 'firebase/auth'
-import { removeCookie, setCookie } from './tools'
-import { auth } from './config/firebase' // Import your Firebase config
 
 const App = () => {
   const dispatch: AppDispatch = useDispatch()
@@ -24,20 +21,6 @@ const App = () => {
     dispatch(fetchVCs())
     dispatch(fetchUserResumes())
   }, [dispatch])
-
-  // Listen for authentication state changes
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async user => {
-      if (user) {
-        const accessToken = await user.getIdToken()
-        setCookie('accessToken', accessToken, { expires: 1 }) // Expires in 1 day
-      } else {
-        removeCookie('accessToken')
-      }
-    })
-
-    return () => unsubscribe()
-  }, [])
 
   return (
     <Router>
