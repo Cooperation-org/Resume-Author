@@ -35,8 +35,8 @@ const SectionContent: React.FC<SectionContentProps> = ({
   tooltipPosition
 }) => {
   const dispatch = useDispatch()
+  const { vcs: claims } = useSelector((state: any) => state.vcReducer)
   const resume = useSelector((state: any) => state.resume.resume)
-  const claims = useSelector((state: any) => state.resume.claims)
   const sectionData = resume[sectionId]
 
   const isStringBased = typeof sectionData === 'string'
@@ -56,7 +56,6 @@ const SectionContent: React.FC<SectionContentProps> = ({
       setContent(sectionData || '')
     }
   }, [sectionData, isListBased])
-
   const toggleEdit = () => {
     if (editing) {
       const updatedContent = isStringBased ? content : { items }
@@ -102,7 +101,7 @@ const SectionContent: React.FC<SectionContentProps> = ({
 
   const handleCredentialsSelected = (selectedClaims: any[]) => {
     const newCredentialItems: CredentialItem[] = selectedClaims.map(claim => ({
-      text: `${claim[0]?.data?.credentialSubject?.achievement[0]?.name} - ${claim[0]?.data?.credentialSubject?.name}`,
+      text: `${JSON.parse(claim[0].data.body).credentialSubject?.achievement[0]?.name} - ${JSON.parse(claim[0].data.body).credentialSubject?.name}`,
       credentialId: claim[0]?.id,
       verified: true
     }))

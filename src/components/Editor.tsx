@@ -76,6 +76,7 @@ const ResumeEditor = () => {
 
   const resume = useSelector((state: RootState) => state?.resume.resume)
   const { vcs, status, error } = useSelector((state: RootState) => state.vcReducer)
+  console.log('🚀 ~ ResumeEditor ~ vcs:', vcs)
 
   const AllSections = Object.keys(resume as Resume).filter(
     sec =>

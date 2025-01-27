@@ -11,13 +11,11 @@ import {
   InputAdornment,
   Divider
 } from '@mui/material'
-import useGoogleDrive from '../../hooks/useGoogleDrive'
-import { useCallback, useEffect, useState } from 'react'
-import { getLocalStorage, removeCookie, removeLocalStorage } from '../../tools'
-import { useDispatch } from 'react-redux'
-import { setVCs } from '../../redux/slices/resume'
+import { getCookie, removeCookie, removeLocalStorage } from '../../tools'
 import { SVGLine, SVGSearch } from '../../assets/svgs'
 import { signInWithGoogle } from '../../firebase/auth'
+import { useSelector } from 'react-redux'
+import { useState } from 'react'
 
 const paperStyle = {
   display: 'flex',
@@ -44,44 +42,13 @@ const placeholderStyle = {
   }
 }
 const RightSidebar = () => {
-  const dispatch = useDispatch()
-
-  const [claims, setClaims] = useState<any[]>([])
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(false)
   const [selectedClaims, setSelectedClaims] = useState<string[]>([])
-  const accessToken = getLocalStorage('accessToken')
 
-  const { storage } = useGoogleDrive()
-
-  const getAllClaims = useCallback(async (): Promise<any> => {
-    const claimsData = await storage?.getAllFilesByType('VCs')
-    if (!claimsData?.length) return []
-    return claimsData
-  }, [storage])
-
-  const fetchClaims = useCallback(async () => {
-    try {
-      setLoading(true)
-      const claimsData = await getAllClaims()
-      const vcs = claimsData.map((file: any[]) =>
-        file.filter((f: { name: string }) => f.name !== 'RELATIONS')
-      )
-      const validVcs = vcs.filter((claim: any) => isValidClaim(claim))
-
-      setClaims(vcs)
-      dispatch(setVCs(validVcs) as any)
-    } catch (error) {
-      console.error('Error fetching claims:', error)
-    } finally {
-      setLoading(false)
-    }
-  }, [getAllClaims, dispatch])
-
-  useEffect(() => {
-    fetchClaims()
-  }, [fetchClaims])
-
+  const { vcs: claims, status } = useSelector((state: any) => state.vcReducer)
+  console.log('🚀 ~ RightSidebar ~ claims:', claims)
   const handleAuth = () => {
+    const accessToken = getCookie('accessToken')
     if (!accessToken) {
       handleGoogleLogin()
     } else {
@@ -93,7 +60,7 @@ const RightSidebar = () => {
     removeCookie('accessToken')
     removeLocalStorage('user_info')
     removeLocalStorage('auth')
-    setClaims([])
+    // setClaims([])
     setSelectedClaims([])
   }
 
@@ -114,10 +81,10 @@ const RightSidebar = () => {
   }
 
   const isValidClaim = (claim: any) => {
-    return (
-      claim[0]?.data?.credentialSubject?.achievement[0]?.name &&
-      claim[0]?.data?.credentialSubject?.name
-    )
+    console.log('🚀 ~ isValidClaim ~ claim:', claim)
+    const body = JSON.parse(claim[0].data.body)
+    console.log('🚀 ~ isValidClaim ~ body:', body)
+    return body.credentialSubject.name && body.credentialSubject?.name
   }
 
   return (
@@ -237,7 +204,7 @@ const RightSidebar = () => {
           />
         </Box>
 
-        {loading ? (
+        {status !== 'succeeded' ? (
           <Box sx={{ display: 'flex', justifyContent: 'center', py: 6 }}>
             <CircularProgress />
           </Box>
@@ -245,7 +212,7 @@ const RightSidebar = () => {
           <Stack>
             <List sx={{ p: 0 }}>
               {claims.map(
-                claim =>
+                (claim: any) =>
                   isValidClaim(claim) && (
                     <Paper key={claim[0]?.id} elevation={0}>
                       <Box>
@@ -264,7 +231,10 @@ const RightSidebar = () => {
                           />
                           <Box sx={{ flex: 1 }}>
                             <Typography variant='subtitle2' sx={{ mb: 1 }}>
-                              {claim[0]?.data?.credentialSubject?.achievement[0]?.name}
+                              {
+                                JSON.parse(claim[0].data.body).credentialSubject
+                                  ?.achievement[0]?.name
+                              }
                             </Typography>
                           </Box>
                         </Box>
