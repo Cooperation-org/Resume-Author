@@ -16,6 +16,8 @@ import { useSelector } from 'react-redux'
 import { RootState } from '../redux/store'
 import { useCallback, useEffect, useState } from 'react'
 import { SVGEditName } from '../assets/svgs'
+import { GoogleDriveStorage, Resume as ResumeManager } from '@cooperation/vc-storage'
+import { getCookie } from '../tools'
 
 const nonVisibleSections = [
   ...leftSections,
@@ -130,6 +132,21 @@ const ResumeEditor = () => {
     }
   }, [handleTextSelection])
 
+  const handleSaveDraft = async () => {
+    const accessToken = getCookie('accessToken')
+    if (!accessToken) {
+      console.error('Access token not found')
+      return
+    }
+    const storage = new GoogleDriveStorage(accessToken)
+    const resumeManager = new ResumeManager(storage)
+    const savedResume = await resumeManager.saveResume({
+      resume: resume,
+      type: 'unsigned'
+    })
+    console.log('Saved Resume:', savedResume)
+  }
+
   return (
     <Box sx={{ p: 6 }}>
       <Box
@@ -176,7 +193,7 @@ const ResumeEditor = () => {
           <Button variant='outlined' sx={ButtonStyles}>
             Preview
           </Button>
-          <Button variant='outlined' sx={ButtonStyles}>
+          <Button variant='outlined' sx={ButtonStyles} onClick={handleSaveDraft}>
             Save as Draft
           </Button>
           <Button
