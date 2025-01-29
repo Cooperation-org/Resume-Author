@@ -1267,6 +1267,16 @@
   resolved "https://registry.yarnpkg.com/@csstools/selector-specificity/-/selector-specificity-2.2.0.tgz#2cbcf822bf3764c9658c4d2e568bd0c0cb748016"
   integrity sha512-+OJ9konv95ClSTOJCmMZqpd5+YGsB2S+x6w3E1oaM8UuR5j8nTNHYSz8c9BEPGDOCMQYIEEGlVPj/VY64iTbGw==
 
+"@did.coop/did-key-ed25519@^0.0.8":
+  version "0.0.8"
+  resolved "https://registry.yarnpkg.com/@did.coop/did-key-ed25519/-/did-key-ed25519-0.0.8.tgz#cdc2aef06f32fd23b31293d15697fe247c40a0e4"
+  integrity sha512-zCYu53gB6O/oITO72jJ4QpBQJvYjmHz8/SmO0HZcOFOWbIajdjkEgLXy2ayNu0NWGjhET8OzIFBF+lFmwhVQEw==
+  dependencies:
+    "@digitalbazaar/did-method-key" "^5.2.0"
+    "@digitalbazaar/ed25519-verification-key-2020" "^4.2.0"
+    base58-universal "^2.0.0"
+    base64url-universal "^2.0.0"
+
 "@digitalbazaar/did-io@^2.0.0":
   version "2.0.0"
   resolved "https://registry.yarnpkg.com/@digitalbazaar/did-io/-/did-io-2.0.0.tgz#a6945be43ccb2e46218d811ba5e630e5df7dd86a"
@@ -1303,7 +1313,7 @@
     ed25519-signature-2020-context "^1.1.0"
     jsonld-signatures "^11.3.0"
 
-"@digitalbazaar/ed25519-verification-key-2020@^4.1.0":
+"@digitalbazaar/ed25519-verification-key-2020@^4.1.0", "@digitalbazaar/ed25519-verification-key-2020@^4.2.0":
   version "4.2.0"
   resolved "https://registry.yarnpkg.com/@digitalbazaar/ed25519-verification-key-2020/-/ed25519-verification-key-2020-4.2.0.tgz#4a394c7c137ead8edf415c83bbd3c40b73c95b49"
   integrity sha512-urEVTYkt+uYD8GjdoS6gkm2sKBich1hqx42b6vvUOmNgF0agZ95JlUjiJXEx+VOwu7WSjJSnEBph2Qatkrk1CA==

@@ -15,9 +15,24 @@ import './styles/App.css'
 import MyResumes from './components/MyResumes.tsx'
 import { fetchUserResumes } from './redux/slices/myresumes'
 
+import { WalletStorage } from '@did-coop/wallet-attached-storage/dist'
 const App = () => {
   const dispatch: AppDispatch = useDispatch()
 
+  const testingWalletStorage = async () => {
+    const { Ed25519Signer } = await import('@did.coop/did-key-ed25519')
+
+    const appDidSigner = await Ed25519Signer.generate()
+
+    const space = await WalletStorage.provisionSpace({
+      url: 'https://data.pub',
+      signer: appDidSigner
+    })
+    console.log(space)
+  }
+  useEffect(() => {
+    testingWalletStorage()
+  }, [])
   useEffect(() => {
     dispatch(fetchVCs())
     dispatch(fetchUserResumes())
