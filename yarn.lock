@@ -1267,10 +1267,10 @@
   resolved "https://registry.yarnpkg.com/@csstools/selector-specificity/-/selector-specificity-2.2.0.tgz#2cbcf822bf3764c9658c4d2e568bd0c0cb748016"
   integrity sha512-+OJ9konv95ClSTOJCmMZqpd5+YGsB2S+x6w3E1oaM8UuR5j8nTNHYSz8c9BEPGDOCMQYIEEGlVPj/VY64iTbGw==
 
-"@did.coop/did-key-ed25519@^0.0.8":
-  version "0.0.8"
-  resolved "https://registry.yarnpkg.com/@did.coop/did-key-ed25519/-/did-key-ed25519-0.0.8.tgz#cdc2aef06f32fd23b31293d15697fe247c40a0e4"
-  integrity sha512-zCYu53gB6O/oITO72jJ4QpBQJvYjmHz8/SmO0HZcOFOWbIajdjkEgLXy2ayNu0NWGjhET8OzIFBF+lFmwhVQEw==
+"@did.coop/did-key-ed25519@^0.0.9":
+  version "0.0.9"
+  resolved "https://registry.yarnpkg.com/@did.coop/did-key-ed25519/-/did-key-ed25519-0.0.9.tgz#bf05fcebd88a7ef2c9c4a4edb571e954b51fd370"
+  integrity sha512-+n64ae2UdqTjVtGaxuzVWh410lTX8T2fwMYDD2LDtA/W8ZU4juZ4zw5BarFVBlF1GDIB8ulvomgZSHkK1qiWlA==
   dependencies:
     "@digitalbazaar/did-method-key" "^5.2.0"
     "@digitalbazaar/ed25519-verification-key-2020" "^4.2.0"

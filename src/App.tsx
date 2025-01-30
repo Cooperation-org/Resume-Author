@@ -14,7 +14,6 @@ import LandingPage from './pages/allskillscoun-org'
 import './styles/App.css'
 import MyResumes from './components/MyResumes.tsx'
 import { fetchUserResumes } from './redux/slices/myresumes'
-
 import { WalletStorage } from '@did-coop/wallet-attached-storage/dist'
 const App = () => {
   const dispatch: AppDispatch = useDispatch()
@@ -23,6 +22,7 @@ const App = () => {
     const { Ed25519Signer } = await import('@did.coop/did-key-ed25519')
 
     const appDidSigner = await Ed25519Signer.generate()
+    console.log('🚀 ~ testingWalletStorage ~ appDidSigner:', appDidSigner)
 
     const space = await WalletStorage.provisionSpace({
       url: 'https://data.pub',

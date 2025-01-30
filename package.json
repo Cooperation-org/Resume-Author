@@ -6,7 +6,7 @@
     "@auth0/auth0-react": "^2.2.4",
     "@cooperation/vc-storage": "^1.0.18",
     "@craco/craco": "^7.1.0",
-    "@did.coop/did-key-ed25519": "^0.0.8",
+    "@did.coop/did-key-ed25519": "^0.0.9",
     "@emotion/react": "^11.13.5",
     "@emotion/styled": "^11.13.5",
     "@mui/icons-material": "^6.1.10",
