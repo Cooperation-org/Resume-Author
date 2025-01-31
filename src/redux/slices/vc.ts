@@ -40,7 +40,7 @@ const initialState: VCState = {
 
 // Async thunk to fetch VCs
 export const fetchVCs = createAsyncThunk('vc/fetchVCs', async () => {
-  const accessToken = getCookie('auth_token')
+  const accessToken = getCookie('accessToken')
   if (!accessToken) {
     console.error('Access token not found')
     throw new Error('Access token not found')
@@ -54,9 +54,35 @@ export const fetchVCs = createAsyncThunk('vc/fetchVCs', async () => {
   )
   console.log('🚀 ~ fetchVCs ~ vcs:', vcs)
   // Filter out files where `name` is "RELATIONS"
-  return claimsData.map((file: any[]) =>
+  const filteredData = claimsData.map((file: any[]) =>
     file.filter((f: { name: string }) => f.name !== 'RELATIONS')
   )
+  // return JSON.parse(vc[i]data.body)
+  const vcs = filteredData.map((file: any[]) =>
+    file.map((f: any) => JSON.parse(f.data.body))
+  )
+
+  return vcs.flat() // Adjust the return value based on your VC structure
+})
+
+// Async thunk to fetch resumes
+export const fetchUserResumes = createAsyncThunk('vc/fetchUserResumes', async () => {
+  const accessToken = getCookie('accessToken')
+  if (!accessToken) {
+    console.error('Access token not found')
+    throw new Error('Access token not found')
+  }
+
+  const storage = new GoogleDriveStorage(accessToken)
+  const resumeManager = new Resume(storage)
+
+  const resumeVCs = await resumeManager.getSignedResumes()
+  const resumeSessions = await resumeManager.getNonSignedResumes()
+
+  return {
+    signed: resumeVCs,
+    unsigned: resumeSessions
+  }
 })
 
 // Async thunk to fetch resumes

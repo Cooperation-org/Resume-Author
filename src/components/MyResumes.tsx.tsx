@@ -48,6 +48,7 @@ const ResumeScreen: React.FC = () => {
       [type]: (prev[type] || []).filter(resume => resume.id !== id) // Ensure prev[type] is an array
     }))
   }
+  
   return (
     <Box
       sx={{
@@ -103,7 +104,6 @@ const ResumeScreen: React.FC = () => {
       {status === 'loading' && <Typography>Loading resumes...</Typography>}
       {resumes.signed.length + resumes.unsigned.length === 0 && status !== 'loading' && (
         <Typography>You dont have any resumes.</Typography>
-      )}
 
       {/* Render Unsigned Resumes */}
       {resumes.unsigned.map(resume => (

@@ -100,7 +100,6 @@ const ResumeCard: React.FC<ResumeCardProps> = ({
         dispatch(updateSection({ id, title: editedTitle }))
       }
     }
-  }
 
   const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
     setMenuAnchor(event.currentTarget)
@@ -129,7 +128,6 @@ const ResumeCard: React.FC<ResumeCardProps> = ({
     } catch (error) {
       console.error('Error duplicating resume:', error)
     }
-    setIsLoading(false)
     handleMenuClose()
   }
 
@@ -157,7 +155,6 @@ const ResumeCard: React.FC<ResumeCardProps> = ({
 
         {/* Main Content */}
         <Box display='flex' justifyContent='space-between' alignItems='center'>
-          {/* Left Side: Title and Metadata */}
           <Box display='flex' gap={1.5}>
             {!isDraft ? (
               <CheckCircleIcon
@@ -193,7 +190,6 @@ const ResumeCard: React.FC<ResumeCardProps> = ({
                     },
                     '& .MuiInput-underline:before': { borderBottom: 'none' },
                     '& .MuiInput-underline:after': { borderBottom: 'none' }
-                  }}
                 />
               ) : (
                 <Link
@@ -219,7 +215,6 @@ const ResumeCard: React.FC<ResumeCardProps> = ({
             </Box>
           </Box>
 
-          {/* Right Side: Action Buttons */}
           <Box display='flex' alignItems='center' color={'#3c4599'} gap={0.5}>
             <Box className='resume-card-actions'>
               {isDraft ? (
@@ -289,4 +284,3 @@ const StyledMoreButton = styled(IconButton)(({ theme }) => ({
   '&:hover': {
     backgroundColor: theme.palette.grey[100]
   }
-}))

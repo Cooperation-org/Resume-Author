@@ -1,0 +1,121 @@
+import React from 'react'
+import { Box, Typography, Divider, Button } from '@mui/material'
+import { SVGGitHub, SVGlisence, SVGCopyWriter } from '../../assets/svgs'
+
+const StyledButton = ({ href, startIcon, children }) => (
+  <Button
+    href={href}
+    target='_blank'
+    rel='noopener noreferrer'
+    startIcon={startIcon}
+    sx={{
+      color: '#2563EB',
+      fontFamily: 'Nunito Sans',
+      fontSize: '26px',
+      fontWeight: 500,
+      lineHeight: '40px',
+      letterSpacing: '-0.26px',
+      textDecoration: 'underline',
+      textDecorationSkipInk: 'auto',
+      textUnderlineOffset: 'auto',
+      textUnderlinePosition: 'from-font',
+      textTransform: 'none',
+      padding: 0,
+      minWidth: 0,
+      '&:hover': {
+        background: 'transparent'
+      }
+    }}
+  >
+    {children}
+  </Button>
+)
+
+const Footer = () => {
+  return (
+    <Box
+      sx={{
+        backgroundColor: '#E9E6F8',
+        padding: '75px 100px'
+      }}
+    >
+      <Box
+        sx={{ pb: '30px' }}
+        display='flex'
+        justifyContent='space-between'
+        alignItems='space-between'
+      >
+        <Box display='flex' alignItems='center' gap={1}>
+          <SVGCopyWriter />
+          <Typography
+            sx={{
+              color: '#292489',
+              fontFamily: 'Nunito Sans',
+              fontSize: '26px',
+              fontWeight: 500,
+              lineHeight: '40px',
+              letterSpacing: '-0.26px'
+            }}
+          >
+            Copyright, Creative Commons License
+          </Typography>
+        </Box>
+
+        <Box display='flex' justifyContent='center' alignItems='center' gap={1}>
+          <SVGlisence />
+          <StyledButton>Apache 2 License</StyledButton>
+        </Box>
+
+        <Box display='flex' alignItems='center' gap={1}>
+          <SVGGitHub />
+          <Typography
+            sx={{
+              color: '#292489',
+              fontFamily: 'Nunito Sans',
+              fontSize: '26px',
+              fontWeight: 500,
+              lineHeight: '40px',
+              letterSpacing: '-0.26px'
+            }}
+          >
+            Source Code:
+          </Typography>
+          <StyledButton href='https://github.com/orgs/Cooperation-org/projects/4/views/1'>
+            https://github.com/....
+          </StyledButton>
+        </Box>
+      </Box>
+
+      <Divider />
+
+      <Box
+        sx={{ pt: '30px' }}
+        display='flex'
+        justifyContent='flex-start'
+        alignItems='center'
+        gap={2}
+      >
+        <StyledButton href='/privacy-policy'>Privacy Policy</StyledButton>
+
+        <Divider orientation='vertical' flexItem />
+
+        <Box>
+          <Typography
+            sx={{
+              color: '#292489',
+              fontFamily: 'Nunito Sans',
+              fontSize: '26px',
+              fontWeight: 500,
+              lineHeight: '40px',
+              letterSpacing: '-0.26px'
+            }}
+          >
+            Contact Us: contact@email.com
+          </Typography>
+        </Box>
+      </Box>
+    </Box>
+  )
+}
+
+export default Footer

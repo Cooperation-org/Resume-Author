@@ -1,20 +1,36 @@
 import { Container, Box, Typography, Stack, Button } from '@mui/material'
 import React from 'react'
-import HeroImage from '../assets/hero.png'
-import { Link } from 'react-router-dom'
-import HowItWorksSection from './HowItWorksSection'
-import HowResumeAuthorWorks from './HowResumeAuthorWorks'
-import WhoBenefitsSection from './WhoBenefitsSection'
+import HeroImage from '../assets/image 1.png'
+import HeroImage2 from '../assets/Union.png'
+import HeroImage3 from '../assets/Union-2.png'
+import { Link, useNavigate } from 'react-router-dom'
+import HowItWorksSection from './landingPageSections/HowItWorksSection'
+import HowResumeAuthorWorks from './landingPageSections/HowResumeAuthorWorks'
+import WhoBenefitsSection from './landingPageSections/WhoBenefitsSection'
+import SelectCards from './landingPageSections/SelectCards'
+import MoreAbout from './landingPageSections/MoreAboutResumeAuthor'
+import Footer from './landingPageSections/Footer'
+import { signInWithGoogle } from '../firebase/auth'
+import { getCookie } from '../tools'
 
 const Hero = () => {
+  const navigate = useNavigate()
+  const handleLogin = async () => {
+    const accessToken = getCookie('accessToken')
+    if (accessToken) {
+      console.log('Already logged in')
+      navigate('resume/new')
+    }
+    await signInWithGoogle()
+  }
   return (
     <div>
-      <Container maxWidth='lg' sx={{ mt: 8 }}>
+      <Container maxWidth='lg' sx={{ mt: 8, pb: 8 }}>
         <Box
           sx={{
             display: 'flex',
             alignItems: 'center',
-            gap: 10,
+            gap: '50px',
             minHeight: '60vh'
           }}
         >
@@ -23,7 +39,7 @@ const Hero = () => {
               variant='h1'
               sx={{
                 color: 'white',
-                fontSize: '3.5rem',
+                fontSize: '50px',
                 fontWeight: 700,
                 mb: 2
               }}
@@ -41,7 +57,7 @@ const Hero = () => {
                   sx={{
                     bgcolor: '#4527A0',
                     color: 'white',
-                    p: '11px 100px',
+                    p: '11px 80px',
                     borderRadius: '100px',
                     border: '2px solid #FFF',
                     textTransform: 'capitalize'
@@ -56,11 +72,12 @@ const Hero = () => {
                   sx={{
                     color: '#4527A0',
                     bgcolor: 'white',
-                    p: '11px 100px',
+                    p: '11px 80px',
                     borderRadius: '100px',
                     textTransform: 'capitalize',
                     fontWeight: 700
                   }}
+                  onClick={handleLogin}
                 >
                   Login
                 </Button>
@@ -74,33 +91,34 @@ const Hero = () => {
             </Typography>
           </Box>
 
-          <Box sx={{}}>
+          <Box sx={{ display: 'flex', gap: '27px' }}>
             <Box
               component='img'
               src={HeroImage}
               alt='Construction worker'
-              sx={{ width: 400, height: 400, borderRadius: '50%' }}
+              sx={{ width: 200, height: 400 }}
+            />
+            <Box
+              component='img'
+              src={HeroImage2}
+              alt='Construction worker'
+              sx={{ width: 200, height: 400 }}
+            />
+            <Box
+              component='img'
+              src={HeroImage3}
+              alt='Construction worker'
+              sx={{ width: 200, height: 400 }}
             />
           </Box>
         </Box>
       </Container>
       <HowItWorksSection />
-      <HowResumeAuthorWorks />
       <WhoBenefitsSection />
-      <Box
-        sx={{
-          display: 'flex',
-          flexDirection: 'column',
-          bgcolor: '#FFFFFF'
-        }}
-      >
-        <Box
-          sx={{
-            height: '400px',
-            background: 'linear-gradient(180deg, #361F7D 0%, #414FCD 100%)'
-          }}
-        />
-      </Box>
+      <HowResumeAuthorWorks />
+      <SelectCards />
+      <MoreAbout />
+      <Footer />
     </div>
   )
 }
