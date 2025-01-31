@@ -1,5 +1,7 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
 import { initialState } from '../../initialResumeState'
+import { GoogleDriveStorage, Resume as ResumeVC } from '@cooperation/vc-storage'
+import { getCookie } from '../../tools'
 
 export interface ResumeState {
   resume: Resume | null
@@ -14,17 +16,28 @@ export interface ResumeState {
   claims: any[]
 }
 
-export const fetchResume = createAsyncThunk(
-  'resume/fetchResume',
-  async (resumeId: string) => {
-    // get the resume from Google drive if it exists
-  }
-)
+const accessToken = getCookie('auth_token') as string
+const storage = new GoogleDriveStorage(accessToken)
+const resumeManager = new ResumeVC(storage)
 
 export const saveResume = createAsyncThunk(
   'resume/saveResume',
-  async (resume: Resume) => {
-    // save the resume to Google drive
+  async (resume: ResumeData) => {
+    return await resumeManager.saveResume({
+      resume,
+      type: resume.type as 'sign' | 'unsigned'
+    })
+  }
+)
+
+export const duplicateResume = createAsyncThunk(
+  'resume/duplicateResume',
+  async ({ resume }: { resume: ResumeData }) => {
+    const duplicatedResume = await resumeManager.saveResume({
+      resume: resume.content,
+      type: resume.type as 'sign' | 'unsigned'
+    })
+    return { duplicatedResume, type: resume.type }
   }
 )
 

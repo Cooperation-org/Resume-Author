@@ -73,7 +73,7 @@ const ResumeEditor = () => {
   const resume = useSelector((state: RootState) => state.resume.resume)
   const { vcs, status, error } = useSelector((state: RootState) => state.vcReducer)
 
-  const AllSections = Object.keys(resume as Resume).filter(
+  const AllSections = Object.keys(resume as unknown as Resume).filter(
     sec =>
       !sectionOrder.includes(sec as keyof Resume) && !nonVisibleSections.includes(sec)
   )

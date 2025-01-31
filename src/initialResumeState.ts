@@ -23,7 +23,7 @@ export const initialState: ResumeState = {
         twitter: ''
       }
     },
-    
+
     summary: '',
     experience: {
       items: []
