@@ -3,19 +3,21 @@ import { useNavigate } from 'react-router-dom'
 import { Box, Button, Typography, Tooltip } from '@mui/material'
 import { SVGFolder, SVGSinfo } from '../assets/svgs'
 import LoadingOverlay from '../components/Loading'
-import { signInWithGoogle } from '../firebase/auth'
+import { handleRedirect, login } from '../tools/auth'
 
 const Login = () => {
   const [loading, setLoading] = useState(false)
   const navigate = useNavigate() // For navigation
 
-  // Check and handle redirect if coming back from Google OAuth
+  // ✅ Check and handle redirect after Google OAuth login
   useEffect(() => {
-    let isMounted = true // Track if the component is mounted
+    let isMounted = true
 
     const handleRedirectAsync = async () => {
       if (window.location.hash) {
-        setLoading(true) // Show loading while processing
+        setLoading(true)
+        handleRedirect({ navigate }) // ✅ Process Google OAuth redirect
+
         if (isMounted) {
           setLoading(false) // Hide loading after processing
         }
@@ -25,20 +27,17 @@ const Login = () => {
     handleRedirectAsync()
 
     return () => {
-      isMounted = false // Cleanup function to prevent state updates on unmounted component
+      isMounted = false // Cleanup to prevent state updates on unmounted component
     }
   }, [navigate])
 
+  // ✅ Start Google OAuth login process
   const handleGoogleLogin = async () => {
     setLoading(true)
     try {
-      const user = await signInWithGoogle()
-      console.log('🚀 ~ handleGoogleLogin ~ user:', user)
-      if (user) {
-        navigate('/resume/new')
-      }
+      await login() // Redirects to Google OAuth login
     } catch (error) {
-      console.error('Error during Google sign-in:', error)
+      console.error('Error during Google login:', error)
     } finally {
       setLoading(false)
     }

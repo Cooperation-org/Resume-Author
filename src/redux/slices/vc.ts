@@ -40,7 +40,7 @@ const initialState: VCState = {
 
 // Async thunk to fetch VCs
 export const fetchVCs = createAsyncThunk('vc/fetchVCs', async () => {
-  const accessToken = getCookie('accessToken')
+  const accessToken = getCookie('auth_token')
   if (!accessToken) {
     console.error('Access token not found')
     throw new Error('Access token not found')
@@ -48,22 +48,20 @@ export const fetchVCs = createAsyncThunk('vc/fetchVCs', async () => {
 
   const storage = new GoogleDriveStorage(accessToken as string)
   const claimsData: any[] = await storage.getAllFilesByType('VCs')
-
-  // Filter out files where `name` is "RELATIONS"
-  const filteredData = claimsData.map((file: any[]) =>
+  console.log('🚀 ~ fetchVCs ~ claimsData:', claimsData)
+  const vcs = claimsData.map((file: any[]) =>
     file.filter((f: { name: string }) => f.name !== 'RELATIONS')
   )
-  // return JSON.parse(vc[i]data.body)
-  const vcs = filteredData.map((file: any[]) =>
-    file.map((f: any) => JSON.parse(f.data.body))
+  console.log('🚀 ~ fetchVCs ~ vcs:', vcs)
+  // Filter out files where `name` is "RELATIONS"
+  return claimsData.map((file: any[]) =>
+    file.filter((f: { name: string }) => f.name !== 'RELATIONS')
   )
-
-  return vcs.flat() // Adjust the return value based on your VC structure
 })
 
 // Async thunk to fetch resumes
 export const fetchUserResumes = createAsyncThunk('vc/fetchUserResumes', async () => {
-  const accessToken = getCookie('accessToken')
+  const accessToken = getCookie('auth_token')
   if (!accessToken) {
     console.error('Access token not found')
     throw new Error('Access token not found')
