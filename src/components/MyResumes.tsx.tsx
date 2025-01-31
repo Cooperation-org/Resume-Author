@@ -3,11 +3,51 @@ import ResumeCard from './ResumeCard'
 import { Link } from 'react-router-dom'
 import { RootState } from '../redux/store'
 import { useSelector } from 'react-redux'
+import { useEffect, useState } from 'react'
 
 const ResumeScreen: React.FC = () => {
-  const resumes = useSelector((state: RootState) => state.vcReducer.resumes)
+  const reduxResumes = useSelector((state: RootState) => state.vcReducer.resumes)
+  console.log('🚀 ~ resumes:', reduxResumes)
   const status = useSelector((state: RootState) => state.vcReducer.status)
 
+  const [resumes, setResumes] = useState<{
+    signed: ResumeData[]
+    unsigned: ResumeData[]
+  }>({
+    signed: [],
+    unsigned: []
+  })
+
+  useEffect(() => {
+    if (reduxResumes) {
+      setResumes(reduxResumes as any)
+    }
+  }, [reduxResumes])
+
+  const handleCreateResume = (type: 'signed' | 'unsigned') => {
+    const newResume: ResumeData = {
+      id: `resume-${Date.now()}`,
+      content: {
+        resume: {
+          contact: { fullName: 'New Resume' },
+          lastUpdated: new Date().toISOString()
+        }
+      },
+      type
+    }
+
+    setResumes(prev => ({
+      ...prev,
+      [type]: [...(prev[type] || []), newResume] // Ensure prev[type] is an array
+    }))
+  }
+
+  const removeResume = (id: string, type: 'signed' | 'unsigned') => {
+    setResumes(prev => ({
+      ...prev,
+      [type]: (prev[type] || []).filter(resume => resume.id !== id) // Ensure prev[type] is an array
+    }))
+  }
   return (
     <Box
       sx={{
@@ -54,22 +94,31 @@ const ResumeScreen: React.FC = () => {
           title={resume.content.resume.contact.fullName}
           date={new Date(resume.content.resume.lastUpdated).toLocaleDateString()}
           credentials={0} // Update this if you have credentials data
+          resume={resume}
+          addNewResume={handleCreateResume}
+          removeResume={removeResume}
+          resumes={resumes}
         />
       ))}
 
       {status === 'loading' && <Typography>Loading resumes...</Typography>}
-      {status === 'failed' && <Typography>Failed to load resumes.</Typography>}
+      {resumes.signed.length + resumes.unsigned.length === 0 &&
+        status === 'succeeded' && <Typography>You dont have any resumes.</Typography>}
 
       {/* Render Unsigned Resumes */}
       {resumes.unsigned.map(resume => (
         <ResumeCard
           key={resume.id}
           id={resume.id}
-          title={resume.name}
+          title={resume.content.resume.contact.fullName}
           date={new Date().toLocaleDateString()} // Use a default date or fetch from content
           credentials={0} // Update this if you have credentials data
           isDraft={true}
           lastUpdated='2 months ago' // Update this if you have lastUpdated data
+          resume={resume}
+          addNewResume={handleCreateResume}
+          removeResume={removeResume}
+          resumes={resumes}
         />
       ))}
     </Box>
