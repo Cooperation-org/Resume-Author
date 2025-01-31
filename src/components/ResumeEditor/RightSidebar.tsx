@@ -13,9 +13,9 @@ import {
 } from '@mui/material'
 import { getCookie, removeCookie, removeLocalStorage } from '../../tools'
 import { SVGLine, SVGSearch } from '../../assets/svgs'
-import { signInWithGoogle } from '../../firebase/auth'
 import { useSelector } from 'react-redux'
 import { useState } from 'react'
+import { login } from '../../tools/auth'
 
 const paperStyle = {
   display: 'flex',
@@ -43,28 +43,28 @@ const placeholderStyle = {
 }
 const RightSidebar = () => {
   const [selectedClaims, setSelectedClaims] = useState<string[]>([])
-
   const { vcs: claims, status } = useSelector((state: any) => state.vcReducer)
+
   console.log('🚀 ~ RightSidebar ~ claims:', claims)
+
   const handleAuth = () => {
-    const accessToken = getCookie('accessToken')
+    const accessToken = getCookie('auth_token') // Ensure this matches the correct cookie key
     if (!accessToken) {
-      handleGoogleLogin()
+      handleGoogleLogin() // If no token, login
     } else {
-      handleLogout()
+      handleLogout() // If logged in, logout
     }
   }
 
   const handleLogout = () => {
-    removeCookie('accessToken')
+    removeCookie('auth_token') // Ensure it matches the correct key
     removeLocalStorage('user_info')
     removeLocalStorage('auth')
-    // setClaims([])
-    setSelectedClaims([])
+    setSelectedClaims([]) // Clear selected claims
   }
 
   const handleGoogleLogin = async () => {
-    await signInWithGoogle()
+    await login() // Redirects to Google OAuth login
   }
 
   const handleClaimToggle = (claimId: string) => {

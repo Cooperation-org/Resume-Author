@@ -10,18 +10,21 @@ import WhoBenefitsSection from './landingPageSections/WhoBenefitsSection'
 import SelectCards from './landingPageSections/SelectCards'
 import MoreAbout from './landingPageSections/MoreAboutResumeAuthor'
 import Footer from './landingPageSections/Footer'
-import { signInWithGoogle } from '../firebase/auth'
 import { getCookie } from '../tools'
+import { login } from '../tools/auth'
 
 const Hero = () => {
   const navigate = useNavigate()
   const handleLogin = async () => {
-    const accessToken = getCookie('accessToken')
+    const accessToken = getCookie('auth_token') // Make sure this matches the correct cookie key
+
     if (accessToken) {
       console.log('Already logged in')
-      navigate('resume/new')
+      navigate('/resume/new') // Redirect if already logged in
+      return
     }
-    await signInWithGoogle()
+
+    await login() // Redirects to Google OAuth login
   }
   return (
     <div>
