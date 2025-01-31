@@ -2,8 +2,13 @@ import { Box, Typography, Button, Divider, Stack } from '@mui/material'
 import { getCookie, removeCookie, removeLocalStorage } from '../../tools'
 import { signInWithGoogle } from '../../firebase/auth'
 import { useSelector } from 'react-redux'
-import { useState } from 'react'
-import { fileIconSVG, checkmarkBlueSVG, checkmarkgraySVG } from '../../assets/svgs'
+import { useState, useEffect } from 'react'
+import {
+  fileIconSVG,
+  checkmarkBlueSVG,
+  checkmarkgraySVG,
+  uploadArrowUpSVG
+} from '../../assets/svgs'
 
 interface RootState {
   vcReducer: {
@@ -14,6 +19,7 @@ interface RootState {
 
 const RightSidebar = () => {
   const [selectedClaims, setSelectedClaims] = useState<string[]>([])
+  const [uploadedFiles, setUploadedFiles] = useState<string[]>([])
 
   // Redux state connection kept for future use
   useSelector((state: RootState) => state.vcReducer)
@@ -25,8 +31,16 @@ const RightSidebar = () => {
     { id: '4', name: 'English Language Proficiency Certification' },
     { id: '5', name: 'Foundations of User Experience (UX) Design' },
     { id: '6', name: 'Language Description and Documentation' },
-    { id: '7', name: 'Start the UX Design Process: Empathize, Define, and Ideate' }
+    { id: '7', name: 'Start the UX Design Process: Empathize, Define, and Ideate' },
+    { id: '8', name: 'Introduction to Interaction Design' },
+    { id: '9', name: 'UX Design for Beginners' },
+    { id: '10', name: 'User Interface Design Essentials' }
   ]
+
+  useEffect(() => {
+    const savedFiles = JSON.parse(localStorage.getItem('uploadedFiles') ?? '[]')
+    setUploadedFiles(savedFiles)
+  }, [])
 
   const handleAuth = () => {
     const accessToken = getCookie('accessToken')
@@ -59,15 +73,44 @@ const RightSidebar = () => {
     })
   }
 
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files
+    if (files) {
+      const fileNames = Array.from(files).map(file => file.name)
+      setUploadedFiles(prevFiles => {
+        const newFiles = [...prevFiles, ...fileNames]
+        localStorage.setItem('uploadedFiles', JSON.stringify(newFiles))
+        return newFiles
+      })
+    }
+  }
+
+  const handleDragOver = (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault()
+  }
+
+  const handleDrop = (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault()
+    const files = event.dataTransfer.files
+    if (files.length > 0) {
+      const fileNames = Array.from(files).map(file => file.name)
+      setUploadedFiles(prevFiles => {
+        const newFiles = [...prevFiles, ...fileNames]
+        localStorage.setItem('uploadedFiles', JSON.stringify(newFiles))
+        return newFiles
+      })
+    }
+  }
+
   return (
     <Box
       sx={{
         width: 375,
         display: 'flex',
         flexDirection: 'column',
-        gap: 3,
+        gap: '30px',
         bgcolor: 'white',
-        p: 5
+        pr: '40px'
       }}
     >
       {/* Section 1: Library Header and Buttons */}
@@ -197,30 +240,38 @@ const RightSidebar = () => {
 
         <Divider sx={{ borderColor: '#47516B', mt: '3px' }} />
 
-        <Stack spacing={2}>
-          {dummyCredentials.map(claim => (
-            <Box sx={{ display: 'flex', alignItems: 'center' }} key={claim.id}>
-              <Box sx={{ width: 24, height: 24, mr: '10px', display: 'flex' }}>
-                {selectedClaims.includes(claim.id)
-                  ? checkmarkBlueSVG()
-                  : checkmarkgraySVG()}
+        <Box
+          sx={{
+            maxHeight: dummyCredentials.length > 10 ? 531 : 'auto',
+            overflowY: dummyCredentials.length > 10 ? 'auto' : 'visible',
+            paddingRight: 1
+          }}
+        >
+          <Stack spacing={2}>
+            {dummyCredentials.map(claim => (
+              <Box sx={{ display: 'flex', alignItems: 'center' }} key={claim.id}>
+                <Box sx={{ width: 24, height: 24, mr: '10px', display: 'flex' }}>
+                  {selectedClaims.includes(claim.id)
+                    ? checkmarkBlueSVG()
+                    : checkmarkgraySVG()}
+                </Box>
+                <Typography
+                  sx={{
+                    fontSize: 16,
+                    fontWeight: 500,
+                    color: '#2563EB',
+                    textDecoration: 'underline',
+                    fontFamily: 'Nunito Sans',
+                    cursor: 'pointer'
+                  }}
+                  onClick={() => handleClaimToggle(claim.id)}
+                >
+                  {claim.name}
+                </Typography>
               </Box>
-              <Typography
-                sx={{
-                  fontSize: 16,
-                  fontWeight: 500,
-                  color: '#2563EB',
-                  textDecoration: 'underline',
-                  fontFamily: 'Nunito Sans',
-                  cursor: 'pointer'
-                }}
-                onClick={() => handleClaimToggle(claim.id)}
-              >
-                {claim.name}
-              </Typography>
-            </Box>
-          ))}
-        </Stack>
+            ))}
+          </Stack>
+        </Box>
       </Box>
 
       {/* Section 3: Your Files */}
@@ -236,16 +287,26 @@ const RightSidebar = () => {
           boxShadow: '0px 2px 20px rgba(0,0,0,0.10)'
         }}
       >
-        <Typography
-          sx={{
-            fontSize: 16,
-            color: '#47516B',
-            fontWeight: 700,
-            fontFamily: 'Nunito Sans'
-          }}
+        <Box
+          sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
         >
-          Your Files
-        </Typography>
+          <Typography
+            sx={{
+              fontSize: 16,
+              color: '#47516B',
+              fontWeight: 700,
+              fontFamily: 'Nunito Sans'
+            }}
+          >
+            Your Files
+          </Typography>
+          <Box
+            sx={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}
+            onClick={() => document.getElementById('file-upload')?.click()}
+          >
+            <Box sx={{ width: 24, height: 24 }}>{uploadArrowUpSVG()}</Box>
+          </Box>
+        </Box>
 
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
           <Box sx={{ width: 24, height: 24, mr: '12px', display: 'flex' }}>
@@ -265,6 +326,7 @@ const RightSidebar = () => {
 
         <Divider sx={{ borderColor: '#47516B' }} />
 
+        {/* File Drop Area */}
         <Box
           sx={{
             display: 'flex',
@@ -272,8 +334,12 @@ const RightSidebar = () => {
             alignItems: 'center',
             mt: '15px',
             mb: '10px',
-            gap: '12px'
+            gap: '12px',
+            cursor: 'pointer'
           }}
+          onDrop={handleDrop}
+          onDragOver={handleDragOver}
+          onClick={() => document.getElementById('file-upload')?.click()}
         >
           <Typography
             sx={{
@@ -283,7 +349,7 @@ const RightSidebar = () => {
               fontWeight: 600
             }}
           >
-            No files yet...
+            {uploadedFiles.length === 0 ? 'No files yet...' : 'Your Uploaded Files'}
           </Typography>
           <Box sx={{ width: 'auto', height: 54, display: 'flex' }}>{fileIconSVG()}</Box>
           <Typography
@@ -301,6 +367,48 @@ const RightSidebar = () => {
           >
             Maximum size: 50MB
           </Typography>
+
+          <input
+            type='file'
+            id='file-upload'
+            multiple
+            style={{ display: 'none' }}
+            onChange={handleFileUpload}
+            accept='application/pdf, image/*'
+          />
+        </Box>
+
+        {/* Uploaded Files List */}
+        <Box
+          sx={{
+            maxHeight: uploadedFiles.length > 10 ? 531 : 'auto',
+            overflowY: uploadedFiles.length > 10 ? 'auto' : 'visible',
+            textWrap: 'wrap',
+            wordBreak: 'break-word',
+            paddingRight: 1
+          }}
+        >
+          <Stack spacing={2}>
+            {uploadedFiles.map((file, index) => (
+              <Box sx={{ display: 'flex', alignItems: 'center' }} key={file}>
+                <Box sx={{ width: 24, height: 24, mr: '10px', display: 'flex' }}>
+                  {checkmarkBlueSVG()}
+                </Box>
+                <Typography
+                  sx={{
+                    fontSize: 16,
+                    fontWeight: 500,
+                    color: '#2563EB',
+                    textDecoration: 'underline',
+                    fontFamily: 'Nunito Sans',
+                    cursor: 'pointer'
+                  }}
+                >
+                  {file}
+                </Typography>
+              </Box>
+            ))}
+          </Stack>
         </Box>
       </Box>
     </Box>

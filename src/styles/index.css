@@ -10,6 +10,33 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: #e1e2f600;
+  border-radius: 30px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #e1e2f6;
+  border-radius: 30px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #614bc4;
+}
+
+::-webkit-scrollbar-horizontal {
+  height: 8px;
+}
+
+::-webkit-scrollbar-track-horizontal {
+  background: #e1e2f600;
+  border-radius: 30px;
+}
+
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
 }
