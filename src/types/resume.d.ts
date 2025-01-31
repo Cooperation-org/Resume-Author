@@ -186,3 +186,16 @@ interface Resume {
     items: Testimonial[]
   }
 }
+
+interface ResumeData {
+  id: string
+  content: {
+    resume: {
+      contact: {
+        fullName: string
+      }
+      lastUpdated: string
+    }
+  }
+  type: 'signed' | 'unsigned'
+}
