@@ -1,44 +1,36 @@
-import React, { useState } from 'react'
-import Card from '@mui/material/Card'
-import Typography from '@mui/material/Typography'
-import Button from '@mui/material/Button'
-import IconButton from '@mui/material/IconButton'
-import Box from '@mui/material/Box'
+import React, { useRef, useState } from 'react'
+import {
+  Card,
+  Typography,
+  IconButton,
+  Box,
+  Menu,
+  MenuItem,
+  ListItemIcon,
+  ListItemText,
+  TextField,
+  CircularProgress,
+  Tooltip,
+  Button
+} from '@mui/material'
 import { styled } from '@mui/material/styles'
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined'
-import LinkIcon from '@mui/icons-material/Link'
-import DownloadIcon from '@mui/icons-material/Download'
-import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined'
+
 import MoreVertIcon from '@mui/icons-material/MoreVert'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
-import Tooltip from '@mui/material/Tooltip'
-import Menu from '@mui/material/Menu'
-import MenuItem from '@mui/material/MenuItem'
+import DeleteIcon from '@mui/icons-material/Delete'
+import ShareIcon from '@mui/icons-material/Share'
+import ContentCopyIcon from '@mui/icons-material/ContentCopy'
+import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined'
+import DownloadIcon from '@mui/icons-material/Download'
+import { LinkIcon } from 'lucide-react'
+
 import { useDispatch } from 'react-redux'
-import { removeSection, setSelectedResume, updateSection } from '../redux/slices/resume'
-import { TextField } from '@mui/material'
-import { Link } from 'react-router-dom'
+import { updateSection } from '../redux/slices/resume'
+import { GoogleDriveStorage, Resume } from '@cooperation/vc-storage'
+import { getCookie } from '../tools'
 import Logo from '../assets/blue-logo.png'
-import html2canvas from 'html2canvas'
-import jsPDF from 'jspdf'
-
-interface ResumeCardProps {
-  id: string
-  title: string
-  date: string
-  credentials: number
-  isDraft?: boolean
-  lastUpdated?: string
-}
-
-const StyledCard = styled(Card)(({ theme }) => ({
-  border: `1px solid #001aff`,
-  boxShadow: 'none',
-  borderRadius: '12px',
-  '&:hover': {
-    backgroundColor: theme.palette.background.paper
-  }
-}))
+import { Link } from 'react-router-dom'
 
 const ActionButton = styled(Button)(({ theme }) => ({
   textTransform: 'none',
@@ -50,12 +42,24 @@ const ActionButton = styled(Button)(({ theme }) => ({
   }
 }))
 
-const StyledMoreButton = styled(IconButton)(({ theme }) => ({
-  padding: 8,
-  borderRadius: 8,
-  '&:hover': {
-    backgroundColor: theme.palette.grey[100]
-  }
+interface ResumeCardProps {
+  id: string
+  title: string
+  date: string
+  credentials: number
+  isDraft?: boolean
+  lastUpdated?: string
+  resume: any
+  resumes: any
+  addNewResume: (newResume: any, type: 'signed' | 'unsigned') => void
+  removeResume: (id: string, type: 'signed' | 'unsigned') => void
+}
+
+const StyledCard = styled(Card)(() => ({
+  border: `1px solid #001aff`,
+  boxShadow: 'none',
+  borderRadius: '12px',
+  '&:hover': { backgroundColor: '#f9f9f9' }
 }))
 
 const ResumeCard: React.FC<ResumeCardProps> = ({
@@ -64,15 +68,42 @@ const ResumeCard: React.FC<ResumeCardProps> = ({
   date,
   credentials,
   isDraft = false,
-  lastUpdated
+  lastUpdated,
+  resume,
+  addNewResume,
+  removeResume,
+  resumes
 }) => {
   const dispatch = useDispatch()
   const [menuAnchor, setMenuAnchor] = useState<null | HTMLElement>(null)
   const [isEditing, setIsEditing] = useState(false)
   const [editedTitle, setEditedTitle] = useState(title)
+  const [isLoading, setIsLoading] = useState(false) // Loading state for duplicate & delete
   const [showCopiedTooltip, setShowCopiedTooltip] = useState(false)
+  const inputRef = useRef<HTMLInputElement | null>(null)
 
-  const statusColor = isDraft ? '#6B7280' : '#4F46E5'
+  const accessToken = getCookie('auth_token')
+  const storage = new GoogleDriveStorage(accessToken as string)
+  const resumeManager = new Resume(storage)
+
+  const handleEditTitle = () => {
+    setIsEditing(true)
+    setTimeout(() => inputRef.current?.focus(), 0)
+  }
+
+  const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setEditedTitle(e.target.value)
+  }
+
+  const handleBlurOrEnter = async (e?: React.KeyboardEvent<HTMLInputElement>) => {
+    if (!e || e.key === 'Enter') {
+      setIsEditing(false)
+      if (editedTitle !== title) {
+        dispatch(updateSection({ id, title: editedTitle }))
+      }
+    }
+    await storage.update(id, { title: editedTitle })
+  }
 
   const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
     setMenuAnchor(event.currentTarget)
@@ -82,57 +113,72 @@ const ResumeCard: React.FC<ResumeCardProps> = ({
     setMenuAnchor(null)
   }
 
-  const handleEditTitle = () => {
-    setIsEditing(true)
-  }
-
-  const handleSaveTitle = () => {
-    dispatch(updateSection({ sectionId: id, content: { title: editedTitle } }))
-    setIsEditing(false)
-  }
-
-  const handleDeleteResume = () => {
-    dispatch(removeSection(id))
+  const handleDeleteResume = async () => {
+    setIsLoading(true)
+    await storage.delete(id) // Delete from Google Drive
+    removeResume(id, isDraft ? 'unsigned' : 'signed') // Remove from state
+    setIsLoading(false)
     handleMenuClose()
+  }
+
+  const handleDuplicateResume = async () => {
+    setIsLoading(true)
+    try {
+      handleMenuClose()
+      const newResume = await resumeManager.saveResume({
+        resume: resume.content,
+        type: 'unsigned'
+      })
+
+      console.log('Duplicated Resume:', newResume)
+
+      const duplicatedResume = {
+        id: newResume.id,
+        content: newResume.content,
+        type: 'unsigned'
+      }
+
+      addNewResume(duplicatedResume, 'unsigned')
+
+      console.log('Updated Resumes:', resumes)
+    } catch (error) {
+      console.error('Error duplicating resume:', error)
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   const handleCopyLink = () => {
     navigator.clipboard.writeText(`https://example.com/resume/${id}`)
     setShowCopiedTooltip(true)
     setTimeout(() => setShowCopiedTooltip(false), 2000)
-  }
-
-  const handleSelectResume = () => {
-    dispatch(setSelectedResume({ id, title, date, credentials, isDraft }))
-  }
-
-  const handleDownloadPdf = (id: string) => {
-    const element = document.getElementById(`resume-${id}`)
-
-    if (element) {
-      html2canvas(element).then(canvas => {
-        const imgData = canvas.toDataURL('image/png')
-        const pdf = new jsPDF('p', 'mm', 'a4')
-        const imgWidth = 210 // A4 width in mm
-        const imgHeight = (canvas.height * imgWidth) / canvas.width
-        console.log('🚀 ~ html2canvas ~ imgHeight:', imgHeight)
-
-        pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight)
-        pdf.save(`${id}.pdf`)
-      })
-    }
+    handleMenuClose()
   }
 
   return (
     <StyledCard>
-      <Box position={'relative'} sx={{ p: 2 }}>
+      <Box position='relative' sx={{ p: 2, opacity: isLoading ? 0.5 : 1 }}>
+        {/* Loading Spinner */}
+        {isLoading && (
+          <Box
+            position='absolute'
+            top='50%'
+            left='50%'
+            sx={{ transform: 'translate(-50%, -50%)' }}
+          >
+            <CircularProgress size={24} />
+          </Box>
+        )}
+
+        {/* Main Content */}
         <Box display='flex' justifyContent='space-between' alignItems='center'>
+          {/* Left Side: Title and Metadata */}
           <Box display='flex' gap={1.5}>
             {!isDraft ? (
               <CheckCircleIcon
                 sx={{
                   color: 'white',
-                  backgroundColor: statusColor,
+                  backgroundColor: '#4F46E5',
                   borderRadius: '50%',
                   p: 0.5,
                   width: 15,
@@ -147,9 +193,23 @@ const ResumeCard: React.FC<ResumeCardProps> = ({
                 <TextField
                   type='text'
                   value={editedTitle}
-                  onChange={e => setEditedTitle(e.target.value)}
-                  onBlur={handleSaveTitle}
+                  onChange={handleTitleChange}
+                  onBlur={() => handleBlurOrEnter()}
                   autoFocus
+                  variant='standard'
+                  sx={{
+                    fontSize: '0.875rem',
+                    '& .MuiInputBase-root': { padding: 0 },
+                    '& .MuiInputBase-input': {
+                      padding: 0,
+                      margin: 0,
+                      fontSize: 'inherit',
+                      fontWeight: 500,
+                      color: '#3c4599'
+                    },
+                    '& .MuiInput-underline:before': { borderBottom: 'none' },
+                    '& .MuiInput-underline:after': { borderBottom: 'none' }
+                  }}
                 />
               ) : (
                 <Link
@@ -175,6 +235,7 @@ const ResumeCard: React.FC<ResumeCardProps> = ({
             </Box>
           </Box>
 
+          {/* Right Side: Action Buttons */}
           <Box display='flex' alignItems='center' color={'#3c4599'} gap={0.5}>
             <Box className='resume-card-actions'>
               {isDraft ? (
@@ -192,13 +253,6 @@ const ResumeCard: React.FC<ResumeCardProps> = ({
                 </>
               ) : (
                 <>
-                  {/* <ActionButton
-                    size='small'
-                    startIcon={<EditOutlinedIcon />}
-                    onClick={handleEditTitle}
-                  >
-                    Edit
-                  </ActionButton> */}
                   <Tooltip title={showCopiedTooltip ? 'Copied!' : 'Copy Link'}>
                     <ActionButton
                       size='small'
@@ -208,11 +262,7 @@ const ResumeCard: React.FC<ResumeCardProps> = ({
                       Copy Link
                     </ActionButton>
                   </Tooltip>
-                  <ActionButton
-                    size='small'
-                    startIcon={<DownloadIcon />}
-                    onClick={() => handleDownloadPdf(id)}
-                  >
+                  <ActionButton size='small' startIcon={<DownloadIcon />}>
                     Download PDF
                   </ActionButton>
                   <ActionButton size='small' startIcon={<VisibilityOutlinedIcon />}>
@@ -227,9 +277,20 @@ const ResumeCard: React.FC<ResumeCardProps> = ({
           </Box>
         </Box>
 
+        {/* Menu for Additional Actions */}
         <Menu anchorEl={menuAnchor} open={Boolean(menuAnchor)} onClose={handleMenuClose}>
-          <MenuItem onClick={handleDeleteResume}>Delete</MenuItem>
-          <MenuItem onClick={handleMenuClose}>Duplicate</MenuItem>
+          <MenuItem onClick={handleDeleteResume} disabled={isLoading}>
+            <ListItemIcon>
+              <DeleteIcon fontSize='small' />
+            </ListItemIcon>
+            <ListItemText primary='Delete' />
+          </MenuItem>
+          <MenuItem onClick={handleDuplicateResume} disabled={isLoading}>
+            <ListItemIcon>
+              <ContentCopyIcon fontSize='small' />
+            </ListItemIcon>
+            <ListItemText primary='Duplicate' />
+          </MenuItem>
         </Menu>
       </Box>
     </StyledCard>
@@ -237,3 +298,11 @@ const ResumeCard: React.FC<ResumeCardProps> = ({
 }
 
 export default ResumeCard
+
+const StyledMoreButton = styled(IconButton)(({ theme }) => ({
+  padding: 8,
+  borderRadius: 8,
+  '&:hover': {
+    backgroundColor: theme.palette.grey[100]
+  }
+}))

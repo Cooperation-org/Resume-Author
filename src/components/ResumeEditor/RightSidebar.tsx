@@ -7,7 +7,7 @@ import {
   fileIconSVG,
   checkmarkBlueSVG,
   checkmarkgraySVG,
-  uploadArrowUpSVG
+  uploadArrowUpSVG..
 } from '../../assets/svgs'
 
 interface RootState {
@@ -41,25 +41,29 @@ const RightSidebar = () => {
     const savedFiles = JSON.parse(localStorage.getItem('uploadedFiles') ?? '[]')
     setUploadedFiles(savedFiles)
   }, [])
+  // const { vcs: claims, status } = useSelector((state: any) => state.vcReducer)
+
+  // console.log('🚀 ~ RightSidebar ~ claims:', claims)
 
   const handleAuth = () => {
-    const accessToken = getCookie('accessToken')
+    const accessToken = getCookie('auth_token') // Ensure this matches the correct cookie key
     if (!accessToken) {
-      handleGoogleLogin()
+      handleGoogleLogin() // If no token, login
     } else {
-      handleLogout()
+      handleLogout() // If logged in, logout
     }
   }
 
   const handleLogout = () => {
-    removeCookie('accessToken')
+    removeCookie('auth_token') // Ensure it matches the correct key
     removeLocalStorage('user_info')
     removeLocalStorage('auth')
-    setSelectedClaims([])
+
+    setSelectedClaims([]) // Clear selected claims
   }
 
   const handleGoogleLogin = async () => {
-    await signInWithGoogle()
+    await login() // Redirects to Google OAuth login
   }
 
   const handleClaimToggle = (claimId: string) => {
