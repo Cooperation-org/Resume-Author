@@ -8,6 +8,7 @@ const ResumeScreen: React.FC = () => {
   const { signed, unsigned, status, error } = useSelector(
     (state: RootState) => state.myresumes
   )
+  console.log('🚀 ~ unsigned:', unsigned)
 
   return (
     <Box
@@ -56,7 +57,7 @@ const ResumeScreen: React.FC = () => {
         <ResumeCard
           key={resume?.id}
           id={resume?.id}
-          title={resume?.content?.resume?.title}
+          title={resume?.name}
           date={new Date(resume?.lastUpdated).toLocaleDateString()}
           credentials={0}
           isDraft={false}
@@ -69,7 +70,7 @@ const ResumeScreen: React.FC = () => {
         <ResumeCard
           key={resume.id}
           id={resume.id}
-          title={resume?.content?.resume?.title}
+          title={resume?.name.split('.')[0]}
           date={new Date().toLocaleDateString()}
           credentials={0}
           isDraft={true}
