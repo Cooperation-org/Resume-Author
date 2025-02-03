@@ -15,22 +15,18 @@ import {
 } from '@mui/material'
 import { styled } from '@mui/material/styles'
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined'
-
 import MoreVertIcon from '@mui/icons-material/MoreVert'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import DeleteIcon from '@mui/icons-material/Delete'
-import ShareIcon from '@mui/icons-material/Share'
 import ContentCopyIcon from '@mui/icons-material/ContentCopy'
 import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined'
 import DownloadIcon from '@mui/icons-material/Download'
 import { LinkIcon } from 'lucide-react'
-
-import { useDispatch } from 'react-redux'
-import { updateSection } from '../redux/slices/resume'
 import { GoogleDriveStorage, Resume } from '@cooperation/vc-storage'
 import { getCookie } from '../tools'
 import Logo from '../assets/blue-logo.png'
 import { Link } from 'react-router-dom'
+import DeleteConfirmationDialog from './DeleteConfirmDialog'
 
 const ActionButton = styled(Button)(({ theme }) => ({
   textTransform: 'none',
@@ -53,6 +49,7 @@ interface ResumeCardProps {
   resumes: any
   addNewResume: (newResume: any, type: 'signed' | 'unsigned') => void
   removeResume: (id: string, type: 'signed' | 'unsigned') => void
+  updateTitle: (id: string, newTitle: string, type: 'signed' | 'unsigned') => void
 }
 
 const StyledCard = styled(Card)(() => ({
@@ -67,19 +64,21 @@ const ResumeCard: React.FC<ResumeCardProps> = ({
   title,
   date,
   credentials,
-  isDraft = false,
+  isDraft,
   lastUpdated,
   resume,
   addNewResume,
   removeResume,
-  resumes
+  resumes,
+  updateTitle
 }) => {
-  const dispatch = useDispatch()
   const [menuAnchor, setMenuAnchor] = useState<null | HTMLElement>(null)
   const [isEditing, setIsEditing] = useState(false)
   const [editedTitle, setEditedTitle] = useState(title)
   const [isLoading, setIsLoading] = useState(false) // Loading state for duplicate & delete
   const [showCopiedTooltip, setShowCopiedTooltip] = useState(false)
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+
   const inputRef = useRef<HTMLInputElement | null>(null)
 
   const accessToken = getCookie('auth_token')
@@ -99,10 +98,12 @@ const ResumeCard: React.FC<ResumeCardProps> = ({
     if (!e || e.key === 'Enter') {
       setIsEditing(false)
       if (editedTitle !== title) {
-        dispatch(updateSection({ id, title: editedTitle }))
+        updateTitle(id, editedTitle, 'unsigned') // Call the updateTitle function
       }
     }
-    await storage.update(id, { title: editedTitle })
+    resume.title = editedTitle
+
+    await storage.update(id, resume.content)
   }
 
   const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
@@ -113,34 +114,37 @@ const ResumeCard: React.FC<ResumeCardProps> = ({
     setMenuAnchor(null)
   }
 
-  const handleDeleteResume = async () => {
-    setIsLoading(true)
-    await storage.delete(id) // Delete from Google Drive
-    removeResume(id, isDraft ? 'unsigned' : 'signed') // Remove from state
-    setIsLoading(false)
-    handleMenuClose()
+  const handleDeleteResume = () => {
+    setDeleteDialogOpen(true)
   }
 
   const handleDuplicateResume = async () => {
     setIsLoading(true)
     try {
       handleMenuClose()
+
       const newResume = await resumeManager.saveResume({
         resume: resume.content,
         type: 'unsigned'
       })
+      console.log('🚀 ~ handleDuplicateResume ~ newResume:', newResume)
 
-      console.log('Duplicated Resume:', newResume)
-
+      // Clone the resume and modify the ID and title
       const duplicatedResume = {
-        id: newResume.id,
-        content: newResume.content,
-        type: 'unsigned'
+        ...resume,
+        content: {
+          ...resume.content,
+          resume: {
+            ...resume.content.resume,
+            id: `${resume.content.resume.id}-1`,
+            title: `${resume.content.resume.title} (1)`
+          }
+        }
       }
 
-      addNewResume(duplicatedResume, 'unsigned')
+      console.log('🚀 ~ handleDuplicateResume ~ duplicatedResume:', duplicatedResume)
 
-      console.log('Updated Resumes:', resumes)
+      addNewResume(duplicatedResume, 'unsigned')
     } catch (error) {
       console.error('Error duplicating resume:', error)
     } finally {
@@ -155,145 +159,170 @@ const ResumeCard: React.FC<ResumeCardProps> = ({
     handleMenuClose()
   }
 
-  return (
-    <StyledCard>
-      <Box position='relative' sx={{ p: 2, opacity: isLoading ? 0.5 : 1 }}>
-        {/* Loading Spinner */}
-        {isLoading && (
-          <Box
-            position='absolute'
-            top='50%'
-            left='50%'
-            sx={{ transform: 'translate(-50%, -50%)' }}
-          >
-            <CircularProgress size={24} />
-          </Box>
-        )}
+  const handleConfirmDelete = async () => {
+    setIsLoading(true)
+    try {
+      await storage.delete(id)
+      removeResume(id, isDraft ? 'unsigned' : 'signed')
+    } catch (error) {
+      console.error('Error deleting resume:', error)
+    } finally {
+      setIsLoading(false)
+      setDeleteDialogOpen(false)
+      handleMenuClose()
+    }
+  }
 
-        {/* Main Content */}
-        <Box display='flex' justifyContent='space-between' alignItems='center'>
-          {/* Left Side: Title and Metadata */}
-          <Box display='flex' gap={1.5}>
-            {!isDraft ? (
-              <CheckCircleIcon
-                sx={{
-                  color: 'white',
-                  backgroundColor: '#4F46E5',
-                  borderRadius: '50%',
-                  p: 0.5,
-                  width: 15,
-                  height: 15
-                }}
-              />
-            ) : (
-              <img src={Logo} alt='Résumé Author' style={{ height: 25 }} />
-            )}
-            <Box>
-              {isEditing ? (
-                <TextField
-                  type='text'
-                  value={editedTitle}
-                  onChange={handleTitleChange}
-                  onBlur={() => handleBlurOrEnter()}
-                  autoFocus
-                  variant='standard'
+  return (
+    <>
+      <StyledCard>
+        <Box position='relative' sx={{ p: 2, opacity: isLoading ? 0.5 : 1 }}>
+          {/* Loading Spinner */}
+          {isLoading && (
+            <Box
+              position='absolute'
+              top='50%'
+              left='50%'
+              sx={{ transform: 'translate(-50%, -50%)' }}
+            >
+              <CircularProgress size={24} />
+            </Box>
+          )}
+
+          {/* Main Content */}
+          <Box display='flex' justifyContent='space-between' alignItems='center'>
+            {/* Left Side: Title and Metadata */}
+            <Box display='flex' gap={1.5}>
+              {!isDraft ? (
+                <CheckCircleIcon
                   sx={{
-                    fontSize: '0.875rem',
-                    '& .MuiInputBase-root': { padding: 0 },
-                    '& .MuiInputBase-input': {
-                      padding: 0,
-                      margin: 0,
-                      fontSize: 'inherit',
-                      fontWeight: 500,
-                      color: '#3c4599'
-                    },
-                    '& .MuiInput-underline:before': { borderBottom: 'none' },
-                    '& .MuiInput-underline:after': { borderBottom: 'none' }
+                    color: 'white',
+                    backgroundColor: '#4F46E5',
+                    borderRadius: '50%',
+                    p: 0.5,
+                    width: 15,
+                    height: 15
                   }}
                 />
               ) : (
-                <Link
-                  to={`/resume/${id}`}
-                  style={{
-                    fontWeight: 500,
-                    textDecoration: 'underline',
-                    color: '#3c4599'
-                  }}
-                >
-                  {title} - {date}
-                </Link>
+                <img src={Logo} alt='Résumé Author' style={{ height: 25 }} />
               )}
-              <Typography
-                variant='body2'
-                color='text.secondary'
-                sx={{ mt: 0.5, fontSize: '0.875rem' }}
-              >
-                {isDraft
-                  ? `DRAFT - ${lastUpdated}`
-                  : `Just now - ${credentials} Credentials`}
-              </Typography>
-            </Box>
-          </Box>
-
-          {/* Right Side: Action Buttons */}
-          <Box display='flex' alignItems='center' color={'#3c4599'} gap={0.5}>
-            <Box className='resume-card-actions'>
-              {isDraft ? (
-                <>
-                  <ActionButton
-                    size='small'
-                    startIcon={<EditOutlinedIcon />}
-                    onClick={handleEditTitle}
+              <Box>
+                {isEditing ? (
+                  <TextField
+                    type='text'
+                    value={editedTitle}
+                    onChange={handleTitleChange}
+                    onBlur={() => handleBlurOrEnter()}
+                    autoFocus
+                    variant='standard'
+                    sx={{
+                      fontSize: '0.875rem',
+                      '& .MuiInputBase-root': { padding: 0 },
+                      '& .MuiInputBase-input': {
+                        padding: 0,
+                        margin: 0,
+                        fontSize: 'inherit',
+                        fontWeight: 500,
+                        color: '#3c4599'
+                      },
+                      '& .MuiInput-underline:before': { borderBottom: 'none' },
+                      '& .MuiInput-underline:after': { borderBottom: 'none' }
+                    }}
+                  />
+                ) : (
+                  <Link
+                    to={`/resume/${id}`}
+                    style={{
+                      fontWeight: 500,
+                      textDecoration: 'underline',
+                      color: '#3c4599'
+                    }}
                   >
-                    Edit
-                  </ActionButton>
-                  <ActionButton size='small' startIcon={<VisibilityOutlinedIcon />}>
-                    Preview
-                  </ActionButton>
-                </>
-              ) : (
-                <>
-                  <Tooltip title={showCopiedTooltip ? 'Copied!' : 'Copy Link'}>
+                    {title} - {date}
+                  </Link>
+                )}
+                <Typography
+                  variant='body2'
+                  color='text.secondary'
+                  sx={{ mt: 0.5, fontSize: '0.875rem' }}
+                >
+                  {isDraft
+                    ? `DRAFT - ${lastUpdated}`
+                    : `Just now - ${credentials} Credentials`}
+                </Typography>
+              </Box>
+            </Box>
+
+            {/* Right Side: Action Buttons */}
+            <Box display='flex' alignItems='center' color={'#3c4599'} gap={0.5}>
+              <Box className='resume-card-actions'>
+                {isDraft ? (
+                  <>
                     <ActionButton
                       size='small'
-                      startIcon={<LinkIcon />}
-                      onClick={handleCopyLink}
+                      startIcon={<EditOutlinedIcon />}
+                      onClick={handleEditTitle}
                     >
-                      Copy Link
+                      Edit
                     </ActionButton>
-                  </Tooltip>
-                  <ActionButton size='small' startIcon={<DownloadIcon />}>
-                    Download PDF
-                  </ActionButton>
-                  <ActionButton size='small' startIcon={<VisibilityOutlinedIcon />}>
-                    Preview
-                  </ActionButton>
-                </>
-              )}
+                    <ActionButton size='small' startIcon={<VisibilityOutlinedIcon />}>
+                      Preview
+                    </ActionButton>
+                  </>
+                ) : (
+                  <>
+                    <Tooltip title={showCopiedTooltip ? 'Copied!' : 'Copy Link'}>
+                      <ActionButton
+                        size='small'
+                        startIcon={<LinkIcon />}
+                        onClick={handleCopyLink}
+                      >
+                        Copy Link
+                      </ActionButton>
+                    </Tooltip>
+                    <ActionButton size='small' startIcon={<DownloadIcon />}>
+                      Download PDF
+                    </ActionButton>
+                    <ActionButton size='small' startIcon={<VisibilityOutlinedIcon />}>
+                      Preview
+                    </ActionButton>
+                  </>
+                )}
+              </Box>
+              <StyledMoreButton size='small' onClick={handleMenuOpen}>
+                <MoreVertIcon sx={{ fontSize: 18 }} />
+              </StyledMoreButton>
             </Box>
-            <StyledMoreButton size='small' onClick={handleMenuOpen}>
-              <MoreVertIcon sx={{ fontSize: 18 }} />
-            </StyledMoreButton>
           </Box>
-        </Box>
 
-        {/* Menu for Additional Actions */}
-        <Menu anchorEl={menuAnchor} open={Boolean(menuAnchor)} onClose={handleMenuClose}>
-          <MenuItem onClick={handleDeleteResume} disabled={isLoading}>
-            <ListItemIcon>
-              <DeleteIcon fontSize='small' />
-            </ListItemIcon>
-            <ListItemText primary='Delete' />
-          </MenuItem>
-          <MenuItem onClick={handleDuplicateResume} disabled={isLoading}>
-            <ListItemIcon>
-              <ContentCopyIcon fontSize='small' />
-            </ListItemIcon>
-            <ListItemText primary='Duplicate' />
-          </MenuItem>
-        </Menu>
-      </Box>
-    </StyledCard>
+          {/* Menu for Additional Actions */}
+          <Menu
+            anchorEl={menuAnchor}
+            open={Boolean(menuAnchor)}
+            onClose={handleMenuClose}
+          >
+            <MenuItem onClick={handleDeleteResume} disabled={isLoading}>
+              <ListItemIcon>
+                <DeleteIcon fontSize='small' />
+              </ListItemIcon>
+              <ListItemText primary='Delete' />
+            </MenuItem>
+            <MenuItem onClick={handleDuplicateResume} disabled={isLoading}>
+              <ListItemIcon>
+                <ContentCopyIcon fontSize='small' />
+              </ListItemIcon>
+              <ListItemText primary='Duplicate' />
+            </MenuItem>
+          </Menu>
+        </Box>
+      </StyledCard>
+      <DeleteConfirmationDialog
+        open={deleteDialogOpen}
+        onClose={() => setDeleteDialogOpen(false)}
+        onConfirm={handleConfirmDelete}
+      />
+    </>
   )
 }
 

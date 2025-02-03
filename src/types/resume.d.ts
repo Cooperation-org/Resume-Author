@@ -150,6 +150,7 @@ interface Language extends VerifiableItem {
 interface Resume {
   id: string
   lastUpdated: string
+  title: string
   version?: number
   contact: Contact
   summary: string
@@ -191,6 +192,8 @@ interface ResumeData {
   id: string
   content: {
     resume: {
+      id: string
+      title: string
       contact: {
         fullName: string
       }

@@ -7,7 +7,7 @@ import { useEffect, useState } from 'react'
 
 const ResumeScreen: React.FC = () => {
   const reduxResumes = useSelector((state: RootState) => state.vcReducer.resumes)
-  console.log('🚀 ~ resumes:', reduxResumes)
+  console.log('🚀 ~ resumes reduxresumes:', reduxResumes)
   const status = useSelector((state: RootState) => state.vcReducer.status)
 
   const [resumes, setResumes] = useState<{
@@ -24,24 +24,36 @@ const ResumeScreen: React.FC = () => {
     }
   }, [reduxResumes])
 
-  const handleCreateResume = (type: 'signed' | 'unsigned') => {
-    const newResume: ResumeData = {
-      id: `resume-${Date.now()}`,
-      content: {
-        resume: {
-          contact: { fullName: 'New Resume' },
-          lastUpdated: new Date().toISOString()
-        }
-      },
-      type
-    }
-
+  const handleCreateResume = (newResume: ResumeData, type: 'signed' | 'unsigned') => {
     setResumes(prev => ({
       ...prev,
       [type]: [...(prev[type] || []), newResume] // Ensure prev[type] is an array
     }))
   }
-
+  const handleUpdateTitle = (
+    id: string,
+    newTitle: string,
+    type: 'signed' | 'unsigned'
+  ) => {
+    setResumes(prev => ({
+      ...prev,
+      [type]: prev[type].map(resume =>
+        resume.id === id
+          ? {
+              ...resume,
+              title: newTitle, // Update root-level title
+              content: {
+                ...resume.content,
+                resume: {
+                  ...resume.content.resume,
+                  title: newTitle // Update nested title inside resume object
+                }
+              }
+            }
+          : resume
+      )
+    }))
+  }
   const removeResume = (id: string, type: 'signed' | 'unsigned') => {
     setResumes(prev => ({
       ...prev,
@@ -91,13 +103,14 @@ const ResumeScreen: React.FC = () => {
         <ResumeCard
           key={resume.id}
           id={resume.id}
-          title={resume.content.resume.contact.fullName}
-          date={new Date(resume.content.resume.lastUpdated).toLocaleDateString()}
-          credentials={0} // Update this if you have credentials data
+          title={resume?.content?.resume?.title || 'untitled resume'}
+          date={new Date(resume?.content?.resume?.lastUpdated).toLocaleDateString()}
+          credentials={0}
           resume={resume}
           addNewResume={handleCreateResume}
           removeResume={removeResume}
           resumes={resumes}
+          updateTitle={handleUpdateTitle}
         />
       ))}
 
@@ -110,15 +123,16 @@ const ResumeScreen: React.FC = () => {
         <ResumeCard
           key={resume.id}
           id={resume.id}
-          title={resume.content.resume.contact.fullName}
-          date={new Date().toLocaleDateString()} // Use a default date or fetch from content
-          credentials={0} // Update this if you have credentials data
+          title={resume?.content?.resume?.title || 'untitled resume'}
+          date={new Date().toLocaleDateString()}
+          credentials={0}
           isDraft={true}
-          lastUpdated='2 months ago' // Update this if you have lastUpdated data
+          lastUpdated='2 months ago'
           resume={resume}
           addNewResume={handleCreateResume}
           removeResume={removeResume}
           resumes={resumes}
+          updateTitle={handleUpdateTitle} // Add this line
         />
       ))}
     </Box>

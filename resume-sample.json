@@ -1,8 +1,8 @@
 {
   "id": "res_123456789",
   "lastUpdated": "2024-03-04T15:30:00Z",
+  "title": "Sarah Thompson - Full Stack Developer",
   "version": 1,
-
   "contact": {
     "fullName": "Sarah J. Thompson",
     "email": "sarah.thompson@email.com",
@@ -17,9 +17,7 @@
       "github": "github.com/sarahdev"
     }
   },
-
   "summary": "Full Stack Developer with 5+ years of experience building scalable web applications. Passionate about clean code, user experience, and emerging technologies.",
-
   "experience": {
     "items": [
       {
@@ -61,7 +59,6 @@
       }
     ]
   },
-
   "education": {
     "items": [
       {
@@ -89,7 +86,6 @@
       }
     ]
   },
-
   "skills": {
     "items": [
       {
@@ -122,7 +118,6 @@
       }
     ]
   },
-
   "certifications": {
     "items": [
       {
@@ -149,7 +144,6 @@
       }
     ]
   },
-
   "projects": {
     "items": [
       {

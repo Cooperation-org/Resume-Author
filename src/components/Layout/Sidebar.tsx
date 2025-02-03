@@ -8,17 +8,22 @@ import {
   SVGLineDown,
   SVGAddSidebar
 } from '../../assets/svgs'
+import { Link } from 'react-router-dom'
 
 const Sidebar = () => {
   const Icons = [
     <Box sx={{ mb: 2 }}>
-      <IconButton>
-        <SVGRightLine />
-      </IconButton>
+      <Link to='/'>
+        <IconButton>
+          <SVGRightLine />
+        </IconButton>
+      </Link>
     </Box>,
-    <IconButton>
-      <SVGCopySidebar />
-    </IconButton>,
+    <Link to='/myresumes'>
+      <IconButton>
+        <SVGCopySidebar />
+      </IconButton>
+    </Link>,
     <IconButton>
       <SVGAddSidebar />
     </IconButton>,
