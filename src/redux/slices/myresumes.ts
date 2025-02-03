@@ -47,14 +47,12 @@ interface Contact {
 interface Resume {
   id: string
   lastUpdated: string
-  title: string
+  name: string
   version?: number
   contact: Contact
   summary: string
   content: {
-    resume: {
-      title: string
-    }
+    resume: any
   }
 }
 
@@ -115,19 +113,18 @@ const resumeSlice = createSlice({
         resume.id === id
           ? {
               ...resume,
-              title: newTitle,
+              name: `${newTitle}.json`, // ✅ Rename Google Drive File
               content: {
                 ...resume.content,
                 resume: {
                   ...resume.content.resume,
-                  title: newTitle
+                  title: undefined // ❌ Remove Title from JSON
                 }
               }
             }
           : resume
       )
     },
-
     // ✅ Duplicate Resume (with new ID and updated title)
     duplicateResume: (
       state,
@@ -140,7 +137,6 @@ const resumeSlice = createSlice({
         const newResume = {
           ...JSON.parse(JSON.stringify(resumeToDuplicate)), // Deep clone
           id: `${resumeToDuplicate.id}`,
-          title: `${resumeToDuplicate.title}`,
           content: {
             ...resumeToDuplicate.content,
             resume: {

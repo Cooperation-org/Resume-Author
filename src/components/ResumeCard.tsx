@@ -93,6 +93,7 @@ const ResumeCard: React.FC<ResumeCardProps> = ({
 
       if (editedTitle !== title) {
         try {
+          // ✅ Dispatch Redux Action to Update File Name
           dispatch(
             updateTitle({
               id,
@@ -100,26 +101,13 @@ const ResumeCard: React.FC<ResumeCardProps> = ({
               type: isDraft ? 'unsigned' : 'signed'
             })
           )
-          await storage.delete(id)
 
-          const updatedResume = {
-            ...resume.content,
-            resume: {
-              ...resume.content.resume,
-              title: editedTitle
-            }
-          }
+          const newFileName = `${editedTitle}.json`
+          await storage.updateFileData(id, { fileName: newFileName })
 
-          const newFile = await resumeManager.saveResume({
-            resume: updatedResume,
-            type: 'unsigned'
-          })
-
-          console.log('✅ Saved new resume with updated title:', newFile)
+          console.log('✅ File renamed successfully:', newFileName)
         } catch (error) {
-          console.error('❌ Error updating title:', error)
-        } finally {
-          // window.location.reload()
+          console.error('❌ Error renaming file:', error)
         }
       }
     }

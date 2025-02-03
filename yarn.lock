@@ -1121,10 +1121,10 @@
   resolved "https://registry.yarnpkg.com/@bcoe/v8-coverage/-/v8-coverage-0.2.3.tgz#75a2e8b51cb758a7553d6804a5932d7aace75c39"
   integrity sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==
 
-"@cooperation/vc-storage@^1.0.17":
-  version "1.0.17"
-  resolved "https://registry.yarnpkg.com/@cooperation/vc-storage/-/vc-storage-1.0.17.tgz#dd47e6d424f3e037a5f47d81443fa9d4f83525f3"
-  integrity sha512-y3rNDEhAxvOVRgSnvc4UtYaytcUUn7eYYqIDEn91bOMsIPRLyCi8BdTBJXAmKcCgDYWw7KwDBmgqlnnrCt6u2Q==
+"@cooperation/vc-storage@^1.0.18":
+  version "1.0.18"
+  resolved "https://registry.yarnpkg.com/@cooperation/vc-storage/-/vc-storage-1.0.18.tgz#1e846b5db007b999c0d6cf099e1159e5157ee239"
+  integrity sha512-Fr/YdId19lb1AgOWpuNEzNbtfdxchUGzTF8mpsVGwOgir3viTAWwnIPLfMjEXTvUmojG+fwMvYa0cZDibZEENA==
   dependencies:
     "@digitalbazaar/did-method-key" "^5.2.0"
     "@digitalbazaar/ed25519-signature-2020" "^5.3.0"
