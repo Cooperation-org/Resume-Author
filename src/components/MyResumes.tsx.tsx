@@ -1,65 +1,14 @@
 import { Box, Typography } from '@mui/material'
 import ResumeCard from './ResumeCard'
 import { Link } from 'react-router-dom'
-import { RootState } from '../redux/store'
 import { useSelector } from 'react-redux'
-import { useEffect, useState } from 'react'
+import { RootState } from '../redux/store'
 
 const ResumeScreen: React.FC = () => {
-  const reduxResumes = useSelector((state: RootState) => state.vcReducer.resumes)
-  console.log('🚀 ~ resumes reduxresumes:', reduxResumes)
-  const status = useSelector((state: RootState) => state.vcReducer.status)
+  const { signed, unsigned, status, error } = useSelector(
+    (state: RootState) => state.myresumes
+  )
 
-  const [resumes, setResumes] = useState<{
-    signed: ResumeData[]
-    unsigned: ResumeData[]
-  }>({
-    signed: [],
-    unsigned: []
-  })
-
-  useEffect(() => {
-    if (reduxResumes) {
-      setResumes(reduxResumes as any)
-    }
-  }, [reduxResumes])
-
-  const handleCreateResume = (newResume: ResumeData, type: 'signed' | 'unsigned') => {
-    setResumes(prev => ({
-      ...prev,
-      [type]: [...(prev[type] || []), newResume] // Ensure prev[type] is an array
-    }))
-  }
-  const handleUpdateTitle = (
-    id: string,
-    newTitle: string,
-    type: 'signed' | 'unsigned'
-  ) => {
-    setResumes(prev => ({
-      ...prev,
-      [type]: prev[type].map(resume =>
-        resume.id === id
-          ? {
-              ...resume,
-              title: newTitle, // Update root-level title
-              content: {
-                ...resume.content,
-                resume: {
-                  ...resume.content.resume,
-                  title: newTitle // Update nested title inside resume object
-                }
-              }
-            }
-          : resume
-      )
-    }))
-  }
-  const removeResume = (id: string, type: 'signed' | 'unsigned') => {
-    setResumes(prev => ({
-      ...prev,
-      [type]: (prev[type] || []).filter(resume => resume.id !== id) // Ensure prev[type] is an array
-    }))
-  }
   return (
     <Box
       sx={{
@@ -98,43 +47,40 @@ const ResumeScreen: React.FC = () => {
         </Link>
       </Box>
 
+      {/* Handle Loading & Error States */}
+      {status === 'loading' && <Typography>Loading resumes...</Typography>}
+      {status === 'failed' && <Typography color='error'>Error: {error}</Typography>}
+
       {/* Render Signed Resumes */}
-      {resumes.signed.map(resume => (
+      {signed.map(resume => (
         <ResumeCard
-          key={resume.id}
-          id={resume.id}
-          title={resume?.content?.resume?.title || 'untitled resume'}
-          date={new Date(resume?.content?.resume?.lastUpdated).toLocaleDateString()}
+          key={resume?.id}
+          id={resume?.id}
+          title={resume?.content?.resume?.title}
+          date={new Date(resume?.lastUpdated).toLocaleDateString()}
           credentials={0}
+          isDraft={false}
           resume={resume}
-          addNewResume={handleCreateResume}
-          removeResume={removeResume}
-          resumes={resumes}
-          updateTitle={handleUpdateTitle}
         />
       ))}
 
-      {status === 'loading' && <Typography>Loading resumes...</Typography>}
-      {resumes.signed.length + resumes.unsigned.length === 0 &&
-        status === 'succeeded' && <Typography>You dont have any resumes.</Typography>}
-
-      {/* Render Unsigned Resumes */}
-      {resumes.unsigned.map(resume => (
+      {/* Render Unsigned (Draft) Resumes */}
+      {unsigned.map(resume => (
         <ResumeCard
           key={resume.id}
           id={resume.id}
-          title={resume?.content?.resume?.title || 'untitled resume'}
+          title={resume?.content?.resume?.title}
           date={new Date().toLocaleDateString()}
           credentials={0}
           isDraft={true}
-          lastUpdated='2 months ago'
           resume={resume}
-          addNewResume={handleCreateResume}
-          removeResume={removeResume}
-          resumes={resumes}
-          updateTitle={handleUpdateTitle} // Add this line
         />
       ))}
+
+      {/* Show Message if No Resumes Exist */}
+      {signed.length + unsigned.length === 0 && status === 'succeeded' && (
+        <Typography>You don’t have any resumes.</Typography>
+      )}
     </Box>
   )
 }

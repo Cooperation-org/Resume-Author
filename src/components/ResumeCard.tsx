@@ -27,6 +27,9 @@ import { getCookie } from '../tools'
 import Logo from '../assets/blue-logo.png'
 import { Link } from 'react-router-dom'
 import DeleteConfirmationDialog from './DeleteConfirmDialog'
+import { useDispatch } from 'react-redux'
+import { AppDispatch } from '../redux/store'
+import { deleteResume, duplicateResume, updateTitle } from '../redux/slices/myresumes'
 
 const ActionButton = styled(Button)(({ theme }) => ({
   textTransform: 'none',
@@ -44,12 +47,7 @@ interface ResumeCardProps {
   date: string
   credentials: number
   isDraft?: boolean
-  lastUpdated?: string
   resume: any
-  resumes: any
-  addNewResume: (newResume: any, type: 'signed' | 'unsigned') => void
-  removeResume: (id: string, type: 'signed' | 'unsigned') => void
-  updateTitle: (id: string, newTitle: string, type: 'signed' | 'unsigned') => void
 }
 
 const StyledCard = styled(Card)(() => ({
@@ -65,17 +63,13 @@ const ResumeCard: React.FC<ResumeCardProps> = ({
   date,
   credentials,
   isDraft,
-  lastUpdated,
-  resume,
-  addNewResume,
-  removeResume,
-  resumes,
-  updateTitle
+  resume
 }) => {
+  const dispatch: AppDispatch = useDispatch()
   const [menuAnchor, setMenuAnchor] = useState<null | HTMLElement>(null)
   const [isEditing, setIsEditing] = useState(false)
   const [editedTitle, setEditedTitle] = useState(title)
-  const [isLoading, setIsLoading] = useState(false) // Loading state for duplicate & delete
+  const [isLoading, setIsLoading] = useState(false)
   const [showCopiedTooltip, setShowCopiedTooltip] = useState(false)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
 
@@ -93,17 +87,42 @@ const ResumeCard: React.FC<ResumeCardProps> = ({
   const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setEditedTitle(e.target.value)
   }
-
   const handleBlurOrEnter = async (e?: React.KeyboardEvent<HTMLInputElement>) => {
     if (!e || e.key === 'Enter') {
       setIsEditing(false)
+
       if (editedTitle !== title) {
-        updateTitle(id, editedTitle, 'unsigned') // Call the updateTitle function
+        try {
+          dispatch(
+            updateTitle({
+              id,
+              newTitle: editedTitle,
+              type: isDraft ? 'unsigned' : 'signed'
+            })
+          )
+          await storage.delete(id)
+
+          const updatedResume = {
+            ...resume.content,
+            resume: {
+              ...resume.content.resume,
+              title: editedTitle
+            }
+          }
+
+          const newFile = await resumeManager.saveResume({
+            resume: updatedResume,
+            type: 'unsigned'
+          })
+
+          console.log('✅ Saved new resume with updated title:', newFile)
+        } catch (error) {
+          console.error('❌ Error updating title:', error)
+        } finally {
+          // window.location.reload()
+        }
       }
     }
-    resume.title = editedTitle
-
-    await storage.update(id, resume.content)
   }
 
   const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
@@ -119,37 +138,9 @@ const ResumeCard: React.FC<ResumeCardProps> = ({
   }
 
   const handleDuplicateResume = async () => {
-    setIsLoading(true)
-    try {
-      handleMenuClose()
-
-      const newResume = await resumeManager.saveResume({
-        resume: resume.content,
-        type: 'unsigned'
-      })
-      console.log('🚀 ~ handleDuplicateResume ~ newResume:', newResume)
-
-      // Clone the resume and modify the ID and title
-      const duplicatedResume = {
-        ...resume,
-        content: {
-          ...resume.content,
-          resume: {
-            ...resume.content.resume,
-            id: `${resume.content.resume.id}-1`,
-            title: `${resume.content.resume.title} (1)`
-          }
-        }
-      }
-
-      console.log('🚀 ~ handleDuplicateResume ~ duplicatedResume:', duplicatedResume)
-
-      addNewResume(duplicatedResume, 'unsigned')
-    } catch (error) {
-      console.error('Error duplicating resume:', error)
-    } finally {
-      setIsLoading(false)
-    }
+    dispatch(duplicateResume({ id, type: 'unsigned' }))
+    // resume.content.resume.title = `${title} - Copy`
+    await resumeManager.saveResume({ resume: resume.content, type: 'unsigned' })
   }
 
   const handleCopyLink = () => {
@@ -160,17 +151,11 @@ const ResumeCard: React.FC<ResumeCardProps> = ({
   }
 
   const handleConfirmDelete = async () => {
-    setIsLoading(true)
-    try {
-      await storage.delete(id)
-      removeResume(id, isDraft ? 'unsigned' : 'signed')
-    } catch (error) {
-      console.error('Error deleting resume:', error)
-    } finally {
-      setIsLoading(false)
-      setDeleteDialogOpen(false)
-      handleMenuClose()
-    }
+    dispatch(deleteResume({ id, type: isDraft ? 'unsigned' : 'signed' }))
+    setDeleteDialogOpen(false)
+    handleMenuClose()
+    const deleted = await storage.delete(id)
+    console.log('🚀 ~ handleConfirmDelete ~ deleted:', deleted)
   }
 
   return (
@@ -247,9 +232,7 @@ const ResumeCard: React.FC<ResumeCardProps> = ({
                   color='text.secondary'
                   sx={{ mt: 0.5, fontSize: '0.875rem' }}
                 >
-                  {isDraft
-                    ? `DRAFT - ${lastUpdated}`
-                    : `Just now - ${credentials} Credentials`}
+                  {isDraft ? `DRAFT - ${date}` : `Just now - ${credentials} Credentials`}
                 </Typography>
               </Box>
             </Box>

@@ -3,7 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import { useEffect } from 'react'
 import { useDispatch } from 'react-redux'
 import { AppDispatch } from './redux/store'
-import { fetchUserResumes, fetchVCs } from './redux/slices/vc'
+import { fetchVCs } from './redux/slices/vc'
 import Layout from './components/Layout'
 import Login from './pages/login'
 import Home from './pages/home'
@@ -13,6 +13,7 @@ import Error404 from './pages/error404'
 import LandingPage from './pages/allskillscoun-org'
 import './styles/App.css'
 import MyResumes from './components/MyResumes.tsx'
+import { fetchUserResumes } from './redux/slices/myresumes'
 
 const App = () => {
   const dispatch: AppDispatch = useDispatch()
