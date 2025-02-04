@@ -17,7 +17,7 @@ import { RootState } from '../redux/store'
 import { useCallback, useEffect, useState } from 'react'
 import { SVGEditName } from '../assets/svgs'
 import { GoogleDriveStorage, Resume as ResumeManager } from '@cooperation/vc-storage'
-import { getCookie } from '../tools'
+import { getCookie } from '../tools/cookie'
 
 const nonVisibleSections = [
   ...leftSections,

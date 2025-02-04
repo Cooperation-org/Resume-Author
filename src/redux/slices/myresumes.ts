@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit'
 import { GoogleDriveStorage, Resume as ResumeManager } from '@cooperation/vc-storage'
-import { getCookie } from '../../tools'
+import { getCookie } from '../../tools/cookie'
 
 // Define Resume Types
 interface IssuerInfo {

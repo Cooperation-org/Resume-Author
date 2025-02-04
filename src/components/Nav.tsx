@@ -3,7 +3,7 @@ import { AppBar, Toolbar, Box, Typography, Stack, Button } from '@mui/material'
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import LoadingOverlay from './Loading'
-import { getCookie } from '../tools'
+import { getCookie } from '../tools/cookie'
 
 const Nav = () => {
   const [loading, setLoading] = useState(false)

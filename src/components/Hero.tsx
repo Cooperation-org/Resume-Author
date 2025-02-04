@@ -10,7 +10,7 @@ import WhoBenefitsSection from './landingPageSections/WhoBenefitsSection'
 import SelectCards from './landingPageSections/SelectCards'
 import MoreAbout from './landingPageSections/MoreAboutResumeAuthor'
 import Footer from './landingPageSections/Footer'
-import { getCookie } from '../tools'
+import { getCookie } from '../tools/cookie'
 import { login } from '../tools/auth'
 
 const Hero = () => {

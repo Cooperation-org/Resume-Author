@@ -1,6 +1,6 @@
 import { GoogleDriveStorage, Resume } from '@cooperation/vc-storage'
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
-import { getCookie } from '../../tools'
+import { getCookie } from '../../tools/cookie'
 
 interface ResumeData {
   id: string

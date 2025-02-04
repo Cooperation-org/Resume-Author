@@ -1,5 +1,5 @@
 import { Box, Typography, Button, Divider, Stack } from '@mui/material'
-import { getCookie, removeCookie, removeLocalStorage } from '../../tools'
+import { getCookie, removeCookie, removeLocalStorage } from '../../tools/cookie'
 import { login } from '../../tools/auth'
 import { useSelector } from 'react-redux'
 import { useState, useEffect } from 'react'

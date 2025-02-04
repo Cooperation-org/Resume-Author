@@ -1,5 +1,5 @@
 import { NavigateFunction } from 'react-router-dom'
-import { setLocalStorage, setCookie } from '.'
+import { setLocalStorage, setCookie } from './cookie'
 
 export const login = async () => {
   const clientId = process.env.REACT_APP_GOOGLE_CLIENT_ID
