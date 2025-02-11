@@ -1,7 +1,7 @@
 import { Box, Button, Typography } from '@mui/material'
 import { styled } from '@mui/system'
 import { useAuth0 } from '@auth0/auth0-react'
-import { SVGStartFromScratchicon, SVGFromLinkedin } from '../assets/svgs'
+import { SVGStartFromScratchicon } from '../assets/svgs'
 
 const InnerContainer = styled(Box)(() => ({
   backgroundColor: '#FFFFFF',
@@ -124,27 +124,6 @@ export default function ImportPage(props: any) {
                 (doc, docx, pdf, rtf, json, txt)
               </Typography>
             </Box>
-          </Section>
-
-          <Section onClick={handlesign} sx={{ width: { xs: '250px', md: '400px' } }}>
-            <Typography variant='h6' sx={{ color: '#07142B', fontWeight: 'bold' }}>
-              Import LinkedIn profile
-            </Typography>
-            <Box
-              sx={{
-                height: 'fit-content',
-                width: 'fit-content',
-                border: '2px solid #2563EB',
-                p: '4px',
-                borderRadius: '4px'
-              }}
-            >
-              <SVGFromLinkedin />
-            </Box>
-
-            <Typography variant='body2' sx={{ color: '#1F2937', textAlign: 'center' }}>
-              Must have a LinkedIn account
-            </Typography>
           </Section>
         </Box>
         <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>

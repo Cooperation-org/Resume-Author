@@ -300,55 +300,6 @@ export const SVGAddFiles = () => {
     </div>
   )
 }
-export const SVGFromLinkedin = () => {
-  return (
-    <div>
-      <svg
-        width='51'
-        height='38'
-        viewBox='0 0 51 38'
-        fill='none'
-        xmlns='http://www.w3.org/2000/svg'
-      >
-        <circle
-          cx='5.66393'
-          cy='6.70788'
-          r='4.16393'
-          fill='#EFF6FF'
-          stroke='#2563EB'
-          strokeWidth='2'
-        />
-        <path
-          d='M16.8281 1.54395H49.8281'
-          stroke='#2563EB'
-          strokeWidth='2'
-          strokeLinecap='round'
-        />
-        <path
-          d='M16.8281 6.54395H49.8281'
-          stroke='#2563EB'
-          strokeWidth='2'
-          strokeLinecap='round'
-        />
-        <path
-          d='M16.8281 11.5439H49.8281'
-          stroke='#2563EB'
-          strokeWidth='2'
-          strokeLinecap='round'
-        />
-        <path
-          d='M16.8281 16.5439H49.8281'
-          stroke='#2563EB'
-          strokeWidth='2'
-          strokeLinecap='round'
-        />
-        <path d='M2 27H50' stroke='#2563EB' strokeWidth='2' strokeLinecap='round' />
-        <path d='M2 32H50' stroke='#2563EB' strokeWidth='2' strokeLinecap='round' />
-        <path d='M2 37H50' stroke='#2563EB' strokeWidth='2' strokeLinecap='round' />
-      </svg>
-    </div>
-  )
-}
 export const SVGAddcredential = () => {
   return (
     <div>
