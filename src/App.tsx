@@ -14,7 +14,8 @@ import LandingPage from './pages/allskillscoun-org'
 import './styles/App.css'
 import MyResumes from './components/MyResumes.tsx'
 import { fetchUserResumes } from './redux/slices/myresumes'
-import { WalletStorage } from '@did-coop/wallet-attached-storage/dist'
+import { WalletStorage } from '@did-coop/wallet-attached-storage'
+
 const App = () => {
   const dispatch: AppDispatch = useDispatch()
 
@@ -25,10 +26,10 @@ const App = () => {
     console.log('🚀 ~ testingWalletStorage ~ appDidSigner:', appDidSigner)
 
     const space = await WalletStorage.provisionSpace({
-      url: 'https://data.pub',
+      url: 'https://cors-anywhere.herokuapp.com/https://data.pub',
       signer: appDidSigner
     })
-    console.log(space)
+    console.log('🚀 ~ testingWalletStorage ~ space:', space)
   }
   useEffect(() => {
     testingWalletStorage()
