@@ -7,7 +7,9 @@ import {
   LinearProgress,
   linearProgressClasses,
   styled,
-  IconButton
+  IconButton,
+  CircularProgress,
+  Dialog
 } from '@mui/material'
 import LeftSidebar, { leftSections } from './ResumeEditor/LeftSidebar'
 import RightSidebar from './ResumeEditor/RightSidebar'
@@ -17,6 +19,7 @@ import { RootState } from '../redux/store'
 import { useCallback, useEffect, useState } from 'react'
 import { SVGEditName } from '../assets/svgs'
 import useGoogleDrive from '../hooks/useGoogleDrive'
+import { useNavigate } from 'react-router-dom'
 
 const nonVisibleSections = [
   ...leftSections,
@@ -72,6 +75,8 @@ const ResumeEditor = () => {
     top: number
     left: number
   } | null>(null)
+  const [loading, setLoading] = useState(false)
+  const navigator = useNavigate()
 
   const resume = useSelector((state: RootState) => state?.resume.resume)
   const { vcs, status, error } = useSelector((state: RootState) => state.vcReducer)
@@ -142,18 +147,30 @@ const ResumeEditor = () => {
   }
 
   const handlkeSignAndSave = async () => {
-    const keyPair = await instances?.resumeVC?.generateKeyPair()
-    const issuerDid = 'did:example:123456789abcdefghi'
+    try {
+      setLoading(true) // Start Loading
 
-    const signedResume = await instances?.resumeVC?.sign({
-      formData: resume,
-      issuerDid,
-      keyPair
-    })
-    await instances?.resumeManager?.saveResume({
-      resume: signedResume,
-      type: 'sign'
-    })
+      const keyPair = await instances?.resumeVC?.generateKeyPair()
+      const issuerDid = 'did:example:123456789abcdefghi'
+
+      const signedResume = await instances?.resumeVC?.sign({
+        formData: resume,
+        issuerDid,
+        keyPair
+      })
+
+      await instances?.resumeManager?.saveResume({
+        resume: signedResume,
+        type: 'sign'
+      })
+
+      console.log('Resume signed and saved to Google Drive.')
+      navigator('/myresumes')
+    } catch (error) {
+      console.error('Error saving signed resume:', error)
+    } finally {
+      setLoading(false) // Stop Loading
+    }
   }
 
   return (
@@ -214,6 +231,41 @@ const ResumeEditor = () => {
           </Button>
         </Box>
       </Box>
+
+      {/* Loading Dialog */}
+      {loading && (
+        <Dialog
+          open={loading}
+          aria-labelledby='loading-dialog-title'
+          aria-describedby='loading-dialog-description'
+          PaperProps={{
+            style: {
+              borderRadius: '20px',
+              padding: '20px',
+              textAlign: 'center',
+              minWidth: '300px'
+            }
+          }}
+        >
+          <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            <Typography
+              id='loading-dialog-description'
+              sx={{
+                mb: 3,
+                fontFamily: 'Poppins',
+                fontSize: '18px',
+                fontWeight: 500,
+                color: '#111'
+              }}
+            >
+              Making public link and
+              <br /> saving to Google Drive...
+            </Typography>
+            <CircularProgress color='primary' size={60} />
+          </Box>
+        </Dialog>
+      )}
+
       <Box>
         <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
           <Typography
