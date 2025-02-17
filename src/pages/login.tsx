@@ -1,106 +1,169 @@
-import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { Box, Button, Typography, Tooltip } from '@mui/material'
-import { SVGFolder, SVGSinfo } from '../assets/svgs'
-import LoadingOverlay from '../components/Loading'
-import { login as googleLogin, handleRedirect } from '../tools/auth' // Import your auth functions
+import React from 'react'
+import { Box, Button, Container, Paper, Typography, Link } from '@mui/material'
+import CheckIcon from '@mui/icons-material/Check'
+import img from '../assets/image 116.png'
+import Nav from '../components/Nav'
+import Footer from '../components/landingPageSections/Footer'
+import { SVGHelpSection } from '../assets/svgs'
 
-const Login = () => {
-  const [loading, setLoading] = useState(false)
-  const navigate = useNavigate() // For navigation
+interface FeatureListItemProps {
+  text: string
+}
 
-  // Check and handle redirect if coming back from Google OAuth
-  useEffect(() => {
-    if (window.location.hash) {
-      setLoading(true) // Show loading while processing
-      handleRedirect({ navigate }) // Pass navigate to redirect logic
-      setLoading(false) // Hide loading after processing
-    }
-  }, [navigate])
+const FeatureListItem: React.FC<FeatureListItemProps> = ({ text }) => (
+  <Box
+    sx={{
+      display: 'flex',
+      alignItems: 'center',
+      mb: 1,
+      '& .MuiSvgIcon-root': {
+        color: 'primary.main',
+        mr: 1
+      }
+    }}
+  >
+    <CheckIcon />
+    <Typography>{text}</Typography>
+  </Box>
+)
 
-  // Handle the login button click
-  const handleGoogleLogin = () => {
-    setLoading(true) // Show loading while redirecting
-    googleLogin()
-  }
+const DigitalWalletLogin: React.FC = () => {
+  const features = [
+    'Secure storage for credentials',
+    'Embed credentials from your wallet into your resume',
+    'Easy sharing with employers or institutions',
+    'Ownership and control of your personal data'
+  ]
 
   return (
     <Box
       sx={{
+        height: '100vh',
         display: 'flex',
         flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: 3,
-        textAlign: 'center',
-        height: '60vh',
-        mt: 4
+        overflow: 'hidden'
       }}
     >
-      {/* Google Drive Icon */}
-      <Box
-        sx={{
-          width: 100,
-          height: 100,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center'
-        }}
-      >
-        <SVGFolder />
-      </Box>
+      <Nav />
+      <Box sx={{ flex: 1, overflow: 'hidden' }}>
+        <Box
+          sx={{
+            display: 'flex',
+            flexDirection: { xs: 'column', md: 'row' },
+            gap: 4,
+            height: '100%'
+          }}
+        >
+          {/* Left Section */}
+          <Box
+            sx={{
+              width: '60%',
+              overflow: 'auto',
+              padding: '30px 75px'
+            }}
+          >
+            <Box sx={{ p: { xs: 4, md: 6 } }}>
+              <Typography
+                sx={{ fontSize: '55px', pr: '30px' }}
+                variant='h4'
+                component='h1'
+                gutterBottom
+              >
+                Login or Sign Up with a Digital Wallet
+              </Typography>
+              <Typography variant='body1' color='text.secondary'>
+                A digital wallet securely stores your credentials and allows you to manage
+                and share your information easily.
+              </Typography>
 
-      {/* Main text */}
-      <Typography
-        sx={{
-          fontSize: 24
-        }}
-      >
-        First, connect to Google Drive so you can save your data.
-      </Typography>
+              <Box sx={{ my: 4 }}>
+                {features.map((feature, index) => (
+                  <FeatureListItem key={index} text={feature} />
+                ))}
+              </Box>
 
-      {/* Google Login Button */}
-      <Button
-        variant='contained'
-        color='primary'
-        onClick={handleGoogleLogin}
-        sx={{
-          mt: 2,
-          px: 4,
-          py: 0.5,
-          fontSize: '16px',
-          borderRadius: 5,
-          textTransform: 'none',
-          backgroundColor: '#003FE0'
-        }}
-      >
-        Connect to Google Drive{' '}
-        <Tooltip title='You must have a Google Drive account and be able to log in. This is where your credentials will be saved.'>
-          <Box sx={{ ml: 2, mt: '2px' }}>
-            <SVGSinfo />
+              <Box
+                sx={{
+                  display: 'flex',
+                  flexDirection: { xs: 'column', sm: 'row' },
+                  gap: 2
+                }}
+              >
+                <Button
+                  variant='contained'
+                  sx={{
+                    bgcolor: '#FFF',
+                    color: '#4527A0',
+                    p: '10px 20px',
+                    borderRadius: '100px',
+                    border: '2px solid #4527A0',
+                    textTransform: 'capitalize'
+                  }}
+                >
+                  Login with Learner Credential Walle
+                </Button>
+                <Button
+                  variant='contained'
+                  sx={{
+                    bgcolor: '#FFF',
+                    color: '#4527A0',
+                    p: '10px 20px',
+                    borderRadius: '100px',
+                    border: '2px solid #4527A0',
+                    textTransform: 'capitalize'
+                  }}
+                >
+                  Sign Up with Learner Credential Wallet
+                </Button>
+              </Box>
+
+              <Typography variant='caption' sx={{ display: 'block', mt: 2 }}>
+                We currently support Learner Credential Wallet, an open source mobile
+                wallet app developed by the Digital Credentials Consortium.
+              </Typography>
+
+              <Box sx={{ mt: 3 }}>
+                <Typography variant='body2'>
+                  Don't see the wallet you want?{' '}
+                  <Link href='#' color='primary'>
+                    Send us an email to add it to our roadmap
+                  </Link>
+                </Typography>
+              </Box>
+            </Box>
           </Box>
-        </Tooltip>
-      </Button>
 
-      {/* Skip Login Button */}
-      <Button
-        variant='text'
-        color='primary'
-        onClick={() => navigate('/')} // Skip login and go to home page
-        sx={{
-          fontSize: '14px',
-          fontWeight: 600,
-          textDecoration: 'underline',
-          textTransform: 'none'
-        }}
-      >
-        Continue without Saving
-      </Button>
-
-      {/* Loading Overlay */}
-      <LoadingOverlay text='Connecting...' open={loading} />
+          {/* Right Section */}
+          <Box
+            sx={{
+              position: 'relative',
+              width: '40%',
+              height: '100%',
+              overflow: 'hidden'
+            }}
+          >
+            <Box
+              sx={{
+                width: '100%',
+                height: '100%',
+                '& img': {
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'cover'
+                }
+              }}
+            >
+              <img src={img} alt='Solar panel worker' />
+            </Box>
+            <Box sx={{ position: 'absolute', top: '20%', left: '10%' }}>
+              <SVGHelpSection />
+            </Box>
+          </Box>
+        </Box>
+      </Box>
+      <Footer />
     </Box>
   )
 }
 
-export default Login
+export default DigitalWalletLogin

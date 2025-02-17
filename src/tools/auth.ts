@@ -5,6 +5,7 @@ export const login = async () => {
   const clientId = process.env.REACT_APP_GOOGLE_CLIENT_ID
   const redirectUri = process.env.REACT_APP_GOOGLE_REDIRECT_URI
   const scope = process.env.REACT_APP_GOOGLE_SCOPE
+
   if (!clientId || !redirectUri || !scope) {
     throw new Error('Missing environment variables for Google login')
   }
@@ -17,17 +18,18 @@ export const login = async () => {
 }
 
 export const handleRedirect = ({ navigate }: { navigate: NavigateFunction }) => {
-  // Get the hash fragment from the URL
   const hash = window.location.hash
   if (!hash) {
     console.error('No token found in the URL')
+    navigate('/login')
     return
   }
 
-  const params = new URLSearchParams(hash.substring(1)) // Remove the '#' and parse
+  const params = new URLSearchParams(hash.substring(1))
   const token = params.get('access_token')
   if (!token) {
     console.error('No access token found')
+    navigate('/login')
     return
   }
 
@@ -37,14 +39,20 @@ export const handleRedirect = ({ navigate }: { navigate: NavigateFunction }) => 
     sameSite: 'strict',
     expires: 7
   })
+
   setLocalStorage('auth', token)
 
-  // Optionally, fetch user info using the token
+  // Fetch user info if needed
   fetchUserInfo(token)
-
-  if (navigate) {
-    navigate('/resume/new')
-  }
+    .then(() => {
+      // Navigate to home page after successful login
+      navigate('/', { replace: true })
+    })
+    .catch(error => {
+      console.error('Error fetching user info:', error)
+      // Still navigate to home page even if user info fetch fails
+      navigate('/', { replace: true })
+    })
 }
 
 const fetchUserInfo = async (token: string) => {

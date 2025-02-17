@@ -4,7 +4,7 @@ import { login as googleLogin, handleRedirect } from '../tools/auth' // Import y
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import LoadingOverlay from './Loading'
-import { getCookie, removeCookie, removeLocalStorage } from '../tools'
+import { getCookie } from '../tools'
 
 const Nav = () => {
   const [loading, setLoading] = useState(false)
@@ -27,7 +27,7 @@ const Nav = () => {
     <AppBar
       position='static'
       elevation={0}
-      sx={{ bgcolor: 'transparent', pt: 1, pr: 5, pl: 4 }}
+      sx={{ bgcolor: '#4527A0', pt: 1, pr: 5, pl: 4 }}
     >
       <Toolbar>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexGrow: 1 }}>

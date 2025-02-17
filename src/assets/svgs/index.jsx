@@ -300,51 +300,80 @@ export const SVGAddFiles = () => {
     </div>
   )
 }
-export const SVGFromLinkedin = () => {
+export const SVGHelpSection = () => {
   return (
     <div>
       <svg
-        width='51'
-        height='38'
-        viewBox='0 0 51 38'
-        fill='none'
         xmlns='http://www.w3.org/2000/svg'
+        width='548'
+        height='268'
+        viewBox='0 0 548 268'
+        fill='none'
       >
-        <circle
-          cx='5.66393'
-          cy='6.70788'
-          r='4.16393'
-          fill='#EFF6FF'
-          stroke='#2563EB'
-          stroke-width='2'
-        />
-        <path
-          d='M16.8281 1.54395H49.8281'
-          stroke='#2563EB'
-          stroke-width='2'
-          stroke-linecap='round'
-        />
-        <path
-          d='M16.8281 6.54395H49.8281'
-          stroke='#2563EB'
-          stroke-width='2'
-          stroke-linecap='round'
-        />
-        <path
-          d='M16.8281 11.5439H49.8281'
-          stroke='#2563EB'
-          stroke-width='2'
-          stroke-linecap='round'
-        />
-        <path
-          d='M16.8281 16.5439H49.8281'
-          stroke='#2563EB'
-          stroke-width='2'
-          stroke-linecap='round'
-        />
-        <path d='M2 27H50' stroke='#2563EB' stroke-width='2' stroke-linecap='round' />
-        <path d='M2 32H50' stroke='#2563EB' stroke-width='2' stroke-linecap='round' />
-        <path d='M2 37H50' stroke='#2563EB' stroke-width='2' stroke-linecap='round' />
+        <g filter='url(#filter0_d_1195_12011)'>
+          <path
+            d='M525.664 38.7086C526.374 33.9602 522.771 29.6603 517.972 29.5285L26.7008 16.0427C21.6721 15.9046 17.7654 20.3871 18.5893 25.3498L53.7399 237.087C54.3806 240.946 57.7192 243.776 61.6319 243.776H488.107C492.069 243.776 495.434 240.877 496.019 236.959L525.664 38.7086Z'
+            fill='#4BB7C4'
+          />
+        </g>
+        <text
+          x='274'
+          y='134'
+          text-anchor='middle'
+          dominant-baseline='middle'
+          fill='#361F7E'
+          font-family='Poppins'
+          font-size='32'
+          font-style='italic'
+          font-weight='700'
+        >
+          <tspan x='274' dy='-40'>
+            Resume Author helps you
+          </tspan>
+          <tspan x='274' dy='40'>
+            prove your skills to
+          </tspan>
+          <tspan x='274' dy='40'>
+            employers.
+          </tspan>
+        </text>
+        <defs>
+          <filter
+            id='filter0_d_1195_12011'
+            x='0.478516'
+            y='0.0400391'
+            width='547.275'
+            height='267.736'
+            filterUnits='userSpaceOnUse'
+            color-interpolation-filters='sRGB'
+          >
+            <feFlood flood-opacity='0' result='BackgroundImageFix' />
+            <feColorMatrix
+              in='SourceAlpha'
+              type='matrix'
+              values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0'
+              result='hardAlpha'
+            />
+            <feOffset dx='2' dy='4' />
+            <feGaussianBlur stdDeviation='10' />
+            <feComposite in2='hardAlpha' operator='out' />
+            <feColorMatrix
+              type='matrix'
+              values='0 0 0 0 0.211765 0 0 0 0 0.121569 0 0 0 0 0.494118 0 0 0 0.1 0'
+            />
+            <feBlend
+              mode='normal'
+              in2='BackgroundImageFix'
+              result='effect1_dropShadow_1195_12011'
+            />
+            <feBlend
+              mode='normal'
+              in='SourceGraphic'
+              in2='effect1_dropShadow_1195_12011'
+              result='shape'
+            />
+          </filter>
+        </defs>
       </svg>
     </div>
   )

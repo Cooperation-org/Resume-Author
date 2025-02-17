@@ -1,6 +1,6 @@
 // src/components/Layout/Sidebar.tsx
 import React from 'react'
-import { Box, IconButton } from '@mui/material'
+import { Box, IconButton, Typography } from '@mui/material'
 import {
   SVGSettings,
   SVGRightLine,
@@ -9,33 +9,74 @@ import {
   SVGAddSidebar
 } from '../../assets/svgs'
 
-const Sidebar = () => {
+interface SidebarProps {
+  onToggle: () => void
+  isExpanded: boolean
+}
+
+const ui = {
+  color: '#FFF',
+  fontFamily: 'Proxima Nova',
+  fontSize: '14px',
+  fontStyle: 'normal',
+  fontWeight: 700,
+  lineHeight: '21px'
+}
+
+const Sidebar = ({ onToggle, isExpanded }: SidebarProps) => {
+  const boxStyles = {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '20px',
+    width: isExpanded ? '200px' : '48px',
+    justifyContent: 'flex-start'
+  }
+
+  const containerStyles = {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'flex-start',
+    gap: '15px',
+    width: isExpanded ? '200px' : '48px',
+    transition: 'width 0.3s ease'
+  }
+
   const Icons = [
-    <Box sx={{ mb: 2 }}>
-      <IconButton>
+    <Box sx={boxStyles} key='rightLine'>
+      <IconButton onClick={onToggle}>
+        {isExpanded && (
+          <Typography sx={{ ...ui, fontSize: '20px' }}>Resume Author</Typography>
+        )}
         <SVGRightLine />
       </IconButton>
     </Box>,
-    <IconButton>
-      <SVGCopySidebar />
+    <IconButton key='copy'>
+      <Box sx={boxStyles}>
+        <SVGCopySidebar />
+        {isExpanded && <Typography sx={ui}>My Resumes</Typography>}
+      </Box>
     </IconButton>,
-    <IconButton>
-      <SVGAddSidebar />
+    <IconButton key='add'>
+      <Box sx={boxStyles}>
+        <SVGAddSidebar />
+        {isExpanded && <Typography sx={ui}>New Resume</Typography>}
+      </Box>
     </IconButton>,
-    <IconButton>
-      <SVGSettings />
+    <IconButton key='settings'>
+      <Box sx={boxStyles}>
+        <SVGSettings />
+        {isExpanded && <Typography sx={ui}>App Connections</Typography>}
+      </Box>
     </IconButton>,
-    <IconButton>
-      <SVGLineDown />
+    <IconButton key='lineDown'>
+      <Box sx={boxStyles}>
+        <SVGLineDown />
+        {isExpanded && <Typography sx={ui}>Help</Typography>}
+      </Box>
     </IconButton>
   ]
-  return (
-    <Box
-      sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '25px' }}
-    >
-      {Icons.map(item => item)}
-    </Box>
-  )
+
+  return <Box sx={containerStyles}>{Icons.map(item => item)}</Box>
 }
 
 export default Sidebar

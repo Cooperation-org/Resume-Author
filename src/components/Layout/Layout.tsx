@@ -1,12 +1,19 @@
 // src/components/Layout/Layout.tsx
 import { Box } from '@mui/material'
 import { Outlet, useLocation } from 'react-router-dom'
-import { SidebarContainer, MainContent } from './styles'
+import { MainContent, SidebarContainer } from './styles'
 import Sidebar from './Sidebar'
+import { useState } from 'react'
 
 const Layout = () => {
   const location = useLocation()
   const isLandingPage = location.pathname === '/'
+
+  const [isExpanded, setIsExpanded] = useState(false)
+
+  const handleSidebarToggle = () => {
+    setIsExpanded(!isExpanded)
+  }
 
   if (isLandingPage) {
     return <Outlet />
@@ -14,10 +21,10 @@ const Layout = () => {
 
   return (
     <Box sx={{ display: 'flex' }}>
-      <SidebarContainer>
-        <Sidebar />
+      <SidebarContainer className={isExpanded ? 'expanded' : ''}>
+        <Sidebar onToggle={handleSidebarToggle} isExpanded={isExpanded} />
       </SidebarContainer>
-      <MainContent>
+      <MainContent className={isExpanded ? 'sidebar-expanded' : ''}>
         <Outlet />
       </MainContent>
     </Box>

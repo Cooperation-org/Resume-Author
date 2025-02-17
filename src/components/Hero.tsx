@@ -10,8 +10,12 @@ import WhoBenefitsSection from './landingPageSections/WhoBenefitsSection'
 import SelectCards from './landingPageSections/SelectCards'
 import MoreAbout from './landingPageSections/MoreAboutResumeAuthor'
 import Footer from './landingPageSections/Footer'
+import { login } from '../tools/auth'
 
 const Hero = () => {
+  const handleLogin = () => {
+    login()
+  }
   return (
     <div>
       <Container maxWidth='lg' sx={{ mt: 8, pb: 8 }}>
@@ -55,21 +59,21 @@ const Hero = () => {
                   Sign Up
                 </Button>
               </Link>
-              <Link to='/resume/new'>
-                <Button
-                  variant='outlined'
-                  sx={{
-                    color: '#4527A0',
-                    bgcolor: 'white',
-                    p: '11px 80px',
-                    borderRadius: '100px',
-                    textTransform: 'capitalize',
-                    fontWeight: 700
-                  }}
-                >
-                  Login
-                </Button>
-              </Link>
+
+              <Button
+                variant='outlined'
+                onClick={handleLogin}
+                sx={{
+                  color: '#4527A0',
+                  bgcolor: 'white',
+                  p: '11px 80px',
+                  borderRadius: '100px',
+                  textTransform: 'capitalize',
+                  fontWeight: 700
+                }}
+              >
+                Login
+              </Button>
             </Stack>
             <Typography
               sx={{ mt: 4, color: 'rgba(255,255,255,0.7)', fontSize: '0.9rem' }}

@@ -1,4 +1,3 @@
-import React from 'react'
 import { Box, Typography, Divider, Button } from '@mui/material'
 import { SVGGitHub, SVGlisence, SVGCopyWriter } from '../../assets/svgs'
 
@@ -11,7 +10,7 @@ const StyledButton = ({ href, startIcon, children }) => (
     sx={{
       color: '#2563EB',
       fontFamily: 'Nunito Sans',
-      fontSize: '26px',
+      fontSize: '14px',
       fontWeight: 500,
       lineHeight: '40px',
       letterSpacing: '-0.26px',
@@ -36,14 +35,15 @@ const Footer = () => {
     <Box
       sx={{
         backgroundColor: '#E9E6F8',
-        padding: '75px 100px'
+        padding: '30px 75px'
       }}
     >
       <Box
-        sx={{ pb: '30px' }}
+        sx={{}}
         display='flex'
-        justifyContent='space-between'
+        justifyContent='flex-start'
         alignItems='space-between'
+        gap={2}
       >
         <Box display='flex' alignItems='center' gap={1}>
           <SVGCopyWriter />
@@ -51,7 +51,7 @@ const Footer = () => {
             sx={{
               color: '#292489',
               fontFamily: 'Nunito Sans',
-              fontSize: '26px',
+              fontSize: '14px',
               fontWeight: 500,
               lineHeight: '40px',
               letterSpacing: '-0.26px'
@@ -60,11 +60,13 @@ const Footer = () => {
             Copyright, Creative Commons License
           </Typography>
         </Box>
+        <Divider orientation='vertical' flexItem />
 
         <Box display='flex' justifyContent='center' alignItems='center' gap={1}>
           <SVGlisence />
           <StyledButton>Apache 2 License</StyledButton>
         </Box>
+        <Divider orientation='vertical' flexItem />
 
         <Box display='flex' alignItems='center' gap={1}>
           <SVGGitHub />
@@ -72,7 +74,7 @@ const Footer = () => {
             sx={{
               color: '#292489',
               fontFamily: 'Nunito Sans',
-              fontSize: '26px',
+              fontSize: '14px',
               fontWeight: 500,
               lineHeight: '40px',
               letterSpacing: '-0.26px'
@@ -84,19 +86,9 @@ const Footer = () => {
             https://github.com/....
           </StyledButton>
         </Box>
-      </Box>
+        <Divider orientation='vertical' flexItem />
 
-      <Divider />
-
-      <Box
-        sx={{ pt: '30px' }}
-        display='flex'
-        justifyContent='flex-start'
-        alignItems='center'
-        gap={2}
-      >
         <StyledButton href='/privacy-policy'>Privacy Policy</StyledButton>
-
         <Divider orientation='vertical' flexItem />
 
         <Box>
@@ -104,7 +96,7 @@ const Footer = () => {
             sx={{
               color: '#292489',
               fontFamily: 'Nunito Sans',
-              fontSize: '26px',
+              fontSize: '14px',
               fontWeight: 500,
               lineHeight: '40px',
               letterSpacing: '-0.26px'
