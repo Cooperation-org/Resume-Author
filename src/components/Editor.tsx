@@ -16,6 +16,7 @@ import { useSelector } from 'react-redux'
 import { RootState } from '../redux/store'
 import { useCallback, useEffect, useState } from 'react'
 import { SVGEditName } from '../assets/svgs'
+import useGoogleDrive from '../hooks/useGoogleDrive'
 
 const nonVisibleSections = [
   ...leftSections,
@@ -74,6 +75,8 @@ const ResumeEditor = () => {
 
   const resume = useSelector((state: RootState) => state?.resume.resume)
   const { vcs, status, error } = useSelector((state: RootState) => state.vcReducer)
+  console.log('🚀 ~ ResumeEditor ~ vcs:', vcs)
+  const { instances } = useGoogleDrive()
 
   const AllSections = Object.keys(resume as Resume).filter(
     sec =>
@@ -130,6 +133,29 @@ const ResumeEditor = () => {
     }
   }, [handleTextSelection])
 
+  const handleSaveDraft = async () => {
+    const savedResume = await instances?.resumeManager?.saveResume({
+      resume: resume,
+      type: 'unsigned'
+    })
+    console.log('Saved Resume:', savedResume)
+  }
+
+  const handlkeSignAndSave = async () => {
+    const keyPair = await instances?.resumeVC?.generateKeyPair()
+    const issuerDid = 'did:example:123456789abcdefghi'
+
+    const signedResume = await instances?.resumeVC?.sign({
+      formData: resume,
+      issuerDid,
+      keyPair
+    })
+    await instances?.resumeManager?.saveResume({
+      resume: signedResume,
+      type: 'sign'
+    })
+  }
+
   return (
     <Box sx={{ p: 6 }}>
       <Box
@@ -176,12 +202,13 @@ const ResumeEditor = () => {
           <Button variant='outlined' sx={ButtonStyles}>
             Preview
           </Button>
-          <Button variant='outlined' sx={ButtonStyles}>
+          <Button variant='outlined' sx={ButtonStyles} onClick={handleSaveDraft}>
             Save as Draft
           </Button>
           <Button
             variant='outlined'
             sx={{ ...ButtonStyles, color: 'white', bgcolor: '#614BC4' }}
+            onClick={handlkeSignAndSave}
           >
             Save and Sign
           </Button>

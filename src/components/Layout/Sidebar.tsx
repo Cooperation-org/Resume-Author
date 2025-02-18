@@ -8,6 +8,7 @@ import {
   SVGLineDown,
   SVGAddSidebar
 } from '../../assets/svgs'
+import { Link } from 'react-router-dom'
 
 interface SidebarProps {
   onToggle: () => void
