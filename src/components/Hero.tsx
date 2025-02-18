@@ -14,7 +14,7 @@ import { login } from '../tools/auth'
 
 const Hero = () => {
   const handleLogin = () => {
-    login()
+    window.location.href = '/login'
   }
   return (
     <div>
@@ -44,35 +44,19 @@ const Hero = () => {
               turning your experience into a compelling, interactive story.
             </Typography>
             <Stack direction='row' spacing={2}>
-              <Link to='/resume/import'>
-                <Button
-                  variant='contained'
-                  sx={{
-                    bgcolor: '#4527A0',
-                    color: 'white',
-                    p: '11px 80px',
-                    borderRadius: '100px',
-                    border: '2px solid #FFF',
-                    textTransform: 'capitalize'
-                  }}
-                >
-                  Sign Up
-                </Button>
-              </Link>
-
               <Button
                 variant='outlined'
                 onClick={handleLogin}
                 sx={{
                   color: '#4527A0',
                   bgcolor: 'white',
-                  p: '11px 80px',
+                  p: '10px 30px',
                   borderRadius: '100px',
                   textTransform: 'capitalize',
                   fontWeight: 700
                 }}
               >
-                Login
+                Login or Sign Up with a Digital Wallet
               </Button>
             </Stack>
             <Typography
@@ -88,7 +72,7 @@ const Hero = () => {
               component='img'
               src={HeroImage}
               alt='Construction worker'
-              sx={{ width: 200, height: 400 }}
+              sx={{ width: 200, height: 400, borderRadius: '10px' }}
             />
             <Box
               component='img'

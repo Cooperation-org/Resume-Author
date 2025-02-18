@@ -1,10 +1,14 @@
 import React from 'react'
-import { Box, Button, Container, Paper, Typography, Link } from '@mui/material'
-import CheckIcon from '@mui/icons-material/Check'
+import { Box, Button, Typography, Link } from '@mui/material'
 import img from '../assets/image 116.png'
 import Nav from '../components/Nav'
 import Footer from '../components/landingPageSections/Footer'
-import { SVGHelpSection } from '../assets/svgs'
+import {
+  SVGAddGreenCheck,
+  SVGHelpSection,
+  SVGHeroicon2,
+  SVGHeroicon1
+} from '../assets/svgs'
 
 interface FeatureListItemProps {
   text: string
@@ -22,7 +26,7 @@ const FeatureListItem: React.FC<FeatureListItemProps> = ({ text }) => (
       }
     }}
   >
-    <CheckIcon />
+    <SVGAddGreenCheck />
     <Typography>{text}</Typography>
   </Box>
 )
@@ -38,10 +42,10 @@ const DigitalWalletLogin: React.FC = () => {
   return (
     <Box
       sx={{
-        height: '100vh',
         display: 'flex',
         flexDirection: 'column',
-        overflow: 'hidden'
+        overflow: 'hidden',
+        position: 'relative'
       }}
     >
       <Nav />
@@ -50,21 +54,21 @@ const DigitalWalletLogin: React.FC = () => {
           sx={{
             display: 'flex',
             flexDirection: { xs: 'column', md: 'row' },
-            gap: 4,
+            gap: 2,
             height: '100%'
           }}
         >
           {/* Left Section */}
           <Box
             sx={{
-              width: '60%',
+              flex: 1,
               overflow: 'auto',
               padding: '30px 75px'
             }}
           >
-            <Box sx={{ p: { xs: 4, md: 6 } }}>
+            <Box sx={{ p: { xs: 4 } }}>
               <Typography
-                sx={{ fontSize: '55px', pr: '30px' }}
+                sx={{ fontSize: '55px' }}
                 variant='h4'
                 component='h1'
                 gutterBottom
@@ -72,8 +76,10 @@ const DigitalWalletLogin: React.FC = () => {
                 Login or Sign Up with a Digital Wallet
               </Typography>
               <Typography variant='body1' color='text.secondary'>
-                A digital wallet securely stores your credentials and allows you to manage
-                and share your information easily.
+                A digital wallet securely stores your credentials and allows
+              </Typography>
+              <Typography variant='body1' color='text.secondary'>
+                you to manage and share your information easily.
               </Typography>
 
               <Box sx={{ my: 4 }}>
@@ -91,6 +97,7 @@ const DigitalWalletLogin: React.FC = () => {
               >
                 <Button
                   variant='contained'
+                  onClick={() => (window.location.href = '/login/wallet')}
                   sx={{
                     bgcolor: '#FFF',
                     color: '#4527A0',
@@ -100,10 +107,11 @@ const DigitalWalletLogin: React.FC = () => {
                     textTransform: 'capitalize'
                   }}
                 >
-                  Login with Learner Credential Walle
+                  Login with Learner Credential Wallet
                 </Button>
                 <Button
                   variant='contained'
+                  onClick={() => (window.location.href = '/login/wallet')}
                   sx={{
                     bgcolor: '#FFF',
                     color: '#4527A0',
@@ -136,8 +144,7 @@ const DigitalWalletLogin: React.FC = () => {
           {/* Right Section */}
           <Box
             sx={{
-              position: 'relative',
-              width: '40%',
+              flex: 1,
               height: '100%',
               overflow: 'hidden'
             }}
@@ -155,8 +162,17 @@ const DigitalWalletLogin: React.FC = () => {
             >
               <img src={img} alt='Solar panel worker' />
             </Box>
-            <Box sx={{ position: 'absolute', top: '20%', left: '10%' }}>
+            <Box sx={{ position: 'absolute', top: '26%', left: '43%', zIndex: 111 }}>
               <SVGHelpSection />
+            </Box>
+            <Box sx={{ position: 'absolute', top: '26%', left: '41.5%', zIndex: 111 }}>
+              <SVGHeroicon1 />
+            </Box>
+            <Box sx={{ position: 'absolute', top: '47.5%', left: '45%', zIndex: 111 }}>
+              <SVGHeroicon2 />
+            </Box>
+            <Box sx={{ position: 'absolute', top: '48%', left: '44%', zIndex: 111 }}>
+              <SVGHeroicon2 />
             </Box>
           </Box>
         </Box>
