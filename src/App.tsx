@@ -16,6 +16,7 @@ import AuthCallback from './components/AuthCallback'
 import LoginWithWallet from './pages/loginSteps'
 import MyResumes from './components/MyResumes.tsx'
 import { fetchUserResumes } from './redux/slices/myresumes'
+import PreviewPage from './pages/PreviewPage'
 
 const App = () => {
   const dispatch: AppDispatch = useDispatch()
@@ -32,6 +33,7 @@ const App = () => {
           <Route path='/' element={<Home />} />
           <Route path='/resume/new' element={<Resume />} />
           <Route path='/resume/import' element={<ImportPage />} />
+          <Route path='/resume/preview' element={<PreviewPage />} />
           <Route path='/auth/callback' element={<AuthCallback />} />
           <Route path='/myresumes' element={<MyResumes />} />
           <Route path='*' element={<Error404 />} />
