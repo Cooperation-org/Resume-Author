@@ -125,7 +125,6 @@
         "id": "skill_1",
         "name": "React",
         "category": "Frontend",
-        "level": "Expert",
         "yearsOfExperience": 4,
         "verificationStatus": "verified",
         "verifiedCredentials": [
@@ -145,7 +144,6 @@
         "id": "skill_2",
         "name": "Node.js",
         "category": "Backend",
-        "level": "Advanced",
         "yearsOfExperience": 3,
         "verificationStatus": "unverified"
       },
@@ -153,7 +151,6 @@
         "id": "skill_3",
         "name": "JavaScript",
         "category": "Frontend/Backend",
-        "level": "Expert",
         "yearsOfExperience": 5,
         "verificationStatus": "verified",
         "verifiedCredentials": [
@@ -173,7 +170,6 @@
         "id": "skill_4",
         "name": "MongoDB",
         "category": "Database",
-        "level": "Intermediate",
         "yearsOfExperience": 2,
         "verificationStatus": "unverified"
       },
@@ -181,7 +177,6 @@
         "id": "skill_5",
         "name": "AWS",
         "category": "Cloud",
-        "level": "Advanced",
         "yearsOfExperience": 3,
         "verificationStatus": "verified",
         "verifiedCredentials": [
@@ -241,7 +236,6 @@
         "name": "E-commerce Platform",
         "description": "Built a full-stack e-commerce platform using React, Node.js, and MongoDB",
         "url": "github.com/sarahdev/ecommerce",
-        "technologies": ["React", "Node.js", "MongoDB", "AWS"],
         "verificationStatus": "unverified"
       },
       {
@@ -249,7 +243,6 @@
         "name": "Personal Portfolio Website",
         "description": "Designed and developed a personal portfolio website using HTML, CSS, and JavaScript",
         "url": "github.com/sarahdev/portfolio",
-        "technologies": ["HTML", "CSS", "JavaScript"],
         "verificationStatus": "verified",
         "verifiedCredentials": [
           {
