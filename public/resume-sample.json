@@ -14,8 +14,9 @@
     "socialLinks": {
       "linkedin": "linkedin.com/in/sarahthompson",
       "github": "github.com/sarahdev",
-      "twitter": "twitter.com/sarahdev",
-      "instagram": "instagram.com/sarahdev"
+      "instagram": "instagram.com/sarahdev",
+      "ahmedhany.dev": "https://ahmedhany.dev/",
+      "dev-muhammad-hany.vercel.app": "https://dev-muhammad-hany.vercel.app/"
     }
   },
   "summary": "Full Stack Developer with 5+ years of experience building scalable web applications. Passionate about clean code, user experience, and emerging technologies.",
@@ -91,19 +92,7 @@
         "endDate": "2018",
         "location": "Berkeley, CA",
         "gpa": "3.8",
-        "verificationStatus": "verified",
-        "verifiedCredentials": [
-          {
-            "vcDid": "did:edu:ucb:123",
-            "issuer": {
-              "id": "ucb_123",
-              "name": "UC Berkeley",
-              "type": "institution"
-            },
-            "dateVerified": "2024-01-15T00:00:00Z",
-            "status": "valid"
-          }
-        ]
+        "verificationStatus": "unverified"
       },
       {
         "id": "edu_2",
