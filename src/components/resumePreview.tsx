@@ -82,9 +82,9 @@ interface ResumePreviewProps {
 }
 
 const PAGE_SIZE = {
-  width: '210mm',
-  height: '297mm',
-  maxContentHeight: '267mm'
+  width: '251mm',
+  height: '300mm',
+  maxContentHeight: '265mm'
 }
 
 const SectionTitle: React.FC<{ children: ReactNode }> = ({ children }) => (
@@ -262,7 +262,7 @@ const PageFooter: React.FC<{
 )
 
 const SummarySection: React.FC<{ summary: string }> = ({ summary }) => (
-  <Box sx={{ mb: 4 }}>
+  <Box sx={{ mb: '30px' }}>
     <SectionTitle>Professional Summary</SectionTitle>
     <Typography
       variant='body2'
@@ -291,23 +291,38 @@ const SocialLinksSection: React.FC<{
 )
 
 const ExperienceSection: React.FC<{ items: WorkExperience[] }> = ({ items }) => (
-  <Box sx={{ mb: 4 }}>
+  <Box sx={{ mb: '30px' }}>
     <SectionTitle>Work Experience</SectionTitle>
     {items.map(item => (
-      <Box key={item.id} sx={{ mb: 3 }}>
+      <Box key={item.id} sx={{ mb: '30px' }}>
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
-          {item.verificationStatus === 'verified' && <BlueVerifiedBadge />}
-          <Typography variant='subtitle1' sx={{ fontWeight: 600 }}>
+          {item.verificationStatus === 'verified' && <BlueVerifiedBadge />} &nbsp;
+          <Typography variant='subtitle1' sx={{ fontWeight: 700 }}>
             {item.position}
           </Typography>
         </Box>
-        <Typography variant='body2' sx={{ color: '#000' }}>
+        <Typography
+          variant='body2'
+          sx={{ color: '#000', fontWeight: 400, fontSize: '16px', fontFamily: 'Arial' }}
+        >
           {item.company}
         </Typography>
-        <Typography variant='body2' sx={{ color: '#000', mb: 1 }}>
+        <Typography
+          variant='body2'
+          sx={{
+            color: '#000',
+            mb: 1,
+            fontWeight: 400,
+            fontSize: '16px',
+            fontFamily: 'Arial'
+          }}
+        >
           {item.startDate} – {item.endDate ?? 'Present'}
         </Typography>
-        <Typography variant='body2' sx={{ mb: 1 }}>
+        <Typography
+          variant='body2'
+          sx={{ mb: 1, fontWeight: 400, fontSize: '16px', fontFamily: 'Arial' }}
+        >
           {item.description}
         </Typography>
         <Box component='ul' sx={{ m: 0, pl: 2 }}>
@@ -316,7 +331,7 @@ const ExperienceSection: React.FC<{ items: WorkExperience[] }> = ({ items }) => 
               component='li'
               variant='body2'
               key={`${item.id}-achievement-${idx}`}
-              sx={{ mb: 0.5 }}
+              sx={{ mb: 0.5, fontWeight: 400, fontSize: '16px', fontFamily: 'Arial' }}
             >
               {achievement}
             </Typography>
@@ -328,21 +343,22 @@ const ExperienceSection: React.FC<{ items: WorkExperience[] }> = ({ items }) => 
 )
 
 const EducationSection: React.FC<{ items: Education[] }> = ({ items }) => (
-  <Box sx={{ mb: 4 }}>
+  <Box sx={{ mb: '30px' }}>
     <SectionTitle>Education</SectionTitle>
     {items.map(item => (
-      <Box key={item.id} sx={{ mb: 2 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center' }}>
-          {item.verificationStatus === 'verified' && <BlueVerifiedBadge />}
-          <Typography variant='subtitle1' sx={{ fontWeight: 600 }}>
-            {item.degree} in {item.field}
-          </Typography>
-        </Box>
-        <Typography variant='body2' sx={{ color: '#000' }}>
-          {item.institution}
+      <Box key={item.id} sx={{ mb: 2, display: 'flex', alignItems: 'center' }}>
+        {item.verificationStatus === 'verified' && <BlueVerifiedBadge />} &nbsp;
+        <Typography
+          variant='subtitle1'
+          sx={{ fontWeight: 700, fontSize: '16px', fontFamily: 'Arial' }}
+        >
+          {item.degree} in {item.field},&nbsp;
         </Typography>
-        <Typography variant='body2' sx={{ color: '#000' }}>
-          {item.startDate} – {item.endDate}
+        <Typography
+          variant='body2'
+          sx={{ color: '#000', fontWeight: 400, fontSize: '16px', fontFamily: 'Arial' }}
+        >
+          {item.institution},{item.startDate} – {item.endDate}
           {item.gpa && ` | GPA: ${item.gpa}`}
         </Typography>
       </Box>
@@ -351,7 +367,7 @@ const EducationSection: React.FC<{ items: Education[] }> = ({ items }) => (
 )
 
 const SkillsSection: React.FC<{ items: Skill[] }> = ({ items }) => (
-  <Box sx={{ mb: 4 }}>
+  <Box sx={{ mb: '30px' }}>
     <SectionTitle>Skills</SectionTitle>
     <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
       {items.map(item => (
@@ -364,13 +380,10 @@ const SkillsSection: React.FC<{ items: Skill[] }> = ({ items }) => (
             width: 'calc(50% - 8px)'
           }}
         >
-          {item.verificationStatus === 'verified' && <BlueVerifiedBadge />}
-          <Typography variant='body2'>{item.name}</Typography>
-          {item.level && (
-            <Typography variant='caption' sx={{ color: '#000', ml: 'auto' }}>
-              {item.level}
-            </Typography>
-          )}
+          {item.verificationStatus === 'verified' && <BlueVerifiedBadge />} &nbsp;
+          <Typography sx={{ fontWeight: 400, fontSize: '16px', fontFamily: 'Arial' }}>
+            {item.name}
+          </Typography>
         </Box>
       ))}
     </Box>
@@ -378,21 +391,35 @@ const SkillsSection: React.FC<{ items: Skill[] }> = ({ items }) => (
 )
 
 const CertificationsSection: React.FC<{ items: Certification[] }> = ({ items }) => (
-  <Box sx={{ mb: 4 }}>
+  <Box sx={{ mb: '30px' }}>
     <SectionTitle>Certifications</SectionTitle>
     {items.map(item => (
       <Box key={item.id} sx={{ mb: 2 }}>
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
-          {item.verificationStatus === 'verified' && <BlueVerifiedBadge />}
-          <Typography variant='subtitle1' sx={{ fontWeight: 600 }}>
+          {item.verificationStatus === 'verified' && <BlueVerifiedBadge />} &nbsp;
+          <Typography
+            variant='subtitle1'
+            sx={{ fontWeight: 700, fontSize: '16px', fontFamily: 'Arial' }}
+          >
             {item.name}
           </Typography>
         </Box>
-        <Typography variant='body2' sx={{ color: '#000' }}>
+        <Typography
+          variant='body2'
+          sx={{ color: '#000', fontFamily: 'Arial', fontSize: '16px', fontWeight: 400 }}
+        >
           {item.issuer} | {item.issueDate} - {item.expiryDate}
         </Typography>
         {item.verificationStatus === 'verified' && item.credentialId && (
-          <Typography variant='body2' sx={{ color: '#2563EB' }}>
+          <Typography
+            variant='body2'
+            sx={{
+              color: '#2563EB',
+              fontFamily: 'Arial',
+              fontSize: '16px',
+              fontWeight: 400
+            }}
+          >
             Credential ID: {item.credentialId}
           </Typography>
         )}
@@ -402,17 +429,23 @@ const CertificationsSection: React.FC<{ items: Certification[] }> = ({ items }) 
 )
 
 const ProjectsSection: React.FC<{ items: Project[] }> = ({ items }) => (
-  <Box sx={{ mb: 4 }}>
+  <Box sx={{ mb: '30px' }}>
     <SectionTitle>Projects</SectionTitle>
     {items.map(item => (
       <Box key={item.id} sx={{ mb: 3 }}>
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
-          {item.verificationStatus === 'verified' && <BlueVerifiedBadge />}
-          <Typography variant='subtitle1' sx={{ fontWeight: 600 }}>
+          {item.verificationStatus === 'verified' && <BlueVerifiedBadge />} &nbsp;
+          <Typography
+            variant='subtitle1'
+            sx={{ fontWeight: 700, fontFamily: 'Arial', fontSize: '16px' }}
+          >
             {item.name}
           </Typography>
         </Box>
-        <Typography variant='body2' sx={{ mb: 1 }}>
+        <Typography
+          variant='body2'
+          sx={{ mb: 1, fontFamily: 'Arial', fontSize: '16px', fontWeight: 400 }}
+        >
           {item.description}
         </Typography>
         {item.url && (
@@ -420,22 +453,6 @@ const ProjectsSection: React.FC<{ items: Project[] }> = ({ items }) => (
             <LinkWithFavicon url={item.url} />
           </Box>
         )}
-        <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-          {item.technologies.map(tech => (
-            <Box
-              key={`${item.id}-${tech}`}
-              sx={{
-                bgcolor: '#F3F4F6',
-                px: 1.5,
-                py: 0.5,
-                borderRadius: 1,
-                fontSize: '0.75rem'
-              }}
-            >
-              {tech}
-            </Box>
-          ))}
-        </Box>
       </Box>
     ))}
   </Box>
@@ -525,7 +542,7 @@ const ResumePreview: React.FC<ResumePreviewProps> = ({ data }) => {
   )
 
   return (
-    <Box sx={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 4 }}>
+    <Box sx={{ width: '100%', display: 'flex', flexDirection: 'column' }}>
       <Box
         sx={{ position: 'absolute', visibility: 'hidden', width: PAGE_SIZE.width }}
         ref={measureRef}
@@ -541,8 +558,10 @@ const ResumePreview: React.FC<ResumePreviewProps> = ({ data }) => {
             height: PAGE_SIZE.height,
             position: 'relative',
             bgcolor: '#fff',
+            border: '1px solid #78809A',
             boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
             mx: 'auto',
+            mb: '30px',
             '@media print': {
               boxShadow: 'none',
               m: 0,
