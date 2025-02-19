@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState, ReactNode } from 'react'
 import { Box, Typography, Link } from '@mui/material'
 import { QRCodeSVG } from 'qrcode.react'
+import VerifiedIcon from '@mui/icons-material/Verified'
 
 interface VerifiableItem {
   id: string
@@ -101,6 +102,46 @@ const SectionTitle: React.FC<{ children: ReactNode }> = ({ children }) => (
   </Typography>
 )
 
+const LinkWithFavicon: React.FC<{ url: string; platform?: string }> = ({
+  url,
+  platform
+}) => {
+  const cleanUrl = url.replace(/^https?:\/\//, '')
+  const domain = platform ? platform.toLowerCase() : cleanUrl.split('/')[0]
+  const faviconDomain = domain.includes('.') ? domain : `${domain}.com`
+
+  return (
+    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+      <img
+        src={`https://www.google.com/s2/favicons?domain=${faviconDomain}&sz=32`}
+        alt={`${domain} favicon`}
+        style={{ width: 16, height: 16 }}
+      />
+      <Link
+        href={`https://${cleanUrl}`}
+        target='_blank'
+        rel='noopener noreferrer'
+        sx={{
+          color: '#2563EB',
+          textDecoration: 'underline',
+          fontSize: '14px',
+          fontWeight: 400,
+          fontFamily: 'DM Sans',
+          '&:hover': {
+            opacity: 0.8
+          }
+        }}
+      >
+        {cleanUrl}
+      </Link>
+    </Box>
+  )
+}
+
+const VerificationBadge: React.FC = () => (
+  <VerifiedIcon sx={{ color: '#2563EB', fontSize: 16, mr: 1 }} />
+)
+
 const PageHeader: React.FC<{ fullName: string }> = ({ fullName }) => (
   <Box
     sx={{
@@ -127,12 +168,7 @@ const PageHeader: React.FC<{ fullName: string }> = ({ fullName }) => (
             fontStyle: 'normal',
             fontWeight: 400,
             lineHeight: '16px',
-            textDecorationLine: 'underline',
-            textDecorationStyle: 'solid',
-            textDecorationSkipInk: 'auto',
-            textDecorationThickness: 'auto',
-            textUnderlineOffset: 'auto',
-            textUnderlinePosition: 'from-font'
+            textDecorationLine: 'underline'
           }}
         >
           View a verifiable <br />
@@ -190,7 +226,7 @@ const PageFooter: React.FC<{
         lineHeight: '15px'
       }}
     >
-      {fullName} | Page {pageNumber} of {totalPages} | {phone && ` ${phone}`} | {email}
+      {fullName} | Page {pageNumber} of {totalPages} | {phone && `${phone} |`} {email}
     </Typography>
   </Box>
 )
@@ -212,23 +248,8 @@ const SocialLinksSection: React.FC<{
       {Object.entries(socialLinks || {}).map(
         ([platform, url]) =>
           url && (
-            <Box key={platform} sx={{ display: 'flex', alignItems: 'center' }}>
-              <Box
-                sx={{
-                  width: 6,
-                  height: 6,
-                  borderRadius: '50%',
-                  bgcolor: '#2563EB',
-                  mr: 1
-                }}
-              />
-              <Link
-                href={`https://${url}`}
-                target='_blank'
-                sx={{ color: '#2563EB', textDecoration: 'none' }}
-              >
-                {url}
-              </Link>
+            <Box key={platform}>
+              <LinkWithFavicon url={url} platform={platform} />
             </Box>
           )
       )}
@@ -241,9 +262,12 @@ const ExperienceSection: React.FC<{ items: WorkExperience[] }> = ({ items }) => 
     <SectionTitle>Work Experience</SectionTitle>
     {items.map(item => (
       <Box key={item.id} sx={{ mb: 3 }}>
-        <Typography variant='subtitle1' sx={{ fontWeight: 600 }}>
-          {item.position}
-        </Typography>
+        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+          {item.verificationStatus === 'verified' && <VerificationBadge />}
+          <Typography variant='subtitle1' sx={{ fontWeight: 600 }}>
+            {item.position}
+          </Typography>
+        </Box>
         <Typography variant='body2' sx={{ color: '#666' }}>
           {item.company}
         </Typography>
@@ -275,9 +299,12 @@ const EducationSection: React.FC<{ items: Education[] }> = ({ items }) => (
     <SectionTitle>Education</SectionTitle>
     {items.map(item => (
       <Box key={item.id} sx={{ mb: 2 }}>
-        <Typography variant='subtitle1' sx={{ fontWeight: 600 }}>
-          {item.degree} in {item.field}
-        </Typography>
+        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+          {item.verificationStatus === 'verified' && <VerificationBadge />}
+          <Typography variant='subtitle1' sx={{ fontWeight: 600 }}>
+            {item.degree} in {item.field}
+          </Typography>
+        </Box>
         <Typography variant='body2' sx={{ color: '#666' }}>
           {item.institution}
         </Typography>
@@ -304,10 +331,13 @@ const SkillsSection: React.FC<{ items: Skill[] }> = ({ items }) => (
             width: 'calc(50% - 8px)'
           }}
         >
-          {item.verificationStatus === 'verified' && (
-            <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: '#2563EB' }} />
-          )}
+          {item.verificationStatus === 'verified' && <VerificationBadge />}
           <Typography variant='body2'>{item.name}</Typography>
+          {item.level && (
+            <Typography variant='caption' sx={{ color: '#666', ml: 'auto' }}>
+              {item.level}
+            </Typography>
+          )}
         </Box>
       ))}
     </Box>
@@ -319,9 +349,12 @@ const CertificationsSection: React.FC<{ items: Certification[] }> = ({ items }) 
     <SectionTitle>Certifications</SectionTitle>
     {items.map(item => (
       <Box key={item.id} sx={{ mb: 2 }}>
-        <Typography variant='subtitle1' sx={{ fontWeight: 600 }}>
-          {item.name}
-        </Typography>
+        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+          {item.verificationStatus === 'verified' && <VerificationBadge />}
+          <Typography variant='subtitle1' sx={{ fontWeight: 600 }}>
+            {item.name}
+          </Typography>
+        </Box>
         <Typography variant='body2' sx={{ color: '#666' }}>
           {item.issuer} | {item.issueDate} - {item.expiryDate}
         </Typography>
@@ -340,25 +373,19 @@ const ProjectsSection: React.FC<{ items: Project[] }> = ({ items }) => (
     <SectionTitle>Projects</SectionTitle>
     {items.map(item => (
       <Box key={item.id} sx={{ mb: 3 }}>
-        <Typography variant='subtitle1' sx={{ fontWeight: 600 }}>
-          {item.name}
-        </Typography>
+        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+          {item.verificationStatus === 'verified' && <VerificationBadge />}
+          <Typography variant='subtitle1' sx={{ fontWeight: 600 }}>
+            {item.name}
+          </Typography>
+        </Box>
         <Typography variant='body2' sx={{ mb: 1 }}>
           {item.description}
         </Typography>
         {item.url && (
-          <Link
-            href={`https://${item.url}`}
-            target='_blank'
-            sx={{
-              color: '#2563EB',
-              fontSize: '0.875rem',
-              display: 'inline-block',
-              mb: 1
-            }}
-          >
-            {item.url}
-          </Link>
+          <Box sx={{ mb: 1 }}>
+            <LinkWithFavicon url={item.url} />
+          </Box>
         )}
         <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
           {item.technologies.map(tech => (
@@ -466,7 +493,6 @@ const ResumePreview: React.FC<ResumePreviewProps> = ({ data }) => {
 
   return (
     <Box sx={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 4 }}>
-      {/* Hidden measurement container */}
       <Box
         sx={{ position: 'absolute', visibility: 'hidden', width: PAGE_SIZE.width }}
         ref={measureRef}
@@ -474,7 +500,6 @@ const ResumePreview: React.FC<ResumePreviewProps> = ({ data }) => {
         {content}
       </Box>
 
-      {/* Visible pages */}
       {pages.map((pageContent, pageIndex) => (
         <Box
           key={`page-${pageIndex}`}
