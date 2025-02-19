@@ -1,8 +1,7 @@
 import React, { useEffect, useRef, useState, ReactNode } from 'react'
 import { Box, Typography, Link } from '@mui/material'
 import { QRCodeSVG } from 'qrcode.react'
-import VerifiedIcon from '@mui/icons-material/Verified'
-
+import { BlueVerifiedBadge } from '../assets/svgs'
 interface VerifiableItem {
   id: string
   verificationStatus?: 'verified' | 'pending' | 'unverified'
@@ -94,6 +93,7 @@ const SectionTitle: React.FC<{ children: ReactNode }> = ({ children }) => (
     sx={{
       fontWeight: 700,
       mb: '11px',
+      lineHeight: '20px',
       fontSize: '18px',
       color: '#000'
     }}
@@ -111,36 +111,55 @@ const LinkWithFavicon: React.FC<{ url: string; platform?: string }> = ({
   const faviconDomain = domain.includes('.') ? domain : `${domain}.com`
 
   return (
-    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-      <img
-        src={`https://www.google.com/s2/favicons?domain=${faviconDomain}&sz=32`}
-        alt={`${domain} favicon`}
-        style={{ width: 16, height: 16 }}
-      />
-      <Link
-        href={`https://${cleanUrl}`}
-        target='_blank'
-        rel='noopener noreferrer'
+    <Box
+      sx={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'flex-start',
+        gap: '5px'
+      }}
+    >
+      <Typography
+        variant='body2'
         sx={{
-          color: '#2563EB',
-          textDecoration: 'underline',
-          fontSize: '14px',
-          fontWeight: 400,
-          fontFamily: 'DM Sans',
-          '&:hover': {
-            opacity: 0.8
-          }
+          fontWeight: 700,
+          color: '#000',
+          fontSize: '10px',
+          ml: '24px',
+          lineHeight: '8px',
+          fontFamily: 'DM Sans'
         }}
       >
-        {cleanUrl}
-      </Link>
+        {platform || domain}
+      </Typography>
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+        <img
+          src={`https://www.google.com/s2/favicons?domain=${faviconDomain}&sz=32`}
+          alt={`${domain} favicon`}
+          style={{ width: 16, height: 16, borderRadius: '50%' }}
+        />
+        <Link
+          href={`https://${cleanUrl}`}
+          target='_blank'
+          rel='noopener noreferrer'
+          sx={{
+            color: '#2563EB',
+            textDecoration: 'underline',
+            fontSize: '16px',
+            lineHeight: '9px',
+            fontWeight: 400,
+            fontFamily: 'DM Sans',
+            '&:hover': {
+              opacity: 0.8
+            }
+          }}
+        >
+          {cleanUrl}
+        </Link>
+      </Box>
     </Box>
   )
 }
-
-const VerificationBadge: React.FC = () => (
-  <VerifiedIcon sx={{ color: '#2563EB', fontSize: 16, mr: 1 }} />
-)
 
 const PageHeader: React.FC<{ fullName: string }> = ({ fullName }) => (
   <Box
@@ -211,7 +230,9 @@ const PageFooter: React.FC<{
       py: '15px',
       display: 'flex',
       alignItems: 'center',
-      justifyContent: 'center'
+      justifyContent: 'center',
+      height: '15px',
+      overflow: 'hidden'
     }}
   >
     <Typography
@@ -223,18 +244,30 @@ const PageFooter: React.FC<{
         fontSize: '10px',
         fontStyle: 'normal',
         fontWeight: 400,
-        lineHeight: '15px'
+        lineHeight: '15px',
+        mr: '10px'
       }}
     >
-      {fullName} | Page {pageNumber} of {totalPages} | {phone && `${phone} |`} {email}
+      {fullName} | Page {pageNumber} of {totalPages} | {phone && `${phone} |`}{' '}
+      <span style={{ textDecoration: 'underline', color: '#2563EB' }}>{email}</span>
     </Typography>
+    <QRCodeSVG
+      value='https://resume.example.com'
+      size={32}
+      level='H'
+      bgColor='transparent'
+      fgColor='#000'
+    />
   </Box>
 )
 
 const SummarySection: React.FC<{ summary: string }> = ({ summary }) => (
   <Box sx={{ mb: 4 }}>
     <SectionTitle>Professional Summary</SectionTitle>
-    <Typography variant='body2' sx={{ color: '#333' }}>
+    <Typography
+      variant='body2'
+      sx={{ color: '#000', fontWeight: 400, fontSize: '16px', fontFamily: 'Arial' }}
+    >
       {summary}
     </Typography>
   </Box>
@@ -243,8 +276,8 @@ const SummarySection: React.FC<{ summary: string }> = ({ summary }) => (
 const SocialLinksSection: React.FC<{
   socialLinks?: { [key: string]: string | undefined }
 }> = ({ socialLinks }) => (
-  <Box sx={{ mb: 4 }}>
-    <Box sx={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+  <Box sx={{ mb: '30px' }}>
+    <Box sx={{ display: 'flex', gap: '20px', flexWrap: 'wrap', flexDirection: 'row' }}>
       {Object.entries(socialLinks || {}).map(
         ([platform, url]) =>
           url && (
@@ -263,15 +296,15 @@ const ExperienceSection: React.FC<{ items: WorkExperience[] }> = ({ items }) => 
     {items.map(item => (
       <Box key={item.id} sx={{ mb: 3 }}>
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
-          {item.verificationStatus === 'verified' && <VerificationBadge />}
+          {item.verificationStatus === 'verified' && <BlueVerifiedBadge />}
           <Typography variant='subtitle1' sx={{ fontWeight: 600 }}>
             {item.position}
           </Typography>
         </Box>
-        <Typography variant='body2' sx={{ color: '#666' }}>
+        <Typography variant='body2' sx={{ color: '#000' }}>
           {item.company}
         </Typography>
-        <Typography variant='body2' sx={{ color: '#666', mb: 1 }}>
+        <Typography variant='body2' sx={{ color: '#000', mb: 1 }}>
           {item.startDate} – {item.endDate ?? 'Present'}
         </Typography>
         <Typography variant='body2' sx={{ mb: 1 }}>
@@ -300,15 +333,15 @@ const EducationSection: React.FC<{ items: Education[] }> = ({ items }) => (
     {items.map(item => (
       <Box key={item.id} sx={{ mb: 2 }}>
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
-          {item.verificationStatus === 'verified' && <VerificationBadge />}
+          {item.verificationStatus === 'verified' && <BlueVerifiedBadge />}
           <Typography variant='subtitle1' sx={{ fontWeight: 600 }}>
             {item.degree} in {item.field}
           </Typography>
         </Box>
-        <Typography variant='body2' sx={{ color: '#666' }}>
+        <Typography variant='body2' sx={{ color: '#000' }}>
           {item.institution}
         </Typography>
-        <Typography variant='body2' sx={{ color: '#666' }}>
+        <Typography variant='body2' sx={{ color: '#000' }}>
           {item.startDate} – {item.endDate}
           {item.gpa && ` | GPA: ${item.gpa}`}
         </Typography>
@@ -331,10 +364,10 @@ const SkillsSection: React.FC<{ items: Skill[] }> = ({ items }) => (
             width: 'calc(50% - 8px)'
           }}
         >
-          {item.verificationStatus === 'verified' && <VerificationBadge />}
+          {item.verificationStatus === 'verified' && <BlueVerifiedBadge />}
           <Typography variant='body2'>{item.name}</Typography>
           {item.level && (
-            <Typography variant='caption' sx={{ color: '#666', ml: 'auto' }}>
+            <Typography variant='caption' sx={{ color: '#000', ml: 'auto' }}>
               {item.level}
             </Typography>
           )}
@@ -350,12 +383,12 @@ const CertificationsSection: React.FC<{ items: Certification[] }> = ({ items }) 
     {items.map(item => (
       <Box key={item.id} sx={{ mb: 2 }}>
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
-          {item.verificationStatus === 'verified' && <VerificationBadge />}
+          {item.verificationStatus === 'verified' && <BlueVerifiedBadge />}
           <Typography variant='subtitle1' sx={{ fontWeight: 600 }}>
             {item.name}
           </Typography>
         </Box>
-        <Typography variant='body2' sx={{ color: '#666' }}>
+        <Typography variant='body2' sx={{ color: '#000' }}>
           {item.issuer} | {item.issueDate} - {item.expiryDate}
         </Typography>
         {item.verificationStatus === 'verified' && item.credentialId && (
@@ -374,7 +407,7 @@ const ProjectsSection: React.FC<{ items: Project[] }> = ({ items }) => (
     {items.map(item => (
       <Box key={item.id} sx={{ mb: 3 }}>
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
-          {item.verificationStatus === 'verified' && <VerificationBadge />}
+          {item.verificationStatus === 'verified' && <BlueVerifiedBadge />}
           <Typography variant='subtitle1' sx={{ fontWeight: 600 }}>
             {item.name}
           </Typography>
