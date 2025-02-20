@@ -56,6 +56,7 @@ const SectionContent: React.FC<SectionContentProps> = ({
       setContent(sectionData || '')
     }
   }, [sectionData, isListBased])
+  //eslint-disable-next-line
   const toggleEdit = () => {
     if (editing) {
       const updatedContent = isStringBased ? content : { items }
@@ -63,7 +64,7 @@ const SectionContent: React.FC<SectionContentProps> = ({
     }
     setEditing(!editing)
   }
-
+  //eslint-disable-next-line
   const toggleVisibility = () => {
     setIsVisible(!isVisible)
   }
@@ -107,7 +108,6 @@ const SectionContent: React.FC<SectionContentProps> = ({
     }))
 
     const updatedItems = [...items, ...newCredentialItems]
-
     setItems(updatedItems)
     dispatch(updateSection({ sectionId, content: { items: updatedItems } }))
   }
@@ -125,7 +125,10 @@ const SectionContent: React.FC<SectionContentProps> = ({
           primary={
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
               {editing ? (
-                <TextEditor value={itemText} onChange={e => handleUpdateItem(index, e)} />
+                <TextEditor
+                  value={itemText}
+                  onChange={val => handleUpdateItem(index, val)}
+                />
               ) : (
                 <>
                   <Typography>{itemText}</Typography>
@@ -160,7 +163,6 @@ const SectionContent: React.FC<SectionContentProps> = ({
   return (
     <Box sx={{ position: 'relative' }}>
       {/* Section Header */}
-
       <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', p: '15px 0 20px 10px' }}>
         <SVGSectionIcon />
         <Typography variant='h6' fontWeight='600'>
@@ -175,7 +177,7 @@ const SectionContent: React.FC<SectionContentProps> = ({
           {isStringBased ? (
             <Box>
               {editing ? (
-                <TextEditor value={content} onChange={e => setContent(e)} />
+                <TextEditor value={content} onChange={val => setContent(val)} />
               ) : (
                 <Typography variant='body1'>
                   {content || `No ${sectionId} added yet.`}
@@ -190,7 +192,10 @@ const SectionContent: React.FC<SectionContentProps> = ({
 
               {editing && (
                 <Box sx={{ display: 'flex', gap: 2, mt: 2 }}>
-                  <TextEditor value={newItemValue} onChange={e => setNewItemValue(e)} />
+                  <TextEditor
+                    value={newItemValue}
+                    onChange={val => setNewItemValue(val)}
+                  />
                   <Button
                     variant='outlined'
                     sx={{ borderRadius: 5 }}

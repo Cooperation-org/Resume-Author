@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useCallback } from 'react'
 import {
   Box,
   TextField,
@@ -49,41 +49,86 @@ const PinkSwitch = styled(Switch)(({ theme }) => ({
   }
 }))
 
-export default function SectionDetails(sectionId: any) {
-  const [input1, setInput1] = useState('')
-  const [input2, setInput2] = useState('')
-  const [input3, setInput3] = useState('')
-  const [showDuration, setShowDuration] = useState(true)
+interface WorkExperience {
+  title: string
+  company: string
+  duration: string
+  currentlyEmployed: boolean
+  description: string
+  showDuration: boolean
+}
+
+interface SectionDetailsProps {
+  sectionId: string
+  onDelete?: () => void
+  onAddFiles?: () => void
+  onAddCredential?: (text: string) => void
+}
+
+export default function SectionDetails({
+  sectionId,
+  onDelete,
+  onAddFiles,
+  onAddCredential
+}: SectionDetailsProps) {
+  const [workExperience, setWorkExperience] = useState<WorkExperience>({
+    title: '',
+    company: '',
+    duration: '',
+    currentlyEmployed: false,
+    description: '',
+    showDuration: true
+  })
+
+  const handleWorkExperienceChange = useCallback(
+    (field: keyof WorkExperience, value: any) => {
+      setWorkExperience(prev => ({
+        ...prev,
+        [field]: value
+      }))
+    },
+    []
+  )
+
+  const handleCredentialAdd = useCallback(
+    (text: string) => {
+      if (onAddCredential) {
+        onAddCredential(text)
+      }
+    },
+    [onAddCredential]
+  )
 
   return (
     <Box>
-      {sectionId.sectionId === 'Professional Summary' && (
+      {sectionId === 'Professional Summary' && (
         <Typography sx={{ fontSize: '14px', fontWeight: '500' }}>
-          {' '}
           Write a brief summary highlighting your skills, experience, and achievements.
           Focus on what makes you stand out, including specific expertise or career goals.
           Keep it quantitative, clear, professional, and tailored to your target role.
         </Typography>
       )}
-      {sectionId.sectionId === 'Work Experience' && (
+      {sectionId === 'Work Experience' && (
         <Typography sx={{ fontSize: '14px', fontWeight: '500' }}>
-          {' '}
           Add your work experience in reverse chronological order. In the text editor, you
           may add credentials from your credential library to strengthen the value of your
-          work experience. Don’t have any credentials? Visit www.linkedclaims.com to
+          work experience. Don't have any credentials? Visit www.linkedclaims.com to
           create your own credentials.
         </Typography>
       )}
       <Stack
-        sx={{ bgcolor: '#F1F1FB', p: ' 20px', borderRadius: '4px', mt: 2 }}
+        sx={{ bgcolor: '#F1F1FB', p: '20px', borderRadius: '4px', mt: 2 }}
         spacing={2}
       >
-        {/* Job Title Section */}
-        {sectionId.sectionId === 'Professional Summary' && (
-          <TextEditor value='' onChange={() => {}} />
+        {sectionId === 'Professional Summary' && (
+          <TextEditor
+            value={workExperience.description}
+            onChange={val => handleWorkExperienceChange('description', val)}
+            onAddCredential={handleCredentialAdd}
+          />
         )}
 
-        {sectionId.sectionId === 'Work Experience' && (
+        {sectionId === 'Work Experience' && (
           <Box
             sx={{
               display: 'flex',
@@ -105,29 +150,29 @@ export default function SectionDetails(sectionId: any) {
               size='small'
               fullWidth
               placeholder='Title of your position'
-              value={input1}
-              onChange={e => setInput1(e.target.value)}
+              value={workExperience.title}
+              onChange={e => handleWorkExperienceChange('title', e.target.value)}
               variant='outlined'
             />
 
-            {/* Company Section */}
             <Typography>Company</Typography>
             <TextField
               sx={{ bgcolor: '#FFF' }}
               size='small'
               fullWidth
               placeholder='Employer name'
-              value={input2}
-              onChange={e => setInput2(e.target.value)}
+              value={workExperience.company}
+              onChange={e => handleWorkExperienceChange('company', e.target.value)}
             />
 
-            {/* Dates Section */}
             <Box display='flex' alignItems='start' flexDirection='column'>
               <Typography variant='body1'>Dates</Typography>
               <Box display='flex' alignItems='center'>
                 <PinkSwitch
-                  checked={showDuration}
-                  onChange={e => setShowDuration(e.target.checked)}
+                  checked={workExperience.showDuration}
+                  onChange={e =>
+                    handleWorkExperienceChange('showDuration', e.target.checked)
+                  }
                   sx={{ color: '#34C759' }}
                 />
                 <Typography>Show duration instead of exact dates</Typography>
@@ -139,46 +184,53 @@ export default function SectionDetails(sectionId: any) {
                 sx={{ bgcolor: '#FFF' }}
                 size='small'
                 placeholder='Enter total duration'
-                value={input3}
-                onChange={e => setInput3(e.target.value)}
+                value={workExperience.duration}
+                onChange={e => handleWorkExperienceChange('duration', e.target.value)}
                 variant='outlined'
               />
               <Box display='flex' alignItems='center' gap={1}>
                 <FormControlLabel
-                  required
-                  control={<Checkbox />}
+                  control={
+                    <Checkbox
+                      checked={workExperience.currentlyEmployed}
+                      onChange={e =>
+                        handleWorkExperienceChange('currentlyEmployed', e.target.checked)
+                      }
+                    />
+                  }
                   label='Currently employed here'
                 />
               </Box>
             </Box>
 
-            {/* Description Section */}
             <Typography variant='body1'>Describe your role at this company:</Typography>
-            <TextEditor value='' onChange={() => {}} />
+            <TextEditor
+              value={workExperience.description}
+              onChange={val => handleWorkExperienceChange('description', val)}
+              onAddCredential={handleCredentialAdd}
+            />
           </Box>
         )}
-        {/* Button Group */}
-        {sectionId.sectionId !== 'Professional Summary' && (
+
+        {sectionId !== 'Professional Summary' && (
           <Box
             sx={{
               display: 'flex',
               justifyContent: 'space-between',
-              alignItems: 'center'
+              alignItems: 'center',
+              marginTop: '20px'
             }}
           >
             <StyledButton
               startIcon={<SVGAddcredential />}
-              onClick={() => alert('Pressed!')}
+              onClick={() => handleCredentialAdd('')}
             >
               Add credential(s)
             </StyledButton>
-            <StyledButton startIcon={<SVGAddFiles />} onClick={() => alert('Pressed!')}>
+            <StyledButton startIcon={<SVGAddFiles />} onClick={onAddFiles}>
               Add file(s)
             </StyledButton>
-            <StyledButton
-              startIcon={<SVGDeleteSection />}
-              onClick={() => alert('Pressed!')}
-            >
+            <StyledButton startIcon={<SVGDeleteSection />} onClick={onDelete}>
               Delete this item
             </StyledButton>
           </Box>
