@@ -2,6 +2,7 @@
   border-radius: 8px 8px 0 0;
   border-bottom: 1px solid #ccc;
   background-color: #f3f5f8;
+  padding: 8px !important;
 }
 
 .ql-container {
@@ -16,4 +17,84 @@
 
 .text-editor-container:focus-within {
   box-shadow: 0 0 0 2px #14b8a6;
+}
+
+.text-editor-container {
+  position: relative;
+  z-index: 1;
+}
+
+.text-editor-container .ql-toolbar {
+  border-top-left-radius: 8px;
+  border-top-right-radius: 8px;
+}
+
+.text-editor-container .ql-container {
+  border-bottom-left-radius: 8px;
+  border-bottom-right-radius: 8px;
+  min-height: 120px;
+}
+
+.ql-snow .ql-toolbar button {
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  color: #64748b;
+}
+
+.ql-snow .ql-toolbar button:hover {
+  color: #2563eb;
+}
+
+.ql-snow .ql-toolbar button.ql-active {
+  color: #2563eb;
+}
+
+.ql-snow .ql-toolbar button.ql-undo,
+.ql-snow .ql-toolbar button.ql-redo {
+  width: 28px;
+  height: 28px;
+  padding: 4px;
+}
+
+.ql-snow .ql-toolbar button.ql-undo svg,
+.ql-snow .ql-toolbar button.ql-redo svg {
+  width: 18px;
+  height: 18px;
+  display: block;
+}
+
+.ql-snow .ql-toolbar button.ql-link-to-credentials {
+  width: auto;
+  padding: 0 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.ql-snow .ql-toolbar button.ql-link-to-credentials svg {
+  width: 18px;
+  height: 18px;
+}
+
+.ql-editor a {
+  color: #2563eb;
+  text-decoration: underline;
+  padding-right: 0;
+}
+
+.ql-editor a[href*='linkedcreds.allskillscount.org/view/'] {
+  color: rgba(0, 0, 0, 0.87);
+  text-decoration: none;
+  position: relative;
+  background-color: #badefe;
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.ql-toolbar.ql-snow .ql-formats {
+  margin-right: 8px;
 }

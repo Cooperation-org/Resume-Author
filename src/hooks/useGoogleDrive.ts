@@ -26,9 +26,9 @@ interface ClaimDetail {
 
 const useGoogleDrive = () => {
   const accessToken = getCookie('auth_token')
-  if (!accessToken) {
-    throw new Error('Access token not found')
-  }
+  // if (!accessToken) {
+  //   throw new Error('Access token not found')
+  // }
 
   const [instances, setInstances] = useState<{
     storage: GoogleDriveStorage | null
