@@ -3,14 +3,12 @@ import React from 'react'
 import HeroImage from '../assets/image 1.png'
 import HeroImage2 from '../assets/Union.png'
 import HeroImage3 from '../assets/Union-2.png'
-import { Link, useNavigate } from 'react-router-dom'
 import HowItWorksSection from './landingPageSections/HowItWorksSection'
 import HowResumeAuthorWorks from './landingPageSections/HowResumeAuthorWorks'
 import WhoBenefitsSection from './landingPageSections/WhoBenefitsSection'
 import SelectCards from './landingPageSections/SelectCards'
 import MoreAbout from './landingPageSections/MoreAboutResumeAuthor'
 import Footer from './landingPageSections/Footer'
-import { login } from '../tools/auth'
 
 const Hero = () => {
   const handleLogin = () => {
@@ -32,16 +30,27 @@ const Hero = () => {
               variant='h1'
               sx={{
                 color: 'white',
-                fontSize: '50px',
+                fontSize: '40px',
                 fontWeight: 700,
-                mb: 2
+                mb: 2,
+                fontFamily: 'Poppins',
+                lineHeight: '50px' /* 141.667% */
               }}
             >
               Prove your skills in a verifiable resume that employers trust.{' '}
             </Typography>
-            <Typography sx={{ color: 'white', mb: 4, fontSize: '1.2rem' }}>
-              Resume Author transforms bullet points into verified proof of your skills,
-              turning your experience into a compelling, interactive story.
+            <Typography
+              sx={{
+                color: 'white',
+                mb: 4,
+                fontSize: '18px',
+                fontWeight: '500',
+                fonstFamily: 'Nunito sans'
+              }}
+            >
+              Resume Author transforms resume bullet points into verified proof of your
+              skills, turning your experiences into a compelling, trusted expression of
+              who you are.
             </Typography>
             <Stack direction='row' spacing={2}>
               <Button
@@ -53,17 +62,40 @@ const Hero = () => {
                   p: '10px 30px',
                   borderRadius: '100px',
                   textTransform: 'capitalize',
-                  fontWeight: 700
+                  fontWeight: 700,
+                  fonstFamily: 'Nunito Sans'
                 }}
               >
                 Login or Sign Up with a Digital Wallet
               </Button>
             </Stack>
+
             <Typography
-              sx={{ mt: 4, color: 'rgba(255,255,255,0.7)', fontSize: '0.9rem' }}
+              sx={{
+                mt: 4,
+                color: 'rgba(255,255,255,0.7)',
+                fontSize: '14px',
+                fontWeight: 700,
+                fontFamily: 'Nunito Sans',
+                cursor: 'pointer',
+                '&:hover': {
+                  color: 'rgba(255,255,255,1)'
+                }
+              }}
             >
-              Created for you by the US Chamber of Commerce Foundation T3 Innovation
-              Network.
+              Created for you by the{' '}
+              <Box
+                component='span'
+                sx={{
+                  textDecoration: 'underline',
+                  '&:hover': {
+                    textDecoration: 'underline'
+                  }
+                }}
+              >
+                US Chamber of Commerce Foundation T3 Innovation Network
+              </Box>
+              .
             </Typography>
           </Box>
 

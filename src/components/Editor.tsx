@@ -14,7 +14,7 @@ import RightSidebar from './ResumeEditor/RightSidebar'
 import Section from './ResumeEditor/Section'
 import { useSelector } from 'react-redux'
 import { RootState } from '../redux/store'
-import { useCallback, useEffect, useState } from 'react'
+import { useState } from 'react'
 import { SVGEditName } from '../assets/svgs'
 import useGoogleDrive from '../hooks/useGoogleDrive'
 
@@ -34,7 +34,7 @@ const ButtonStyles = {
   textTransform: 'none',
   fontWeight: 600,
   color: '#3A35A2',
-  p: '0 25px'
+  p: '5px 25px'
 }
 
 const BorderLinearProgress = styled(LinearProgress)(({ theme }) => ({
@@ -66,15 +66,8 @@ const ResumeEditor = () => {
     'Skills and Abilities'
   ])
 
-  // Tooltip state
-  const [highlightedText, setHighlightedText] = useState<string>('')
-  const [tooltipPosition, setTooltipPosition] = useState<{
-    top: number
-    left: number
-  } | null>(null)
-
   const resume = useSelector((state: RootState) => state?.resume.resume)
-  const { vcs, status, error } = useSelector((state: RootState) => state.vcReducer)
+  const { vcs } = useSelector((state: RootState) => state.vcReducer)
   console.log('🚀 ~ ResumeEditor ~ vcs:', vcs)
   const { instances } = useGoogleDrive()
 
@@ -145,6 +138,8 @@ const ResumeEditor = () => {
     const keyPair = await instances?.resumeVC?.generateKeyPair()
     const issuerDid = 'did:example:123456789abcdefghi'
 
+    console.log('resume', resume)
+
     const signedResume = await instances?.resumeVC?.sign({
       formData: resume,
       issuerDid,
@@ -163,7 +158,7 @@ const ResumeEditor = () => {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          mb: '30px'
+          mb: '20px'
         }}
       >
         <Box sx={{ display: 'flex', gap: '15px', flexDirection: 'column' }}>
@@ -178,7 +173,7 @@ const ResumeEditor = () => {
                 lineHeight: '55.88px'
               }}
             >
-              Alice Parker Resume
+              Untitled
             </Typography>
             <IconButton>
               <SVGEditName />
@@ -195,7 +190,8 @@ const ResumeEditor = () => {
               letterSpacing: '0.16px'
             }}
           >
-            Placeholder for instructional text, if needed, TBD
+            Name your resume with your first and last name so recruiters can easily locate
+            your resume.
           </Typography>
         </Box>
         <Box sx={{ display: 'flex', gap: '10px' }}>
@@ -214,41 +210,22 @@ const ResumeEditor = () => {
           </Button>
         </Box>
       </Box>
-      <Box>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-          <Typography
-            sx={{
-              color: '#2E2E48',
-              fontFamily: 'DM Sans',
-              fontSize: '16px',
-              fontStyle: 'normal',
-              fontWeight: 700,
-              lineHeight: 'normal',
-              letterSpacing: '0.16px',
-              mt: 2
-            }}
-          >
-            Progress: 50%
-          </Typography>
-          <Typography
-            sx={{
-              color: '#2E2E48',
-              fontFamily: 'DM Sans',
-              fontSize: '16px',
-              fontStyle: 'normal',
-              fontWeight: 500,
-              lineHeight: 'normal',
-              letterSpacing: '0.16px',
-              mt: 2,
-              pr: 2
-            }}
-          >
-            Add at least 1 credential!{' '}
-          </Typography>
-        </Box>
 
-        <BorderLinearProgress variant='determinate' value={50} />
-      </Box>
+      <BorderLinearProgress variant='determinate' value={100} />
+      <Typography
+        sx={{
+          color: '#2E2E48',
+          fontFamily: 'DM Sans',
+          fontSize: '16px',
+          fontStyle: 'normal',
+          fontWeight: 500,
+          lineHeight: 'normal',
+          letterSpacing: '0.16px',
+          mt: '20px'
+        }}
+      >
+        Any section left blank will not appear on your resume.
+      </Typography>
       <Box sx={{ display: 'flex', gap: 4, mt: 2 }}>
         <LeftSidebar />
 

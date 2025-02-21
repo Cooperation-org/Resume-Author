@@ -7,34 +7,9 @@ import {
   fileIconSVG,
   checkmarkBlueSVG,
   checkmarkgraySVG,
-  uploadArrowUpSVG,
-  SVGLine
+  uploadArrowUpSVG
 } from '../../assets/svgs'
 
-const paperStyle = {
-  display: 'flex',
-  padding: '20px',
-  flexDirection: 'column',
-  alignItems: 'flex-start',
-  gap: '20px',
-  alignSelf: 'stretch',
-  borderRadius: '8px',
-  bgcolor: '#FFF',
-  boxShadow: '0px 2px 20px 0px rgba(0,0,0,0.10)',
-  height: 'fit-content'
-}
-
-const placeholderStyle = {
-  '& .MuiInputBase-input::placeholder': {
-    color: 'var(--neutral-light-n-100, #7A869A)',
-    fontFamily: '"Proxima Nova", "Helvetica Neue", Helvetica, Arial, sans-serif',
-    fontSize: '14px',
-    fontStyle: 'normal',
-    fontWeight: 400,
-    lineHeight: '20px',
-    opacity: 1
-  }
-}
 interface RootState {
   vcReducer: {
     vcs: any[]
@@ -101,9 +76,6 @@ const RightSidebar = () => {
     })
   }
 
-  const isValidClaim = (claim: any) => {
-    return claim.credentialSubject.name && claim.credentialSubject?.name
-  }
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files
     if (files) {
@@ -136,7 +108,7 @@ const RightSidebar = () => {
   return (
     <Box
       sx={{
-        width: 375,
+        width: '29%',
         display: 'flex',
         flexDirection: 'column',
         gap: '30px',
@@ -164,7 +136,7 @@ const RightSidebar = () => {
         </Typography>
 
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-          <Typography sx={{ fontSize: 16, color: '#47516B' }}>
+          <Typography sx={{ fontSize: 16, color: '#47516B', fontFamily: 'Nunito Sans' }}>
             To access credentials from Google Drive, select the Import from Google Drive
             button.
           </Typography>
@@ -177,9 +149,10 @@ const RightSidebar = () => {
               color: '#3A35A2',
               fontSize: 18,
               textTransform: 'none',
-              backgroundColor: 'transparent'
+              backgroundColor: 'transparent',
+              fontFamily: 'Nunito Sans'
             }}
-            onClick={() => alert('Pressed!')}
+            onClick={handleAuth}
           >
             Import Credentials from Google Drive
           </Button>
@@ -191,7 +164,7 @@ const RightSidebar = () => {
             To check for new credentials in your wallet, select the refresh button below:
           </Typography>
           <Button
-            onClick={handleAuth}
+            onClick={() => alert('Pressed!')}
             variant='outlined'
             fullWidth
             sx={{
@@ -206,91 +179,6 @@ const RightSidebar = () => {
             Refresh Learner Credential Wallet
           </Button>
         </Box>
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-          <Typography sx={{ fontSize: 16, color: '#47516B' }}>
-            To access credentials on your LinkedIn profile, select the Import from
-            LinkedIn button.
-          </Typography>
-          <Button
-            fullWidth
-            variant='outlined'
-            sx={{
-              borderRadius: '100px',
-              borderColor: '#3A35A2',
-              color: '#3A35A2',
-              fontSize: 18,
-              textTransform: 'none',
-              backgroundColor: 'transparent'
-            }}
-            onClick={() => alert('Pressed!')}
-          >
-            Import from LinkedIn
-          </Button>
-        </Box>
-      </Box>
-
-      {/* Section 2: Your Credentials */}
-      <Box
-        sx={{
-          width: '100%',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '12px',
-          backgroundColor: '#FFF',
-          padding: '20px',
-          borderRadius: 2,
-          boxShadow: '0px 2px 20px rgba(0,0,0,0.10)'
-        }}
-      >
-        <Typography
-          sx={{
-            fontFamily: '"Proxima Nova", "Helvetica Neue", Helvetica, Arial, sans-serif',
-            fontSize: '13px',
-            fontWeight: 700
-          }}
-        >
-          Add Credentials
-        </Typography>
-        <SVGLine />
-        <Button
-          size='small'
-          sx={{
-            textTransform: 'none',
-            fontFamily: '"Proxima Nova", "Helvetica Neue", Helvetica, Arial, sans-serif',
-            fontSize: '13px',
-            fontWeight: 700,
-            color: '#6B79F6'
-          }}
-        >
-          Learn more
-        </Button>
-      </Box>
-      <Box sx={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '20px' }}>
-        <Button
-          onClick={handleAuth}
-          variant='outlined'
-          fullWidth
-          sx={{
-            fontSize: '0.8rem',
-            border: '1px solid #3A35A2',
-            color: '#3A35A2',
-            borderRadius: '100px'
-          }}
-        >
-          Connect Google Drive
-        </Button>
-        <Button
-          variant='outlined'
-          fullWidth
-          sx={{
-            fontSize: '0.8rem',
-            borderRadius: '100px',
-            border: '1px solid #3A35A2',
-            color: '#3A35A2'
-          }}
-        >
-          Connect Digital Wallet
-        </Button>
       </Box>
 
       {/* Credentials Section */}
@@ -300,7 +188,7 @@ const RightSidebar = () => {
             fontSize: '16px',
             fontWeight: 700,
             color: '#47516B',
-            fontFamily: 'nunito sans'
+            fontFamily: 'Poppins'
           }}
         >
           Your Credentials
@@ -379,7 +267,7 @@ const RightSidebar = () => {
               fontSize: 16,
               color: '#47516B',
               fontWeight: 700,
-              fontFamily: 'Nunito Sans'
+              fontFamily: 'Poppins'
             }}
           >
             Your Files

@@ -17,6 +17,8 @@ import LoginWithWallet from './pages/loginSteps'
 import MyResumes from './components/MyResumes.tsx'
 import { fetchUserResumes } from './redux/slices/myresumes'
 import PreviewPage from './pages/PreviewPage'
+import SignUpStep from './pages/SignUpStep'
+import LoginScanStep from './pages/LoginScanStep'
 
 const App = () => {
   const dispatch: AppDispatch = useDispatch()
@@ -42,6 +44,8 @@ const App = () => {
         <Route path='/login' element={<Login />} />
         <Route path='/login/Wallet' element={<LoginWithWallet />} />
         <Route path='/' element={<LandingPage />} />
+        <Route path='/signup' element={<SignUpStep />} />
+        <Route path='/login-scan' element={<LoginScanStep />} />
       </Routes>
     </Router>
   )

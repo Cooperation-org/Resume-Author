@@ -3,7 +3,7 @@ import { Box, Container, Typography, styled } from '@mui/material'
 import image1 from '../../assets/Rectangle 5573-2.png'
 import image2 from '../../assets/Rectangle 5573-3.png'
 import image3 from '../../assets/Rectangle 5573-4.png'
-import { SVGBihVerefied } from '../../assets/svgs'
+import { SVGBihVerefied, SVGVe2 } from '../../assets/svgs'
 
 const BenefitItem = styled(Container)(() => ({
   display: 'flex',
@@ -16,7 +16,32 @@ const BenefitsSection = () => {
   const sectionData = [
     {
       title: 'All Skills Count',
-      text: 'All Skills Count means any skill you have developed can be made into a verifiable credential - whether it was earned on the job or through other life experiences. You can claim any skill using LinkedClaims Author and link to them from within your resume using the Resume Author editor.',
+      text: (
+        <>
+          All Skills Count means any skill you have developed can be made into a
+          verifiable credential - whether it was earned on the job or through other life
+          experiences. You can claim any skill using{' '}
+          <span
+            style={{
+              color: '#2563EB',
+              fontFamily: 'Nunito Sans',
+              fontSize: '26px',
+              fontStyle: 'normal',
+              fontWeight: 700,
+              lineHeight: '40px',
+              letterSpacing: '-0.26px',
+              textDecoration: 'underline',
+              textDecorationStyle: 'solid',
+              textDecorationSkipInk: 'none',
+              textUnderlineOffset: 'auto',
+              textUnderlinePosition: 'from-font'
+            }}
+          >
+            LinkedCreds Author
+          </span>{' '}
+          and link to them from within your resume using the Resume Author editor.
+        </>
+      ),
       color: '#EAB037',
       img: image1
     },
@@ -42,7 +67,8 @@ const BenefitsSection = () => {
         bgcolor: '#F7F9FC',
         alignItems: 'center',
         gap: '30px',
-        p: '130px 0 130px 0'
+        p: '130px 0 130px 0',
+        position: 'relative'
       }}
     >
       <Typography
@@ -55,7 +81,7 @@ const BenefitsSection = () => {
           lineHeight: '62px'
         }}
       >
-        Who can benefit from Resume Author?
+        Why choose Resume Author?
       </Typography>
       <Typography
         sx={{
@@ -97,7 +123,8 @@ const BenefitsSection = () => {
                   color: '#292489',
                   fontFamily: 'Poppins',
                   fontWeight: 700,
-                  letterSpacing: '-0.3px'
+                  letterSpacing: '-0.3px',
+                  mb: '20px'
                 }}
               >
                 {section.title}
@@ -133,7 +160,7 @@ const BenefitsSection = () => {
             color: '#3A35A2',
             textAlign: 'center',
             fontFamily: 'Poppins',
-            fontSize: '50px',
+            fontSize: '40px',
             fontWeight: 600,
             lineHeight: 'normal'
           }}
@@ -142,6 +169,9 @@ const BenefitsSection = () => {
           resume.
         </Typography>
       </Container>
+      <Box sx={{ position: 'absolute', top: '26%', right: '0', zIndex: 111 }}>
+        <SVGVe2 />
+      </Box>
     </Box>
   )
 }

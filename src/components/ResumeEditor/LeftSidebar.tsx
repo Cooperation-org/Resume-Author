@@ -1,4 +1,3 @@
-import React, { useState } from 'react'
 import {
   Box,
   TextField,
@@ -7,7 +6,8 @@ import {
   InputAdornment,
   FormLabel
 } from '@mui/material'
-
+import { useDispatch, useSelector } from 'react-redux'
+import { RootState } from '../../redux/store'
 import {
   SVGSectionIcon,
   SVGMail,
@@ -19,26 +19,86 @@ import {
   SVGAdd,
   SVGInstagram
 } from '../../assets/svgs'
-
-interface LeftSidebarProps {
-  highlightedText: string
-  credentials: string[]
-  tooltipPosition: { top: number; left: number } | null
-}
+import { updateSection } from '../../redux/slices/resume'
 
 export const leftSections: (keyof Resume)[] = ['contact', 'languages']
 
 const LeftSidebar = () => {
-  const [input1, setInput1] = useState('')
-  const [input2, setInput2] = useState('')
-  const [input3, setInput3] = useState('')
-  const [input4, setInput4] = useState('')
-  const [input5, setInput5] = useState('')
-  const [input6, setInput6] = useState('')
-  const [input7, setInput7] = useState('')
-  const [input8, setInput8] = useState('')
-  const [input9, setInput9] = useState('')
-  const [input10, setInput10] = useState('')
+  const dispatch = useDispatch()
+  const resume = useSelector((state: RootState) => state.resume.resume)
+
+  const handleContactChange = (field: string, value: string) => {
+    if (!resume) return
+
+    let updatedContact = { ...resume.contact }
+
+    if (field === 'location') {
+      const locations = value
+        .split(',')
+        .map(loc => loc.trim())
+        .filter(Boolean)
+      updatedContact = {
+        ...updatedContact,
+        location: {
+          ...updatedContact.location,
+          city: locations.join(', ') // Store all locations in city field
+        } as any
+      }
+    } else {
+      updatedContact = {
+        ...updatedContact,
+        [field]: value
+      }
+    }
+
+    dispatch(updateSection({ sectionId: 'contact', content: updatedContact }))
+  }
+
+  const handleLinksChange = (field: string, value: string) => {
+    if (!resume) return
+
+    const updatedLinks = {
+      ...resume.contact.socialLinks,
+      [field]: value
+    }
+
+    const updatedContact = {
+      ...resume.contact,
+      socialLinks: updatedLinks
+    }
+
+    dispatch(updateSection({ sectionId: 'contact', content: updatedContact }))
+  }
+
+  const handleLanguageChange = (value: string) => {
+    if (!resume) return
+
+    const languages = value
+      .split(',')
+      .map(lang => lang.trim())
+      .filter(Boolean)
+      .filter((lang, index, self) => self.indexOf(lang) === index)
+
+    dispatch(
+      updateSection({
+        sectionId: 'languages',
+        content: {
+          items: languages
+        }
+      })
+    )
+  }
+
+  const handleCustomSectionAdd = (sectionName: string) => {
+    if (!resume || !sectionName.trim()) return
+
+    dispatch(
+      updateSection({
+        sectionId: sectionName.toLowerCase().replace(/\s+/g, '_'),
+        content: { items: [] }
+      })
+    )
+  }
 
   const paperStyle = {
     display: 'flex',
@@ -61,6 +121,7 @@ const LeftSidebar = () => {
     lineHeight: 'normal',
     letterSpacing: '0.16px'
   }
+
   const boxStyle = {
     width: '24px',
     height: '24px',
@@ -89,7 +150,7 @@ const LeftSidebar = () => {
       display='flex'
       flexDirection='column'
       bgcolor='#FFFFFF'
-      sx={{ width: 300, gap: '30px' }}
+      sx={{ width: '25%', gap: '30px' }}
     >
       <Paper sx={paperStyle}>
         <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
@@ -103,8 +164,8 @@ const LeftSidebar = () => {
           <TextField
             placeholder='Enter your full name'
             fullWidth
-            value={input1}
-            onChange={e => setInput1(e.target.value)}
+            value={resume?.contact.fullName || ''}
+            onChange={e => handleContactChange('fullName', e.target.value)}
             size='small'
             sx={placeholderStyle}
           />
@@ -118,8 +179,8 @@ const LeftSidebar = () => {
             <TextField
               placeholder='Enter a valid email address'
               fullWidth
-              value={input2}
-              onChange={e => setInput2(e.target.value)}
+              value={resume?.contact.email || ''}
+              onChange={e => handleContactChange('email', e.target.value)}
               size='small'
               sx={placeholderStyle}
             />
@@ -134,8 +195,8 @@ const LeftSidebar = () => {
             <TextField
               placeholder='###-###-####'
               fullWidth
-              value={input3}
-              onChange={e => setInput3(e.target.value)}
+              value={resume?.contact.phone || ''}
+              onChange={e => handleContactChange('phone', e.target.value)}
               size='small'
               sx={placeholderStyle}
             />
@@ -150,8 +211,8 @@ const LeftSidebar = () => {
             <TextField
               placeholder='City, state or province'
               fullWidth
-              value={input4}
-              onChange={e => setInput4(e.target.value)}
+              value={resume?.contact?.location?.city || ''}
+              onChange={e => handleContactChange('location', e.target.value)}
               size='small'
               sx={placeholderStyle}
             />
@@ -175,8 +236,8 @@ const LeftSidebar = () => {
             <TextField
               placeholder='https://'
               fullWidth
-              value={input5}
-              onChange={e => setInput5(e.target.value)}
+              value={resume?.contact?.socialLinks?.portfolio || ''}
+              onChange={e => handleLinksChange('portfolio', e.target.value)}
               size='small'
               sx={placeholderStyle}
             />
@@ -202,8 +263,8 @@ const LeftSidebar = () => {
             <TextField
               placeholder='Enter your LinkedIn URL'
               fullWidth
-              value={input6}
-              onChange={e => setInput6(e.target.value)}
+              value={resume?.contact?.socialLinks?.linkedin || ''}
+              onChange={e => handleLinksChange('linkedin', e.target.value)}
               size='small'
               sx={placeholderStyle}
             />
@@ -218,8 +279,8 @@ const LeftSidebar = () => {
             <TextField
               placeholder='Enter your Instagram URL'
               fullWidth
-              value={input7}
-              onChange={e => setInput7(e.target.value)}
+              value={resume?.contact?.socialLinks?.twitter || ''} // Using twitter field for Instagram
+              onChange={e => handleLinksChange('twitter', e.target.value)}
               size='small'
               sx={placeholderStyle}
             />
@@ -234,8 +295,8 @@ const LeftSidebar = () => {
             <TextField
               placeholder='Enter a URL'
               fullWidth
-              value={input8}
-              onChange={e => setInput8(e.target.value)}
+              value={resume?.contact?.socialLinks?.github || ''} // Using github field for custom URL
+              onChange={e => handleLinksChange('github', e.target.value)}
               size='small'
               sx={placeholderStyle}
             />
@@ -254,8 +315,8 @@ const LeftSidebar = () => {
           <TextField
             placeholder='Which languages do you speak?'
             fullWidth
-            value={input9}
-            onChange={e => setInput9(e.target.value)}
+            value={resume?.languages.items.join(', ') || ''}
+            onChange={e => handleLanguageChange(e.target.value)}
             size='small'
             InputProps={{
               endAdornment: (
@@ -289,8 +350,6 @@ const LeftSidebar = () => {
           <TextField
             placeholder='Name this section'
             fullWidth
-            value={input10}
-            onChange={e => setInput10(e.target.value)}
             size='small'
             InputProps={{
               endAdornment: (
@@ -298,6 +357,12 @@ const LeftSidebar = () => {
                   <SVGAdd />
                 </InputAdornment>
               )
+            }}
+            onKeyPress={e => {
+              if (e.key === 'Enter') {
+                handleCustomSectionAdd((e.target as HTMLInputElement).value)
+                ;(e.target as HTMLInputElement).value = ''
+              }
             }}
             sx={{
               bgcolor: '#F3F5F8',
