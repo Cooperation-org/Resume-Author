@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit'
 import { GoogleDriveStorage, Resume as ResumeManager } from '@cooperation/vc-storage'
-import { getCookie } from '../../tools/cookie'
+import { getCookie, getLocalStorage } from '../../tools/cookie'
 
 // Define Resume Types
 interface IssuerInfo {
@@ -73,7 +73,7 @@ const initialState: ResumeState = {
 
 // ✅ Fetch Resumes (Signed & Unsigned)
 export const fetchUserResumes = createAsyncThunk('resume/fetchUserResumes', async () => {
-  const accessToken = getCookie('auth_token')
+  const accessToken = getLocalStorage('auth')
   if (!accessToken) {
     throw new Error('Access token not found')
   }
@@ -82,6 +82,8 @@ export const fetchUserResumes = createAsyncThunk('resume/fetchUserResumes', asyn
   const resumeManager = new ResumeManager(storage)
 
   const resumeVCs = await resumeManager.getSignedResumes()
+  console.log(resumeVCs)
+
   const resumeSessions = await resumeManager.getNonSignedResumes()
 
   return {

@@ -1,5 +1,10 @@
 import { Box, Typography, Button, Divider, Stack } from '@mui/material'
-import { getCookie, removeCookie, removeLocalStorage } from '../../tools/cookie'
+import {
+  getCookie,
+  getLocalStorage,
+  removeCookie,
+  removeLocalStorage
+} from '../../tools/cookie'
 import { login } from '../../tools/auth'
 import { useSelector } from 'react-redux'
 import { useState, useEffect } from 'react'
@@ -21,6 +26,7 @@ const RightSidebar = () => {
   const [selectedClaims, setSelectedClaims] = useState<string[]>([])
   const [uploadedFiles, setUploadedFiles] = useState<string[]>([])
   const { vcs: claims, status } = useSelector((state: any) => state.vcReducer)
+  const accessToken = getLocalStorage('auth')
 
   console.log('🚀 ~ RightSidebar ~ claims:', claims)
 
@@ -141,6 +147,7 @@ const RightSidebar = () => {
             button.
           </Typography>
           <Button
+            disabled={!!accessToken}
             fullWidth
             variant='outlined'
             sx={{

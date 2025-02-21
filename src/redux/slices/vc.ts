@@ -1,6 +1,6 @@
 import { GoogleDriveStorage, Resume } from '@cooperation/vc-storage'
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
-import { getCookie } from '../../tools/cookie'
+import { getCookie, getLocalStorage } from '../../tools/cookie'
 
 interface ResumeData {
   id: string
@@ -40,7 +40,7 @@ const initialState: VCState = {
 
 // Async thunk to fetch VCs
 export const fetchVCs = createAsyncThunk('vc/fetchVCs', async () => {
-  const accessToken = getCookie('auth_token')
+  const accessToken = getLocalStorage('auth')
   if (!accessToken) {
     console.error('Access token not found')
     throw new Error('Access token not found')
