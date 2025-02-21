@@ -9,6 +9,7 @@ import {
   SVGLogOut
 } from '../../assets/svgs'
 import logo from '../../assets/logo.png'
+import { removeCookie, removeLocalStorage } from '../../tools/cookie'
 
 interface SidebarProps {
   onToggle: () => void
@@ -80,6 +81,16 @@ const Sidebar = ({ onToggle, isExpanded }: SidebarProps) => {
     setSelectedItem('add')
     navigate('/resume/new')
   }
+  const handleLogOutClick = () => {
+    setSelectedItem('logOut')
+    handleLogout()
+  }
+
+  const handleLogout = () => {
+    removeCookie('auth_token')
+    removeLocalStorage('user_info')
+    removeLocalStorage('auth')
+  }
 
   const Icons = [
     <Box sx={boxStyles} key='rightLine'>
@@ -109,14 +120,10 @@ const Sidebar = ({ onToggle, isExpanded }: SidebarProps) => {
         {isExpanded && <Typography sx={getTextStyles('add')}>New Resume</Typography>}
       </Box>
     </IconButton>,
-    <IconButton
-      key='settings'
-      onClick={() => setSelectedItem('settings')}
-      sx={getButtonStyles('settings')}
-    >
+    <IconButton key='logOut' onClick={handleLogOutClick} sx={getButtonStyles('logOut')}>
       <Box sx={boxStyles}>
         <SVGLogOut />
-        {isExpanded && <Typography sx={getTextStyles('settings')}>Logout</Typography>}
+        {isExpanded && <Typography sx={getTextStyles('logOut')}>Logout</Typography>}
       </Box>
     </IconButton>,
     <IconButton
