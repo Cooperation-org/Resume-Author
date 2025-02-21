@@ -27,7 +27,7 @@ export default function LoginWithWallet() {
         sx={{
           color: 'var(--Primary-Link, #2563EB)',
           fontFamily: '"Nunito Sans"',
-          fontSize: '18px',
+          fontSize: '14px',
           fontStyle: 'normal',
           fontWeight: 700,
           lineHeight: 'normal',
@@ -81,13 +81,14 @@ export default function LoginWithWallet() {
           <Typography
             sx={{
               fontSize: { xs: 24, sm: 32, md: 40, lg: 48 },
-              fontWeight: 'bold',
+              fontWeight: 700,
               color: '#44464D',
               textAlign: 'center',
-              lineHeight: 1.2
+              lineHeight: 1.2,
+              fontFamily: 'Poppins'
             }}
           >
-            Login with Learner Credential Wallet
+            {step === 0 ? 'Sign Up' : 'Login'} with Learner Credential Wallet
           </Typography>
         </Box>
       </Box>
@@ -122,10 +123,12 @@ export default function LoginWithWallet() {
                 '& .MuiOutlinedInput-input': { fontSize: 14 },
                 mt: 2,
                 p: '15px',
-                width: '250px'
+                width: '221px'
               }}
             >
-              <Typography>Need Learner Credential Wallet? </Typography>
+              <Typography sx={{ fontSize: '14px', fontWeight: 400 }}>
+                Need Learner Credential Wallet?{' '}
+              </Typography>
               <TypographyLink href='#'>Go here to download and install</TypographyLink>
             </Box>
           )}
@@ -141,12 +144,13 @@ export default function LoginWithWallet() {
         >
           <Typography
             sx={{
-              fontSize: { xs: 20, sm: 24, md: 28 },
-              fontWeight: 'bold',
+              fontSize: { xs: 20, sm: 24, md: 30 },
+              fontWeight: 700,
               color: '#44464D',
               mb: 2,
               textAlign: { xs: 'center', md: 'left' },
-              width: '100%'
+              width: '100%',
+              fontFamily: 'Poppins'
             }}
           >
             {stepText[step]}
@@ -155,10 +159,11 @@ export default function LoginWithWallet() {
           <Typography
             sx={{
               color: '#2D2D47',
-              fontSize: { xs: 14, sm: 16 },
+              fontSize: { xs: 14, sm: 18 },
               mb: 3,
               textAlign: { xs: 'center', md: 'left' },
-              maxWidth: { xs: '100%', sm: '90%', md: '100%' }
+              maxWidth: { xs: '100%', sm: '90%', md: '100%' },
+              fontFamily: 'Nunito sans'
             }}
           >
             {DescriptionText[step]}
@@ -167,10 +172,11 @@ export default function LoginWithWallet() {
             <Typography
               sx={{
                 color: '#2D2D47',
-                fontSize: { xs: 14, sm: 16 },
+                fontSize: { xs: 14, sm: 18 },
                 mb: 3,
                 textAlign: { xs: 'center', md: 'left' },
-                maxWidth: { xs: '100%', sm: '90%', md: '100%' }
+                maxWidth: { xs: '100%', sm: '90%', md: '100%' },
+                fontFamily: 'Nunito sans'
               }}
             >
               To get started, scan this QR code with your phone’s camera to download and
@@ -195,10 +201,11 @@ export default function LoginWithWallet() {
             <Typography
               sx={{
                 color: '#2D2D47',
-                fontSize: { xs: 14, sm: 16 },
+                fontSize: { xs: 14, sm: 18 },
                 mb: 4,
                 textAlign: { xs: 'center', md: 'left' },
-                maxWidth: { xs: '100%', sm: '90%', md: '100%' }
+                maxWidth: { xs: '100%', sm: '90%', md: '100%' },
+                fontFamily: 'Nunito sans'
               }}
             >
               If your screen doesn’t automatically refresh 30 seconds after you consent,
@@ -261,7 +268,7 @@ export default function LoginWithWallet() {
                   color: '#3A35A2',
                   borderRadius: '50px',
                   textTransform: 'none',
-                  fontWeight: 'bold',
+                  fontWeight: 700,
                   minWidth: { xs: '80%', sm: 200 },
                   p: '21px 31px'
                 }}

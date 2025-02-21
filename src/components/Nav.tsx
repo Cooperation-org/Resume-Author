@@ -5,6 +5,14 @@ import { useNavigate } from 'react-router-dom'
 import LoadingOverlay from './Loading'
 import { getCookie } from '../tools/cookie'
 
+const navStyles = {
+  color: 'white',
+  textTransform: 'capitalize',
+  fontWeight: 600,
+  fontSize: '16px',
+  fonstFamily: 'Nunito sans'
+}
+
 const Nav = () => {
   const [loading, setLoading] = useState(false)
   const [isLogged, setIsLogged] = useState(false)
@@ -29,55 +37,23 @@ const Nav = () => {
       sx={{ bgcolor: '#4527A0', pt: 1, pr: 5, pl: 4 }}
     >
       <Toolbar>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexGrow: 1 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: '7px', flexGrow: 1 }}>
           <img src={Logo} alt='Résumé Author' style={{ height: '50px' }} />
           <Typography sx={{ fontFamily: 'Poppins', fontSize: '32px', fontWeight: 700 }}>
             Resume Author
           </Typography>
         </Box>
         <Stack direction='row' spacing={5}>
-          <Button
-            color='inherit'
-            sx={{
-              color: 'white',
-              textTransform: 'capitalize',
-              fontWeight: 500,
-              fontSize: '16px'
-            }}
-          >
-            How it works
-          </Button>
-          <Button
-            color='inherit'
-            sx={{
-              color: 'white',
-              textTransform: 'capitalize',
-              fontWeight: 500,
-              fontSize: '16px'
-            }}
-          >
+          <Button color='inherit' sx={navStyles}>
             Why Resume Author?
           </Button>
-          <Button
-            color='inherit'
-            sx={{
-              color: 'white',
-              textTransform: 'capitalize',
-              fontWeight: 500,
-              fontSize: '16px'
-            }}
-          >
+          <Button color='inherit' sx={navStyles}>
+            How it works
+          </Button>
+          <Button color='inherit' sx={navStyles}>
             Benefits
           </Button>
-          <Button
-            color='inherit'
-            sx={{
-              color: 'white',
-              textTransform: 'capitalize',
-              fontWeight: 500,
-              fontSize: '16px'
-            }}
-          >
+          <Button color='inherit' sx={navStyles}>
             Learn More
           </Button>
         </Stack>

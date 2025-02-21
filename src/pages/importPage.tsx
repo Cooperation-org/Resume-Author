@@ -1,7 +1,7 @@
 import { Box, Button, Typography } from '@mui/material'
 import { styled } from '@mui/system'
 import { useAuth0 } from '@auth0/auth0-react'
-import { SVGStartFromScratchicon } from '../assets/svgs'
+import { SVGStartFromScratchicon, SVGUpload } from '../assets/svgs'
 
 const InnerContainer = styled(Box)(() => ({
   backgroundColor: '#FFFFFF',
@@ -67,10 +67,13 @@ export default function ImportPage(props: any) {
           sx={{
             color: '#07142B',
             textAlign: 'center',
-            mb: 8
+            mb: 8,
+            fontFamily: 'Poppins',
+            fontSize: '38px',
+            fontWeight: 600
           }}
         >
-          Where do you want to import from?
+          How do you want to create your resume?
         </Typography>
 
         <Box
@@ -96,15 +99,7 @@ export default function ImportPage(props: any) {
             <Typography variant='h6' sx={{ color: '#07142B', fontWeight: 'bold' }}>
               Upload Resume
             </Typography>
-            <Box
-              component='img'
-              src='https://figma-alpha-api.s3.us-west-2.amazonaws.com/images/3931be67-58fb-4780-bc18-f60c628f1a4a'
-              sx={{
-                height: 44,
-                marginX: 'auto',
-                objectFit: 'fill'
-              }}
-            />
+            <SVGUpload />
             <Box
               sx={{
                 display: 'flex',
@@ -145,7 +140,7 @@ export default function ImportPage(props: any) {
           variant='contained'
           sx={{
             backgroundColor: '#B5B5B5',
-            color: '#FFFFFF',
+            color: '#2E2E48',
             textTransform: 'none',
             px: 4,
             py: 1.5,

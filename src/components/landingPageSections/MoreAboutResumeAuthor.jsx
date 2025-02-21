@@ -49,12 +49,21 @@ const MoreAbout = () => {
                 justifyContent: 'flex-start'
               }}
             >
-              <Typography gutterBottom variant='h5' component='div'>
+              <Typography
+                sx={{ fontFamily: 'Nunito Sans', fontWeight: 700, fontSize: '20px' }}
+                gutterBottom
+              >
                 Headline
               </Typography>
               <Typography
                 variant='body2'
-                sx={{ color: 'text.secondary', textAlign: 'left' }}
+                sx={{
+                  fontFamily: 'Nunito Sans',
+                  fontWeight: 500,
+                  fontSize: '18px',
+                  color: 'text.secondary',
+                  textAlign: 'left'
+                }}
               >
                 All Skills Count means any skill you have developed can be made into
                 verifiable credential and embedded into your resume.
