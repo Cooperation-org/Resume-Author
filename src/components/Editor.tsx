@@ -67,8 +67,6 @@ const ResumeEditor = () => {
   ])
 
   const resume = useSelector((state: RootState) => state?.resume.resume)
-  const { vcs } = useSelector((state: RootState) => state.vcReducer)
-  console.log('🚀 ~ ResumeEditor ~ vcs:', vcs)
   const { instances } = useGoogleDrive()
 
   const AllSections = Object.keys(resume as Resume).filter(
@@ -134,15 +132,17 @@ const ResumeEditor = () => {
     console.log('Saved Resume:', savedResume)
   }
 
-  const handlkeSignAndSave = async () => {
+  const handleSignAndSave = async () => {
     const keyPair = await instances?.resumeVC?.generateKeyPair()
-    const issuerDid = 'did:example:123456789abcdefghi'
+    const didDoc = await instances?.resumeVC?.createDID({
+      keyPair
+    })
 
     console.log('resume', resume)
 
     const signedResume = await instances?.resumeVC?.sign({
       formData: resume,
-      issuerDid,
+      issuerDid: didDoc.id,
       keyPair
     })
     await instances?.resumeManager?.saveResume({
@@ -204,7 +204,7 @@ const ResumeEditor = () => {
           <Button
             variant='outlined'
             sx={{ ...ButtonStyles, color: 'white', bgcolor: '#614BC4' }}
-            onClick={handlkeSignAndSave}
+            onClick={handleSignAndSave}
           >
             Save and Sign
           </Button>
