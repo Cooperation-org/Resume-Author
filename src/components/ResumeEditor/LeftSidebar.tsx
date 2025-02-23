@@ -315,7 +315,7 @@ const LeftSidebar = () => {
           <TextField
             placeholder='Which languages do you speak?'
             fullWidth
-            value={resume?.languages.items.join(', ') || ''}
+            value={resume?.languages?.items.join(', ') || ''}
             onChange={e => handleLanguageChange(e.target.value)}
             size='small'
             InputProps={{

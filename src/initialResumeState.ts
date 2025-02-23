@@ -57,6 +57,9 @@ export const initialState: ResumeState = {
     },
     testimonials: {
       items: []
+    },
+    projects: {
+      items: []
     }
   },
   status: 'idle',

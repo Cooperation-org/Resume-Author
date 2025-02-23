@@ -20,7 +20,6 @@ interface VerifiableItem {
   id: string
   verificationStatus: 'unverified' | 'pending' | 'verified'
   verifiedCredentials?: VerificationCredential[]
-
   isVisible?: boolean
 }
 
@@ -83,6 +82,12 @@ interface Conference extends VerifiableItem {
   description?: string
   presentationTitle?: string
   url?: string
+}
+interface Project extends VerifiableItem {
+  name: string
+  description: string
+  url?: string
+  technologies: string[]
 }
 
 interface Award extends VerifiableItem {
@@ -154,7 +159,6 @@ interface Resume {
   version?: number
   contact: Contact
   summary: string
-
   experience: {
     items: WorkExperience[]
   }
@@ -164,23 +168,26 @@ interface Resume {
   skills: {
     items: Skill[]
   }
-  awards: {
+  projects: {
+    items: Project[]
+  }
+  awards?: {
     items: Award[]
   }
-  publications: {
+  publications?: {
     items: Publication[]
   }
-  certifications: {
+  certifications?: {
     items: Certification[]
   }
-  professionalAffiliations: {
+  professionalAffiliations?: {
     items: ProfessionalAffiliation[]
   }
-  volunteerWork: {
+  volunteerWork?: {
     items: VolunteerWork[]
   }
-  hobbiesAndInterests: string[]
-  languages: {
+  hobbiesAndInterests?: string[]
+  languages?: {
     items: Language[]
   }
   testimonials: {
@@ -201,4 +208,8 @@ interface ResumeData {
     }
   }
   type: 'signed' | 'unsigned'
+}
+
+interface ResumePreviewProps {
+  data: Resume
 }
