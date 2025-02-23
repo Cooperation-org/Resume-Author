@@ -2,84 +2,6 @@ import React, { useEffect, useRef, useState, ReactNode } from 'react'
 import { Box, Typography, Link } from '@mui/material'
 import { QRCodeSVG } from 'qrcode.react'
 import { BlueVerifiedBadge } from '../assets/svgs'
-interface VerifiableItem {
-  id: string
-  verificationStatus?: 'verified' | 'pending' | 'unverified'
-}
-
-interface Project extends VerifiableItem {
-  name: string
-  description: string
-  url?: string
-  technologies: string[]
-}
-
-interface Education extends VerifiableItem {
-  degree: string
-  field: string
-  institution: string
-  startDate: string
-  endDate: string
-  gpa?: number
-}
-
-interface Skill extends VerifiableItem {
-  name: string
-  level?: string
-}
-
-interface Certification extends VerifiableItem {
-  name: string
-  issuer: string
-  issueDate: string
-  expiryDate: string
-  credentialId?: string
-}
-
-interface WorkExperience extends VerifiableItem {
-  position: string
-  company: string
-  startDate: string
-  endDate?: string
-  description: string
-  achievements: string[]
-}
-
-interface Resume {
-  id: string
-  contact: {
-    fullName: string
-    email: string
-    phone?: string
-    socialLinks?: {
-      linkedin?: string
-      github?: string
-      portfolio?: string
-      [key: string]: string | undefined
-    }
-  }
-  summary: string
-  experience: {
-    items: WorkExperience[]
-  }
-  education: {
-    items: Education[]
-  }
-  skills: {
-    items: Skill[]
-  }
-  certifications: {
-    items: Certification[]
-  }
-}
-
-interface ResumePreviewProps {
-  data: Resume & {
-    projects: {
-      items: Project[]
-    }
-  }
-}
 
 const PAGE_SIZE = {
   width: '251mm',
@@ -532,7 +454,9 @@ const ResumePreview: React.FC<ResumePreviewProps> = ({ data }) => {
     <ExperienceSection key='experience' items={data.experience.items} />,
     <EducationSection key='education' items={data.education.items} />,
     <SkillsSection key='skills' items={data.skills.items} />,
-    <CertificationsSection key='certifications' items={data.certifications.items} />,
+    data.certifications?.items && (
+      <CertificationsSection key='certifications' items={data.certifications.items} />
+    ),
     <ProjectsSection key='projects' items={data.projects.items} />
   ]
 
