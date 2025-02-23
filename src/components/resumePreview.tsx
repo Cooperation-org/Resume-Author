@@ -170,7 +170,7 @@ const PageFooter: React.FC<{
         mr: '10px'
       }}
     >
-      {fullName} | Page {pageNumber} of {totalPages} | {phone && `${phone} |`}{' '}
+      {fullName} | Page {pageNumber} of {totalPages} | {phone && `${phone} |`}
       <span style={{ textDecoration: 'underline', color: '#2563EB' }}>{email}</span>
     </Typography>
     <QRCodeSVG

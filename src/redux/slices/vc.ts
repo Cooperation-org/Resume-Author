@@ -48,6 +48,7 @@ export const fetchVCs = createAsyncThunk('vc/fetchVCs', async () => {
 
   const storage = new GoogleDriveStorage(accessToken as string)
   const claimsData: any[] = await storage.getAllFilesByType('VCs')
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const vcs = claimsData.map((file: any[]) =>
     file.filter((f: { name: string }) => f.name !== 'RELATIONS')
   )

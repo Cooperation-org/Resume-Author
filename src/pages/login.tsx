@@ -145,11 +145,11 @@ const DigitalWalletLogin: React.FC = () => {
                   fontSize: '13px'
                 }}
               >
-                We currently support{' '}
+                We currently support
                 <Box component='span' sx={{ fontWeight: 700 }}>
                   Learner Credential Wallet
                 </Box>
-                , an open source mobile wallet app developed by the{' '}
+                , an open source mobile wallet app developed by the
                 <Box component='span' sx={{ textDecoration: 'underline' }}>
                   Digital Credentials Consortium
                 </Box>
@@ -168,7 +168,7 @@ const DigitalWalletLogin: React.FC = () => {
                     letterSpacing: '-0.24px'
                   }}
                 >
-                  Don't see the wallet you want?{' '}
+                  Don't see the wallet you want?
                 </Typography>
                 <Link
                   href='#'
