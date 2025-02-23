@@ -27,7 +27,7 @@ const MoreAbout = () => {
           marginBottom: '70px'
         }}
       >
-        Learn More About Resume Author{' '}
+        Learn More About Resume Author
       </Typography>
 
       <Box
@@ -82,7 +82,7 @@ const MoreAbout = () => {
                   mt: '10px'
                 }}
               >
-                Read more{' '}
+                Read more
               </Typography>
             </CardContent>
           </Card>

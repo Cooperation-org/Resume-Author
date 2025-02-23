@@ -20,7 +20,7 @@ const BenefitsSection = () => {
         <>
           All Skills Count means any skill you have developed can be made into a
           verifiable credential - whether it was earned on the job or through other life
-          experiences. You can claim any skill using{' '}
+          experiences. You can claim any skill using
           <span
             style={{
               color: '#2563EB',
@@ -38,7 +38,7 @@ const BenefitsSection = () => {
             }}
           >
             LinkedCreds Author
-          </span>{' '}
+          </span>
           and link to them from within your resume using the Resume Author editor.
         </>
       ),
@@ -95,7 +95,7 @@ const BenefitsSection = () => {
           mb: '70px'
         }}
       >
-        Empowering you to showcase your skills through a tamper-proof verifable resume.{' '}
+        Empowering you to showcase your skills through a tamper-proof verifable resume.
       </Typography>
 
       <Box
@@ -153,7 +153,6 @@ const BenefitsSection = () => {
           justifyContent: 'center'
         }}
       >
-        {' '}
         <SVGBihVerefied />
         <Typography
           sx={{

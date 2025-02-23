@@ -53,7 +53,7 @@ const LandingPage = () => {
           marginBottom: '16px'
         }}
       >
-        How Resume Author Works{' '}
+        How Resume Author Works
       </Typography>
 
       <Typography
@@ -63,7 +63,7 @@ const LandingPage = () => {
           marginBottom: '70px'
         }}
       >
-        Just 3 easy steps to get started.{' '}
+        Just 3 easy steps to get started.
       </Typography>
 
       <Box

@@ -15,6 +15,7 @@ const navStyles = {
 
 const Nav = () => {
   const [loading, setLoading] = useState(false)
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [isLogged, setIsLogged] = useState(false)
   const navigate = useNavigate()
 

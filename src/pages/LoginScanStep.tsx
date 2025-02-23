@@ -85,7 +85,7 @@ export default function LoginScanStep() {
             }}
           >
             <Typography sx={{ fontSize: '14px', fontWeight: 400 }}>
-              Need Learner Credential Wallet?{' '}
+              Need Learner Credential Wallet?
             </Typography>
             <Link
               href='#'
