@@ -1,12 +1,12 @@
-import React, { useEffect, useRef, useState, ReactNode } from 'react'
+import React, { useRef, useState, ReactNode, useLayoutEffect } from 'react'
 import { Box, Typography, Link } from '@mui/material'
 import { QRCodeSVG } from 'qrcode.react'
 import { BlueVerifiedBadge } from '../assets/svgs'
 
 const PAGE_SIZE = {
-  width: '251mm',
-  height: '300mm',
-  maxContentHeight: '265mm'
+  width: '210mm',
+  height: '297mm',
+  maxContentHeight: '267mm'
 }
 
 const SectionTitle: React.FC<{ children: ReactNode }> = ({ children }) => (
@@ -170,8 +170,19 @@ const PageFooter: React.FC<{
         mr: '10px'
       }}
     >
-      {fullName} | Page {pageNumber} of {totalPages} | {phone && `${phone} |`}
-      <span style={{ textDecoration: 'underline', color: '#2563EB' }}>{email}</span>
+      {fullName} | Page {pageNumber} of {totalPages} |{' '}
+      {phone && (
+        <a href={`tel:${phone}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+          {phone}
+        </a>
+      )}{' '}
+      |{' '}
+      <a
+        href={`mailto:${email}`}
+        style={{ textDecoration: 'underline', color: '#2563EB' }}
+      >
+        {email}
+      </a>
     </Typography>
     <QRCodeSVG
       value='https://resume.example.com'
@@ -272,13 +283,13 @@ const EducationSection: React.FC<{ items: Education[] }> = ({ items }) => (
         {item.verificationStatus === 'verified' && <BlueVerifiedBadge />} &nbsp;
         <Typography
           variant='subtitle1'
-          sx={{ fontWeight: 700, fontSize: '16px', fontFamily: 'Arial' }}
+          sx={{ fontWeight: 700, fontSize: '15px', fontFamily: 'Arial' }}
         >
           {item.degree} in {item.field},&nbsp;
         </Typography>
         <Typography
           variant='body2'
-          sx={{ color: '#000', fontWeight: 400, fontSize: '16px', fontFamily: 'Arial' }}
+          sx={{ color: '#000', fontWeight: 400, fontSize: '15px', fontFamily: 'Arial' }}
         >
           {item.institution},{item.startDate} – {item.endDate}
           {item.gpa && ` | GPA: ${item.gpa}`}
@@ -383,8 +394,9 @@ const ProjectsSection: React.FC<{ items: Project[] }> = ({ items }) => (
 const usePagination = (content: ReactNode[], maxHeight: number) => {
   const [pages, setPages] = useState<ReactNode[][]>([])
   const measureRef = useRef<HTMLDivElement>(null)
+  const measuredRef = useRef<boolean>(false)
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const measureAndPaginate = () => {
       if (!measureRef.current) return
 
@@ -437,11 +449,21 @@ const usePagination = (content: ReactNode[], maxHeight: number) => {
       }
 
       setPages(paginatedContent)
+      measuredRef.current = true
     }
 
-    measureAndPaginate()
-    window.addEventListener('resize', measureAndPaginate)
-    return () => window.removeEventListener('resize', measureAndPaginate)
+    // Only run once after initial render
+    if (!measuredRef.current) {
+      measureAndPaginate()
+    }
+
+    const handleResize = () => {
+      measuredRef.current = false
+      measureAndPaginate()
+    }
+
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
   }, [content, maxHeight])
 
   return { pages, measureRef }
@@ -466,7 +488,15 @@ const ResumePreview: React.FC<ResumePreviewProps> = ({ data }) => {
   )
 
   return (
-    <Box sx={{ width: '100%', display: 'flex', flexDirection: 'column' }}>
+    <Box
+      id='resume-preview'
+      sx={{
+        width: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden'
+      }}
+    >
       <Box
         sx={{ position: 'absolute', visibility: 'hidden', width: PAGE_SIZE.width }}
         ref={measureRef}
@@ -485,11 +515,15 @@ const ResumePreview: React.FC<ResumePreviewProps> = ({ data }) => {
             border: '1px solid #78809A',
             boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
             mx: 'auto',
-            mb: '30px',
+            // mb: '30px',
             '@media print': {
+              width: '100%',
+              height: '100%',
+              margin: 0,
+              padding: 0,
               boxShadow: 'none',
               m: 0,
-              pageBreakAfter: 'always'
+              pageBreakAfter: 'avoid'
             }
           }}
         >
