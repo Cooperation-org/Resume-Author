@@ -40,16 +40,11 @@ const StyledButton = styled(Button)({
 })
 
 export default function ImportPage(props: any) {
-  const { user, isAuthenticated } = useAuth0()
+  const { user } = useAuth0()
   console.log(':  LoginButton  user', user)
 
-  const { loginWithRedirect, logout } = useAuth0()
-  const handlesign = () => {
-    if (!isAuthenticated) {
-      loginWithRedirect({})
-    } else {
-      logout()
-    }
+  const handleFromScratch = () => {
+    window.location.href = '/resume/new'
   }
   return (
     <Box
@@ -86,7 +81,10 @@ export default function ImportPage(props: any) {
             mb: { xs: '30px', md: 0 }
           }}
         >
-          <Section onClick={handlesign} sx={{ width: { xs: '250px', md: '400px' } }}>
+          <Section
+            onClick={handleFromScratch}
+            sx={{ width: { xs: '250px', md: '400px' } }}
+          >
             <Typography variant='h6' sx={{ color: '#07142B', fontWeight: 'bold' }}>
               Start from scratch
             </Typography>
@@ -95,7 +93,7 @@ export default function ImportPage(props: any) {
               Build a resume from a blank template
             </Typography>
           </Section>
-          <Section sx={{ width: { xs: '250px', md: '400px' } }}>
+          <Section aria-disabled={true} sx={{ width: { xs: '250px', md: '400px' } }}>
             <Typography variant='h6' sx={{ color: '#07142B', fontWeight: 'bold' }}>
               Upload Resume
             </Typography>
