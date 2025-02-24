@@ -50,7 +50,7 @@ const Footer = () => {
           <SVGCopyWriter />
           <Typography
             sx={{
-              color: '#292489',
+              color: '#47516B',
               fontFamily: 'Nunito Sans',
               fontSize: '14px',
               fontWeight: 500,
@@ -58,7 +58,7 @@ const Footer = () => {
               letterSpacing: '-0.26px'
             }}
           >
-            Copyright, Creative Commons License
+            Copyright, Creative Commons License BY 4.0
           </Typography>
         </Box>
         <Divider orientation='vertical' flexItem />
@@ -73,7 +73,7 @@ const Footer = () => {
           <SVGGitHub />
           <Typography
             sx={{
-              color: '#292489',
+              color: '#47516B',
               fontFamily: 'Nunito Sans',
               fontSize: '14px',
               fontWeight: 500,
@@ -92,10 +92,10 @@ const Footer = () => {
         <StyledButton href='/privacy-policy'>Privacy Policy</StyledButton>
         <Divider orientation='vertical' flexItem />
 
-        <Box>
+        <Box display='flex' alignItems='center'>
           <Typography
             sx={{
-              color: '#292489',
+              color: '#47516B',
               fontFamily: 'Nunito Sans',
               fontSize: '14px',
               fontWeight: 500,
@@ -103,7 +103,26 @@ const Footer = () => {
               letterSpacing: '-0.26px'
             }}
           >
-            Contact Us: contact@email.com
+            Contact Us:{' '}
+            <span
+              style={{
+                color: 'var(--Primary-Link, #2563EB)',
+                fontFamily: 'Nunito Sans',
+                fontSize: '16px',
+                fontStyle: 'normal',
+                fontWeight: 500,
+                lineHeight: '40px',
+                letterSpacing: '-0.16px',
+                textDecorationLine: 'underline',
+                textDecorationStyle: 'solid',
+                textDecorationSkipInk: 'auto',
+                textDecorationThickness: 'auto',
+                textUnderlineOffset: 'auto',
+                textUnderlinePosition: 'from-font'
+              }}
+            >
+              contact@email.com
+            </span>
           </Typography>
         </Box>
       </Box>

@@ -1,9 +1,14 @@
 import { Box, Typography, Button } from '@mui/material'
 import { SVGLogoDescreption, SVGALoginLogo, SVGQRCode } from '../assets/svgs'
 import { useNavigate } from 'react-router-dom'
+import { login } from '../tools/auth'
 
-export default function SignUpStep() {
+export default function SignUpStep2() {
   const navigate = useNavigate()
+
+  const handleGoogleSignIn = () => {
+    login()
+  }
 
   return (
     <Box sx={{ width: '100%', bgcolor: '#FFFFFF', minHeight: '100vh' }}>
@@ -90,7 +95,7 @@ export default function SignUpStep() {
               fontFamily: 'Poppins'
             }}
           >
-            Step 1
+            Step 2
           </Typography>
 
           <Typography
@@ -103,53 +108,9 @@ export default function SignUpStep() {
               fontFamily: 'Nunito sans'
             }}
           >
-            To Sign Up with Learner Credential Wallet, you will need the app on your
-            mobile device.
-          </Typography>
-
-          <Typography
-            sx={{
-              color: '#2D2D47',
-              fontSize: { xs: 14, sm: 18 },
-              mb: 3,
-              textAlign: { xs: 'center', md: 'left' },
-              maxWidth: { xs: '100%', sm: '90%', md: '100%' },
-              fontFamily: 'Nunito sans'
-            }}
-          >
-            To get started, scan this QR code with your phone's camera to{' '}
-            <Box
-              component='span'
-              sx={{
-                color: 'var(--Text-Primary-Text, #2E2E48)',
-                fontFamily: '"Nunito Sans"',
-                fontSize: 18,
-                fontStyle: 'normal',
-                fontWeight: 700,
-                lineHeight: 'normal',
-                letterSpacing: '-0.18px',
-                display: 'inline'
-              }}
-            >
-              download and install the app
-            </Box>{' '}
-            from the app store. Once the app is installed, return here and select{' '}
-            <Box
-              component='span'
-              sx={{
-                color: 'var(--Text-Primary-Text, #2E2E48)',
-                fontFamily: '"Nunito Sans"',
-                fontSize: 18,
-                fontStyle: 'normal',
-                fontWeight: 700,
-                lineHeight: 'normal',
-                letterSpacing: '-0.18px',
-                display: 'inline'
-              }}
-            >
-              Continue
-            </Box>
-            :
+            Now that the Learner Credential Wallet is installed, use your phone’s camera
+            to scan this QR code to authorize Resume Author to connect to Learner
+            Credential Wallet to store your credentials and resumes:
           </Typography>
 
           <Box
@@ -163,6 +124,34 @@ export default function SignUpStep() {
           >
             <SVGQRCode />
           </Box>
+
+          <Typography
+            sx={{
+              color: '#2D2D47',
+              fontSize: { xs: 14, sm: 18 },
+              mb: 3,
+              textAlign: { xs: 'center', md: 'left' },
+              maxWidth: { xs: '100%', sm: '90%', md: '100%' },
+              fontFamily: 'Nunito sans'
+            }}
+          >
+            If your screen doesn't automatically refresh 30 seconds after you consent,
+            select the{' '}
+            <span
+              style={{
+                color: '#2E2E48',
+                fontFamily: 'Nunito Sans',
+                fontSize: '18px',
+                fontStyle: 'normal',
+                fontWeight: 700,
+                lineHeight: 'normal',
+                letterSpacing: '-0.18px'
+              }}
+            >
+              Launch Resume Author
+            </span>{' '}
+            button to continue:
+          </Typography>
 
           <Box
             sx={{
@@ -190,12 +179,12 @@ export default function SignUpStep() {
               Cancel
             </Button>
             <Button
-              onClick={() => navigate('/SignUp2')}
+              onClick={handleGoogleSignIn}
               variant='outlined'
               sx={{
                 border: '2px solid #3A35A2',
-                bgcolor: '#3A35A2',
-                color: '#FFF',
+                bgcolor: '#FFF',
+                color: '#3A35A2',
                 borderRadius: '50px',
                 textTransform: 'none',
                 fontWeight: 'bold',
@@ -203,7 +192,7 @@ export default function SignUpStep() {
                 p: '21px 31px'
               }}
             >
-              Continue
+              Launch Resume Author
             </Button>
           </Box>
         </Box>

@@ -3,7 +3,7 @@ import { AppBar, Toolbar, Box, Typography, Stack, Button } from '@mui/material'
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import LoadingOverlay from './Loading'
-import { getCookie } from '../tools/cookie'
+import { getLocalStorage, removeLocalStorage } from '../tools/cookie'
 
 const navStyles = {
   color: 'white',
@@ -25,11 +25,16 @@ const Nav = () => {
       navigate('/resume/new')
       setLoading(false)
     }
-    const token = getCookie('access_token')
+    const token = getLocalStorage('auth')
     if (token) {
       setIsLogged(true)
     }
   }, [navigate])
+
+  const habdleLogout = () => {
+    removeLocalStorage('auth')
+    setIsLogged(false)
+  }
 
   return (
     <AppBar
@@ -44,20 +49,26 @@ const Nav = () => {
             Resume Author
           </Typography>
         </Box>
-        <Stack direction='row' spacing={5}>
-          <Button color='inherit' sx={navStyles}>
-            Why Resume Author?
+        {!isLogged ? (
+          <Stack direction='row' spacing={5}>
+            <Button color='inherit' sx={navStyles}>
+              Why Resume Author?
+            </Button>
+            <Button color='inherit' sx={navStyles}>
+              How it works
+            </Button>
+            <Button color='inherit' sx={navStyles}>
+              Benefits
+            </Button>
+            <Button color='inherit' sx={navStyles}>
+              Learn More
+            </Button>
+          </Stack>
+        ) : (
+          <Button onClick={habdleLogout} color='inherit' sx={navStyles}>
+            Logout
           </Button>
-          <Button color='inherit' sx={navStyles}>
-            How it works
-          </Button>
-          <Button color='inherit' sx={navStyles}>
-            Benefits
-          </Button>
-          <Button color='inherit' sx={navStyles}>
-            Learn More
-          </Button>
-        </Stack>
+        )}
       </Toolbar>
       <LoadingOverlay open={loading} />
     </AppBar>
