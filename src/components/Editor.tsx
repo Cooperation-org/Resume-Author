@@ -85,44 +85,11 @@ const ResumeEditor = () => {
     }
     setAddSectionOpen(false)
   }
-  // // Handle text selection
-  // const handleTextSelection = useCallback(() => {
-  //   const selection = window.getSelection()
-  //   try {
-  //     if (selection && selection.toString().trim() !== '') {
-  //       const range = selection.getRangeAt(0)
-  //       const rect = range.getBoundingClientRect()
 
-  //       // Calculate tooltip position
-  //       const viewportWidth = window.innerWidth
-  //       const tooltipWidth = 300 // Approximate width of the tooltip
-  //       const left = rect.left + window.scrollX
-  //       const top = rect.bottom + window.scrollY
-
-  //       // Adjust position if tooltip goes off-screen
-  //       const adjustedLeft =
-  //         left + tooltipWidth > viewportWidth ? left - tooltipWidth : left
-
-  //       setTooltipPosition({ top, left: adjustedLeft })
-  //       setHighlightedText(selection.toString().trim())
-  //       console.log('Selected text:', selection.toString().trim())
-  //       console.log('Tooltip Position:', { top, left: adjustedLeft })
-  //     } else {
-  //       setTooltipPosition(null)
-  //       setHighlightedText('')
-  //     }
-  //   } catch (error) {
-  //     console.error('Error getting text selection', error)
-  //   }
-  // }, [])
-
-  // // Add event listener for text selection
-  // useEffect(() => {
-  //   document.addEventListener('mouseup', handleTextSelection)
-  //   return () => {
-  //     document.removeEventListener('mouseup', handleTextSelection)
-  //   }
-  // }, [handleTextSelection])
+  const handlePreview = () => {
+    console.log(resume)
+    window.location.href = '/resume/preview'
+  }
 
   const handleSaveDraft = async () => {
     const savedResume = await instances?.resumeManager?.saveResume({
@@ -195,7 +162,7 @@ const ResumeEditor = () => {
           </Typography>
         </Box>
         <Box sx={{ display: 'flex', gap: '10px' }}>
-          <Button variant='outlined' sx={ButtonStyles}>
+          <Button onClick={handlePreview} variant='outlined' sx={ButtonStyles}>
             Preview
           </Button>
           <Button variant='outlined' sx={ButtonStyles} onClick={handleSaveDraft}>

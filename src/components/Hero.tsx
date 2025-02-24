@@ -66,7 +66,7 @@ const Hero = () => {
                   fonstFamily: 'Nunito Sans'
                 }}
               >
-                Login or Sign Up with a Digital Wallet
+                Login or Sign Up with Google Drive
               </Button>
             </Stack>
 

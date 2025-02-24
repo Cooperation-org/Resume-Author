@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react'
+import React, { useState, useCallback, useEffect } from 'react'
 import {
   Box,
   TextField,
@@ -11,6 +11,10 @@ import {
 } from '@mui/material'
 import { SVGAddcredential, SVGAddFiles, SVGDeleteSection } from '../../../assets/svgs'
 import { StyledButton } from './StyledButton'
+import { useDispatch, useSelector } from 'react-redux'
+import { updateSection } from '../../../redux/slices/resume'
+import { RootState } from '../../../redux/store'
+import stripHtmlTags from '../../../tools/stripHTML'
 
 const PinkSwitch = styled(Switch)(({ theme }) => ({
   '& .MuiSwitch-switchBase.Mui-checked': {
@@ -23,6 +27,7 @@ const PinkSwitch = styled(Switch)(({ theme }) => ({
     backgroundColor: '#34C759'
   }
 }))
+
 interface ProfessionalAffiliationsProps {
   onAddFiles?: () => void
   onDelete?: () => void
@@ -34,6 +39,9 @@ const ProfessionalAffiliations: React.FC<ProfessionalAffiliationsProps> = ({
   onDelete,
   onAddCredential
 }) => {
+  const dispatch = useDispatch()
+  const resume = useSelector((state: RootState) => state.resume.resume)
+
   const [affiliation, setAffiliation] = useState({
     name: '',
     organization: '',
@@ -43,12 +51,38 @@ const ProfessionalAffiliations: React.FC<ProfessionalAffiliationsProps> = ({
     activeAffiliation: false
   })
 
-  const handleChange = useCallback((field: string, value: any) => {
-    setAffiliation(prev => ({
-      ...prev,
-      [field]: value
-    }))
-  }, [])
+  // Load existing affiliations from Redux
+  useEffect(() => {
+    if (
+      resume?.professionalAffiliations?.items &&
+      resume.professionalAffiliations.items.length > 0
+    ) {
+      setAffiliation(resume.professionalAffiliations.items[0] as any)
+    }
+  }, [resume])
+
+  const handleChange = useCallback(
+    (field: string, value: any) => {
+      setAffiliation(prev => {
+        const updatedAffiliation = {
+          ...prev,
+          [field]: field === 'description' ? stripHtmlTags(value) : value
+        }
+
+        dispatch(
+          updateSection({
+            sectionId: 'professionalAffiliations',
+            content: {
+              items: [updatedAffiliation]
+            }
+          })
+        )
+
+        return updatedAffiliation
+      })
+    },
+    [dispatch]
+  )
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
