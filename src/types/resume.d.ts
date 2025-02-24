@@ -46,6 +46,10 @@ interface Contact {
 }
 
 interface WorkExperience extends VerifiableItem {
+  title: string
+  duration: string
+  currentlyEmployed: boolean
+  showDuration: undefined
   company: string
   position: string
   startDate: string

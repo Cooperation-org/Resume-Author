@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react'
+import React, { useState, useEffect } from 'react'
 import {
   Box,
   TextField,
@@ -18,6 +18,10 @@ import {
 } from '../../../assets/svgs'
 import TextEditor from '../../TextEditor/Texteditor'
 import { StyledButton } from './StyledButton'
+import { useDispatch, useSelector } from 'react-redux'
+import { updateSection } from '../../../redux/slices/resume'
+import { RootState } from '../../../redux/store'
+import stripHtmlTags from '../../../tools/stripHTML'
 
 const PinkSwitch = styled(Switch)(({ theme }) => ({
   '& .MuiSwitch-switchBase.Mui-checked': {
@@ -42,6 +46,9 @@ export default function WorkExperience({
   onDelete,
   onAddCredential
 }: WorkExperienceProps) {
+  const dispatch = useDispatch()
+  const resume = useSelector((state: RootState) => state.resume.resume)
+
   const [workExperience, setWorkExperience] = useState({
     title: '',
     company: '',
@@ -51,12 +58,48 @@ export default function WorkExperience({
     showDuration: true
   })
 
-  const handleWorkExperienceChange = useCallback((field: string, value: any) => {
-    setWorkExperience(prev => ({
-      ...prev,
-      [field]: value
-    }))
-  }, [])
+  // Load existing work experience from Redux
+  useEffect(() => {
+    if (resume?.experience?.items && resume.experience.items.length > 0) {
+      const existingExperience = resume.experience.items[0]
+
+      // Prevent redundant updates to avoid infinite loop
+      const isChanged = Object.keys(existingExperience).some(
+        key =>
+          workExperience[key as keyof typeof workExperience] !==
+          existingExperience[key as keyof typeof existingExperience]
+      )
+
+      if (isChanged) {
+        setWorkExperience(existingExperience as any)
+      }
+    }
+  }, [resume, workExperience])
+
+  const handleWorkExperienceChange = (field: string, value: any) => {
+    const updatedExperience = {
+      ...workExperience,
+      [field]: field === 'description' ? stripHtmlTags(value) : value
+    }
+
+    // Prevent unnecessary Redux updates if the content hasn't changed
+    const isChanged =
+      workExperience[field as keyof typeof workExperience] !==
+      updatedExperience[field as keyof typeof updatedExperience]
+
+    if (isChanged) {
+      setWorkExperience(updatedExperience)
+
+      dispatch(
+        updateSection({
+          sectionId: 'experience',
+          content: {
+            items: [updatedExperience]
+          }
+        })
+      )
+    }
+  }
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>

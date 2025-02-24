@@ -28,8 +28,6 @@ const RightSidebar = () => {
   const { vcs: claims, status } = useSelector((state: any) => state.vcReducer)
   const accessToken = getLocalStorage('auth')
 
-  console.log('🚀 ~ RightSidebar ~ claims:', claims)
-
   // Redux state connection kept for future use
   useSelector((state: RootState) => state.vcReducer)
 

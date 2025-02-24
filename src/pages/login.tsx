@@ -78,7 +78,7 @@ const DigitalWalletLogin: React.FC = () => {
                   color: '#44474D'
                 }}
               >
-                Login or Sign Up with a Digital Wallet
+                Login or Sign Up with Google Drive
               </Typography>
               <Typography
                 sx={{

@@ -1,6 +1,10 @@
-import React, { useState, useCallback } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Box, Typography } from '@mui/material'
 import TextEditor from '../../TextEditor/Texteditor'
+import { useDispatch, useSelector } from 'react-redux'
+import { updateSection } from '../../../redux/slices/resume'
+import { RootState } from '../../../redux/store'
+import stripHtmlTags from '../../../tools/stripHTML'
 
 interface ProfessionalSummaryProps {
   onAddFiles?: () => void
@@ -13,11 +17,38 @@ export default function ProfessionalSummary({
   onDelete,
   onAddCredential
 }: ProfessionalSummaryProps) {
+  const dispatch = useDispatch()
+  const resume = useSelector((state: RootState) => state.resume.resume)
+
   const [description, setDescription] = useState('')
 
-  const handleDescriptionChange = useCallback((val: string) => {
-    setDescription(val)
-  }, [])
+  // ✅ Load existing summary from Redux if available
+  useEffect(() => {
+    if (resume?.summary) {
+      const cleanSummary = stripHtmlTags(resume.summary)
+
+      // Prevent unnecessary state updates
+      if (cleanSummary !== description) {
+        setDescription(cleanSummary)
+      }
+    }
+  }, [description, resume])
+
+  const handleDescriptionChange = (val: string) => {
+    const plainText = stripHtmlTags(val)
+
+    // ✅ Prevent unnecessary Redux updates
+    if (plainText !== description) {
+      setDescription(plainText)
+
+      dispatch(
+        updateSection({
+          sectionId: 'summary',
+          content: plainText
+        })
+      )
+    }
+  }
 
   return (
     <Box>

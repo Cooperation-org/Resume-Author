@@ -1,18 +1,28 @@
-import React, { useState, useCallback } from 'react'
+import React, { useState, useEffect } from 'react'
 import {
   Box,
   TextField,
   Typography,
+  Switch,
   styled,
   alpha,
-  Switch,
-  FormControlLabel,
   Checkbox,
+  FormControlLabel,
   FormGroup
 } from '@mui/material'
-import { SVGAddcredential, SVGAddFiles, SVGDeleteSection } from '../../../assets/svgs'
-import { StyledButton } from './StyledButton'
+import {
+  SVGSectionIcon,
+  SVGDownIcon,
+  SVGAddcredential,
+  SVGAddFiles,
+  SVGDeleteSection
+} from '../../../assets/svgs'
 import TextEditor from '../../TextEditor/Texteditor'
+import { StyledButton } from './StyledButton'
+import { useDispatch, useSelector } from 'react-redux'
+import { updateSection } from '../../../redux/slices/resume'
+import { RootState } from '../../../redux/store'
+import stripHtmlTags from '../../../tools/stripHTML'
 
 const PinkSwitch = styled(Switch)(({ theme }) => ({
   '& .MuiSwitch-switchBase.Mui-checked': {
@@ -25,17 +35,21 @@ const PinkSwitch = styled(Switch)(({ theme }) => ({
     backgroundColor: '#34C759'
   }
 }))
+
 interface EducationProps {
   onAddFiles?: () => void
   onDelete?: () => void
   onAddCredential?: (text: string) => void
 }
 
-const Education: React.FC<EducationProps> = ({
+export default function Education({
   onAddFiles,
   onDelete,
   onAddCredential
-}) => {
+}: EducationProps) {
+  const dispatch = useDispatch()
+  const resume = useSelector((state: RootState) => state.resume.resume)
+
   const [education, setEducation] = useState({
     type: 'Masters',
     programName: '',
@@ -48,75 +62,108 @@ const Education: React.FC<EducationProps> = ({
     description: ''
   })
 
-  const handleChange = useCallback((field: string, value: any) => {
-    setEducation(prev => ({
-      ...prev,
-      [field]: value
-    }))
-  }, [])
+  // Load existing education from Redux
+  useEffect(() => {
+    if (resume?.education?.items && resume.education.items.length > 0) {
+      const existingEducation = resume.education.items[0]
+
+      // Prevent redundant updates to avoid infinite loop
+      const isChanged = Object.keys(existingEducation).some(
+        key =>
+          education[key as keyof typeof education] !==
+          existingEducation[key as keyof typeof existingEducation]
+      )
+
+      if (isChanged) {
+        setEducation(existingEducation as any)
+      }
+    }
+  }, [education, resume])
+
+  const handleEducationChange = (field: string, value: any) => {
+    const updatedEducation = {
+      ...education,
+      [field]: field === 'description' ? stripHtmlTags(value) : value
+    }
+
+    // Prevent unnecessary Redux updates if the content hasn't changed
+    const isChanged =
+      education[field as keyof typeof education] !==
+      updatedEducation[field as keyof typeof updatedEducation]
+
+    if (isChanged) {
+      setEducation(updatedEducation)
+
+      dispatch(
+        updateSection({
+          sectionId: 'education',
+          content: {
+            items: [updatedEducation]
+          }
+        })
+      )
+    }
+  }
 
   return (
-    <Box
-      sx={{ display: 'flex', flexDirection: 'column', gap: 2, p: 2, bgcolor: '#F8F8FC' }}
-    >
-      <Box>
-        <Typography variant='body2' mb={1}>
-          Type
-        </Typography>
-        <TextField
-          fullWidth
-          size='small'
-          sx={{ bgcolor: '#FFF' }}
-          value={education.type}
-          onChange={e => handleChange('type', e.target.value)}
-        />
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+      <Box display='flex' alignItems='center' justifyContent='space-between'>
+        <Box display='flex' alignItems='center' gap={2}>
+          <SVGSectionIcon />
+          <Typography variant='body1'>Type</Typography>
+        </Box>
+        <SVGDownIcon />
       </Box>
 
-      <Box display='flex' gap={2}>
-        <Box flex={1}>
-          <Typography variant='body2' mb={1}>
-            Program or Course Name
-          </Typography>
-          <TextField
-            fullWidth
-            size='small'
-            sx={{ bgcolor: '#FFF' }}
-            value={education.programName}
-            onChange={e => handleChange('programName', e.target.value)}
-          />
-        </Box>
-        <Box flex={1}>
-          <Typography variant='body2' mb={1}>
-            Institution or Organization Name
-          </Typography>
-          <TextField
-            fullWidth
-            size='small'
-            sx={{ bgcolor: '#FFF' }}
-            value={education.institutionName}
-            onChange={e => handleChange('institutionName', e.target.value)}
-          />
-        </Box>
-      </Box>
-
-      <Typography variant='body2'>Dates</Typography>
-      <FormControlLabel
-        control={
-          <PinkSwitch
-            checked={education.showDuration}
-            onChange={e => handleChange('showDuration', e.target.checked)}
-            sx={{ color: '#34C759' }}
-          />
-        }
-        label='Show duration instead of exact dates'
+      <TextField
+        sx={{ bgcolor: '#FFF' }}
+        size='small'
+        fullWidth
+        value={education.type}
+        onChange={e => handleEducationChange('type', e.target.value)}
+        variant='outlined'
       />
 
-      <Box>
+      <Typography>Program or Course Name</Typography>
+      <TextField
+        sx={{ bgcolor: '#FFF' }}
+        size='small'
+        fullWidth
+        placeholder='Enter program name'
+        value={education.programName}
+        onChange={e => handleEducationChange('programName', e.target.value)}
+      />
+
+      <Typography>Institution or Organization Name</Typography>
+      <TextField
+        sx={{ bgcolor: '#FFF' }}
+        size='small'
+        fullWidth
+        placeholder='Enter institution name'
+        value={education.institutionName}
+        onChange={e => handleEducationChange('institutionName', e.target.value)}
+      />
+
+      <Box display='flex' alignItems='start' flexDirection='column'>
+        <Typography variant='body1'>Dates</Typography>
+        <Box display='flex' alignItems='center'>
+          <PinkSwitch
+            checked={education.showDuration}
+            onChange={e => handleEducationChange('showDuration', e.target.checked)}
+            sx={{ color: '#34C759' }}
+          />
+          <Typography>Show duration instead of exact dates</Typography>
+        </Box>
+      </Box>
+
+      <Box display='flex' alignItems='center' gap={2}>
         <TextField
+          sx={{ bgcolor: '#FFF' }}
           size='small'
-          sx={{ bgcolor: '#FFF', width: '150px' }}
+          placeholder='Enter total duration'
           value={education.duration}
-          onChange={e => handleChange('duration', e.target.value)}
+          onChange={e => handleEducationChange('duration', e.target.value)}
+          variant='outlined'
         />
       </Box>
 
@@ -125,7 +172,7 @@ const Education: React.FC<EducationProps> = ({
           control={
             <Checkbox
               checked={education.currentlyEnrolled}
-              onChange={e => handleChange('currentlyEnrolled', e.target.checked)}
+              onChange={e => handleEducationChange('currentlyEnrolled', e.target.checked)}
             />
           }
           label='Currently enrolled here'
@@ -134,7 +181,7 @@ const Education: React.FC<EducationProps> = ({
           control={
             <Checkbox
               checked={education.inProgress}
-              onChange={e => handleChange('inProgress', e.target.checked)}
+              onChange={e => handleEducationChange('inProgress', e.target.checked)}
             />
           }
           label='In progress'
@@ -143,19 +190,19 @@ const Education: React.FC<EducationProps> = ({
           control={
             <Checkbox
               checked={education.awardEarned}
-              onChange={e => handleChange('awardEarned', e.target.checked)}
+              onChange={e => handleEducationChange('awardEarned', e.target.checked)}
             />
           }
           label='Award earned'
         />
       </FormGroup>
 
-      <Typography variant='body2'>
+      <Typography variant='body1'>
         Describe how this item relates to the job you want to get:
       </Typography>
       <TextEditor
         value={education.description}
-        onChange={val => handleChange('description', val)}
+        onChange={val => handleEducationChange('description', val)}
         onAddCredential={onAddCredential}
       />
 
@@ -183,5 +230,3 @@ const Education: React.FC<EducationProps> = ({
     </Box>
   )
 }
-
-export default Education
