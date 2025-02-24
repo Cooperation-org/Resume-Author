@@ -170,13 +170,13 @@ const PageFooter: React.FC<{
         mr: '10px'
       }}
     >
-      {fullName} | Page {pageNumber} of {totalPages} |{' '}
+      {fullName} | Page {pageNumber} of {totalPages} |
       {phone && (
         <a href={`tel:${phone}`} style={{ textDecoration: 'none', color: 'inherit' }}>
           {phone}
         </a>
-      )}{' '}
-      |{' '}
+      )}
+      |
       <a
         href={`mailto:${email}`}
         style={{ textDecoration: 'underline', color: '#2563EB' }}
