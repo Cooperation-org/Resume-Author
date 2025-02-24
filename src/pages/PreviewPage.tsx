@@ -7,15 +7,15 @@ const PreviewPage = () => {
   const [resumeData, setResumeData] = useState(null)
   const [error, setError] = useState<string | null>(null)
   const exportResumeToPDF = (resumeData: any) => {
-    const element = document.getElementById('resume-preview') // The container for the resume content
+    const element = document.getElementById('resume-preview')
     const options = {
-      margin: [0, 0, 0, 0], // No margins
+      margin: [0, 0, 0, 0],
       filename: `${resumeData.contact.fullName}_Resume.pdf`,
       image: { type: 'jpeg', quality: 0.98 },
       html2canvas: {
-        scale: 2, // Increase scale for better quality
-        useCORS: true, // Allow cross-origin images
-        logging: true // Enable logging for debugging
+        scale: 2,
+        useCORS: true,
+        logging: true
       },
       jsPDF: {
         unit: 'mm',
@@ -24,13 +24,12 @@ const PreviewPage = () => {
       }
     }
 
-    // Add JSON data as metadata
     const metadata = {
       title: `${resumeData.contact.fullName}'s Resume`,
       creator: 'Reactive Resume',
       subject: 'Resume',
       keywords: ['Resume', 'CV', resumeData.contact.fullName],
-      custom: { resumeData: JSON.stringify(resumeData) } // Embed JSON data
+      custom: { resumeData: JSON.stringify(resumeData) }
     }
 
     html2pdf().set(metadata).from(element).set(options).save()

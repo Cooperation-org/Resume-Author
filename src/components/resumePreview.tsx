@@ -452,7 +452,6 @@ const usePagination = (content: ReactNode[], maxHeight: number) => {
       measuredRef.current = true
     }
 
-    // Only run once after initial render
     if (!measuredRef.current) {
       measureAndPaginate()
     }
