@@ -17,7 +17,7 @@ interface SidebarProps {
 }
 
 const ui = {
-  fontFamily: 'Proxima Nova',
+  fontFamily: 'Poppins',
   fontSize: '14px',
   fontStyle: 'normal',
   fontWeight: 700,
@@ -81,6 +81,10 @@ const Sidebar = ({ onToggle, isExpanded }: SidebarProps) => {
     setSelectedItem('add')
     navigate('/resume/new')
   }
+  const handleFAQClick = () => {
+    setSelectedItem('FAQ')
+    navigate('/faq')
+  }
   const handleLogOutClick = () => {
     setSelectedItem('logOut')
     handleLogout()
@@ -126,14 +130,10 @@ const Sidebar = ({ onToggle, isExpanded }: SidebarProps) => {
         {isExpanded && <Typography sx={getTextStyles('logOut')}>Logout</Typography>}
       </Box>
     </IconButton>,
-    <IconButton
-      key='lineDown'
-      onClick={() => setSelectedItem('lineDown')}
-      sx={getButtonStyles('lineDown')}
-    >
+    <IconButton key='lineDown' onClick={handleFAQClick} sx={getButtonStyles('faq')}>
       <Box sx={boxStyles}>
         <SVGLineDown />
-        {isExpanded && <Typography sx={getTextStyles('lineDown')}>FAQs</Typography>}
+        {isExpanded && <Typography sx={getTextStyles('faq')}>FAQs</Typography>}
       </Box>
     </IconButton>
   ]

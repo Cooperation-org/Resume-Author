@@ -19,6 +19,8 @@ import { fetchUserResumes } from './redux/slices/myresumes'
 import PreviewPage from './pages/PreviewPage'
 import SignUpStep from './pages/SignUpStep'
 import LoginScanStep from './pages/LoginScanStep'
+import Faq from './pages/FAQ'
+import SignUpStep2 from './pages/signUpStep2'
 
 const App = () => {
   const dispatch: AppDispatch = useDispatch()
@@ -46,6 +48,8 @@ const App = () => {
         <Route path='/' element={<LandingPage />} />
         <Route path='/signup' element={<SignUpStep />} />
         <Route path='/login-scan' element={<LoginScanStep />} />
+        <Route path='/faq' element={<Faq />} />
+        <Route path='/SignUp2' element={<SignUpStep2 />} />
       </Routes>
     </Router>
   )

@@ -35,7 +35,7 @@ const FeatureListItem: React.FC<FeatureListItemProps> = ({ text }) => (
 const DigitalWalletLogin: React.FC = () => {
   const features = [
     'Secure storage for credentials',
-    'Embed credentials from your wallet into your resume',
+    'Embed credentials from your Wallet into your resume',
     'Easy sharing with employers or institutions',
     'Ownership and control of your personal data'
   ]
@@ -89,7 +89,7 @@ const DigitalWalletLogin: React.FC = () => {
                   color: '#2E2E48'
                 }}
               >
-                A digital wallet securely stores your credentials and allows you to manage
+                A digital Wallet securely stores your credentials and allows you to manage
                 and share your information easily.
               </Typography>
 
@@ -149,7 +149,7 @@ const DigitalWalletLogin: React.FC = () => {
                 <Box component='span' sx={{ fontWeight: 700 }}>
                   Learner Credential Wallet
                 </Box>
-                , an open source mobile wallet app developed by the{' '}
+                , an open source mobile Wallet app developed by the{' '}
                 <Box component='span' sx={{ textDecoration: 'underline' }}>
                   Digital Credentials Consortium
                 </Box>
@@ -168,7 +168,7 @@ const DigitalWalletLogin: React.FC = () => {
                     letterSpacing: '-0.24px'
                   }}
                 >
-                  Don't see the wallet you want?{' '}
+                  Don't see the Wallet you want?{' '}
                 </Typography>
                 <Link
                   href='#'
