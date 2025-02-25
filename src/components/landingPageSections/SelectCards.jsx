@@ -37,7 +37,7 @@ const SelectCards = () => {
           marginBottom: '16px'
         }}
       >
-        How Resume Author Works{' '}
+        How Resume Author Works
       </Typography>
 
       <Typography
@@ -47,7 +47,7 @@ const SelectCards = () => {
           marginBottom: '70px'
         }}
       >
-        Just 3 easy steps to get started.{' '}
+        Just 3 easy steps to get started.
       </Typography>
 
       <Box

@@ -56,7 +56,7 @@ const PrevResumesList: React.FC<PrevResumesListProps> = ({ open, onClose }) => {
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [accessToken])
 
   useEffect(() => {
     if (open) {

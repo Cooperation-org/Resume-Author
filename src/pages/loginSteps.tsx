@@ -127,7 +127,7 @@ export default function LoginWithWallet() {
               }}
             >
               <Typography sx={{ fontSize: '14px', fontWeight: 400 }}>
-                Need Learner Credential Wallet?{' '}
+                Need Learner Credential Wallet?
               </Typography>
               <TypographyLink href='#'>Go here to download and install</TypographyLink>
             </Box>

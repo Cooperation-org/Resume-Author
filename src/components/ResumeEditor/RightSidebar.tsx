@@ -25,6 +25,7 @@ interface RootState {
 const RightSidebar = () => {
   const [selectedClaims, setSelectedClaims] = useState<string[]>([])
   const [uploadedFiles, setUploadedFiles] = useState<string[]>([])
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { vcs: claims, status } = useSelector((state: any) => state.vcReducer)
   const accessToken = getLocalStorage('auth')
 

@@ -1,7 +1,5 @@
 import { Box, Typography } from '@mui/material'
 import { SVGYellowAdd, SVGResume, SVGFile, SVGVerefied, SVGVe } from '../../assets/svgs'
-import { fontFamily } from 'html2canvas/dist/types/css/property-descriptors/font-family'
-import { fontWeight } from 'html2canvas/dist/types/css/property-descriptors/font-weight'
 
 const HowItWorksSection = () => {
   const sectionData = [
@@ -57,7 +55,7 @@ const HowItWorksSection = () => {
           lineHeight: '52px'
         }}
       >
-        A better way to build a resume{' '}
+        A better way to build a resume
       </Typography>
       <Box
         sx={{

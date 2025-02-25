@@ -37,7 +37,7 @@ const Hero = () => {
                 lineHeight: '50px' /* 141.667% */
               }}
             >
-              Prove your skills in a verifiable resume that employers trust.{' '}
+              Prove your skills in a verifiable resume that employers trust.
             </Typography>
             <Typography
               sx={{
@@ -83,7 +83,7 @@ const Hero = () => {
                 }
               }}
             >
-              Created for you by the{' '}
+              Created for you by the
               <Box
                 component='span'
                 sx={{

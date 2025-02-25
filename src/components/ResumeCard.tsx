@@ -69,6 +69,7 @@ const ResumeCard: React.FC<ResumeCardProps> = ({
   const [menuAnchor, setMenuAnchor] = useState<null | HTMLElement>(null)
   const [isEditing, setIsEditing] = useState(false)
   const [editedTitle, setEditedTitle] = useState(title)
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [isLoading, setIsLoading] = useState(false)
   const [showCopiedTooltip, setShowCopiedTooltip] = useState(false)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
