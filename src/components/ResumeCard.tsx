@@ -23,7 +23,7 @@ import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined'
 import DownloadIcon from '@mui/icons-material/Download'
 import { LinkIcon } from 'lucide-react'
 import { GoogleDriveStorage, Resume } from '@cooperation/vc-storage'
-import { getCookie } from '../tools/cookie'
+import { getCookie, getLocalStorage } from '../tools/cookie'
 import Logo from '../assets/blue-logo.png'
 import { Link } from 'react-router-dom'
 import DeleteConfirmationDialog from './DeleteConfirmDialog'
@@ -76,7 +76,7 @@ const ResumeCard: React.FC<ResumeCardProps> = ({
 
   const inputRef = useRef<HTMLInputElement | null>(null)
 
-  const accessToken = getCookie('auth_token')
+  const accessToken = getLocalStorage('auth')
   const storage = new GoogleDriveStorage(accessToken as string)
   const resumeManager = new Resume(storage)
 

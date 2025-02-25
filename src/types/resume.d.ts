@@ -59,6 +59,9 @@ interface WorkExperience extends VerifiableItem {
 }
 
 interface Education extends VerifiableItem {
+  type: ReactNode
+  programName: ReactNode
+  awardEarned: string
   institution: string
   degree: string
   field: string

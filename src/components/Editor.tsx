@@ -17,6 +17,7 @@ import { RootState } from '../redux/store'
 import { useState } from 'react'
 import { SVGEditName } from '../assets/svgs'
 import useGoogleDrive from '../hooks/useGoogleDrive'
+import { useNavigate } from 'react-router-dom'
 
 const nonVisibleSections = [
   ...leftSections,
@@ -56,6 +57,7 @@ const BorderLinearProgress = styled(LinearProgress)(({ theme }) => ({
 }))
 
 const ResumeEditor = () => {
+  const navigate = useNavigate()
   const [addSectionOpen, setAddSectionOpen] = useState(false)
   const [selectedSection, setSelectedSection] = useState<string | null>(null)
   const [sectionOrder, setSectionOrder] = useState<(keyof Resume)[]>([
@@ -88,7 +90,7 @@ const ResumeEditor = () => {
 
   const handlePreview = () => {
     console.log(resume)
-    window.location.href = '/resume/preview'
+    navigate('/resume/preview')
   }
 
   const handleSaveDraft = async () => {
@@ -105,8 +107,6 @@ const ResumeEditor = () => {
       keyPair
     })
 
-    console.log('resume', resume)
-
     const signedResume = await instances?.resumeVC?.sign({
       formData: resume,
       issuerDid: didDoc.id,
@@ -116,6 +116,7 @@ const ResumeEditor = () => {
       resume: signedResume,
       type: 'sign'
     })
+    console.log('resume', signedResume)
   }
 
   return (

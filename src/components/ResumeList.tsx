@@ -1,6 +1,6 @@
 import React, { useCallback, useState, useEffect } from 'react'
 import { useDispatch } from 'react-redux'
-import { getCookie } from '../tools/cookie'
+import { getCookie, getLocalStorage } from '../tools/cookie'
 import { GoogleDriveStorage, Resume } from '@cooperation/vc-storage'
 
 import {
@@ -28,7 +28,7 @@ const PrevResumesList: React.FC<PrevResumesListProps> = ({ open, onClose }) => {
   >([])
   const [loading, setLoading] = useState(false)
   const dispatch = useDispatch() // Access the Redux dispatch function
-  const accessToken = getCookie('auth_token')
+  const accessToken = getLocalStorage('auth')
 
   const getSessions = useCallback(async () => {
     try {

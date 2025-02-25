@@ -4,7 +4,7 @@
   "private": true,
   "dependencies": {
     "@auth0/auth0-react": "^2.2.4",
-    "@cooperation/vc-storage": "https://github.com/Cooperation-org/linked-claims-storage/",
+    "@cooperation/vc-storage": "https://github.com/Cooperation-org/linked-claims-storage",
     "@craco/craco": "^7.1.0",
     "@emotion/react": "^11.13.5",
     "@emotion/styled": "^11.13.5",

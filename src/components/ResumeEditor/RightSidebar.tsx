@@ -51,7 +51,7 @@ const RightSidebar = () => {
   }, [])
 
   const handleAuth = () => {
-    const accessToken = getCookie('auth_token') // Ensure this matches the correct cookie key
+    const accessToken = getLocalStorage('auth') // Ensure this matches the correct cookie key
     if (!accessToken) {
       handleGoogleLogin() // If no token, login
     } else {

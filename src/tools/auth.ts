@@ -4,9 +4,10 @@ import { setLocalStorage, setCookie } from './cookie'
 export const login = async () => {
   const clientId = process.env.REACT_APP_GOOGLE_CLIENT_ID
   const redirectUri = process.env.REACT_APP_GOOGLE_REDIRECT_URI
-  const scope = process.env.REACT_APP_GOOGLE_SCOPE
+  const scope = 'openid profile email https://www.googleapis.com/auth/drive.file'
+  console.log(':  login  scope', scope)
 
-  if (!clientId || !redirectUri || !scope) {
+  if (!clientId || !redirectUri) {
     throw new Error('Missing environment variables for Google login')
   }
 

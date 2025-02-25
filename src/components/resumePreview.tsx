@@ -2,6 +2,8 @@ import React, { useRef, useState, ReactNode, useLayoutEffect } from 'react'
 import { Box, Typography, Link } from '@mui/material'
 import { QRCodeSVG } from 'qrcode.react'
 import { BlueVerifiedBadge } from '../assets/svgs'
+import { useSelector } from 'react-redux'
+import { RootState } from '../redux/store'
 
 const PAGE_SIZE = {
   width: '210mm',
@@ -226,7 +228,7 @@ const SocialLinksSection: React.FC<{
 const ExperienceSection: React.FC<{ items: WorkExperience[] }> = ({ items }) => (
   <Box sx={{ mb: '30px' }}>
     <SectionTitle>Work Experience</SectionTitle>
-    {items.map(item => (
+    {items?.map(item => (
       <Box key={item.id} sx={{ mb: '30px' }}>
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
           {item.verificationStatus === 'verified' && <BlueVerifiedBadge />} &nbsp;
@@ -259,7 +261,7 @@ const ExperienceSection: React.FC<{ items: WorkExperience[] }> = ({ items }) => 
           {item.description}
         </Typography>
         <Box component='ul' sx={{ m: 0, pl: 2 }}>
-          {item.achievements.map((achievement, idx) => (
+          {item?.achievements?.map((achievement, idx) => (
             <Typography
               component='li'
               variant='body2'
@@ -278,14 +280,14 @@ const ExperienceSection: React.FC<{ items: WorkExperience[] }> = ({ items }) => 
 const EducationSection: React.FC<{ items: Education[] }> = ({ items }) => (
   <Box sx={{ mb: '30px' }}>
     <SectionTitle>Education</SectionTitle>
-    {items.map(item => (
+    {items?.map(item => (
       <Box key={item.id} sx={{ mb: 2, display: 'flex', alignItems: 'center' }}>
-        {item.verificationStatus === 'verified' && <BlueVerifiedBadge />} &nbsp;
+        {item.awardEarned && <BlueVerifiedBadge />} &nbsp;
         <Typography
           variant='subtitle1'
           sx={{ fontWeight: 700, fontSize: '15px', fontFamily: 'Arial' }}
         >
-          {item.degree} in {item.field},&nbsp;
+          {item.type} in {item.programName},&nbsp;
         </Typography>
         <Typography
           variant='body2'
@@ -303,7 +305,7 @@ const SkillsSection: React.FC<{ items: Skill[] }> = ({ items }) => (
   <Box sx={{ mb: '30px' }}>
     <SectionTitle>Skills</SectionTitle>
     <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
-      {items.map(item => (
+      {items?.map(item => (
         <Box
           key={item.id}
           sx={{
@@ -326,7 +328,7 @@ const SkillsSection: React.FC<{ items: Skill[] }> = ({ items }) => (
 const CertificationsSection: React.FC<{ items: Certification[] }> = ({ items }) => (
   <Box sx={{ mb: '30px' }}>
     <SectionTitle>Certifications</SectionTitle>
-    {items.map(item => (
+    {items?.map(item => (
       <Box key={item.id} sx={{ mb: 2 }}>
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
           {item.verificationStatus === 'verified' && <BlueVerifiedBadge />} &nbsp;
@@ -364,7 +366,7 @@ const CertificationsSection: React.FC<{ items: Certification[] }> = ({ items }) 
 const ProjectsSection: React.FC<{ items: Project[] }> = ({ items }) => (
   <Box sx={{ mb: '30px' }}>
     <SectionTitle>Projects</SectionTitle>
-    {items.map(item => (
+    {items?.map(item => (
       <Box key={item.id} sx={{ mb: 3 }}>
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
           {item.verificationStatus === 'verified' && <BlueVerifiedBadge />} &nbsp;
@@ -403,7 +405,7 @@ const usePagination = (content: ReactNode[], maxHeight: number) => {
       const mmToPx = (mm: number) => mm * 3.779527559
       const maxHeightPx = mmToPx(maxHeight)
       const contentElements = Array.from(measureRef.current.children)
-      const contentHeights = contentElements.map(el => el.getBoundingClientRect().height)
+      const contentHeights = contentElements?.map(el => el.getBoundingClientRect().height)
 
       let currentPage: ReactNode[] = []
       let currentHeight = 0
@@ -469,16 +471,18 @@ const usePagination = (content: ReactNode[], maxHeight: number) => {
 }
 
 const ResumePreview: React.FC<ResumePreviewProps> = ({ data }) => {
+  const resume = useSelector((state: RootState) => state?.resume.resume)
+  console.log(':  resume', resume)
   const content = [
-    <SummarySection key='summary' summary={data.summary} />,
-    <SocialLinksSection key='social' socialLinks={data.contact.socialLinks} />,
-    <ExperienceSection key='experience' items={data.experience.items} />,
-    <EducationSection key='education' items={data.education.items} />,
-    <SkillsSection key='skills' items={data.skills.items} />,
-    data.certifications?.items && (
-      <CertificationsSection key='certifications' items={data.certifications.items} />
+    <SummarySection key='summary' summary={resume?.summary as any} />,
+    <SocialLinksSection key='social' socialLinks={resume?.contact.socialLinks} />,
+    <ExperienceSection key='experience' items={resume?.experience.items as any} />,
+    <EducationSection key='education' items={resume?.education.items as any} />,
+    <SkillsSection key='skills' items={resume?.skills.items as any} />,
+    resume?.certifications?.items && (
+      <CertificationsSection key='certifications' items={resume?.certifications.items} />
     ),
-    <ProjectsSection key='projects' items={data.projects.items} />
+    <ProjectsSection key='projects' items={resume?.projects.items as any} />
   ]
 
   const { pages, measureRef } = usePagination(
@@ -503,7 +507,7 @@ const ResumePreview: React.FC<ResumePreviewProps> = ({ data }) => {
         {content}
       </Box>
 
-      {pages.map((pageContent, pageIndex) => (
+      {pages?.map((pageContent, pageIndex) => (
         <Box
           key={`page-${pageIndex}`}
           sx={{
@@ -526,7 +530,7 @@ const ResumePreview: React.FC<ResumePreviewProps> = ({ data }) => {
             }
           }}
         >
-          <PageHeader fullName={data.contact.fullName} />
+          <PageHeader fullName={resume?.contact.fullName as any} />
           <Box
             sx={{
               height: PAGE_SIZE.maxContentHeight,
@@ -540,9 +544,9 @@ const ResumePreview: React.FC<ResumePreviewProps> = ({ data }) => {
           </Box>
           <Box sx={{ position: 'absolute', bottom: 0, left: 0, right: 0 }}>
             <PageFooter
-              fullName={data.contact.fullName}
-              email={data.contact.email}
-              phone={data.contact.phone}
+              fullName={resume?.contact.fullName as any}
+              email={resume?.contact.email as any}
+              phone={resume?.contact.phone as any}
               pageNumber={pageIndex + 1}
               totalPages={pages.length}
             />
