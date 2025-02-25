@@ -48,7 +48,7 @@ interface WorkExperience extends VerifiableItem {
   title: string
   duration: string
   currentlyEmployed: boolean
-  showDuration: undefined
+  showDuration: boolean
   company: string
   position: string
   startDate: string
@@ -56,6 +56,13 @@ interface WorkExperience extends VerifiableItem {
   location?: string
   description: string
   achievements: string[]
+  position?: string
+  startDate?: string
+  acheivements?: string[]
+  id?: string
+  verificationStatus?: 'unverified' | 'verified'
+  credentialLink?: string
+  [key: string]: any
 }
 
 interface Education extends VerifiableItem {
