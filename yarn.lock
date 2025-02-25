@@ -1221,9 +1221,9 @@
   resolved "https://registry.yarnpkg.com/@bcoe/v8-coverage/-/v8-coverage-0.2.3.tgz#75a2e8b51cb758a7553d6804a5932d7aace75c39"
   integrity sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==
 
-"@cooperation/vc-storage@https://github.com/Cooperation-org/linked-claims-storage/":
+"@cooperation/vc-storage@https://github.com/Cooperation-org/linked-claims-storage":
   version "1.0.22"
-  resolved "https://github.com/Cooperation-org/linked-claims-storage/#471c280663c61e6a41402074bd3393e6ac820dee"
+  resolved "https://github.com/Cooperation-org/linked-claims-storage#c6567c78fb1a20ce6f37fa502be8e5d9e4b382b7"
   dependencies:
     "@digitalbazaar/did-method-key" "^5.2.0"
     "@digitalbazaar/ed25519-signature-2020" "^5.3.0"
