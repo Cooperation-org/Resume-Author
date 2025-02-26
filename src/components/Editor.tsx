@@ -6,7 +6,8 @@ import {
   LinearProgress,
   linearProgressClasses,
   styled,
-  IconButton
+  IconButton,
+  TextField
 } from '@mui/material'
 import LeftSidebar from './ResumeEditor/LeftSidebar'
 import RightSidebar from './ResumeEditor/RightSidebar'
