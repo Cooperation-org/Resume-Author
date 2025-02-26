@@ -111,6 +111,8 @@ const ResumeEditor = () => {
       keyPair
     })
 
+    console.log('FORM DATA', resume)
+
     const signedResume = await instances?.resumeVC?.sign({
       formData: resume,
       issuerDid: didDoc.id,
