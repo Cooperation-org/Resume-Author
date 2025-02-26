@@ -296,9 +296,21 @@ const EducationSection: React.FC<{ items: Education[] }> = ({ items }) => (
           variant='body2'
           sx={{ color: '#000', fontWeight: 400, fontSize: '15px', fontFamily: 'Arial' }}
         >
-          {item.institution},{item.startDate} – {item.endDate}
-          {item.gpa && ` | GPA: ${item.gpa}`}
+          {item.institution} {item.showDuration && `| Duration: ${item.duration}`}
         </Typography>
+        <Typography
+          variant='body2'
+          sx={{ color: '#000', fontWeight: 400, fontSize: '14px', fontFamily: 'Arial' }}
+        >
+          {item.currentlyEnrolled ? 'Currently Enrolled' : 'Graduated'}
+        </Typography>
+        {item.description && (
+          <Typography
+            variant='body2'
+            sx={{ color: '#000', fontWeight: 400, fontSize: '14px', fontFamily: 'Arial' }}
+            dangerouslySetInnerHTML={{ __html: item.description }}
+          />
+        )}
       </Box>
     ))}
   </Box>
