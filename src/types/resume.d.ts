@@ -116,6 +116,7 @@ interface Project extends VerifiableItem {
   description: string
   url?: string
   technologies: string[]
+  credentialLink?: string
 }
 
 interface Award extends VerifiableItem {
@@ -145,7 +146,8 @@ interface Certification extends VerifiableItem {
   issueDate: string
   expiryDate?: string
   credentialId?: string
-  credentialURL?: string
+  credentialLink?: string
+  noExpiration: boolean
   score?: string
 }
 
@@ -174,6 +176,10 @@ interface VolunteerWork extends VerifiableItem {
   location?: string
   description?: string
   achievements?: string[]
+  currentlyVolunteering: boolean
+  duration: string
+  showDuration: boolean
+  credentialLink?: string
   cause?: string
 }
 

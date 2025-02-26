@@ -1,33 +1,22 @@
+import React, { useState } from 'react'
 import {
   Box,
   Button,
   Typography,
-  Autocomplete,
-  TextField,
   LinearProgress,
   linearProgressClasses,
   styled,
   IconButton
 } from '@mui/material'
-import LeftSidebar, { leftSections } from './ResumeEditor/LeftSidebar'
+import LeftSidebar from './ResumeEditor/LeftSidebar'
 import RightSidebar from './ResumeEditor/RightSidebar'
 import Section from './ResumeEditor/Section'
 import { useSelector } from 'react-redux'
 import { RootState } from '../redux/store'
-import { useState } from 'react'
 import { SVGEditName } from '../assets/svgs'
 import useGoogleDrive from '../hooks/useGoogleDrive'
 import { useNavigate } from 'react-router-dom'
-
-const nonVisibleSections = [
-  ...leftSections,
-  'id',
-  'lastUpdated',
-  'version',
-  'error',
-  'status',
-  'isDirty'
-]
+import OptionalSectionsManager from './ResumeEditor/OptionalSectionCard'
 
 const ButtonStyles = {
   border: '2px solid #3A35A2',
@@ -56,12 +45,10 @@ const BorderLinearProgress = styled(LinearProgress)(({ theme }) => ({
   }
 }))
 
-const ResumeEditor = () => {
+const ResumeEditor: React.FC = () => {
   const navigate = useNavigate()
-  const [addSectionOpen, setAddSectionOpen] = useState(false)
-  const [selectedSection, setSelectedSection] = useState<string | null>(null)
-  const [sectionOrder, setSectionOrder] = useState<(keyof Resume)[]>([
-    'Professional Summary' as any,
+  const [sectionOrder, setSectionOrder] = useState<string[]>([
+    'Professional Summary',
     'Work Experience',
     'Education',
     'Professional Affiliations',
@@ -71,21 +58,30 @@ const ResumeEditor = () => {
   const resume = useSelector((state: RootState) => state?.resume.resume)
   const { instances } = useGoogleDrive()
 
-  const AllSections = Object.keys(resume as Resume).filter(
-    sec =>
-      !sectionOrder.includes(sec as keyof Resume) && !nonVisibleSections.includes(sec)
-  )
+  const requiredSections = [
+    'Professional Summary',
+    'Work Experience',
+    'Education',
+    'Professional Affiliations',
+    'Skills and Abilities'
+  ]
 
-  const handleSectionSelect = (event: any, value: string | null) => {
-    setSelectedSection(value)
+  const handleAddSection = (sectionId: string) => {
+    setSectionOrder(prev => [...prev, sectionId])
   }
 
-  const handleAddSelectedSection = () => {
-    if (selectedSection && AllSections.includes(selectedSection)) {
-      setSectionOrder(prev => [...prev, selectedSection as keyof Resume])
-      setSelectedSection(null) // Reset selection
+  const handleRemoveSection = (sectionId: string) => {
+    if (!requiredSections.includes(sectionId)) {
+      setSectionOrder(prev => prev.filter(id => id !== sectionId))
     }
-    setAddSectionOpen(false)
+  }
+
+  const handleAddFiles = () => {
+    console.log('Add files clicked')
+  }
+
+  const handleAddCredential = (text: string) => {
+    console.log('Add credential clicked', text)
   }
 
   const handlePreview = () => {
@@ -205,20 +201,24 @@ const ResumeEditor = () => {
             flex: 1
           }}
         >
-          <Box>
-            {resume &&
-              sectionOrder.map(key => (
-                <Section
-                  key={key}
-                  sectionId={key}
-                  highlightedText={''}
-                  tooltipPosition={null}
-                />
-              ))}
-          </Box>
+          {sectionOrder.map(sectionId => (
+            <Section
+              key={sectionId}
+              sectionId={sectionId}
+              onDelete={() => handleRemoveSection(sectionId)}
+              onAddFiles={handleAddFiles}
+              onAddCredential={handleAddCredential}
+              isRemovable={!requiredSections.includes(sectionId)}
+            />
+          ))}
 
+          {/* Optional sections manager */}
+          <OptionalSectionsManager
+            activeSections={sectionOrder}
+            onAddSection={handleAddSection}
+          />
           {/* Autocomplete for Adding New Sections */}
-          {addSectionOpen && (
+          {/* {addSectionOpen && (
             <Box
               sx={{
                 display: 'flex',
@@ -249,7 +249,7 @@ const ResumeEditor = () => {
                 Add
               </Button>
             </Box>
-          )}
+          )} */}
         </Box>
 
         <RightSidebar />
