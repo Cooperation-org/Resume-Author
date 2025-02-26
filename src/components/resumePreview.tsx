@@ -615,53 +615,58 @@ const usePagination = (content: ReactNode[], maxHeight: number) => {
   const measuredRef = useRef<boolean>(false)
 
   useLayoutEffect(() => {
+    // Add delay to ensure DOM elements are properly rendered
+    const timeoutId = setTimeout(() => {
+      measureAndPaginate()
+    }, 100)
+
     const measureAndPaginate = () => {
       if (!measureRef.current) return
 
       const mmToPx = (mm: number) => mm * 3.779527559
       const maxHeightPx = mmToPx(maxHeight)
       const contentElements = Array.from(measureRef.current.children)
-      const contentHeights = contentElements?.map(el => el.getBoundingClientRect().height)
+
+      // Guard against empty elements
+      if (contentElements.length === 0) {
+        setTimeout(measureAndPaginate, 100)
+        return
+      }
+
+      const contentHeights = contentElements.map(el => el.getBoundingClientRect().height)
 
       let currentPage: ReactNode[] = []
       let currentHeight = 0
       const paginatedContent: ReactNode[][] = []
 
-      const addSectionToPage = (section: ReactNode, index: number) => {
-        currentPage.push(section)
-        currentHeight += contentHeights[index]
-      }
-
-      const startNewPage = (section: ReactNode, index: number) => {
-        if (currentPage.length > 0) {
-          paginatedContent.push([...currentPage])
-        }
-        currentPage = [section]
-        currentHeight = contentHeights[index]
-      }
-
       for (let i = 0; i < content.length; i++) {
         const section = content[i]
         const sectionHeight = contentHeights[i]
-        const nextSectionHeight = i < content.length - 1 ? contentHeights[i + 1] : 0
 
+        // If the current section is too big for the current page, start a new page
         if (currentHeight + sectionHeight > maxHeightPx) {
-          startNewPage(section, i)
+          if (currentPage.length > 0) {
+            paginatedContent.push([...currentPage])
+            currentPage = []
+            currentHeight = 0
+          }
+
+          // If the section is larger than a single page, put it on its own page
+          if (sectionHeight > maxHeightPx) {
+            paginatedContent.push([section])
+          } else {
+            currentPage = [section]
+            currentHeight = sectionHeight
+          }
           continue
         }
 
-        if (
-          i < content.length - 1 &&
-          currentHeight + sectionHeight + nextSectionHeight > maxHeightPx &&
-          nextSectionHeight < maxHeightPx
-        ) {
-          startNewPage(section, i)
-          continue
-        }
-
-        addSectionToPage(section, i)
+        // Otherwise, add the section to the current page
+        currentPage.push(section)
+        currentHeight += sectionHeight
       }
 
+      // Don't forget to add the last page if it has content
       if (currentPage.length > 0) {
         paginatedContent.push(currentPage)
       }
@@ -680,7 +685,10 @@ const usePagination = (content: ReactNode[], maxHeight: number) => {
     }
 
     window.addEventListener('resize', handleResize)
-    return () => window.removeEventListener('resize', handleResize)
+    return () => {
+      clearTimeout(timeoutId)
+      window.removeEventListener('resize', handleResize)
+    }
   }, [content, maxHeight])
 
   return { pages, measureRef }
