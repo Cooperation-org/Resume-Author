@@ -68,7 +68,7 @@ interface WorkExperience extends VerifiableItem {
 interface Education extends VerifiableItem {
   type: ReactNode
   programName: ReactNode
-  awardEarned: string
+  awardEarned: boolean
   institution: string
   degree: string
   field: string
@@ -79,13 +79,27 @@ interface Education extends VerifiableItem {
   honors?: string[]
   thesis?: string
   relevantCourses?: string[]
+  duration: string
+  showDuration: boolean
+  currentlyEnrolled: boolean
+  inProgress: boolean
+  description: string
+  id: string
+  verificationStatus: string
+  credentialLink: string
+  [key: string]: any
 }
 
 interface Skill extends VerifiableItem {
-  name: string
-  category?: string
-  level?: 'Beginner' | 'Intermediate' | 'Advanced' | 'Expert'
-  yearsOfExperience?: number
+  // name: string
+  // category?: string
+  // level?: 'Beginner' | 'Intermediate' | 'Advanced' | 'Expert'
+  // yearsOfExperience?: number
+  skills: string
+  id: string
+  verificationStatus: string
+  credentialLink: string
+  [key: string]: any
 }
 
 interface Conference extends VerifiableItem {
@@ -136,6 +150,7 @@ interface Certification extends VerifiableItem {
 }
 
 interface ProfessionalAffiliation extends VerifiableItem {
+  name: string
   organization: string
   role?: string
   startDate: string
@@ -143,6 +158,12 @@ interface ProfessionalAffiliation extends VerifiableItem {
   membershipId?: string
   description?: string
   benefits?: string[]
+  showDuration: boolean
+  activeAffiliation: boolean
+  id: string
+  verificationStatus: string
+  credentialLink: string
+  [key: string]: any
 }
 
 interface VolunteerWork extends VerifiableItem {

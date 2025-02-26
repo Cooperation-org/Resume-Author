@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef, useCallback } from 'react'
 import {
   Box,
   TextField,
@@ -8,7 +8,9 @@ import {
   alpha,
   Checkbox,
   FormControlLabel,
-  FormGroup
+  FormGroup,
+  Button,
+  IconButton
 } from '@mui/material'
 import {
   SVGSectionIcon,
@@ -22,7 +24,8 @@ import { StyledButton } from './StyledButton'
 import { useDispatch, useSelector } from 'react-redux'
 import { updateSection } from '../../../redux/slices/resume'
 import { RootState } from '../../../redux/store'
-import stripHtmlTags from '../../../tools/stripHTML'
+import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline'
+import CredentialOverlay from '../../CredentialsOverlay'
 
 const PinkSwitch = styled(Switch)(({ theme }) => ({
   '& .MuiSwitch-switchBase.Mui-checked': {
@@ -49,184 +52,537 @@ export default function Education({
 }: EducationProps) {
   const dispatch = useDispatch()
   const resume = useSelector((state: RootState) => state.resume.resume)
+  const reduxUpdateTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const initialLoadRef = useRef(true)
+  const [showCredentialsOverlay, setShowCredentialsOverlay] = useState(false)
+  const [activeSectionIndex, setActiveSectionIndex] = useState<number | null>(null)
 
-  const [education, setEducation] = useState({
-    type: 'Masters',
-    programName: '',
-    institutionName: '',
-    duration: '1 year',
-    showDuration: false,
-    currentlyEnrolled: false,
-    inProgress: false,
-    awardEarned: false,
-    description: ''
+  const [educations, setEducations] = useState<Education[]>([
+    {
+      type: 'Bachelors',
+      programName: '',
+      institution: '',
+      duration: '1 year',
+      showDuration: false,
+      currentlyEnrolled: false,
+      inProgress: false,
+      awardEarned: false,
+      description: '',
+      id: '',
+      verificationStatus: 'unverified',
+      credentialLink: '',
+      degree: '',
+      field: '',
+      startDate: ''
+    }
+  ])
+
+  const [expandedItems, setExpandedItems] = useState<Record<number, boolean>>({
+    0: true
   })
+
+  const debouncedReduxUpdate = useCallback(
+    (items: Education[]) => {
+      if (reduxUpdateTimeoutRef.current) {
+        clearTimeout(reduxUpdateTimeoutRef.current)
+      }
+      reduxUpdateTimeoutRef.current = setTimeout(() => {
+        dispatch(
+          updateSection({
+            sectionId: 'education',
+            content: {
+              items: items
+            }
+          })
+        )
+      }, 500)
+    },
+    [dispatch]
+  )
 
   // Load existing education from Redux
   useEffect(() => {
     if (resume?.education?.items && resume.education.items.length > 0) {
-      const existingEducation = resume.education.items[0]
+      const typedItems = resume.education.items.map((item: any) => ({
+        type: item.type || 'Bachelors',
+        programName: item.programName || '',
+        institution: item.institution || '',
+        duration: item.duration || '1 year',
+        showDuration:
+          item.showDuration === undefined ? false : Boolean(item.showDuration),
+        currentlyEnrolled: Boolean(item.currentlyEnrolled),
+        inProgress: Boolean(item.inProgress),
+        awardEarned: Boolean(item.awardEarned),
+        description: item.description || '',
+        id: item.id || '',
+        verificationStatus: item.verificationStatus || 'unverified',
+        credentialLink: item.credentialLink || '',
+        ...item
+      }))
 
-      // Prevent redundant updates to avoid infinite loop
-      const isChanged = Object.keys(existingEducation).some(
-        key =>
-          education[key as keyof typeof education] !==
-          existingEducation[key as keyof typeof existingEducation]
-      )
+      const shouldUpdate =
+        initialLoadRef.current || typedItems.length !== educations.length
 
-      if (isChanged) {
-        setEducation(existingEducation as any)
+      if (shouldUpdate) {
+        initialLoadRef.current = false
+
+        setEducations(typedItems)
+        if (typedItems.length !== Object.keys(expandedItems).length) {
+          const initialExpanded: Record<number, boolean> = {}
+          typedItems.forEach((_, index) => {
+            initialExpanded[index] =
+              index < Object.keys(expandedItems).length ? expandedItems[index] : true
+          })
+          setExpandedItems(initialExpanded)
+        }
       }
     }
-  }, [education, resume])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [resume])
 
-  const handleEducationChange = (field: string, value: any) => {
-    const updatedEducation = {
-      ...education,
-      [field]: field === 'description' ? stripHtmlTags(value) : value
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (reduxUpdateTimeoutRef.current) {
+        clearTimeout(reduxUpdateTimeoutRef.current)
+      }
+    }
+  }, [])
+
+  const handleEducationChange = useCallback(
+    (index: number, field: string, value: any) => {
+      setEducations(prevEducations => {
+        const updatedEducations = [...prevEducations]
+        updatedEducations[index] = {
+          ...updatedEducations[index],
+          [field]: value
+        }
+        if (field !== 'description') {
+          debouncedReduxUpdate(updatedEducations)
+        }
+
+        return updatedEducations
+      })
+    },
+    [debouncedReduxUpdate]
+  )
+
+  const handleDescriptionChange = useCallback(
+    (index: number, value: string) => {
+      setEducations(prevEducations => {
+        const updatedEducations = [...prevEducations]
+        updatedEducations[index] = {
+          ...updatedEducations[index],
+          description: value
+        }
+        if (reduxUpdateTimeoutRef.current) {
+          clearTimeout(reduxUpdateTimeoutRef.current)
+        }
+
+        reduxUpdateTimeoutRef.current = setTimeout(() => {
+          dispatch(
+            updateSection({
+              sectionId: 'education',
+              content: {
+                items: updatedEducations
+              }
+            })
+          )
+        }, 1000)
+
+        return updatedEducations
+      })
+    },
+    [dispatch]
+  )
+
+  const handleAddAnotherItem = useCallback(() => {
+    const emptyItem: Education = {
+      type: 'Masters',
+      programName: '',
+      institution: '',
+      duration: '1 year',
+      showDuration: false,
+      currentlyEnrolled: false,
+      inProgress: false,
+      awardEarned: false,
+      description: '',
+      id: '',
+      verificationStatus: 'unverified',
+      credentialLink: '',
+      degree: '',
+      field: '',
+      startDate: ''
     }
 
-    // Prevent unnecessary Redux updates if the content hasn't changed
-    const isChanged =
-      education[field as keyof typeof education] !==
-      updatedEducation[field as keyof typeof updatedEducation]
-
-    if (isChanged) {
-      setEducation(updatedEducation)
+    setEducations(prevEducations => {
+      const updatedEducations = [...prevEducations, emptyItem]
 
       dispatch(
         updateSection({
           sectionId: 'education',
           content: {
-            items: [updatedEducation]
+            items: updatedEducations
           }
         })
       )
-    }
-  }
+
+      return updatedEducations
+    })
+
+    const newIndex = educations.length
+    setExpandedItems(prev => ({
+      ...prev,
+      [newIndex]: true
+    }))
+  }, [educations.length, dispatch])
+
+  const handleDeleteEducation = useCallback(
+    (index: number) => {
+      if (educations.length <= 1) {
+        if (onDelete) onDelete()
+        return
+      }
+
+      setEducations(prevEducations => {
+        const updatedEducations = prevEducations.filter((_, i) => i !== index)
+        dispatch(
+          updateSection({
+            sectionId: 'education',
+            content: {
+              items: updatedEducations
+            }
+          })
+        )
+
+        return updatedEducations
+      })
+
+      setExpandedItems(prev => {
+        const newExpandedState: Record<number, boolean> = {}
+        educations
+          .filter((_, i) => i !== index)
+          .forEach((_, i) => {
+            if (i === 0 && educations.length - 1 === 1) {
+              newExpandedState[i] = true
+            } else if (i < index) {
+              newExpandedState[i] = prev[i] || false
+            } else {
+              newExpandedState[i] = prev[i + 1] || false
+            }
+          })
+        return newExpandedState
+      })
+    },
+    [educations, dispatch, onDelete]
+  )
+
+  const toggleExpanded = useCallback((index: number) => {
+    setExpandedItems(prev => ({
+      ...prev,
+      [index]: !prev[index]
+    }))
+  }, [])
+
+  const handleOpenCredentialsOverlay = useCallback((index: number) => {
+    setActiveSectionIndex(index)
+    setShowCredentialsOverlay(true)
+  }, [])
+
+  const handleCredentialSelect = useCallback(
+    (selectedCredentials: string[]) => {
+      if (activeSectionIndex !== null && selectedCredentials.length > 0) {
+        const credentialId = selectedCredentials[0]
+        const credentialLink = `https://linkedcreds.allskillscount.org/view/${credentialId}`
+
+        setEducations(prevEducations => {
+          const updatedEducations = [...prevEducations]
+          updatedEducations[activeSectionIndex] = {
+            ...updatedEducations[activeSectionIndex],
+            verificationStatus: 'verified',
+            credentialLink: credentialLink
+          }
+
+          dispatch(
+            updateSection({
+              sectionId: 'education',
+              content: {
+                items: updatedEducations
+              }
+            })
+          )
+
+          return updatedEducations
+        })
+      }
+
+      setShowCredentialsOverlay(false)
+      setActiveSectionIndex(null)
+    },
+    [activeSectionIndex, dispatch]
+  )
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-      <Box display='flex' alignItems='center' justifyContent='space-between'>
-        <Box display='flex' alignItems='center' gap={2}>
-          <SVGSectionIcon />
-          <Typography variant='body1'>Type</Typography>
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+      {educations.map((education, index) => (
+        <Box
+          key={index}
+          sx={{
+            backgroundColor: '#F1F1FB',
+            px: '20px',
+            py: '10px',
+            display: 'flex',
+            flexDirection: 'column',
+            borderRadius: '4px',
+            gap: 2
+          }}
+        >
+          <Box
+            display='flex'
+            alignItems='center'
+            justifyContent='space-between'
+            onClick={() => toggleExpanded(index)}
+            sx={{ cursor: 'pointer' }}
+          >
+            <Box display='flex' alignItems='center' gap={2} flexGrow={1}>
+              <SVGSectionIcon />
+              {!expandedItems[index] ? (
+                <>
+                  <Typography variant='body1'>Program:</Typography>
+                  <Typography variant='body1' sx={{ fontWeight: 'medium' }}>
+                    {education.programName || 'Untitled Program'}
+                  </Typography>
+                </>
+              ) : (
+                <Box display='flex' alignItems='center'>
+                  <Typography variant='body1'>Program Details</Typography>
+                </Box>
+              )}
+            </Box>
+            <IconButton
+              onClick={e => {
+                e.stopPropagation()
+                toggleExpanded(index)
+              }}
+              sx={{
+                transform: expandedItems[index] ? 'rotate(180deg)' : 'rotate(0deg)',
+                transition: 'transform 0.3s ease'
+              }}
+            >
+              <SVGDownIcon />
+            </IconButton>
+          </Box>
+
+          {expandedItems[index] && (
+            <>
+              <TextField
+                sx={{ bgcolor: '#FFF' }}
+                size='small'
+                fullWidth
+                placeholder='Type of Education (Masters, Bachelors, etc.)'
+                value={education.type}
+                onChange={e => handleEducationChange(index, 'type', e.target.value)}
+                variant='outlined'
+              />
+
+              <Typography>Program or Course Name</Typography>
+              <TextField
+                sx={{ bgcolor: '#FFF' }}
+                size='small'
+                fullWidth
+                placeholder='Enter program name'
+                value={education.programName}
+                onChange={e =>
+                  handleEducationChange(index, 'programName', e.target.value)
+                }
+              />
+
+              <Typography>Institution or Organization Name</Typography>
+              <TextField
+                sx={{ bgcolor: '#FFF' }}
+                size='small'
+                fullWidth
+                placeholder='Enter institution name'
+                value={education.institution}
+                onChange={e =>
+                  handleEducationChange(index, 'institution', e.target.value)
+                }
+              />
+
+              <Box display='flex' alignItems='start' flexDirection='column'>
+                <Typography variant='body1'>Dates</Typography>
+                <Box display='flex' alignItems='center'>
+                  <PinkSwitch
+                    checked={education.showDuration}
+                    onChange={e =>
+                      handleEducationChange(index, 'showDuration', e.target.checked)
+                    }
+                    sx={{ color: '#34C759' }}
+                  />
+                  <Typography>Show duration instead of exact dates</Typography>
+                </Box>
+              </Box>
+
+              <Box display='flex' alignItems='center' gap={2}>
+                <TextField
+                  sx={{ bgcolor: '#FFF' }}
+                  size='small'
+                  placeholder='Enter total duration'
+                  value={education.duration}
+                  onChange={e => handleEducationChange(index, 'duration', e.target.value)}
+                  variant='outlined'
+                />
+              </Box>
+
+              <FormGroup row sx={{ gap: 2 }}>
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={education.currentlyEnrolled}
+                      onChange={e =>
+                        handleEducationChange(
+                          index,
+                          'currentlyEnrolled',
+                          e.target.checked
+                        )
+                      }
+                    />
+                  }
+                  label='Currently enrolled here'
+                />
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={education.inProgress}
+                      onChange={e =>
+                        handleEducationChange(index, 'inProgress', e.target.checked)
+                      }
+                    />
+                  }
+                  label='In progress'
+                />
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={education.awardEarned}
+                      onChange={e =>
+                        handleEducationChange(index, 'awardEarned', e.target.checked)
+                      }
+                    />
+                  }
+                  label='Award earned'
+                />
+              </FormGroup>
+
+              <Typography variant='body1'>
+                Describe how this item relates to the job you want to get:
+              </Typography>
+              <TextEditor
+                key={`editor-${index}`}
+                value={education.description || ''}
+                onChange={val => handleDescriptionChange(index, val)}
+                onAddCredential={onAddCredential}
+              />
+
+              <Box
+                sx={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  marginTop: '20px',
+                  gap: '15px'
+                }}
+              >
+                <StyledButton
+                  startIcon={<SVGAddcredential />}
+                  onClick={() => onAddCredential && onAddCredential('')}
+                >
+                  Add credential(s)
+                </StyledButton>
+                <StyledButton startIcon={<SVGAddFiles />} onClick={onAddFiles}>
+                  Add file(s)
+                </StyledButton>
+                <StyledButton
+                  startIcon={<SVGDeleteSection />}
+                  onClick={() => handleDeleteEducation(index)}
+                >
+                  Delete this item
+                </StyledButton>
+              </Box>
+            </>
+          )}
         </Box>
-        <SVGDownIcon />
-      </Box>
-
-      <TextField
-        sx={{ bgcolor: '#FFF' }}
-        size='small'
-        fullWidth
-        value={education.type}
-        onChange={e => handleEducationChange('type', e.target.value)}
-        variant='outlined'
-      />
-
-      <Typography>Program or Course Name</Typography>
-      <TextField
-        sx={{ bgcolor: '#FFF' }}
-        size='small'
-        fullWidth
-        placeholder='Enter program name'
-        value={education.programName}
-        onChange={e => handleEducationChange('programName', e.target.value)}
-      />
-
-      <Typography>Institution or Organization Name</Typography>
-      <TextField
-        sx={{ bgcolor: '#FFF' }}
-        size='small'
-        fullWidth
-        placeholder='Enter institution name'
-        value={education.institutionName}
-        onChange={e => handleEducationChange('institutionName', e.target.value)}
-      />
-
-      <Box display='flex' alignItems='start' flexDirection='column'>
-        <Typography variant='body1'>Dates</Typography>
-        <Box display='flex' alignItems='center'>
-          <PinkSwitch
-            checked={education.showDuration}
-            onChange={e => handleEducationChange('showDuration', e.target.checked)}
-            sx={{ color: '#34C759' }}
-          />
-          <Typography>Show duration instead of exact dates</Typography>
-        </Box>
-      </Box>
-
-      <Box display='flex' alignItems='center' gap={2}>
-        <TextField
-          sx={{ bgcolor: '#FFF' }}
-          size='small'
-          placeholder='Enter total duration'
-          value={education.duration}
-          onChange={e => handleEducationChange('duration', e.target.value)}
-          variant='outlined'
-        />
-      </Box>
-
-      <FormGroup row sx={{ gap: 2 }}>
-        <FormControlLabel
-          control={
-            <Checkbox
-              checked={education.currentlyEnrolled}
-              onChange={e => handleEducationChange('currentlyEnrolled', e.target.checked)}
-            />
-          }
-          label='Currently enrolled here'
-        />
-        <FormControlLabel
-          control={
-            <Checkbox
-              checked={education.inProgress}
-              onChange={e => handleEducationChange('inProgress', e.target.checked)}
-            />
-          }
-          label='In progress'
-        />
-        <FormControlLabel
-          control={
-            <Checkbox
-              checked={education.awardEarned}
-              onChange={e => handleEducationChange('awardEarned', e.target.checked)}
-            />
-          }
-          label='Award earned'
-        />
-      </FormGroup>
-
-      <Typography variant='body1'>
-        Describe how this item relates to the job you want to get:
-      </Typography>
-      <TextEditor
-        value={education.description}
-        onChange={val => handleEducationChange('description', val)}
-        onAddCredential={onAddCredential}
-      />
+      ))}
 
       <Box
         sx={{
           display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginTop: '20px'
+          justifyContent: 'center',
+          gap: '20px'
         }}
       >
-        <StyledButton
-          startIcon={<SVGAddcredential />}
-          onClick={() => onAddCredential && onAddCredential('')}
+        <Button
+          variant='contained'
+          color='primary'
+          onClick={() => handleOpenCredentialsOverlay(educations.length - 1)}
+          sx={{
+            borderRadius: '4px',
+            width: '100%',
+            textTransform: 'none',
+            padding: '8px 44px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            backgroundColor: '#F3F5F8',
+            color: '#2E2E48',
+            boxShadow: 'none',
+            fontFamily: 'Nunito sans',
+            fontSize: '14px',
+            fontWeight: 500
+          }}
         >
-          Add credential(s)
-        </StyledButton>
-        <StyledButton startIcon={<SVGAddFiles />} onClick={onAddFiles}>
-          Add file(s)
-        </StyledButton>
-        <StyledButton startIcon={<SVGDeleteSection />} onClick={onDelete}>
-          Delete this item
-        </StyledButton>
+          <AddCircleOutlineIcon
+            sx={{ marginRight: 1, width: '16px', height: '16px', color: '#2E2E48' }}
+          />
+          Add credential
+        </Button>
+
+        <Button
+          variant='contained'
+          color='primary'
+          onClick={handleAddAnotherItem}
+          sx={{
+            borderRadius: '4px',
+            width: '100%',
+            textTransform: 'none',
+            padding: '8px 44px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            backgroundColor: '#F3F5F8',
+            color: '#2E2E48',
+            boxShadow: 'none',
+            fontFamily: 'Nunito sans',
+            fontSize: '14px',
+            fontWeight: 500
+          }}
+        >
+          <AddCircleOutlineIcon
+            sx={{ marginRight: 1, width: '16px', height: '16px', color: '#2E2E48' }}
+          />
+          Add another item
+        </Button>
       </Box>
+
+      {showCredentialsOverlay && (
+        <CredentialOverlay
+          onClose={() => {
+            setShowCredentialsOverlay(false)
+            setActiveSectionIndex(null)
+          }}
+          onSelect={handleCredentialSelect}
+        />
+      )}
     </Box>
   )
 }

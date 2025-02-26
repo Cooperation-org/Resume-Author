@@ -429,7 +429,18 @@ export default function WorkExperience({
                 </Box>
               </Box>
 
-              <Typography variant='body1'>Describe your role at this company:</Typography>
+              <Typography
+                variant='body1'
+                sx={{
+                  fontFamily: 'Nunito Sans',
+                  fontWeight: 500,
+                  fontSize: '16px',
+                  lineHeight: 'normal',
+                  letterSpacing: '0.16px'
+                }}
+              >
+                Describe your role at this company:
+              </Typography>
               <TextEditor
                 key={`editor-${index}`}
                 value={experience.description || ''}
@@ -497,7 +508,7 @@ export default function WorkExperience({
           <AddCircleOutlineIcon
             sx={{ marginRight: 1, width: '16px', height: '16px', color: '#2E2E48' }}
           />
-          Verify this section
+          Add credential
         </Button>
 
         <Button

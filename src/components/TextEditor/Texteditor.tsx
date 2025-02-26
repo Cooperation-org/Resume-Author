@@ -10,9 +10,15 @@ const BaseClipboard = Quill.import('modules/clipboard')
 
 const icons = Quill.import('ui/icons')
 icons['link-to-credentials'] =
-  `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <rect x="4" y="4" width="16" height="16" rx="2" stroke="currentColor" stroke-width="2"/>
-  <path d="M12 8V16M8 12H16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+  `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="25" viewBox="0 0 24 25" fill="none">
+  <g clip-path="url(#clip0_1381_33743)">
+    <path d="M4 6.67578H2V20.6758C2 21.7808 2.895 22.6758 4 22.6758H18V20.6758H4V6.67578ZM20 2.67578H8C6.895 2.67578 6 3.57078 6 4.67578V16.6758C6 17.7808 6.895 18.6758 8 18.6758H20C21.105 18.6758 22 17.7808 22 16.6758V4.67578C22 3.57078 21.105 2.67578 20 2.67578ZM19 11.6758H15V15.6758H13V11.6758H9V9.67578H13V5.67578H15V9.67578H19V11.6758Z" fill="#000"/>
+  </g>
+  <defs>
+    <clipPath id="clip0_1381_33743">
+      <rect width="24" height="24" fill="white" transform="translate(0 0.675781)"/>
+    </clipPath>
+  </defs>
 </svg>`
 
 icons['undo'] = `<svg viewBox="0 0 18 18">

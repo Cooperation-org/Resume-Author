@@ -4,7 +4,6 @@ import TextEditor from '../../TextEditor/Texteditor'
 import { useDispatch, useSelector } from 'react-redux'
 import { updateSection } from '../../../redux/slices/resume'
 import { RootState } from '../../../redux/store'
-import stripHtmlTags from '../../../tools/stripHTML'
 
 interface ProfessionalSummaryProps {
   onAddFiles?: () => void
@@ -25,26 +24,22 @@ export default function ProfessionalSummary({
   // ✅ Load existing summary from Redux if available
   useEffect(() => {
     if (resume?.summary) {
-      const cleanSummary = stripHtmlTags(resume.summary)
-
       // Prevent unnecessary state updates
-      if (cleanSummary !== description) {
-        setDescription(cleanSummary)
+      if (resume.summary !== description) {
+        setDescription(resume.summary)
       }
     }
   }, [description, resume])
 
   const handleDescriptionChange = (val: string) => {
-    const plainText = stripHtmlTags(val)
-
     // ✅ Prevent unnecessary Redux updates
-    if (plainText !== description) {
-      setDescription(plainText)
+    if (val !== description) {
+      setDescription(val)
 
       dispatch(
         updateSection({
           sectionId: 'summary',
-          content: plainText
+          content: val
         })
       )
     }
