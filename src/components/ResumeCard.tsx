@@ -16,20 +16,20 @@ import {
 import { styled } from '@mui/material/styles'
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined'
 import MoreVertIcon from '@mui/icons-material/MoreVert'
-import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import DeleteIcon from '@mui/icons-material/Delete'
 import ContentCopyIcon from '@mui/icons-material/ContentCopy'
 import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined'
 import DownloadIcon from '@mui/icons-material/Download'
 import { LinkIcon } from 'lucide-react'
 import { GoogleDriveStorage, Resume } from '@cooperation/vc-storage'
-import { getCookie, getLocalStorage } from '../tools/cookie'
+import { getLocalStorage } from '../tools/cookie'
 import Logo from '../assets/blue-logo.png'
-import { Link } from 'react-router-dom'
+// import { Link } from 'react-router-dom'
 import DeleteConfirmationDialog from './DeleteConfirmDialog'
 import { useDispatch } from 'react-redux'
 import { AppDispatch } from '../redux/store'
 import { deleteResume, duplicateResume, updateTitle } from '../redux/slices/myresumes'
+import { SVGBadge } from '../assets/svgs'
 
 const ActionButton = styled(Button)(({ theme }) => ({
   textTransform: 'none',
@@ -44,7 +44,7 @@ const ActionButton = styled(Button)(({ theme }) => ({
 interface ResumeCardProps {
   id: string
   title: string
-  date: string
+  date: string // ISO date string like "2025-02-26T13:37:25.520Z" for non-drafts
   credentials: number
   isDraft?: boolean
   resume: any
@@ -116,10 +116,13 @@ const ResumeCard: React.FC<ResumeCardProps> = ({
   // Format the date
   const formattedDate = formatDate(date)
 
-  // Get time ago for lastUpdated timestamp
-  const timeAgo = resume?.content?.lastUpdated
-    ? getTimeAgo(resume.content.lastUpdated)
-    : 'Just now'
+  // Get time ago for the appropriate timestamp
+  // For drafts, use lastUpdated; for non-drafts, use the date prop
+  const timeAgo = isDraft
+    ? resume?.content?.lastUpdated
+      ? getTimeAgo(resume.content.lastUpdated)
+      : 'Just now'
+    : getTimeAgo(date)
 
   const inputRef = useRef<HTMLInputElement | null>(null)
 
@@ -215,16 +218,7 @@ const ResumeCard: React.FC<ResumeCardProps> = ({
             {/* Left Side: Title and Metadata */}
             <Box display='flex' gap={1.5}>
               {!isDraft ? (
-                <CheckCircleIcon
-                  sx={{
-                    color: 'white',
-                    backgroundColor: '#4F46E5',
-                    borderRadius: '50%',
-                    p: 0.5,
-                    width: 15,
-                    height: 15
-                  }}
-                />
+                <SVGBadge />
               ) : (
                 <img src={Logo} alt='Résumé Author' style={{ height: 25 }} />
               )}
@@ -254,8 +248,8 @@ const ResumeCard: React.FC<ResumeCardProps> = ({
                     }}
                   />
                 ) : (
-                  <Link
-                    to={`/resume/${id}`}
+                  <Box
+                    // to={`/resume/${id}`} // this will be after creating the review page and will replace box with link
                     style={{
                       fontWeight: 500,
                       textDecoration: 'underline',
@@ -263,7 +257,7 @@ const ResumeCard: React.FC<ResumeCardProps> = ({
                     }}
                   >
                     {title} - {formattedDate}
-                  </Link>
+                  </Box>
                 )}
                 <Typography
                   variant='body2'
@@ -272,7 +266,7 @@ const ResumeCard: React.FC<ResumeCardProps> = ({
                 >
                   {isDraft
                     ? `DRAFT - ${timeAgo}`
-                    : `Just now - ${credentials} Credentials`}
+                    : `${timeAgo} - ${credentials} Credentials`}
                 </Typography>
               </Box>
             </Box>
