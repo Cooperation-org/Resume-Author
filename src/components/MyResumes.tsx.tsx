@@ -57,7 +57,7 @@ const ResumeScreen: React.FC = () => {
         <ResumeCard
           key={resume?.id}
           id={resume?.id}
-          title={resume?.name}
+          title={resume?.content?.contact?.fullName}
           date={new Date(resume?.lastUpdated).toLocaleDateString()}
           credentials={0}
           isDraft={false}
@@ -70,7 +70,7 @@ const ResumeScreen: React.FC = () => {
         <ResumeCard
           key={resume.id}
           id={resume.id}
-          title={resume?.name.split('.')[0]}
+          title={resume?.content?.contact?.fullName?.split('.')[0]}
           date={new Date().toLocaleDateString()}
           credentials={0}
           isDraft={true}

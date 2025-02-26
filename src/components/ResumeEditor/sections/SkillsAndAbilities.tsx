@@ -245,8 +245,7 @@ export default function SkillsAndAbilities({
             display: 'flex',
             flexDirection: 'column',
             borderRadius: '4px',
-            gap: 2,
-            width: '48vw'
+            gap: 2
           }}
         >
           <Box

@@ -1,13 +1,14 @@
 import { Box, Typography, Button } from '@mui/material'
 import { SVGLogoDescreption, SVGALoginLogo, SVGQRCode } from '../assets/svgs'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { login } from '../tools/auth'
 
 export default function SignUpStep2() {
+  const location = useLocation()
   const navigate = useNavigate()
 
   const handleGoogleSignIn = () => {
-    login()
+    login(location.pathname)
   }
 
   return (

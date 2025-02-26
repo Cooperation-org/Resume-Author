@@ -47,6 +47,7 @@ interface Contact {
 }
 
 interface Resume {
+  fullName: string
   id: string
   lastUpdated: string
   name: string
@@ -54,6 +55,7 @@ interface Resume {
   contact: Contact
   summary: string
   content: {
+    contact: any
     resume: any
   }
 }
@@ -144,8 +146,8 @@ const resumeSlice = createSlice({
           content: {
             ...resumeToDuplicate.content,
             resume: {
-              ...resumeToDuplicate.content.resume,
-              title: `${resumeToDuplicate.content.resume.title}`
+              ...resumeToDuplicate.content,
+              title: `${resumeToDuplicate?.content?.contact}`
             }
           }
         }

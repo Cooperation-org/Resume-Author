@@ -1,10 +1,5 @@
 import { Box, Typography, Button, Divider, Stack } from '@mui/material'
-import {
-  getCookie,
-  getLocalStorage,
-  removeCookie,
-  removeLocalStorage
-} from '../../tools/cookie'
+import { getLocalStorage, removeCookie, removeLocalStorage } from '../../tools/cookie'
 import { login } from '../../tools/auth'
 import { useSelector } from 'react-redux'
 import { useState, useEffect } from 'react'
@@ -14,6 +9,7 @@ import {
   checkmarkgraySVG,
   uploadArrowUpSVG
 } from '../../assets/svgs'
+import { useLocation } from 'react-router-dom'
 
 interface RootState {
   vcReducer: {
@@ -23,6 +19,7 @@ interface RootState {
 }
 
 const RightSidebar = () => {
+  const location = useLocation()
   const [selectedClaims, setSelectedClaims] = useState<string[]>([])
   const [uploadedFiles, setUploadedFiles] = useState<string[]>([])
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -67,7 +64,8 @@ const RightSidebar = () => {
   }
 
   const handleGoogleLogin = async () => {
-    await login() // Redirects to Google OAuth login
+    await login(location.pathname)
+    // Redirects to Google OAuth login
   }
 
   const handleClaimToggle = (claimId: string) => {

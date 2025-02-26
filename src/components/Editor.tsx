@@ -11,11 +11,12 @@ import {
 import LeftSidebar from './ResumeEditor/LeftSidebar'
 import RightSidebar from './ResumeEditor/RightSidebar'
 import Section from './ResumeEditor/Section'
-import { useSelector } from 'react-redux'
+import { useSelector, useDispatch } from 'react-redux'
 import { RootState } from '../redux/store'
 import { SVGEditName } from '../assets/svgs'
 import useGoogleDrive from '../hooks/useGoogleDrive'
 import { useNavigate } from 'react-router-dom'
+import { updateSection } from '../redux/slices/resume'
 import OptionalSectionsManager from './ResumeEditor/OptionalSectionCard'
 
 const ButtonStyles = {
@@ -47,6 +48,7 @@ const BorderLinearProgress = styled(LinearProgress)(({ theme }) => ({
 
 const ResumeEditor: React.FC = () => {
   const navigate = useNavigate()
+  const dispatch = useDispatch()
   const [sectionOrder, setSectionOrder] = useState<string[]>([
     'Professional Summary',
     'Work Experience',
@@ -54,6 +56,8 @@ const ResumeEditor: React.FC = () => {
     'Professional Affiliations',
     'Skills and Abilities'
   ])
+  const [isEditingName, setIsEditingName] = useState(false)
+  const [resumeName, setResumeName] = useState('Untitled')
 
   const resume = useSelector((state: RootState) => state?.resume.resume)
   const { instances } = useGoogleDrive()
@@ -115,6 +119,39 @@ const ResumeEditor: React.FC = () => {
     console.log('resume', signedResume)
   }
 
+  const handleEditNameClick = () => {
+    setIsEditingName(true)
+    // Initialize with current resume name if available
+    if (resume && resume.name) {
+      setResumeName(resume.name)
+    }
+  }
+
+  const handleNameChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setResumeName(event.target.value)
+  }
+
+  const handleNameSave = () => {
+    if (!resume) return
+
+    dispatch(updateSection({ sectionId: 'name', content: resumeName }))
+    setIsEditingName(false)
+  }
+
+  const handleNameKeyPress = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === 'Enter') {
+      handleNameSave()
+    } else if (event.key === 'Escape') {
+      setIsEditingName(false)
+      // Reset to original value
+      if (resume && resume.name) {
+        setResumeName(resume.name)
+      } else {
+        setResumeName('Untitled')
+      }
+    }
+  }
+
   return (
     <Box sx={{ p: 6 }}>
       <Box
@@ -127,19 +164,46 @@ const ResumeEditor: React.FC = () => {
       >
         <Box sx={{ display: 'flex', gap: '15px', flexDirection: 'column' }}>
           <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
-            <Typography
-              sx={{
-                color: '#000',
-                fontFamily: 'Poppins',
-                fontSize: '42px',
-                fontStyle: 'normal',
-                fontWeight: 600,
-                lineHeight: '55.88px'
-              }}
-            >
-              Untitled
-            </Typography>
-            <IconButton>
+            {isEditingName ? (
+              <TextField
+                value={resumeName}
+                onChange={handleNameChange}
+                onBlur={handleNameSave}
+                onKeyDown={handleNameKeyPress}
+                autoFocus
+                variant='standard'
+                sx={{
+                  '& .MuiInputBase-input': {
+                    color: '#000',
+                    fontFamily: 'Poppins',
+                    fontSize: '42px',
+                    fontStyle: 'normal',
+                    fontWeight: 600,
+                    lineHeight: '55.88px'
+                  },
+                  '& .MuiInput-underline:before': {
+                    borderBottomColor: '#614BC4'
+                  },
+                  '& .MuiInput-underline:after': {
+                    borderBottomColor: '#614BC4'
+                  }
+                }}
+              />
+            ) : (
+              <Typography
+                sx={{
+                  color: '#000',
+                  fontFamily: 'Poppins',
+                  fontSize: '42px',
+                  fontStyle: 'normal',
+                  fontWeight: 600,
+                  lineHeight: '55.88px'
+                }}
+              >
+                {resume?.name || 'Untitled'}
+              </Typography>
+            )}
+            <IconButton onClick={handleEditNameClick}>
               <SVGEditName />
             </IconButton>
           </Box>
