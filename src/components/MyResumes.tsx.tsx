@@ -57,8 +57,8 @@ const ResumeScreen: React.FC = () => {
         <ResumeCard
           key={resume?.id}
           id={resume?.id}
-          title={resume?.content?.contact?.fullName}
-          date={new Date(resume?.lastUpdated).toLocaleDateString()}
+          title={resume?.content?.credentialSubject?.person?.name?.formattedName}
+          date={new Date(resume?.content?.issuanceDate).toLocaleDateString()}
           credentials={0}
           isDraft={false}
           resume={resume}

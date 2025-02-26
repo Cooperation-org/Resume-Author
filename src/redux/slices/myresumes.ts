@@ -55,6 +55,8 @@ interface Resume {
   contact: Contact
   summary: string
   content: {
+    issuanceDate: string | number | Date
+    credentialSubject: any
     contact: any
     resume: any
   }
