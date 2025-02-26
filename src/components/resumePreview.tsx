@@ -4,6 +4,7 @@ import { QRCodeSVG } from 'qrcode.react'
 import { BlueVerifiedBadge } from '../assets/svgs'
 import { useSelector } from 'react-redux'
 import { RootState } from '../redux/store'
+import { HTMLWithVerifiedLinks, isVerifiedLink } from '../tools/htmlUtils'
 
 const PAGE_SIZE = {
   width: '210mm',
@@ -33,6 +34,7 @@ const LinkWithFavicon: React.FC<{ url: string; platform?: string }> = ({
   const cleanUrl = url.replace(/^https?:\/\//, '')
   const domain = platform ? platform.toLowerCase() : cleanUrl.split('/')[0]
   const faviconDomain = domain.includes('.') ? domain : `${domain}.com`
+  const isVerified = isVerifiedLink(url)
 
   return (
     <Box
@@ -57,6 +59,7 @@ const LinkWithFavicon: React.FC<{ url: string; platform?: string }> = ({
         {platform || domain}
       </Typography>
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+        {isVerified && <BlueVerifiedBadge />}
         <img
           src={`https://www.google.com/s2/favicons?domain=${faviconDomain}&sz=32`}
           alt={`${domain} favicon`}
@@ -203,7 +206,7 @@ const SummarySection: React.FC<{ summary: string }> = ({ summary }) => (
       variant='body2'
       sx={{ color: '#000', fontWeight: 400, fontSize: '16px', fontFamily: 'Arial' }}
     >
-      {summary}
+      <HTMLWithVerifiedLinks htmlContent={summary} />
     </Typography>
   </Box>
 )
@@ -258,7 +261,7 @@ const ExperienceSection: React.FC<{ items: WorkExperience[] }> = ({ items }) => 
           variant='body2'
           sx={{ mb: 1, fontWeight: 400, fontSize: '16px', fontFamily: 'Arial' }}
         >
-          {item.description}
+          <HTMLWithVerifiedLinks htmlContent={item.description} />
         </Typography>
         <Box component='ul' sx={{ m: 0, pl: 2 }}>
           {item?.achievements?.map((achievement, idx) => (
@@ -268,7 +271,7 @@ const ExperienceSection: React.FC<{ items: WorkExperience[] }> = ({ items }) => 
               key={`${item.id}-achievement-${idx}`}
               sx={{ mb: 0.5, fontWeight: 400, fontSize: '16px', fontFamily: 'Arial' }}
             >
-              {achievement}
+              <HTMLWithVerifiedLinks htmlContent={achievement} />
             </Typography>
           ))}
         </Box>
@@ -325,43 +328,56 @@ const SkillsSection: React.FC<{ items: Skill[] }> = ({ items }) => (
   </Box>
 )
 
-const CertificationsSection: React.FC<{ items: Certification[] }> = ({ items }) => (
-  <Box sx={{ mb: '30px' }}>
-    <SectionTitle>Certifications</SectionTitle>
-    {items?.map(item => (
-      <Box key={item.id} sx={{ mb: 2 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center' }}>
-          {item.verificationStatus === 'verified' && <BlueVerifiedBadge />} &nbsp;
-          <Typography
-            variant='subtitle1'
-            sx={{ fontWeight: 700, fontSize: '16px', fontFamily: 'Arial' }}
-          >
-            {item.name}
-          </Typography>
-        </Box>
-        <Typography
-          variant='body2'
-          sx={{ color: '#000', fontFamily: 'Arial', fontSize: '16px', fontWeight: 400 }}
-        >
-          {item.issuer} | {item.issueDate} - {item.expiryDate}
-        </Typography>
-        {item.verificationStatus === 'verified' && item.credentialId && (
-          <Typography
-            variant='body2'
-            sx={{
-              color: '#2563EB',
-              fontFamily: 'Arial',
-              fontSize: '16px',
-              fontWeight: 400
-            }}
-          >
-            Credential ID: {item.credentialId}
-          </Typography>
-        )}
-      </Box>
-    ))}
-  </Box>
-)
+// const CertificationsSection: React.FC<{ items: Certification[] }> = ({ items }) => (
+//   <Box sx={{ mb: '30px' }}>
+//     <SectionTitle>Certifications</SectionTitle>
+//     {items?.map(item => (
+//       <Box key={item.id} sx={{ mb: 2 }}>
+//         <Box sx={{ display: 'flex', alignItems: 'center' }}>
+//           {item.verificationStatus === 'verified' && <BlueVerifiedBadge />} &nbsp;
+//           <Typography
+//             variant='subtitle1'
+//             sx={{ fontWeight: 700, fontSize: '16px', fontFamily: 'Arial' }}
+//           >
+//             {item.name}
+//           </Typography>
+//         </Box>
+//         <Typography
+//           variant='body2'
+//           sx={{ color: '#000', fontFamily: 'Arial', fontSize: '16px', fontWeight: 400 }}
+//         >
+//           {item.issuer} | {item.issueDate} - {item.expiryDate}
+//         </Typography>
+//         {item.verificationStatus === 'verified' && item.credentialId && (
+//           <Typography
+//             variant='body2'
+//             sx={{
+//               color: '#2563EB',
+//               fontFamily: 'Arial',
+//               fontSize: '16px',
+//               fontWeight: 400
+//             }}
+//           >
+//             Credential ID: {item.credentialId}
+//           </Typography>
+//         )}
+//         {item.description && (
+//           <Typography
+//             variant='body2'
+//             sx={{
+//               color: '#000',
+//               fontFamily: 'Arial',
+//               fontSize: '16px',
+//               fontWeight: 400
+//             }}
+//           >
+//             <HTMLWithVerifiedLinks htmlContent={item.description} />
+//           </Typography>
+//         )}
+//       </Box>
+//     ))}
+//   </Box>
+// )
 
 const ProjectsSection: React.FC<{ items: Project[] }> = ({ items }) => (
   <Box sx={{ mb: '30px' }}>
@@ -381,7 +397,7 @@ const ProjectsSection: React.FC<{ items: Project[] }> = ({ items }) => (
           variant='body2'
           sx={{ mb: 1, fontFamily: 'Arial', fontSize: '16px', fontWeight: 400 }}
         >
-          {item.description}
+          <HTMLWithVerifiedLinks htmlContent={item.description} />
         </Typography>
         {item.url && (
           <Box sx={{ mb: 1 }}>
@@ -479,9 +495,9 @@ const ResumePreview: React.FC<ResumePreviewProps> = ({ data }) => {
     <ExperienceSection key='experience' items={resume?.experience.items as any} />,
     <EducationSection key='education' items={resume?.education.items as any} />,
     <SkillsSection key='skills' items={resume?.skills.items as any} />,
-    resume?.certifications?.items && (
-      <CertificationsSection key='certifications' items={resume?.certifications.items} />
-    ),
+    // resume?.certifications?.items && (
+    //   <CertificationsSection key='certifications' items={resume?.certifications.items} />
+    // ),
     <ProjectsSection key='projects' items={resume?.projects.items as any} />
   ]
 
