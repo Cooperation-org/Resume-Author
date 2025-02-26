@@ -57,6 +57,45 @@ const StyledCard = styled(Card)(() => ({
   '&:hover': { backgroundColor: '#f9f9f9' }
 }))
 
+// Helper function to format date as "Month Day, Year"
+const formatDate = (dateString: string): string => {
+  const date = new Date(dateString)
+  return date.toLocaleDateString('en-US', {
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric'
+  })
+}
+
+// Helper function to get time ago string (e.g., "2 days ago", "3 hours ago")
+const getTimeAgo = (dateString: string): string => {
+  const date = new Date(dateString)
+  const now = new Date()
+  const diffMs = now.getTime() - date.getTime()
+
+  // Convert to appropriate units
+  const diffSecs = Math.floor(diffMs / 1000)
+  const diffMins = Math.floor(diffSecs / 60)
+  const diffHours = Math.floor(diffMins / 60)
+  const diffDays = Math.floor(diffHours / 24)
+  const diffMonths = Math.floor(diffDays / 30)
+  const diffYears = Math.floor(diffDays / 365)
+
+  if (diffYears > 0) {
+    return `${diffYears} ${diffYears === 1 ? 'year' : 'years'} ago`
+  } else if (diffMonths > 0) {
+    return `${diffMonths} ${diffMonths === 1 ? 'month' : 'months'} ago`
+  } else if (diffDays > 0) {
+    return `${diffDays} ${diffDays === 1 ? 'day' : 'days'} ago`
+  } else if (diffHours > 0) {
+    return `${diffHours} ${diffHours === 1 ? 'hour' : 'hours'} ago`
+  } else if (diffMins > 0) {
+    return `${diffMins} ${diffMins === 1 ? 'minute' : 'minutes'} ago`
+  } else {
+    return `${diffSecs} ${diffSecs === 1 ? 'second' : 'seconds'} ago`
+  }
+}
+
 const ResumeCard: React.FC<ResumeCardProps> = ({
   id,
   title,
@@ -73,6 +112,14 @@ const ResumeCard: React.FC<ResumeCardProps> = ({
   const [isLoading, setIsLoading] = useState(false)
   const [showCopiedTooltip, setShowCopiedTooltip] = useState(false)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+
+  // Format the date
+  const formattedDate = formatDate(date)
+
+  // Get time ago for lastUpdated timestamp
+  const timeAgo = resume?.content?.lastUpdated
+    ? getTimeAgo(resume.content.lastUpdated)
+    : 'Just now'
 
   const inputRef = useRef<HTMLInputElement | null>(null)
 
@@ -188,6 +235,8 @@ const ResumeCard: React.FC<ResumeCardProps> = ({
                     value={editedTitle}
                     onChange={handleTitleChange}
                     onBlur={() => handleBlurOrEnter()}
+                    onKeyDown={e => e.key === 'Enter' && handleBlurOrEnter(e as any)}
+                    inputRef={inputRef}
                     autoFocus
                     variant='standard'
                     sx={{
@@ -213,7 +262,7 @@ const ResumeCard: React.FC<ResumeCardProps> = ({
                       color: '#3c4599'
                     }}
                   >
-                    {title} - {date}
+                    {title} - {formattedDate}
                   </Link>
                 )}
                 <Typography
@@ -221,7 +270,9 @@ const ResumeCard: React.FC<ResumeCardProps> = ({
                   color='text.secondary'
                   sx={{ mt: 0.5, fontSize: '0.875rem' }}
                 >
-                  {isDraft ? `DRAFT - ${date}` : `Just now - ${credentials} Credentials`}
+                  {isDraft
+                    ? `DRAFT - ${timeAgo}`
+                    : `Just now - ${credentials} Credentials`}
                 </Typography>
               </Box>
             </Box>
