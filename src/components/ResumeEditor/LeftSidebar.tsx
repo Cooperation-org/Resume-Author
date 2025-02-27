@@ -15,11 +15,11 @@ import {
   SVGLocation,
   SVGLinkedIn,
   SVGURL,
-  SVGSearch,
   SVGAdd,
   SVGInstagram
 } from '../../assets/svgs'
 import { updateSection } from '../../redux/slices/resume'
+import LanguageField from '../LanguageAutocomplete'
 
 export const leftSections: (keyof Resume)[] = ['contact', 'languages']
 
@@ -68,25 +68,6 @@ const LeftSidebar = () => {
     }
 
     dispatch(updateSection({ sectionId: 'contact', content: updatedContact }))
-  }
-
-  const handleLanguageChange = (value: string) => {
-    if (!resume) return
-
-    const languages = value
-      .split(',')
-      .map(lang => lang.trim())
-      .filter(Boolean)
-      .filter((lang, index, self) => self.indexOf(lang) === index)
-
-    dispatch(
-      updateSection({
-        sectionId: 'languages',
-        content: {
-          items: languages
-        }
-      })
-    )
   }
 
   const handleCustomSectionAdd = (sectionName: string) => {
@@ -312,33 +293,7 @@ const LeftSidebar = () => {
           </Typography>
         </Box>
         <Box sx={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 1 }}>
-          <TextField
-            placeholder='Which languages do you speak?'
-            fullWidth
-            value={resume?.languages?.items.join(', ') || ''}
-            onChange={e => handleLanguageChange(e.target.value)}
-            size='small'
-            InputProps={{
-              endAdornment: (
-                <InputAdornment
-                  sx={{ display: 'flex', alignItems: 'center', mt: 1 }}
-                  position='end'
-                >
-                  <SVGSearch />
-                </InputAdornment>
-              )
-            }}
-            sx={{
-              bgcolor: '#F3F5F8',
-              borderRadius: '3px',
-              '& .MuiOutlinedInput-root': {
-                '& fieldset': { border: 'none' },
-                '&:hover fieldset': { border: 'none' },
-                '&.Mui-focused fieldset': { border: 'none' }
-              },
-              ...placeholderStyle
-            }}
-          />
+          <LanguageField />
         </Box>
       </Paper>
 
