@@ -1,6 +1,6 @@
 import React, { useCallback, useState, useEffect } from 'react'
 import { useDispatch } from 'react-redux'
-import { getCookie, getLocalStorage } from '../tools/cookie'
+import { getLocalStorage } from '../tools/cookie'
 import { GoogleDriveStorage, Resume } from '@cooperation/vc-storage'
 
 import {

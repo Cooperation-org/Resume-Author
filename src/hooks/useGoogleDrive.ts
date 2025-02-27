@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { GoogleDriveStorage, Resume, ResumeVC } from '@cooperation/vc-storage'
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { getCookie, getLocalStorage } from '../tools/cookie'
+import { getLocalStorage } from '../tools/cookie'
 
 interface ClaimDetail {
   data: {

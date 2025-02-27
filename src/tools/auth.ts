@@ -1,5 +1,5 @@
 import { NavigateFunction } from 'react-router-dom'
-import { setLocalStorage, setCookie, getLocalStorage } from './cookie'
+import { setLocalStorage } from './cookie'
 
 export const login = async (from?: string) => {
   const clientId = process.env.REACT_APP_GOOGLE_CLIENT_ID
@@ -44,13 +44,6 @@ export const handleRedirect = ({ navigate }: { navigate: NavigateFunction }) => 
   const state = params.get('state')
   const returnPath = state ? decodeURIComponent(state) : '/'
   console.log(':  Return path from state parameter:', returnPath)
-
-  // Save the token in cookies
-  setCookie('auth_token', token, {
-    secure: true,
-    sameSite: 'strict',
-    expires: 7
-  })
 
   setLocalStorage('auth', token)
 

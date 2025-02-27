@@ -1,7 +1,6 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit'
 import { GoogleDriveStorage, Resume as ResumeManager } from '@cooperation/vc-storage'
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { getCookie, getLocalStorage } from '../../tools/cookie'
+import { getLocalStorage } from '../../tools/cookie'
 
 // Define Resume Types
 interface IssuerInfo {

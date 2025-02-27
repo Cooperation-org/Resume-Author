@@ -9,10 +9,16 @@ import WhoBenefitsSection from './landingPageSections/WhoBenefitsSection'
 import SelectCards from './landingPageSections/SelectCards'
 import MoreAbout from './landingPageSections/MoreAboutResumeAuthor'
 import Footer from './landingPageSections/Footer'
+import { getLocalStorage } from '../tools/cookie'
 
 const Hero = () => {
+  const token = getLocalStorage('auth')
   const handleLogin = () => {
-    window.location.href = '/login'
+    if (token) {
+      window.location.href = '/resume/new'
+    } else {
+      window.location.href = '/login'
+    }
   }
   return (
     <div>
@@ -66,7 +72,7 @@ const Hero = () => {
                   fonstFamily: 'Nunito Sans'
                 }}
               >
-                Login or Sign Up with Google Drive
+                {!token ? 'Login or Sign Up with Google Drive' : 'Start Your Resume'}
               </Button>
             </Stack>
 
