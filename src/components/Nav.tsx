@@ -2,7 +2,6 @@ import Logo from '../assets/logo.png'
 import { AppBar, Toolbar, Box, Typography, Stack, Button } from '@mui/material'
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import LoadingOverlay from './Loading'
 import { getLocalStorage, removeLocalStorage } from '../tools/cookie'
 
 const navStyles = {
@@ -14,17 +13,11 @@ const navStyles = {
 }
 
 const Nav = () => {
-  const [loading, setLoading] = useState(false)
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [isLogged, setIsLogged] = useState(false)
   const navigate = useNavigate()
 
   useEffect(() => {
-    if (window.location.hash) {
-      setLoading(true)
-      navigate('/resume/new')
-      setLoading(false)
-    }
     const token = getLocalStorage('auth')
     if (token) {
       setIsLogged(true)
@@ -70,7 +63,6 @@ const Nav = () => {
           </Button>
         )}
       </Toolbar>
-      <LoadingOverlay open={loading} />
     </AppBar>
   )
 }

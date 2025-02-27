@@ -1,5 +1,5 @@
 import { Box, Typography, Button, Divider, Stack } from '@mui/material'
-import { getLocalStorage, removeCookie, removeLocalStorage } from '../../tools/cookie'
+import { getLocalStorage } from '../../tools/cookie'
 import { login } from '../../tools/auth'
 import { useSelector } from 'react-redux'
 import { useState, useEffect } from 'react'
@@ -48,19 +48,7 @@ const RightSidebar = () => {
   }, [])
 
   const handleAuth = () => {
-    const accessToken = getLocalStorage('auth') // Ensure this matches the correct cookie key
-    if (!accessToken) {
-      handleGoogleLogin() // If no token, login
-    } else {
-      handleLogout() // If logged in, logout
-    }
-  }
-
-  const handleLogout = () => {
-    removeCookie('auth_token') // Ensure it matches the correct key
-    removeLocalStorage('user_info')
-    removeLocalStorage('auth')
-    setSelectedClaims([]) // Clear selected claims
+    handleGoogleLogin()
   }
 
   const handleGoogleLogin = async () => {
