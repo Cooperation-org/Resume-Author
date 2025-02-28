@@ -50,8 +50,6 @@ interface WorkExperience extends VerifiableItem {
   currentlyEmployed: boolean
   showDuration: boolean
   company: string
-  position: string
-  startDate: string
   endDate?: string
   location?: string
   description: string

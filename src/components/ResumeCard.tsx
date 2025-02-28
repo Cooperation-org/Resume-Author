@@ -24,7 +24,7 @@ import { LinkIcon } from 'lucide-react'
 import { GoogleDriveStorage, Resume } from '@cooperation/vc-storage'
 import { getLocalStorage } from '../tools/cookie'
 import Logo from '../assets/blue-logo.png'
-// import { Link } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import DeleteConfirmationDialog from './DeleteConfirmDialog'
 import { useDispatch } from 'react-redux'
 import { AppDispatch } from '../redux/store'
@@ -105,6 +105,7 @@ const ResumeCard: React.FC<ResumeCardProps> = ({
   resume
 }) => {
   const dispatch: AppDispatch = useDispatch()
+  const navigate = useNavigate()
   const [menuAnchor, setMenuAnchor] = useState<null | HTMLElement>(null)
   const [isEditing, setIsEditing] = useState(false)
   const [editedTitle, setEditedTitle] = useState(title)
@@ -197,6 +198,14 @@ const ResumeCard: React.FC<ResumeCardProps> = ({
     console.log('🚀 ~ handleConfirmDelete ~ deleted:', deleted)
   }
 
+  const handlePreviewResume = () => {
+    if (isDraft) {
+      navigate('/resume/preview')
+    } else {
+      navigate(`/resume/preview/${id}`)
+    }
+  }
+
   return (
     <>
       <StyledCard>
@@ -283,7 +292,11 @@ const ResumeCard: React.FC<ResumeCardProps> = ({
                     >
                       Edit
                     </ActionButton>
-                    <ActionButton size='small' startIcon={<VisibilityOutlinedIcon />}>
+                    <ActionButton
+                      size='small'
+                      startIcon={<VisibilityOutlinedIcon />}
+                      onClick={handlePreviewResume}
+                    >
                       Preview
                     </ActionButton>
                   </>
@@ -301,7 +314,11 @@ const ResumeCard: React.FC<ResumeCardProps> = ({
                     <ActionButton size='small' startIcon={<DownloadIcon />}>
                       Download PDF
                     </ActionButton>
-                    <ActionButton size='small' startIcon={<VisibilityOutlinedIcon />}>
+                    <ActionButton
+                      size='small'
+                      startIcon={<VisibilityOutlinedIcon />}
+                      onClick={handlePreviewResume}
+                    >
                       Preview
                     </ActionButton>
                   </>

@@ -234,8 +234,11 @@ const ExperienceSection: React.FC<{ items: WorkExperience[] }> = ({ items }) => 
     {items?.map(item => (
       <Box key={item.id} sx={{ mb: '30px' }}>
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
-          {item.verificationStatus === 'verified' && <BlueVerifiedBadge />} &nbsp;
-          <Typography variant='subtitle1' sx={{ fontWeight: 700 }}>
+          {item.verificationStatus === 'verified' && <BlueVerifiedBadge />}
+          <Typography
+            variant='subtitle1'
+            sx={{ fontWeight: 700, ml: item.verificationStatus === 'verified' ? 1 : 0 }}
+          >
             {item.position || item.title}
           </Typography>
         </Box>
@@ -265,18 +268,20 @@ const ExperienceSection: React.FC<{ items: WorkExperience[] }> = ({ items }) => 
         >
           <HTMLWithVerifiedLinks htmlContent={item.description} />
         </Typography>
-        <Box component='ul' sx={{ m: 0, pl: 2 }}>
-          {item?.achievements?.map((achievement, idx) => (
-            <Typography
-              component='li'
-              variant='body2'
-              key={`${item.id}-achievement-${idx}`}
-              sx={{ mb: 0.5, fontWeight: 400, fontSize: '16px', fontFamily: 'Arial' }}
-            >
-              <HTMLWithVerifiedLinks htmlContent={achievement} />
-            </Typography>
-          ))}
-        </Box>
+        {item?.achievements && item.achievements.length > 0 && (
+          <Box component='ul' sx={{ m: 0, pl: 2 }}>
+            {item.achievements.map((achievement, idx) => (
+              <Typography
+                component='li'
+                variant='body2'
+                key={`${item.id}-achievement-${idx}`}
+                sx={{ mb: 0.5, fontWeight: 400, fontSize: '16px', fontFamily: 'Arial' }}
+              >
+                <HTMLWithVerifiedLinks htmlContent={achievement} />
+              </Typography>
+            ))}
+          </Box>
+        )}
       </Box>
     ))}
   </Box>
@@ -288,8 +293,8 @@ const EducationSection: React.FC<{ items: Education[] }> = ({ items }) => (
     {items?.map(item => (
       <Box key={item.id} sx={{ mb: 2 }}>
         <Box sx={{ display: 'flex', alignItems: 'flex-start' }}>
-          {item.awardEarned && <BlueVerifiedBadge />} &nbsp;
-          <Box>
+          {item.awardEarned && <BlueVerifiedBadge />}
+          <Box sx={{ ml: item.awardEarned ? 1 : 0 }}>
             <Typography
               variant='subtitle1'
               sx={{ fontWeight: 700, fontSize: '15px', fontFamily: 'Arial' }}
@@ -344,8 +349,15 @@ const SkillsSection: React.FC<{ items: Skill[] }> = ({ items }) => (
             width: 'calc(50% - 8px)'
           }}
         >
-          {item.verificationStatus === 'verified' && <BlueVerifiedBadge />} &nbsp;
-          <Typography sx={{ fontWeight: 400, fontSize: '16px', fontFamily: 'Arial' }}>
+          {item.verificationStatus === 'verified' && <BlueVerifiedBadge />}
+          <Typography
+            sx={{
+              fontWeight: 400,
+              fontSize: '16px',
+              fontFamily: 'Arial',
+              ml: item.verificationStatus === 'verified' ? 1 : 0
+            }}
+          >
             <HTMLWithVerifiedLinks htmlContent={item.skills || item.name} />
           </Typography>
         </Box>
@@ -362,8 +374,8 @@ const ProfessionalAffiliationsSection: React.FC<{ items: ProfessionalAffiliation
     {items?.map(item => (
       <Box key={item.id} sx={{ mb: 2 }}>
         <Box sx={{ display: 'flex', alignItems: 'flex-start' }}>
-          {item.verificationStatus === 'verified' && <BlueVerifiedBadge />} &nbsp;
-          <Box>
+          {item.verificationStatus === 'verified' && <BlueVerifiedBadge />}
+          <Box sx={{ ml: item.verificationStatus === 'verified' ? 1 : 0 }}>
             <Typography
               variant='subtitle1'
               sx={{ fontWeight: 700, fontSize: '16px', fontFamily: 'Arial' }}
@@ -452,8 +464,8 @@ const CertificationsSection: React.FC<{ items: Certification[] }> = ({ items }) 
     {items?.map(item => (
       <Box key={item.id} sx={{ mb: 2 }}>
         <Box sx={{ display: 'flex', alignItems: 'flex-start' }}>
-          {item.verificationStatus === 'verified' && <BlueVerifiedBadge />} &nbsp;
-          <Box>
+          {item.verificationStatus === 'verified' && <BlueVerifiedBadge />}
+          <Box sx={{ ml: item.verificationStatus === 'verified' ? 1 : 0 }}>
             <Typography
               variant='subtitle1'
               sx={{ fontWeight: 700, fontSize: '16px', fontFamily: 'Arial' }}
@@ -484,7 +496,6 @@ const CertificationsSection: React.FC<{ items: Certification[] }> = ({ items }) 
                 Credential ID: {item.credentialId}
               </Typography>
             )}
-            {/* Description removed since it doesn't exist on the Certification type */}
           </Box>
         </Box>
       </Box>
@@ -525,8 +536,8 @@ const ProjectsSection: React.FC<{ items: Project[] }> = ({ items }) => (
     {items?.map(item => (
       <Box key={item.id} sx={{ mb: 3 }}>
         <Box sx={{ display: 'flex', alignItems: 'flex-start' }}>
-          {item.verificationStatus === 'verified' && <BlueVerifiedBadge />} &nbsp;
-          <Box>
+          {item.verificationStatus === 'verified' && <BlueVerifiedBadge />}
+          <Box sx={{ ml: item.verificationStatus === 'verified' ? 1 : 0 }}>
             <Typography
               variant='subtitle1'
               sx={{ fontWeight: 700, fontFamily: 'Arial', fontSize: '16px' }}
@@ -568,7 +579,6 @@ const PublicationsSection: React.FC<{ items: Publication[] }> = ({ items }) => (
         >
           {item.publisher} | {item.publishedDate || 'Published'}
         </Typography>
-        {/* Description removed since it doesn't exist on the Publication type */}
         {item.url && (
           <Box sx={{ mb: 1 }}>
             <LinkWithFavicon url={item.url} />
@@ -615,7 +625,6 @@ const usePagination = (content: ReactNode[], maxHeight: number) => {
   const measuredRef = useRef<boolean>(false)
 
   useLayoutEffect(() => {
-    // Add delay to ensure DOM elements are properly rendered
     const timeoutId = setTimeout(() => {
       measureAndPaginate()
     }, 100)
@@ -627,7 +636,6 @@ const usePagination = (content: ReactNode[], maxHeight: number) => {
       const maxHeightPx = mmToPx(maxHeight)
       const contentElements = Array.from(measureRef.current.children)
 
-      // Guard against empty elements
       if (contentElements.length === 0) {
         setTimeout(measureAndPaginate, 100)
         return
@@ -643,7 +651,6 @@ const usePagination = (content: ReactNode[], maxHeight: number) => {
         const section = content[i]
         const sectionHeight = contentHeights[i]
 
-        // If the current section is too big for the current page, start a new page
         if (currentHeight + sectionHeight > maxHeightPx) {
           if (currentPage.length > 0) {
             paginatedContent.push([...currentPage])
@@ -651,7 +658,6 @@ const usePagination = (content: ReactNode[], maxHeight: number) => {
             currentHeight = 0
           }
 
-          // If the section is larger than a single page, put it on its own page
           if (sectionHeight > maxHeightPx) {
             paginatedContent.push([section])
           } else {
@@ -661,12 +667,10 @@ const usePagination = (content: ReactNode[], maxHeight: number) => {
           continue
         }
 
-        // Otherwise, add the section to the current page
         currentPage.push(section)
         currentHeight += sectionHeight
       }
 
-      // Don't forget to add the last page if it has content
       if (currentPage.length > 0) {
         paginatedContent.push(currentPage)
       }
@@ -694,13 +698,12 @@ const usePagination = (content: ReactNode[], maxHeight: number) => {
   return { pages, measureRef }
 }
 
-const ResumePreview: React.FC<ResumePreviewProps> = ({ data }) => {
-  const resume = useSelector((state: RootState) => state?.resume.resume)
-
-  // Array to hold all sections that have content
+const ResumePreview: React.FC<ResumePreviewProps> = ({ data: propData }) => {
+  const storeResume = useSelector((state: RootState) => state.resume?.resume)
+  const resume = propData || storeResume
+  if (!resume) return null
   const contentSections: ReactNode[] = []
 
-  // Add sections in the order shown in the images
   if (resume?.summary) {
     contentSections.push(<SummarySection key='summary' summary={resume.summary} />)
   }

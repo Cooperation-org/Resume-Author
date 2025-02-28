@@ -1,4 +1,3 @@
-// src/App.tsx
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import { useEffect } from 'react'
 import { useDispatch } from 'react-redux'
@@ -21,6 +20,7 @@ import SignUpStep from './pages/SignUpStep'
 import LoginScanStep from './pages/LoginScanStep'
 import Faq from './pages/FAQ'
 import SignUpStep2 from './pages/signUpStep2'
+import PreviewPageFromDrive from './pages/PreviewPageFromDrive'
 
 const App = () => {
   const dispatch: AppDispatch = useDispatch()
@@ -38,6 +38,7 @@ const App = () => {
           <Route path='/resume/new' element={<Resume />} />
           <Route path='/resume/import' element={<ImportPage />} />
           <Route path='/resume/preview' element={<PreviewPage />} />
+          <Route path='/resume/preview/:id' element={<PreviewPageFromDrive />} />
           <Route path='/auth/callback' element={<AuthCallback />} />
           <Route path='/myresumes' element={<MyResumes />} />
           <Route path='*' element={<Error404 />} />

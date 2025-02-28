@@ -66,8 +66,8 @@ export const SVGBadge = () => {
         fill='none'
       >
         <path
-          fill-rule='evenodd'
-          clip-rule='evenodd'
+          fillRule='evenodd'
+          clipRule='evenodd'
           d='M15.5447 2.55224C17.4889 0.732588 20.5111 0.732588 22.4553 2.55224L24.1388 4.12791C24.6133 4.57201 25.233 4.82868 25.8825 4.85017L28.1871 4.92642C30.8485 5.01448 32.9855 7.15148 33.0736 9.81291L33.1498 12.1175C33.1713 12.7671 33.428 13.3867 33.8721 13.8612L35.4478 15.5447C37.2674 17.4889 37.2674 20.5111 35.4478 22.4553L33.8721 24.1388C33.428 24.6133 33.1713 25.233 33.1498 25.8825L33.0736 28.1871C32.9855 30.8485 30.8485 32.9855 28.1871 33.0736L25.8825 33.1498C25.233 33.1713 24.6133 33.428 24.1388 33.8721L22.4553 35.4478C20.5111 37.2674 17.4889 37.2674 15.5447 35.4478L13.8612 33.8721C13.3867 33.428 12.7671 33.1713 12.1175 33.1498L9.81291 33.0736C7.15148 32.9855 5.01448 30.8485 4.92642 28.1871L4.85017 25.8825C4.82868 25.233 4.57201 24.6133 4.12791 24.1388L2.55224 22.4553C0.732588 20.5111 0.732588 17.4889 2.55224 15.5447L4.12791 13.8612C4.57201 13.3867 4.82868 12.7671 4.85017 12.1175L4.92642 9.81291C5.01448 7.15148 7.15148 5.01448 9.81291 4.92642L12.1175 4.85017C12.7671 4.82868 13.3867 4.57201 13.8612 4.12791L15.5447 2.55224ZM26.3981 15.0615C26.8463 14.5828 26.8216 13.8313 26.3428 13.3831C25.864 12.9349 25.1125 12.9597 24.6644 13.4385L16.6376 22.0125L13.3356 18.4853C12.8875 18.0065 12.136 17.9818 11.6572 18.43C11.1784 18.8782 11.1537 19.6297 11.6019 20.1084L15.7707 24.5615C15.9953 24.8014 16.3091 24.9375 16.6376 24.9375C16.9662 24.9375 17.28 24.8014 17.5045 24.5615L26.3981 15.0615Z'
           fill='url(#paint0_linear_392_10973)'
         />
@@ -80,8 +80,8 @@ export const SVGBadge = () => {
             y2='36.8125'
             gradientUnits='userSpaceOnUse'
           >
-            <stop stop-color='#361F7D' />
-            <stop offset='1' stop-color='#2639E9' />
+            <stop stopColor='#361F7D' />
+            <stop offset='1' stopColor='#2639E9' />
           </linearGradient>
         </defs>
       </svg>
@@ -120,7 +120,7 @@ export const SVGVe2 = () => {
         fill='none'
         xmlns='http://www.w3.org/2000/svg'
       >
-        <g clip-path='url(#clip0_1088_6688)'>
+        <g clipPath='url(#clip0_1088_6688)'>
           <path
             d='M229.707 39.2258L18.7148 300.555L20.5036 302.003L231.496 40.6741L229.707 39.2258Z'
             fill='url(#paint0_linear_1088_6688)'
@@ -170,7 +170,7 @@ export const SVGVe2 = () => {
             fill='url(#paint11_linear_1088_6688)'
           />
         </g>
-        <g clip-path='url(#clip1_1088_6688)'>
+        <g clipPath='url(#clip1_1088_6688)'>
           <path
             d='M338.707 5.22583L127.715 266.555L129.504 268.003L340.496 6.67405L338.707 5.22583Z'
             fill='#E9E6F8'
@@ -229,8 +229,8 @@ export const SVGVe2 = () => {
             y2='171.336'
             gradientUnits='userSpaceOnUse'
           >
-            <stop stop-color='#6E00FF' />
-            <stop offset='1' stop-color='#414FCD' />
+            <stop stopColor='#6E00FF' />
+            <stop offset='1' stopColor='#414FCD' />
           </linearGradient>
           <linearGradient
             id='paint1_linear_1088_6688'
@@ -240,8 +240,8 @@ export const SVGVe2 = () => {
             y2='209.611'
             gradientUnits='userSpaceOnUse'
           >
-            <stop stop-color='#6E00FF' />
-            <stop offset='1' stop-color='#414FCD' />
+            <stop stopColor='#6E00FF' />
+            <stop offset='1' stopColor='#414FCD' />
           </linearGradient>
           <linearGradient
             id='paint2_linear_1088_6688'
@@ -251,8 +251,8 @@ export const SVGVe2 = () => {
             y2='286.129'
             gradientUnits='userSpaceOnUse'
           >
-            <stop stop-color='#6E00FF' />
-            <stop offset='1' stop-color='#414FCD' />
+            <stop stopColor='#6E00FF' />
+            <stop offset='1' stopColor='#414FCD' />
           </linearGradient>
           <linearGradient
             id='paint3_linear_1088_6688'
@@ -262,8 +262,8 @@ export const SVGVe2 = () => {
             y2='133.073'
             gradientUnits='userSpaceOnUse'
           >
-            <stop stop-color='#6E00FF' />
-            <stop offset='1' stop-color='#414FCD' />
+            <stop stopColor='#6E00FF' />
+            <stop offset='1' stopColor='#414FCD' />
           </linearGradient>
           <linearGradient
             id='paint4_linear_1088_6688'
@@ -273,8 +273,8 @@ export const SVGVe2 = () => {
             y2='247.891'
             gradientUnits='userSpaceOnUse'
           >
-            <stop stop-color='#6E00FF' />
-            <stop offset='1' stop-color='#414FCD' />
+            <stop stopColor='#6E00FF' />
+            <stop offset='1' stopColor='#414FCD' />
           </linearGradient>
           <linearGradient
             id='paint5_linear_1088_6688'
@@ -284,8 +284,8 @@ export const SVGVe2 = () => {
             y2='324.415'
             gradientUnits='userSpaceOnUse'
           >
-            <stop stop-color='#6E00FF' />
-            <stop offset='1' stop-color='#414FCD' />
+            <stop stopColor='#6E00FF' />
+            <stop offset='1' stopColor='#414FCD' />
           </linearGradient>
           <linearGradient
             id='paint6_linear_1088_6688'
@@ -295,8 +295,8 @@ export const SVGVe2 = () => {
             y2='113.945'
             gradientUnits='userSpaceOnUse'
           >
-            <stop stop-color='#6E00FF' />
-            <stop offset='1' stop-color='#414FCD' />
+            <stop stopColor='#6E00FF' />
+            <stop offset='1' stopColor='#414FCD' />
           </linearGradient>
           <linearGradient
             id='paint7_linear_1088_6688'
@@ -306,8 +306,8 @@ export const SVGVe2 = () => {
             y2='190.465'
             gradientUnits='userSpaceOnUse'
           >
-            <stop stop-color='#6E00FF' />
-            <stop offset='1' stop-color='#414FCD' />
+            <stop stopColor='#6E00FF' />
+            <stop offset='1' stopColor='#414FCD' />
           </linearGradient>
           <linearGradient
             id='paint8_linear_1088_6688'
@@ -317,8 +317,8 @@ export const SVGVe2 = () => {
             y2='228.751'
             gradientUnits='userSpaceOnUse'
           >
-            <stop stop-color='#6E00FF' />
-            <stop offset='1' stop-color='#414FCD' />
+            <stop stopColor='#6E00FF' />
+            <stop offset='1' stopColor='#414FCD' />
           </linearGradient>
           <linearGradient
             id='paint9_linear_1088_6688'
@@ -328,8 +328,8 @@ export const SVGVe2 = () => {
             y2='305.288'
             gradientUnits='userSpaceOnUse'
           >
-            <stop stop-color='#6E00FF' />
-            <stop offset='1' stop-color='#414FCD' />
+            <stop stopColor='#6E00FF' />
+            <stop offset='1' stopColor='#414FCD' />
           </linearGradient>
           <linearGradient
             id='paint10_linear_1088_6688'
@@ -339,8 +339,8 @@ export const SVGVe2 = () => {
             y2='152.231'
             gradientUnits='userSpaceOnUse'
           >
-            <stop stop-color='#6E00FF' />
-            <stop offset='1' stop-color='#414FCD' />
+            <stop stopColor='#6E00FF' />
+            <stop offset='1' stopColor='#414FCD' />
           </linearGradient>
           <linearGradient
             id='paint11_linear_1088_6688'
@@ -350,8 +350,8 @@ export const SVGVe2 = () => {
             y2='267.023'
             gradientUnits='userSpaceOnUse'
           >
-            <stop stop-color='#6E00FF' />
-            <stop offset='1' stop-color='#414FCD' />
+            <stop stopColor='#6E00FF' />
+            <stop offset='1' stopColor='#414FCD' />
           </linearGradient>
           <clipPath id='clip0_1088_6688'>
             <rect width='371' height='371' fill='white' transform='translate(0 34)' />
@@ -375,7 +375,7 @@ export const SVGVe = () => {
         fill='none'
         xmlns='http://www.w3.org/2000/svg'
       >
-        <g clip-path='url(#clip0_1097_6510)'>
+        <g clipPath='url(#clip0_1097_6510)'>
           <path
             d='M162.707 39.2258L-48.2852 300.555L-46.4964 302.003L164.496 40.6741L162.707 39.2258Z'
             fill='url(#paint0_linear_1097_6510)'
@@ -425,7 +425,7 @@ export const SVGVe = () => {
             fill='url(#paint11_linear_1097_6510)'
           />
         </g>
-        <g clip-path='url(#clip1_1097_6510)'>
+        <g clipPath='url(#clip1_1097_6510)'>
           <path
             d='M271.707 5.22583L60.7148 266.555L62.5036 268.003L273.496 6.67405L271.707 5.22583Z'
             fill='#E9E6F8'
@@ -484,8 +484,8 @@ export const SVGVe = () => {
             y2='171.336'
             gradientUnits='userSpaceOnUse'
           >
-            <stop stop-color='#6E00FF' />
-            <stop offset='1' stop-color='#414FCD' />
+            <stop stopColor='#6E00FF' />
+            <stop offset='1' stopColor='#414FCD' />
           </linearGradient>
           <linearGradient
             id='paint1_linear_1097_6510'
@@ -495,8 +495,8 @@ export const SVGVe = () => {
             y2='209.611'
             gradientUnits='userSpaceOnUse'
           >
-            <stop stop-color='#6E00FF' />
-            <stop offset='1' stop-color='#414FCD' />
+            <stop stopColor='#6E00FF' />
+            <stop offset='1' stopColor='#414FCD' />
           </linearGradient>
           <linearGradient
             id='paint2_linear_1097_6510'
@@ -506,8 +506,8 @@ export const SVGVe = () => {
             y2='286.129'
             gradientUnits='userSpaceOnUse'
           >
-            <stop stop-color='#6E00FF' />
-            <stop offset='1' stop-color='#414FCD' />
+            <stop stopColor='#6E00FF' />
+            <stop offset='1' stopColor='#414FCD' />
           </linearGradient>
           <linearGradient
             id='paint3_linear_1097_6510'
@@ -517,8 +517,8 @@ export const SVGVe = () => {
             y2='133.073'
             gradientUnits='userSpaceOnUse'
           >
-            <stop stop-color='#6E00FF' />
-            <stop offset='1' stop-color='#414FCD' />
+            <stop stopColor='#6E00FF' />
+            <stop offset='1' stopColor='#414FCD' />
           </linearGradient>
           <linearGradient
             id='paint4_linear_1097_6510'
@@ -528,8 +528,8 @@ export const SVGVe = () => {
             y2='247.891'
             gradientUnits='userSpaceOnUse'
           >
-            <stop stop-color='#6E00FF' />
-            <stop offset='1' stop-color='#414FCD' />
+            <stop stopColor='#6E00FF' />
+            <stop offset='1' stopColor='#414FCD' />
           </linearGradient>
           <linearGradient
             id='paint5_linear_1097_6510'
@@ -539,8 +539,8 @@ export const SVGVe = () => {
             y2='324.415'
             gradientUnits='userSpaceOnUse'
           >
-            <stop stop-color='#6E00FF' />
-            <stop offset='1' stop-color='#414FCD' />
+            <stop stopColor='#6E00FF' />
+            <stop offset='1' stopColor='#414FCD' />
           </linearGradient>
           <linearGradient
             id='paint6_linear_1097_6510'
@@ -550,8 +550,8 @@ export const SVGVe = () => {
             y2='113.945'
             gradientUnits='userSpaceOnUse'
           >
-            <stop stop-color='#6E00FF' />
-            <stop offset='1' stop-color='#414FCD' />
+            <stop stopColor='#6E00FF' />
+            <stop offset='1' stopColor='#414FCD' />
           </linearGradient>
           <linearGradient
             id='paint7_linear_1097_6510'
@@ -561,8 +561,8 @@ export const SVGVe = () => {
             y2='190.465'
             gradientUnits='userSpaceOnUse'
           >
-            <stop stop-color='#6E00FF' />
-            <stop offset='1' stop-color='#414FCD' />
+            <stop stopColor='#6E00FF' />
+            <stop offset='1' stopColor='#414FCD' />
           </linearGradient>
           <linearGradient
             id='paint8_linear_1097_6510'
@@ -572,8 +572,8 @@ export const SVGVe = () => {
             y2='228.751'
             gradientUnits='userSpaceOnUse'
           >
-            <stop stop-color='#6E00FF' />
-            <stop offset='1' stop-color='#414FCD' />
+            <stop stopColor='#6E00FF' />
+            <stop offset='1' stopColor='#414FCD' />
           </linearGradient>
           <linearGradient
             id='paint9_linear_1097_6510'
@@ -583,8 +583,8 @@ export const SVGVe = () => {
             y2='305.288'
             gradientUnits='userSpaceOnUse'
           >
-            <stop stop-color='#6E00FF' />
-            <stop offset='1' stop-color='#414FCD' />
+            <stop stopColor='#6E00FF' />
+            <stop offset='1' stopColor='#414FCD' />
           </linearGradient>
           <linearGradient
             id='paint10_linear_1097_6510'
@@ -594,8 +594,8 @@ export const SVGVe = () => {
             y2='152.231'
             gradientUnits='userSpaceOnUse'
           >
-            <stop stop-color='#6E00FF' />
-            <stop offset='1' stop-color='#414FCD' />
+            <stop stopColor='#6E00FF' />
+            <stop offset='1' stopColor='#414FCD' />
           </linearGradient>
           <linearGradient
             id='paint11_linear_1097_6510'
@@ -605,8 +605,8 @@ export const SVGVe = () => {
             y2='267.023'
             gradientUnits='userSpaceOnUse'
           >
-            <stop stop-color='#6E00FF' />
-            <stop offset='1' stop-color='#414FCD' />
+            <stop stopColor='#6E00FF' />
+            <stop offset='1' stopColor='#414FCD' />
           </linearGradient>
           <clipPath id='clip0_1097_6510'>
             <rect width='371' height='371' fill='white' transform='translate(-67 34)' />
@@ -737,12 +737,12 @@ export const SVGUpload = () => {
         <path
           d='M7.05172 12.868L18.2131 11.0078V44.8603L13.3018 45.8942C10.0131 46.5866 6.79705 44.4429 6.17081 41.1409L2.14319 19.9044C1.51599 16.5973 3.73148 13.4214 7.05172 12.868Z'
           stroke='#2563EB'
-          stroke-width='2'
+          strokeWidth='2'
         />
         <path
           d='M64.9483 12.868L53.7869 11.0078V44.8603L58.6982 45.8942C61.9869 46.5866 65.203 44.4429 65.8292 41.1409L69.8568 19.9044C70.484 16.5973 68.2685 13.4214 64.9483 12.868Z'
           stroke='#2563EB'
-          stroke-width='2'
+          strokeWidth='2'
         />
         <g filter='url(#filter0_dd_1674_2013)'>
           <rect
@@ -752,7 +752,7 @@ export const SVGUpload = () => {
             height='42.7541'
             rx='5'
             stroke='#2563EB'
-            stroke-width='2'
+            strokeWidth='2'
             shape-rendering='crispEdges'
           />
         </g>
@@ -762,32 +762,12 @@ export const SVGUpload = () => {
           r='4.16393'
           fill='#EFF6FF'
           stroke='#2563EB'
-          stroke-width='2'
+          strokeWidth='2'
         />
-        <path
-          d='M22.5 27H50.5'
-          stroke='#2563EB'
-          stroke-width='2'
-          stroke-linecap='round'
-        />
-        <path
-          d='M22.5 32H50.5'
-          stroke='#2563EB'
-          stroke-width='2'
-          stroke-linecap='round'
-        />
-        <path
-          d='M22.5 37H50.5'
-          stroke='#2563EB'
-          stroke-width='2'
-          stroke-linecap='round'
-        />
-        <path
-          d='M22.5 42H50.5'
-          stroke='#2563EB'
-          stroke-width='2'
-          stroke-linecap='round'
-        />
+        <path d='M22.5 27H50.5' stroke='#2563EB' strokeWidth='2' strokeLinecap='round' />
+        <path d='M22.5 32H50.5' stroke='#2563EB' strokeWidth='2' strokeLinecap='round' />
+        <path d='M22.5 37H50.5' stroke='#2563EB' strokeWidth='2' strokeLinecap='round' />
+        <path d='M22.5 42H50.5' stroke='#2563EB' strokeWidth='2' strokeLinecap='round' />
         <defs>
           <filter
             id='filter0_dd_1674_2013'
@@ -860,8 +840,8 @@ export const SVGSmallLine = () => {
         <path
           d='M2 9.77637C9.67887 9.77637 15.0711 1.77637 22 1.77637'
           stroke='#361F7E'
-          stroke-width='3'
-          stroke-linecap='round'
+          strokeWidth='3'
+          strokeLinecap='round'
         />
       </svg>
     </div>
@@ -1155,8 +1135,8 @@ export const SVGAddGreenCheck = () => {
             y2='20.5'
             gradientUnits='userSpaceOnUse'
           >
-            <stop stop-color='#6E00FF' />
-            <stop offset='1' stop-color='#414FCD' />
+            <stop stopColor='#6E00FF' />
+            <stop offset='1' stopColor='#414FCD' />
           </linearGradient>
         </defs>
       </svg>
@@ -1176,8 +1156,8 @@ export const SVGHeroicon1 = () => {
         <path
           d='M6.00091 57.7764C18.4933 57.7764 30.1433 46.9095 22.7787 32.9986C20.959 29.5614 2.55664 15.7732 2.00091 25.7764C1.32277 37.9829 16.2131 37.4804 24.112 38.6653C44.0718 41.6592 56.2531 17.5065 58.0009 1.77637'
           stroke='#361F7E'
-          stroke-width='3'
-          stroke-linecap='round'
+          strokeWidth='3'
+          strokeLinecap='round'
         />
       </svg>
     </div>
@@ -1377,8 +1357,8 @@ export const SVGHeroicon2 = () => {
         <path
           d='M2 1.77637C2 20.0064 20.4626 29.0077 34 35.7764'
           stroke='#361F7E'
-          stroke-width='3'
-          stroke-linecap='round'
+          strokeWidth='3'
+          strokeLinecap='round'
         />
       </svg>
     </div>
@@ -2559,8 +2539,8 @@ export const BlueVerifiedBadge = () => {
             y2='15'
             gradientUnits='userSpaceOnUse'
           >
-            <stop stop-color='#361F7D' />
-            <stop offset='1' stop-color='#2639E9' />
+            <stop stopColor='#361F7D' />
+            <stop offset='1' stopColor='#2639E9' />
           </linearGradient>
         </defs>
       </svg>
@@ -2624,40 +2604,40 @@ export const SVGVolunteer = () => {
         fill='none'
         xmlns='http://www.w3.org/2000/svg'
       >
-        <g clip-path='url(#clip0_712_9845)'>
+        <g clipPath='url(#clip0_712_9845)'>
           <path
-            fill-rule='evenodd'
-            clip-rule='evenodd'
+            fillRule='evenodd'
+            clipRule='evenodd'
             d='M34.6981 44.0549H17.7233C17.4227 44.0549 17.1785 43.8109 17.1785 43.5102L17.1786 41.0449C17.1786 36.8755 20.1402 33.2041 24.2196 32.3153C24.5139 32.2515 24.804 32.4376 24.8674 32.7315C24.9318 33.0253 24.7453 33.3156 24.4513 33.3796C20.8684 34.1602 18.2678 37.3842 18.2678 41.045L18.268 42.9655H34.1535V41.0449C34.1535 37.3842 31.5529 34.1604 27.97 33.3796C27.6769 33.3156 27.4896 33.0254 27.5539 32.7315C27.6184 32.4376 27.9085 32.2513 28.2026 32.3153C32.2822 33.2041 35.2428 36.8756 35.2428 41.045L35.2428 43.5102C35.2428 43.8109 34.9988 44.0549 34.6981 44.0549Z'
             fill='black'
           />
           <path
-            fill-rule='evenodd'
-            clip-rule='evenodd'
+            fillRule='evenodd'
+            clipRule='evenodd'
             d='M26.2112 24.0893C23.8548 24.0893 21.9379 26.0063 21.9379 28.3628C21.938 30.719 23.8546 32.6361 26.2112 32.6361C28.5678 32.636 30.4844 30.7191 30.4844 28.3628C30.4846 26.0063 28.5677 24.0894 26.2112 24.0893ZM26.2112 33.7253C23.2542 33.7253 20.8485 31.3197 20.8485 28.3628C20.8486 25.4056 23.2542 23 26.2112 23C29.1682 23 31.5738 25.4057 31.5738 28.3628C31.574 31.3196 29.1681 33.7254 26.2112 33.7253ZM33.3035 36.9325C33.239 36.9325 33.1737 36.9212 33.1103 36.8972C32.8285 36.7908 32.6867 36.4764 32.7936 36.1951C33.8566 33.3838 36.3349 31.2414 39.2616 30.6037C39.5558 30.5398 39.846 30.726 39.9104 31.02C39.9747 31.3139 39.7874 31.6042 39.4943 31.6682C36.9232 32.2281 34.7463 34.1103 33.8129 36.5804C33.7298 36.7982 33.5226 36.9325 33.3035 36.9325ZM49.7411 42.3433H34.6981C34.3975 42.3433 34.1534 42.0995 34.1534 41.7987C34.1534 41.498 34.3973 41.254 34.6981 41.254L49.1964 41.254V39.3336C49.1964 35.6725 46.5959 32.4487 43.0129 31.6682C42.719 31.6041 42.5325 31.3139 42.5969 31.02C42.6602 30.726 42.9505 30.5397 43.2446 30.6037C47.3241 31.4925 50.2858 35.164 50.2858 39.3337V41.7986C50.2858 42.0994 50.0418 42.3434 49.7411 42.3433Z'
             fill='black'
           />
           <path
-            fill-rule='evenodd'
-            clip-rule='evenodd'
+            fillRule='evenodd'
+            clipRule='evenodd'
             d='M41.2533 22.4682C38.8967 22.4682 36.98 24.3853 36.98 26.7416C36.9802 29.098 38.8967 31.015 41.2532 31.015C43.6099 31.0149 45.5265 29.098 45.5265 26.7416C45.5265 24.3852 43.6097 22.4682 41.2533 22.4682ZM41.2533 32.1042C38.2963 32.1042 35.8906 29.6986 35.8906 26.7416C35.8908 23.7845 38.2963 21.3789 41.2532 21.3789C44.2103 21.3789 46.6159 23.7846 46.6159 26.7416C46.6161 29.6986 44.2102 32.1043 41.2533 32.1042ZM19.4859 36.468C19.2789 36.468 19.0812 36.3497 18.9894 36.1492C17.9625 33.8955 15.9123 32.2372 13.5067 31.7131C13.2127 31.649 13.0263 31.3589 13.0897 31.0649C13.1539 30.7709 13.4433 30.5847 13.7384 30.6487C16.478 31.2455 18.8116 33.1329 19.9804 35.6974C20.1053 35.9711 19.9842 36.2941 19.7109 36.4189C19.6382 36.4522 19.5606 36.4681 19.4859 36.468ZM17.7233 42.3882H3.2591C2.95824 42.3882 2.71423 42.1444 2.71423 41.8436L2.71442 39.3786C2.71442 35.2089 5.67596 31.5375 9.75538 30.6487C10.0495 30.5847 10.3398 30.7709 10.4041 31.0649C10.4676 31.3588 10.2811 31.6491 9.98707 31.7131C6.40418 32.4937 3.80359 35.7174 3.80359 39.3786L3.80378 41.2989H17.7233C18.024 41.2989 18.2679 41.5429 18.2679 41.8436C18.268 42.1443 18.0239 42.3883 17.7233 42.3882Z'
             fill='black'
           />
           <path
-            fill-rule='evenodd'
-            clip-rule='evenodd'
+            fillRule='evenodd'
+            clipRule='evenodd'
             d='M11.747 22.4683C9.3906 22.4683 7.47364 24.3854 7.47364 26.7417C7.47379 29.0981 9.39041 31.0151 11.7469 31.0151C14.1036 31.015 16.0202 29.0981 16.0202 26.7417C16.0202 24.3853 14.1034 22.4683 11.747 22.4683ZM11.747 32.1044C8.78995 32.1044 6.38428 29.6988 6.38428 26.7417C6.38443 23.7847 8.78992 21.3791 11.7469 21.3791C14.704 21.3791 17.1095 23.7847 17.1095 26.7417C17.1095 29.6988 14.7039 32.1044 11.747 32.1044ZM27.6921 18.1996C27.8046 18.1996 27.9171 18.2346 28.0126 18.3044L29.9946 19.7496L29.2325 17.4185C29.1589 17.1935 29.2391 16.9468 29.4301 16.808L31.4178 15.3703L28.9651 15.3749L28.9639 15.375C28.7276 15.3749 28.5185 15.2227 28.4457 14.9977L27.6921 12.6636L26.9385 14.9977C26.8657 15.223 26.6537 15.3741 26.4192 15.375L23.9663 15.3703L25.954 16.808C26.1461 16.9467 26.2254 17.1936 26.1516 17.4186L25.3895 19.7496L27.3716 18.3043C27.467 18.2345 27.5795 18.1997 27.6921 18.1996ZM31.0367 21.7288C30.9242 21.7289 30.8116 21.694 30.7152 21.6242L27.6921 19.4185L24.6689 21.6242C24.478 21.7635 24.2188 21.7637 24.0268 21.6247C23.8359 21.4859 23.7564 21.2395 23.8301 21.0148L24.9933 17.4576L21.9608 15.2635C21.7697 15.125 21.6892 14.8788 21.762 14.6541C21.8348 14.4295 22.0448 14.2777 22.2802 14.2777C22.2812 14.2777 22.2812 14.2777 22.2812 14.2777L26.024 14.2848L27.174 10.7232C27.2468 10.4982 27.4556 10.3459 27.692 10.3459C27.9284 10.3459 28.1374 10.4983 28.2102 10.7233L29.3601 14.2848L33.1029 14.2777C33.1029 14.2777 33.1029 14.2777 33.1038 14.2777C33.3395 14.2777 33.5492 14.4295 33.6221 14.6541C33.6951 14.8787 33.6145 15.1251 33.4235 15.2636L30.391 17.4576L31.554 21.0148C31.6278 21.2395 31.5483 21.4859 31.3563 21.6248C31.261 21.6941 31.1493 21.7288 31.0367 21.7288ZM10.1225 18.4631H19.3489V10.683H10.1225V18.4631ZM19.8936 19.5525H9.57784C9.27613 19.5525 9.03295 19.3086 9.03295 19.0078L9.03316 10.1384C9.03316 9.8376 9.27598 9.59384 9.57763 9.59384L19.8936 9.59375C20.1942 9.59375 20.4381 9.83763 20.4381 10.1385L20.4383 19.0078C20.4383 19.3085 20.1942 19.5525 19.8936 19.5525Z'
             fill='black'
           />
           <path
-            fill-rule='evenodd'
-            clip-rule='evenodd'
+            fillRule='evenodd'
+            clipRule='evenodd'
             d='M16.5697 13.8163H12.9017C12.5999 13.8163 12.3568 13.5725 12.3568 13.2717C12.357 12.9707 12.5998 12.727 12.9015 12.727L16.5697 12.7269C16.8704 12.7269 17.1142 12.9708 17.1142 13.2717C17.1144 13.5725 16.8703 13.8163 16.5697 13.8163ZM16.5697 16.4197H12.9017C12.5999 16.4197 12.3568 16.1759 12.3568 15.8752C12.357 15.5741 12.5998 15.3305 12.9015 15.3305L16.5697 15.3304C16.8704 15.3304 17.1142 15.5742 17.1142 15.8752C17.1144 16.1759 16.8703 16.4197 16.5697 16.4197ZM38.8903 11.1635C37.0105 11.1635 35.4803 12.6932 35.4803 14.5733C35.4805 16.4534 37.0104 17.9832 38.8903 17.9832C40.7703 17.9832 42.3002 16.4535 42.3002 14.5733C42.3003 12.6932 40.7702 11.1636 38.8903 11.1635ZM38.8903 19.0725C36.4101 19.0725 34.391 17.0542 34.391 14.5733C34.3911 12.0924 36.4099 10.0742 38.8903 10.0742C41.3707 10.0742 43.3896 12.0926 43.3896 14.5733C43.3896 17.0542 41.3707 19.0725 38.8903 19.0725Z'
             fill='black'
           />
           <path
-            fill-rule='evenodd'
-            clip-rule='evenodd'
+            fillRule='evenodd'
+            clipRule='evenodd'
             d='M40.1306 14.2153H37.6493C37.3476 14.2153 37.1046 13.9715 37.1046 13.6707C37.1046 13.3698 37.3476 13.126 37.6493 13.126L40.1306 13.126C40.4323 13.126 40.6753 13.3699 40.6753 13.6707C40.6753 13.9715 40.4322 14.2154 40.1306 14.2153ZM40.1306 16.0205H37.6493C37.3476 16.0205 37.1046 15.7767 37.1046 15.4758C37.1046 15.1749 37.3476 14.9312 37.6493 14.9312L40.1306 14.9312C40.4323 14.9312 40.6753 15.175 40.6753 15.4758C40.6753 15.7766 40.4322 16.0205 40.1306 16.0205Z'
             fill='black'
           />
@@ -2682,7 +2662,7 @@ export const SVGProjects = () => {
         fill='none'
         xmlns='http://www.w3.org/2000/svg'
       >
-        <g clip-path='url(#clip0_712_9837)'>
+        <g clipPath='url(#clip0_712_9837)'>
           <path
             d='M41.7176 5.5006H21.5941L19.6529 2.52413C19.6529 2.52413 19.6529 2.45943 19.5882 2.45943C18.747 1.48884 17.5823 0.971191 16.2882 0.971191H2.50586C1.72939 0.971191 1.14703 1.55354 1.14703 2.33001V31.7065C1.14703 32.8712 2.11762 33.7771 3.28233 33.7771H15.6412C16.0294 33.7771 16.2882 33.5182 16.2882 33.13C16.2882 32.7418 16.0294 32.483 15.6412 32.483H3.28233C2.82939 32.483 2.44115 32.1594 2.44115 31.7065V13.0712H42.5588V31.7065C42.5588 32.1594 42.1706 32.483 41.7176 32.483H40.5529C40.1647 32.483 39.9059 32.7418 39.9059 33.13C39.9059 33.5182 40.1647 33.7771 40.5529 33.7771H41.7176C42.8823 33.7771 43.8529 32.8712 43.8529 31.7065V7.6359C43.8529 6.79472 42.947 5.5006 41.7176 5.5006ZM2.44115 11.7771V2.33001C2.44115 2.26531 2.44115 2.26531 2.50586 2.26531H16.2882C17.1941 2.26531 18.0353 2.65354 18.5529 3.3006L20.6882 6.5359C20.8176 6.73001 21.0117 6.79472 21.2059 6.79472H41.6529C42.1059 6.79472 42.4941 7.37707 42.4941 7.57119V11.7771H2.44115Z'
             fill='black'
