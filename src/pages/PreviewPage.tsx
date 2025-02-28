@@ -1,72 +1,34 @@
-import React, { useEffect, useState } from 'react'
+import React from 'react'
 import { Box, CircularProgress, Typography, Button } from '@mui/material'
+import { useSelector } from 'react-redux'
+import { RootState } from '../redux/store'
 import ResumePreview from '../components/resumePreview'
 import html2pdf from 'html2pdf.js'
 
 const PreviewPage = () => {
-  const [resumeData, setResumeData] = useState(null)
-  const [error, setError] = useState<string | null>(null)
-  const exportResumeToPDF = (resumeData: any) => {
+  const resumeData = useSelector((state: RootState) => state.resume?.resume)
+
+  const exportResumeToPDF = (data: any) => {
     const element = document.getElementById('resume-preview')
+    if (!element) return
+
     const options = {
       margin: [0, 0, 0, 0],
-      filename: `${resumeData.contact.fullName}_Resume.pdf`,
+      filename: `${data.contact.fullName}_Resume.pdf`,
       image: { type: 'jpeg', quality: 0.98 },
-      html2canvas: {
-        scale: 2,
-        useCORS: true,
-        logging: true
-      },
-      jsPDF: {
-        unit: 'mm',
-        format: 'a4',
-        orientation: 'portrait'
-      }
+      html2canvas: { scale: 2, useCORS: true, logging: true },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
     }
 
     const metadata = {
-      title: `${resumeData.contact.fullName}'s Resume`,
+      title: `${data.contact.fullName}'s Resume`,
       creator: 'Reactive Resume',
       subject: 'Resume',
-      keywords: ['Resume', 'CV', resumeData.contact.fullName],
-      custom: { resumeData: JSON.stringify(resumeData) }
+      keywords: ['Resume', 'CV', data.contact.fullName],
+      custom: { resumeData: JSON.stringify(data) }
     }
 
     html2pdf().set(metadata).from(element).set(options).save()
-  }
-  useEffect(() => {
-    const loadResumeData = async () => {
-      try {
-        const response = await fetch('/resume-sample.json')
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`)
-        }
-        const data = await response.json()
-        setResumeData(data)
-      } catch (error) {
-        console.error('Error loading resume data:', error)
-        setError('Failed to load resume data. Please try again later.')
-      }
-    }
-
-    loadResumeData()
-  }, [])
-
-  if (error) {
-    return (
-      <Box
-        sx={{
-          p: 4,
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center'
-        }}
-      >
-        <Typography color='error' variant='body1'>
-          {error}
-        </Typography>
-      </Box>
-    )
   }
 
   if (!resumeData) {
