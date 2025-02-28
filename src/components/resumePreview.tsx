@@ -1,4 +1,4 @@
-import React, { useRef, useState, ReactNode, useLayoutEffect } from 'react'
+import React, { useRef, useState, ReactNode, useLayoutEffect, useEffect } from 'react'
 import { Box, Typography, Link } from '@mui/material'
 import { QRCodeSVG } from 'qrcode.react'
 import { BlueVerifiedBadge } from '../assets/svgs'
@@ -88,61 +88,69 @@ const LinkWithFavicon: React.FC<{ url: string; platform?: string }> = ({
   )
 }
 
-const PageHeader: React.FC<{ fullName: string }> = ({ fullName }) => (
-  <Box
-    sx={{
-      display: 'flex',
-      justifyContent: 'space-between',
-      backgroundColor: '#F7F9FC',
-      height: '125px'
-    }}
-  >
-    <Box sx={{ display: 'flex', alignItems: 'center', ml: '45px' }}>
-      <Typography sx={{ fontWeight: 600, color: '#2E2E48', fontSize: '30px' }}>
-        {fullName}
-      </Typography>
-    </Box>
-    <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
-      <Box sx={{ textAlign: 'center', py: '20px', mr: '15px' }}>
-        <Typography
-          variant='caption'
-          sx={{
-            color: '#000',
-            textAlign: 'center',
-            fontFamily: 'Arial',
-            fontSize: '12px',
-            fontStyle: 'normal',
-            fontWeight: 400,
-            lineHeight: '16px',
-            textDecorationLine: 'underline'
-          }}
-        >
-          View a verifiable <br />
-          presentation of this <br />
-          resume
+const PageHeader: React.FC<{ fullName: string }> = ({ fullName }) => {
+  const [currentUrl, setCurrentUrl] = useState<string>('')
+
+  useEffect(() => {
+    setCurrentUrl(window.location.href)
+  }, [])
+
+  return (
+    <Box
+      sx={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        backgroundColor: '#F7F9FC',
+        height: '125px'
+      }}
+    >
+      <Box sx={{ display: 'flex', alignItems: 'center', ml: '45px' }}>
+        <Typography sx={{ fontWeight: 600, color: '#2E2E48', fontSize: '30px' }}>
+          {fullName}
         </Typography>
       </Box>
-      <Box
-        sx={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          height: '125px',
-          width: '128px',
-          backgroundColor: '#2563EB'
-        }}
-      >
-        <QRCodeSVG
-          value='https://resume.example.com'
-          size={86}
-          level='L'
-          bgColor='transparent'
-          fgColor='#fff'
-        />
+      <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
+        <Box sx={{ textAlign: 'center', py: '20px', mr: '15px' }}>
+          <Typography
+            variant='caption'
+            sx={{
+              color: '#000',
+              textAlign: 'center',
+              fontFamily: 'Arial',
+              fontSize: '12px',
+              fontStyle: 'normal',
+              fontWeight: 400,
+              lineHeight: '16px',
+              textDecorationLine: 'underline'
+            }}
+          >
+            View a verifiable <br />
+            presentation of this <br />
+            resume
+          </Typography>
+        </Box>
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            height: '125px',
+            width: '128px',
+            backgroundColor: '#2563EB'
+          }}
+        >
+          <QRCodeSVG
+            value={currentUrl || window.location.href}
+            size={86}
+            level='L'
+            bgColor='transparent'
+            fgColor='#fff'
+          />
+        </Box>
       </Box>
     </Box>
-  </Box>
-)
+  )
+}
 
 const PageFooter: React.FC<{
   fullName: string
@@ -150,54 +158,62 @@ const PageFooter: React.FC<{
   phone?: string
   pageNumber: number
   totalPages: number
-}> = ({ fullName, email, phone, pageNumber, totalPages }) => (
-  <Box
-    sx={{
-      backgroundColor: '#F7F9FC',
-      py: '15px',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      height: '15px',
-      overflow: 'hidden'
-    }}
-  >
-    <Typography
-      variant='caption'
+}> = ({ fullName, email, phone, pageNumber, totalPages }) => {
+  const [currentUrl, setCurrentUrl] = useState<string>('')
+
+  useEffect(() => {
+    setCurrentUrl(window.location.href)
+  }, [])
+
+  return (
+    <Box
       sx={{
-        color: '#000',
-        textAlign: 'center',
-        fontFamily: 'DM Sans',
-        fontSize: '10px',
-        fontStyle: 'normal',
-        fontWeight: 400,
-        lineHeight: '15px',
-        mr: '10px'
+        backgroundColor: '#F7F9FC',
+        py: '15px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        height: '15px',
+        overflow: 'hidden'
       }}
     >
-      {fullName} | Page {pageNumber} of {totalPages} |
-      {phone && (
-        <a href={`tel:${phone}`} style={{ textDecoration: 'none', color: 'inherit' }}>
-          {phone}
-        </a>
-      )}
-      |
-      <a
-        href={`mailto:${email}`}
-        style={{ textDecoration: 'underline', color: '#2563EB' }}
+      <Typography
+        variant='caption'
+        sx={{
+          color: '#000',
+          textAlign: 'center',
+          fontFamily: 'DM Sans',
+          fontSize: '10px',
+          fontStyle: 'normal',
+          fontWeight: 400,
+          lineHeight: '15px',
+          mr: '10px'
+        }}
       >
-        {email}
-      </a>
-    </Typography>
-    <QRCodeSVG
-      value='https://resume.example.com'
-      size={32}
-      level='H'
-      bgColor='transparent'
-      fgColor='#000'
-    />
-  </Box>
-)
+        {fullName} | Page {pageNumber} of {totalPages} |
+        {phone && (
+          <a href={`tel:${phone}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+            {phone}
+          </a>
+        )}
+        |
+        <a
+          href={`mailto:${email}`}
+          style={{ textDecoration: 'underline', color: '#2563EB' }}
+        >
+          {email}
+        </a>
+      </Typography>
+      <QRCodeSVG
+        value={currentUrl || window.location.href}
+        size={32}
+        level='H'
+        bgColor='transparent'
+        fgColor='#000'
+      />
+    </Box>
+  )
+}
 
 const SummarySection: React.FC<{ summary: string }> = ({ summary }) => (
   <Box sx={{ mb: '30px' }}>
@@ -701,6 +717,12 @@ const usePagination = (content: ReactNode[], maxHeight: number) => {
 const ResumePreview: React.FC<ResumePreviewProps> = ({ data: propData }) => {
   const storeResume = useSelector((state: RootState) => state.resume?.resume)
   const resume = propData || storeResume
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [currentUrl, setCurrentUrl] = useState<string>('')
+
+  useEffect(() => {
+    setCurrentUrl(window.location.href)
+  }, [])
 
   const contentSections: ReactNode[] = []
 
