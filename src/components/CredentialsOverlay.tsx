@@ -6,7 +6,7 @@ import { fetchVCs } from '../redux/slices/vc'
 
 interface CredentialOverlayProps {
   onClose?: () => void
-  onSelect: (selectedCredentials: string[]) => void
+  onSelect: any
 }
 
 const StyledScrollbar = styled(Box)({
@@ -28,7 +28,6 @@ const CredentialOverlay: React.FC<CredentialOverlayProps> = ({ onClose, onSelect
 
   const dispatch: AppDispatch = useDispatch()
   const { vcs } = useSelector((state: any) => state.vcReducer)
-  console.log(': vc888888888s', vcs)
 
   useEffect(() => {
     // Dispatch the thunk to fetch VCs
@@ -39,11 +38,12 @@ const CredentialOverlay: React.FC<CredentialOverlayProps> = ({ onClose, onSelect
     if (selectedCredentials.length === vcs.length) {
       setSelectedCredentials([])
     } else {
-      setSelectedCredentials(vcs.map((cred: { id: any }) => cred.id))
+      setSelectedCredentials(vcs.map((cred: any) => cred?.originalItem?.id || cred.id))
     }
   }
 
-  const handleToggleCredential = (credentialId: string) => {
+  const handleToggleCredential = (credential: any) => {
+    const credentialId = credential?.originalItem?.id || credential.id
     setSelectedCredentials(prev =>
       prev.includes(credentialId)
         ? prev.filter(id => id !== credentialId)
@@ -168,8 +168,10 @@ const CredentialOverlay: React.FC<CredentialOverlayProps> = ({ onClose, onSelect
                   }}
                 >
                   <Checkbox
-                    checked={selectedCredentials.includes(credential.id)}
-                    onChange={() => handleToggleCredential(credential.id)}
+                    checked={selectedCredentials.includes(
+                      credential?.originalItem?.id || credential.id
+                    )}
+                    onChange={() => handleToggleCredential(credential)}
                     sx={{
                       '&.Mui-checked': {
                         color: '#3A35A2'

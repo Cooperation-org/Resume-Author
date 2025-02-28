@@ -43,6 +43,7 @@ interface EducationProps {
   onAddFiles?: () => void
   onDelete?: () => void
   onAddCredential?: (text: string) => void
+  selectedCredentials?: string[]
 }
 
 export default function Education({
@@ -117,6 +118,7 @@ export default function Education({
         id: item.id || '',
         verificationStatus: item.verificationStatus || 'unverified',
         credentialLink: item.credentialLink || '',
+        selectedCredentials: item.selectedCredentials || [],
         ...item
       }))
 
@@ -292,15 +294,17 @@ export default function Education({
   const handleCredentialSelect = useCallback(
     (selectedCredentials: string[]) => {
       if (activeSectionIndex !== null && selectedCredentials.length > 0) {
-        const credentialId = selectedCredentials[0]
-        const credentialLink = `https://linkedcreds.allskillscount.org/view/${credentialId}`
+        const credentialLinks = selectedCredentials.map(
+          credentialId => `https://linkedcreds.allskillscount.org/view/${credentialId}`
+        )
 
         setEducations(prevEducations => {
           const updatedEducations = [...prevEducations]
           updatedEducations[activeSectionIndex] = {
             ...updatedEducations[activeSectionIndex],
             verificationStatus: 'verified',
-            credentialLink: credentialLink
+            credentialLink: credentialLinks[0],
+            selectedCredentials: credentialLinks
           }
 
           dispatch(
@@ -483,6 +487,29 @@ export default function Education({
                 onChange={val => handleDescriptionChange(index, val)}
                 onAddCredential={onAddCredential}
               />
+              {education.selectedCredentials &&
+                education.selectedCredentials.length > 0 && (
+                  <Box sx={{ mt: 2 }}>
+                    <Typography variant='body2' sx={{ fontWeight: 'bold', mb: 1 }}>
+                      Verified Credentials:
+                    </Typography>
+                    {education.selectedCredentials.map((link: any, linkIndex: any) => (
+                      <Typography
+                        key={linkIndex}
+                        variant='body2'
+                        sx={{
+                          color: 'primary.main',
+                          textDecoration: 'underline',
+                          cursor: 'pointer',
+                          mb: 0.5
+                        }}
+                        onClick={() => window.open(link, '_blank')}
+                      >
+                        Credential {linkIndex + 1}
+                      </Typography>
+                    ))}
+                  </Box>
+                )}
 
               <Box
                 sx={{
