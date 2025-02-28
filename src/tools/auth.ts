@@ -14,52 +14,78 @@ export const login = async (from?: string) => {
   }
 
   // Encode the return path in the state parameter
-  // State parameter is a standard OAuth parameter used to maintain state between the request and callback
   const state = from ? encodeURIComponent(from) : ''
 
-  const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?response_type=token&client_id=${clientId}&redirect_uri=${encodeURIComponent(
+  const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?response_type=code&client_id=${clientId}&redirect_uri=${encodeURIComponent(
     redirectUri
-  )}&scope=${encodeURIComponent(scope)}&prompt=consent&state=${state}`
+  )}&scope=${encodeURIComponent(scope)}&prompt=consent&access_type=offline&state=${state}`
 
   window.location.href = authUrl
 }
 
-export const handleRedirect = ({ navigate }: { navigate: NavigateFunction }) => {
-  const hash = window.location.hash
-  if (!hash) {
-    console.error('No token found in the URL')
-    navigate('/login')
-    return
-  }
-
-  const params = new URLSearchParams(hash.substring(1))
-  const token = params.get('access_token')
-  if (!token) {
-    console.error('No access token found')
-    navigate('/login')
-    return
-  }
-
-  // Get the state parameter from the URL - this contains our return path
+export const handleRedirect = async ({ navigate }: { navigate: NavigateFunction }) => {
+  const params = new URLSearchParams(window.location.search)
+  const code = params.get('code')
   const state = params.get('state')
   const returnPath = state ? decodeURIComponent(state) : '/'
-  console.log(':  Return path from state parameter:', returnPath)
 
-  setLocalStorage('auth', token)
+  if (!code) {
+    console.error('No authorization code found')
+    navigate('/login')
+    return
+  }
 
-  // Fetch user info if needed
-  fetchUserInfo(token)
-    .then(() => {
-      // Navigate to the original path after successful login
-      console.log(':  Navigating to', returnPath)
-      navigate(returnPath, { replace: true })
+  try {
+    const tokenResponse = await exchangeCodeForTokens(code)
+    const { access_token, refresh_token } = tokenResponse
+
+    if (!access_token || !refresh_token) {
+      throw new Error('Failed to retrieve access token or refresh token')
+    }
+
+    setLocalStorage('auth', access_token)
+    setLocalStorage('refresh_token', refresh_token)
+
+    // Fetch user info if needed
+    await fetchUserInfo(access_token)
+
+    // Navigate to the original path after successful login
+    console.log(':  Navigating to', returnPath)
+    navigate(returnPath, { replace: true })
+  } catch (error) {
+    console.error('Error during token exchange or user info fetch:', error)
+    navigate('/login')
+  }
+}
+
+const exchangeCodeForTokens = async (code: string) => {
+  const clientId = process.env.REACT_APP_GOOGLE_CLIENT_ID
+  const clientSecret = process.env.REACT_APP_GOOGLE_CLIENT_SECRET
+  const redirectUri = process.env.REACT_APP_GOOGLE_REDIRECT_URI
+
+  if (!clientId || !clientSecret || !redirectUri) {
+    throw new Error('Missing environment variables for token exchange')
+  }
+
+  const response = await fetch('https://oauth2.googleapis.com/token', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded'
+    },
+    body: new URLSearchParams({
+      code,
+      client_id: clientId,
+      client_secret: clientSecret,
+      redirect_uri: redirectUri,
+      grant_type: 'authorization_code'
     })
-    .catch(error => {
-      console.error('Error fetching user info:', error)
+  })
 
-      // Still navigate to the original path even if user info fetch fails
-      navigate(returnPath, { replace: true })
-    })
+  if (!response.ok) {
+    throw new Error('Failed to exchange code for tokens')
+  }
+
+  return response.json()
 }
 
 const fetchUserInfo = async (token: string) => {
@@ -84,5 +110,6 @@ const fetchUserInfo = async (token: string) => {
     console.log('User info saved in localStorage:', userInfo)
   } catch (error) {
     console.error('Error fetching user info:', error)
+    throw error // Re-throw the error to handle it in the calling function
   }
 }

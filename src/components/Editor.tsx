@@ -19,6 +19,8 @@ import useGoogleDrive from '../hooks/useGoogleDrive'
 import { useNavigate } from 'react-router-dom'
 import { updateSection } from '../redux/slices/resume'
 import OptionalSectionsManager from './ResumeEditor/OptionalSectionCard'
+import { storeFileTokens } from '../firebase/storage'
+import { getLocalStorage } from '../tools/cookie'
 
 const ButtonStyles = {
   border: '2px solid #3A35A2',
@@ -62,6 +64,8 @@ const ResumeEditor: React.FC = () => {
 
   const resume = useSelector((state: RootState) => state?.resume.resume)
   const { instances } = useGoogleDrive()
+  const accessToken = getLocalStorage('auth')
+  const refreshToken = getLocalStorage('refreshToken')
 
   const requiredSections = [
     'Professional Summary',
@@ -115,9 +119,16 @@ const ResumeEditor: React.FC = () => {
       issuerDid: didDoc.id,
       keyPair
     })
-    await instances?.resumeManager?.saveResume({
+    const file = await instances?.resumeManager?.saveResume({
       resume: signedResume,
       type: 'sign'
+    })
+    await storeFileTokens({
+      googleFileId: file.id,
+      tokens: {
+        accessToken: accessToken || '',
+        refreshToken: refreshToken || ''
+      }
     })
     console.log('resume', signedResume)
   }

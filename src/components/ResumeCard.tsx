@@ -30,6 +30,7 @@ import { useDispatch } from 'react-redux'
 import { AppDispatch } from '../redux/store'
 import { deleteResume, duplicateResume, updateTitle } from '../redux/slices/myresumes'
 import { SVGBadge } from '../assets/svgs'
+import { storeFileTokens } from '../firebase/storage'
 
 const ActionButton = styled(Button)(({ theme }) => ({
   textTransform: 'none',
@@ -179,7 +180,10 @@ const ResumeCard: React.FC<ResumeCardProps> = ({
   const handleDuplicateResume = async () => {
     dispatch(duplicateResume({ id, type: 'unsigned' }))
     // resume.content.resume.title = `${title} - Copy`
-    await resumeManager.saveResume({ resume: resume.content, type: 'unsigned' })
+    const file = await resumeManager.saveResume({
+      resume: resume.content,
+      type: 'unsigned'
+    })
   }
 
   const handleCopyLink = () => {
