@@ -42,6 +42,15 @@ interface WorkExperienceProps {
   onAddFiles?: () => void
   onDelete?: () => void
   onAddCredential?: (text: string) => void
+  selectedCredentials?: string[]
+  originalItem?: any
+}
+
+interface CredentialItem {
+  originalItem?: {
+    id: string
+  }
+  id: string
 }
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
@@ -109,7 +118,7 @@ export default function WorkExperience({
         position: item.position || '',
         startDate: item.startDate || '',
         achievements: item.achievements || [],
-        id: item.id || '',
+        id: item?.originalItem?.id || '',
         verificationStatus: item.verificationStatus || 'unverified',
         credentialLink: item.credentialLink || '',
         ...item
@@ -278,18 +287,21 @@ export default function WorkExperience({
   }, [])
 
   const handleCredentialSelect = useCallback(
-    (selectedCredentials: string[]) => {
+    (selectedCredentials: CredentialItem[]) => {
       if (activeSectionIndex !== null && selectedCredentials.length > 0) {
-        const credentialId = selectedCredentials[0]
-        const credentialLink = `https://linkedcreds.allskillscount.org/view/${credentialId}`
+        const credentialLinks = selectedCredentials.map(
+          credentialId => `https://linkedcreds.allskillscount.org/view/${credentialId}`
+        )
+        console.log(selectedCredentials)
 
         setWorkExperiences(prevExperiences => {
           const updatedExperiences = [...prevExperiences]
           updatedExperiences[activeSectionIndex] = {
             ...updatedExperiences[activeSectionIndex],
             verificationStatus: 'verified',
-            credentialLink: credentialLink
-          }
+            credentialLink: credentialLinks[0],
+            selectedCredentials: credentialLinks
+          } as any
 
           dispatch(
             updateSection({
@@ -447,6 +459,29 @@ export default function WorkExperience({
                 onChange={val => handleDescriptionChange(index, val)}
                 onAddCredential={onAddCredential}
               />
+              {experience.selectedCredentials &&
+                experience.selectedCredentials.length > 0 && (
+                  <Box sx={{ mt: 2 }}>
+                    <Typography variant='body2' sx={{ fontWeight: 'bold', mb: 1 }}>
+                      Verified Credentials:
+                    </Typography>
+                    {experience.selectedCredentials.map((link: any, linkIndex: any) => (
+                      <Typography
+                        key={linkIndex}
+                        variant='body2'
+                        sx={{
+                          color: 'primary.main',
+                          textDecoration: 'underline',
+                          cursor: 'pointer',
+                          mb: 0.5
+                        }}
+                        onClick={() => window.open(link, '_blank')}
+                      >
+                        Credential {linkIndex + 1}
+                      </Typography>
+                    ))}
+                  </Box>
+                )}
 
               <Box
                 sx={{

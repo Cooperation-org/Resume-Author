@@ -54,6 +54,7 @@ interface ProfessionalAffiliationsProps {
   onAddFiles?: () => void
   onDelete?: () => void
   onAddCredential?: (text: string) => void
+  selectedCredentials?: string[]
 }
 
 export default function ProfessionalAffiliations({
@@ -262,15 +263,16 @@ export default function ProfessionalAffiliations({
   const handleCredentialSelect = useCallback(
     (selectedCredentials: string[]) => {
       if (activeSectionIndex !== null && selectedCredentials.length > 0) {
-        const credentialId = selectedCredentials[0]
-        const credentialLink = `https://linkedcreds.allskillscount.org/view/${credentialId}`
-
+        const credentialLinks = selectedCredentials.map(
+          credentialId => `https://linkedcreds.allskillscount.org/view/${credentialId}`
+        )
         setAffiliations(prevAffiliations => {
           const updatedAffiliations = [...prevAffiliations]
           updatedAffiliations[activeSectionIndex] = {
             ...updatedAffiliations[activeSectionIndex],
             verificationStatus: 'verified',
-            credentialLink: credentialLink
+            credentialLink: credentialLinks[0],
+            selectedCredentials: credentialLinks
           }
 
           dispatch(
@@ -431,6 +433,30 @@ export default function ProfessionalAffiliations({
                 }
                 label='Active affiliation'
               />
+
+              {affiliation.selectedCredentials &&
+                affiliation.selectedCredentials.length > 0 && (
+                  <Box sx={{ mt: 2 }}>
+                    <Typography variant='body2' sx={{ fontWeight: 'bold', mb: 1 }}>
+                      Verified Credentials:
+                    </Typography>
+                    {affiliation.selectedCredentials.map((link: any, linkIndex: any) => (
+                      <Typography
+                        key={linkIndex}
+                        variant='body2'
+                        sx={{
+                          color: 'primary.main',
+                          textDecoration: 'underline',
+                          cursor: 'pointer',
+                          mb: 0.5
+                        }}
+                        onClick={() => window.open(link, '_blank')}
+                      >
+                        Credential {linkIndex + 1}
+                      </Typography>
+                    ))}
+                  </Box>
+                )}
 
               <Box
                 sx={{
