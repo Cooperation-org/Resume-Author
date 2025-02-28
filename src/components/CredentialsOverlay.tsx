@@ -1,5 +1,8 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Box, Typography, Button, Checkbox, styled } from '@mui/material'
+import { useDispatch, useSelector } from 'react-redux'
+import { AppDispatch } from '../redux/store'
+import { fetchVCs } from '../redux/slices/vc'
 
 interface CredentialOverlayProps {
   onClose?: () => void
@@ -23,24 +26,20 @@ const StyledScrollbar = styled(Box)({
 const CredentialOverlay: React.FC<CredentialOverlayProps> = ({ onClose, onSelect }) => {
   const [selectedCredentials, setSelectedCredentials] = useState<string[]>([])
 
-  const credentials = [
-    { id: '1', name: 'Case Study' },
-    { id: '2', name: 'Google UX Certification' },
-    { id: '3', name: 'Coursera UX Design Essentials for Enterprise Designers' },
-    { id: '4', name: 'Lorem ipsum dolor sit amet nuit' },
-    { id: '5', name: 'Lorem ipsum dolor sit amet nuit' },
-    { id: '6', name: 'Lorem ipsum dolor sit amet nuit' },
-    { id: '7', name: 'Lorem ipsum dolor sit amet nuit' },
-    { id: '8', name: 'Lorem ipsum dolor sit amet nuit' },
-    { id: '9', name: 'Lorem ipsum dolor sit amet nuit' },
-    { id: '10', name: 'Lorem ipsum dolor sit amet nuit' }
-  ]
+  const dispatch: AppDispatch = useDispatch()
+  const { vcs } = useSelector((state: any) => state.vcReducer)
+  console.log(': vc888888888s', vcs)
+
+  useEffect(() => {
+    // Dispatch the thunk to fetch VCs
+    dispatch(fetchVCs())
+  }, [dispatch])
 
   const handleSelectAll = () => {
-    if (selectedCredentials.length === credentials.length) {
+    if (selectedCredentials.length === vcs.length) {
       setSelectedCredentials([])
     } else {
-      setSelectedCredentials(credentials.map(cred => cred.id))
+      setSelectedCredentials(vcs.map((cred: { id: any }) => cred.id))
     }
   }
 
@@ -138,7 +137,7 @@ const CredentialOverlay: React.FC<CredentialOverlayProps> = ({ onClose, onSelect
                 }}
               >
                 <Checkbox
-                  checked={selectedCredentials.length === credentials.length}
+                  checked={selectedCredentials.length === vcs.length}
                   onChange={handleSelectAll}
                   sx={{
                     '&.Mui-checked': {
@@ -158,14 +157,14 @@ const CredentialOverlay: React.FC<CredentialOverlayProps> = ({ onClose, onSelect
                 </Typography>
               </Box>
 
-              {credentials.map((credential, index) => (
+              {vcs.map((credential: any, index: any) => (
                 <Box
                   key={credential.id}
                   sx={{
                     display: 'flex',
                     alignItems: 'center',
                     py: '10px',
-                    mb: index === credentials.length - 1 ? 0 : '12px'
+                    mb: index === vcs.length - 1 ? 0 : '12px'
                   }}
                 >
                   <Checkbox
@@ -185,7 +184,7 @@ const CredentialOverlay: React.FC<CredentialOverlayProps> = ({ onClose, onSelect
                       fontFamily: 'Nunito Sans'
                     }}
                   >
-                    {credential.name}
+                    {credential?.credentialSubject?.achievement[0]?.name}
                   </Typography>
                 </Box>
               ))}
