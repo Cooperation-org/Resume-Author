@@ -48,16 +48,24 @@ export const fetchVCs = createAsyncThunk('vc/fetchVCs', async () => {
 
   const storage = new GoogleDriveStorage(accessToken as string)
   const claimsData: any[] = await storage.getAllFilesByType('VCs')
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const vcs = claimsData.map((file: any[]) =>
-    file.filter((f: { name: string }) => f.name !== 'RELATIONS')
-  )
-  // Filter out files where `name` is "RELATIONS"
-  return claimsData.map((file: any[]) =>
-    file.filter((f: { name: string }) => f.name !== 'RELATIONS')
-  )
-})
+  console.log(': fetchVCs claimsData', claimsData)
 
+  const vcs = claimsData
+    .filter(item => item.data && item.data.fileName)
+    .map(item => {
+      const parsedBody = JSON.parse(item.data.body)
+      return {
+        id: parsedBody.id,
+        ...parsedBody,
+        originalItem: item // Keep original item if needed
+      }
+    })
+
+  // If you want to log the VCs as JSON
+  console.log(': fetchVCs vcs', vcs)
+
+  return vcs
+})
 // Async thunk to fetch resumes
 export const fetchUserResumes = createAsyncThunk('vc/fetchUserResumes', async () => {
   const accessToken = getLocalStorage('auth')

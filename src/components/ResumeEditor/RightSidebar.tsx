@@ -10,37 +10,23 @@ import {
   uploadArrowUpSVG
 } from '../../assets/svgs'
 import { useLocation } from 'react-router-dom'
-
-interface RootState {
-  vcReducer: {
-    vcs: any[]
-    status: string
-  }
-}
+import { fetchVCs } from '../../redux/slices/vc'
+import { useDispatch } from 'react-redux'
+import { AppDispatch } from '../../redux/store'
 
 const RightSidebar = () => {
   const location = useLocation()
   const [selectedClaims, setSelectedClaims] = useState<string[]>([])
   const [uploadedFiles, setUploadedFiles] = useState<string[]>([])
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { vcs: claims, status } = useSelector((state: any) => state.vcReducer)
   const accessToken = getLocalStorage('auth')
+  const dispatch: AppDispatch = useDispatch()
+  const { vcs } = useSelector((state: any) => state.vcReducer)
 
   // Redux state connection kept for future use
-  useSelector((state: RootState) => state.vcReducer)
-
-  const dummyCredentials = [
-    { id: '1', name: 'Case Study' },
-    { id: '2', name: 'Google UX Certification' },
-    { id: '3', name: 'Coursera UX Design Essentials' },
-    { id: '4', name: 'English Language Proficiency Certification' },
-    { id: '5', name: 'Foundations of User Experience (UX) Design' },
-    { id: '6', name: 'Language Description and Documentation' },
-    { id: '7', name: 'Start the UX Design Process: Empathize, Define, and Ideate' },
-    { id: '8', name: 'Introduction to Interaction Design' },
-    { id: '9', name: 'UX Design for Beginners' },
-    { id: '10', name: 'User Interface Design Essentials' }
-  ]
+  useEffect(() => {
+    // Dispatch the thunk to fetch VCs
+    dispatch(fetchVCs())
+  }, [dispatch])
 
   useEffect(() => {
     const savedFiles = JSON.parse(localStorage.getItem('uploadedFiles') ?? '[]')
@@ -206,16 +192,16 @@ const RightSidebar = () => {
 
         <Box
           sx={{
-            maxHeight: dummyCredentials.length > 10 ? 531 : 'auto',
-            overflowY: dummyCredentials.length > 10 ? 'auto' : 'visible',
+            maxHeight: vcs?.length > 10 ? 531 : 'auto',
+            overflowY: vcs?.length > 10 ? 'auto' : 'visible',
             paddingRight: 1
           }}
         >
           <Stack spacing={2}>
-            {dummyCredentials.map(claim => (
-              <Box sx={{ display: 'flex', alignItems: 'center' }} key={claim.id}>
+            {vcs?.map((vc: any) => (
+              <Box sx={{ display: 'flex', alignItems: 'center' }} key={vc.id}>
                 <Box sx={{ width: 24, height: 24, mr: '10px', display: 'flex' }}>
-                  {selectedClaims.includes(claim.id)
+                  {selectedClaims.includes(vc.id)
                     ? checkmarkBlueSVG()
                     : checkmarkgraySVG()}
                 </Box>
@@ -228,9 +214,9 @@ const RightSidebar = () => {
                     fontFamily: 'Nunito Sans',
                     cursor: 'pointer'
                   }}
-                  onClick={() => handleClaimToggle(claim.id)}
+                  onClick={() => handleClaimToggle(vc.id)}
                 >
-                  {claim.name}
+                  {vc?.credentialSubject?.achievement[0]?.name}
                 </Typography>
               </Box>
             ))}
