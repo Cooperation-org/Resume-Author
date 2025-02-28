@@ -8,9 +8,12 @@ import { HTMLWithVerifiedLinks, isVerifiedLink } from '../tools/htmlUtils'
 
 const PAGE_SIZE = {
   width: '210mm',
-  height: '297mm',
-  maxContentHeight: '267mm'
+  height: '297mm'
 }
+const HEADER_HEIGHT_PX = 125
+const FOOTER_HEIGHT_PX = 15
+
+const mmToPx = (mm: number) => mm * 3.779527559
 
 const SectionTitle: React.FC<{ children: ReactNode }> = ({ children }) => (
   <Typography
@@ -101,7 +104,7 @@ const PageHeader: React.FC<{ fullName: string }> = ({ fullName }) => {
         display: 'flex',
         justifyContent: 'space-between',
         backgroundColor: '#F7F9FC',
-        height: '125px'
+        height: `${HEADER_HEIGHT_PX}px`
       }}
     >
       <Box sx={{ display: 'flex', alignItems: 'center', ml: '45px' }}>
@@ -134,7 +137,7 @@ const PageHeader: React.FC<{ fullName: string }> = ({ fullName }) => {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            height: '125px',
+            height: `${HEADER_HEIGHT_PX}px`,
             width: '128px',
             backgroundColor: '#2563EB'
           }}
@@ -173,7 +176,7 @@ const PageFooter: React.FC<{
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        height: '15px',
+        height: `${FOOTER_HEIGHT_PX}px`,
         overflow: 'hidden'
       }}
     >
@@ -190,13 +193,13 @@ const PageFooter: React.FC<{
           mr: '10px'
         }}
       >
-        {fullName} | Page {pageNumber} of {totalPages} |
+        {fullName} | Page {pageNumber} of {totalPages} |{' '}
         {phone && (
           <a href={`tel:${phone}`} style={{ textDecoration: 'none', color: 'inherit' }}>
             {phone}
           </a>
         )}
-        |
+        {' | '}
         <a
           href={`mailto:${email}`}
           style={{ textDecoration: 'underline', color: '#2563EB' }}
@@ -232,13 +235,12 @@ const SocialLinksSection: React.FC<{
 }> = ({ socialLinks }) => (
   <Box sx={{ mb: '30px' }}>
     <Box sx={{ display: 'flex', gap: '20px', flexWrap: 'wrap', flexDirection: 'row' }}>
-      {Object.entries(socialLinks || {}).map(
-        ([platform, url]) =>
-          url && (
-            <Box key={platform}>
-              <LinkWithFavicon url={url} platform={platform} />
-            </Box>
-          )
+      {Object.entries(socialLinks || {}).map(([platform, url]) =>
+        url ? (
+          <Box key={platform}>
+            <LinkWithFavicon url={url} platform={platform} />
+          </Box>
+        ) : null
       )}
     </Box>
   </Box>
@@ -635,23 +637,23 @@ const VolunteerWorkSection: React.FC<{ items: VolunteerWork[] }> = ({ items }) =
   </Box>
 )
 
-const usePagination = (content: ReactNode[], maxHeight: number) => {
+const usePagination = (content: ReactNode[]) => {
   const [pages, setPages] = useState<ReactNode[][]>([])
   const measureRef = useRef<HTMLDivElement>(null)
-  const measuredRef = useRef<boolean>(false)
+  const measuredRef = useRef(false)
 
   useLayoutEffect(() => {
     const timeoutId = setTimeout(() => {
       measureAndPaginate()
     }, 100)
 
-    const measureAndPaginate = () => {
+    function measureAndPaginate() {
       if (!measureRef.current) return
 
-      const mmToPx = (mm: number) => mm * 3.779527559
-      const maxHeightPx = mmToPx(maxHeight)
-      const contentElements = Array.from(measureRef.current.children)
+      const fullPageHeightPx = mmToPx(parseFloat(PAGE_SIZE.height))
+      const contentMaxHeightPx = fullPageHeightPx - HEADER_HEIGHT_PX - FOOTER_HEIGHT_PX
 
+      const contentElements = Array.from(measureRef.current.children || [])
       if (contentElements.length === 0) {
         setTimeout(measureAndPaginate, 100)
         return
@@ -661,23 +663,23 @@ const usePagination = (content: ReactNode[], maxHeight: number) => {
 
       let currentPage: ReactNode[] = []
       let currentHeight = 0
-      const paginatedContent: ReactNode[][] = []
+      const paginated: ReactNode[][] = []
 
       for (let i = 0; i < content.length; i++) {
         const section = content[i]
         const sectionHeight = contentHeights[i]
 
-        if (currentHeight + sectionHeight > maxHeightPx) {
+        if (currentHeight + sectionHeight > contentMaxHeightPx) {
           if (currentPage.length > 0) {
-            paginatedContent.push([...currentPage])
+            paginated.push([...currentPage])
             currentPage = []
             currentHeight = 0
           }
 
-          if (sectionHeight > maxHeightPx) {
-            paginatedContent.push([section])
+          if (sectionHeight > contentMaxHeightPx) {
+            paginated.push([section])
           } else {
-            currentPage = [section]
+            currentPage.push(section)
             currentHeight = sectionHeight
           }
           continue
@@ -688,10 +690,10 @@ const usePagination = (content: ReactNode[], maxHeight: number) => {
       }
 
       if (currentPage.length > 0) {
-        paginatedContent.push(currentPage)
+        paginated.push(currentPage)
       }
 
-      setPages(paginatedContent)
+      setPages(paginated)
       measuredRef.current = true
     }
 
@@ -709,7 +711,7 @@ const usePagination = (content: ReactNode[], maxHeight: number) => {
       clearTimeout(timeoutId)
       window.removeEventListener('resize', handleResize)
     }
-  }, [content, maxHeight])
+  }, [content])
 
   return { pages, measureRef }
 }
@@ -717,7 +719,7 @@ const usePagination = (content: ReactNode[], maxHeight: number) => {
 const ResumePreview: React.FC<ResumePreviewProps> = ({ data: propData }) => {
   const storeResume = useSelector((state: RootState) => state.resume?.resume)
   const resume = propData || storeResume
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+
   const [currentUrl, setCurrentUrl] = useState<string>('')
 
   useEffect(() => {
@@ -725,57 +727,43 @@ const ResumePreview: React.FC<ResumePreviewProps> = ({ data: propData }) => {
   }, [])
 
   const contentSections: ReactNode[] = []
-
-  const { pages, measureRef } = usePagination(
-    contentSections,
-    parseInt(PAGE_SIZE.maxContentHeight)
-  )
+  const { pages, measureRef } = usePagination(contentSections)
 
   if (!resume) return null
 
-  if (resume?.summary) {
+  if (resume.summary) {
     contentSections.push(<SummarySection key='summary' summary={resume.summary} />)
   }
-
   if (
-    resume?.contact?.socialLinks &&
+    resume.contact?.socialLinks &&
     Object.values(resume.contact.socialLinks).some(link => !!link)
   ) {
     contentSections.push(
       <SocialLinksSection key='social' socialLinks={resume.contact.socialLinks} />
     )
   }
-
-  if (resume?.experience?.items && resume.experience.items.length > 0) {
+  if (resume.experience?.items?.length) {
     contentSections.push(
       <ExperienceSection key='experience' items={resume.experience.items} />
     )
   }
-
-  if (resume?.certifications?.items && resume.certifications.items.length > 0) {
+  if (resume.certifications?.items?.length) {
     contentSections.push(
       <CertificationsSection key='certifications' items={resume.certifications.items} />
     )
   }
-
-  if (resume?.awards?.items && resume.awards.items.length > 0) {
+  if (resume.awards?.items?.length) {
     contentSections.push(<AwardsSection key='awards' items={resume.awards.items} />)
   }
-
-  if (resume?.education?.items && resume.education.items.length > 0) {
+  if (resume.education?.items?.length) {
     contentSections.push(
       <EducationSection key='education' items={resume.education.items} />
     )
   }
-
-  if (resume?.skills?.items && resume.skills.items.length > 0) {
+  if (resume.skills?.items?.length) {
     contentSections.push(<SkillsSection key='skills' items={resume.skills.items} />)
   }
-
-  if (
-    resume?.professionalAffiliations?.items &&
-    resume.professionalAffiliations.items.length > 0
-  ) {
+  if (resume.professionalAffiliations?.items?.length) {
     contentSections.push(
       <ProfessionalAffiliationsSection
         key='affiliations'
@@ -783,30 +771,25 @@ const ResumePreview: React.FC<ResumePreviewProps> = ({ data: propData }) => {
       />
     )
   }
-
-  if (resume?.languages?.items && resume.languages.items.length > 0) {
+  if (resume.languages?.items?.length) {
     contentSections.push(
       <LanguagesSection key='languages' items={resume.languages.items} />
     )
   }
-
-  if (resume?.hobbiesAndInterests && resume.hobbiesAndInterests.length > 0) {
+  if (resume.hobbiesAndInterests?.length) {
     contentSections.push(
       <HobbiesSection key='hobbies' items={resume.hobbiesAndInterests} />
     )
   }
-
-  if (resume?.projects?.items && resume.projects.items.length > 0) {
+  if (resume.projects?.items?.length) {
     contentSections.push(<ProjectsSection key='projects' items={resume.projects.items} />)
   }
-
-  if (resume?.publications?.items && resume.publications.items.length > 0) {
+  if (resume.publications?.items?.length) {
     contentSections.push(
       <PublicationsSection key='publications' items={resume.publications.items} />
     )
   }
-
-  if (resume?.volunteerWork?.items && resume.volunteerWork.items.length > 0) {
+  if (resume.volunteerWork?.items?.length) {
     contentSections.push(
       <VolunteerWorkSection key='volunteer' items={resume.volunteerWork.items} />
     )
@@ -822,14 +805,22 @@ const ResumePreview: React.FC<ResumePreviewProps> = ({ data: propData }) => {
         overflow: 'visible'
       }}
     >
+      {/* Rendering all content offscreen for measurement, matching container styling */}
       <Box
-        sx={{ position: 'absolute', visibility: 'hidden', width: PAGE_SIZE.width }}
         ref={measureRef}
+        sx={{
+          visibility: 'hidden',
+          position: 'absolute',
+          width: PAGE_SIZE.width,
+
+          py: '20px',
+          px: '73px'
+        }}
       >
         {contentSections}
       </Box>
 
-      {pages?.map((pageContent, pageIndex) => (
+      {pages.map((pageContent, pageIndex) => (
         <Box
           key={`page-${pageIndex}`}
           sx={{
@@ -846,29 +837,31 @@ const ResumePreview: React.FC<ResumePreviewProps> = ({ data: propData }) => {
               height: '100%',
               margin: 0,
               padding: 0,
-              boxShadow: 'none',
-              m: 0,
-              pageBreakAfter: 'avoid'
+              boxShadow: 'none'
             }
           }}
         >
-          <PageHeader fullName={resume?.contact?.fullName || 'Your Name'} />
+          <PageHeader fullName={resume.contact?.fullName || 'Your Name'} />
+
+          {/* Content area: leftover after header and footer */}
           <Box
             sx={{
-              height: PAGE_SIZE.maxContentHeight,
               py: '20px',
               px: '73px',
               overflow: 'hidden',
-              position: 'relative'
+              position: 'relative',
+
+              height: `calc(${PAGE_SIZE.height} - ${HEADER_HEIGHT_PX}px - ${FOOTER_HEIGHT_PX}px)`
             }}
           >
             {pageContent}
           </Box>
+
           <Box sx={{ position: 'absolute', bottom: 0, left: 0, right: 0 }}>
             <PageFooter
-              fullName={resume?.contact?.fullName || 'Your Name'}
-              email={resume?.contact?.email || 'email@example.com'}
-              phone={resume?.contact?.phone}
+              fullName={resume.contact?.fullName || 'Your Name'}
+              email={resume.contact?.email || 'email@example.com'}
+              phone={resume.contact?.phone}
               pageNumber={pageIndex + 1}
               totalPages={pages.length}
             />
