@@ -701,8 +701,15 @@ const usePagination = (content: ReactNode[], maxHeight: number) => {
 const ResumePreview: React.FC<ResumePreviewProps> = ({ data: propData }) => {
   const storeResume = useSelector((state: RootState) => state.resume?.resume)
   const resume = propData || storeResume
-  if (!resume) return null
+
   const contentSections: ReactNode[] = []
+
+  const { pages, measureRef } = usePagination(
+    contentSections,
+    parseInt(PAGE_SIZE.maxContentHeight)
+  )
+
+  if (!resume) return null
 
   if (resume?.summary) {
     contentSections.push(<SummarySection key='summary' summary={resume.summary} />)
@@ -782,11 +789,6 @@ const ResumePreview: React.FC<ResumePreviewProps> = ({ data: propData }) => {
       <VolunteerWorkSection key='volunteer' items={resume.volunteerWork.items} />
     )
   }
-
-  const { pages, measureRef } = usePagination(
-    contentSections,
-    parseInt(PAGE_SIZE.maxContentHeight)
-  )
 
   return (
     <Box
