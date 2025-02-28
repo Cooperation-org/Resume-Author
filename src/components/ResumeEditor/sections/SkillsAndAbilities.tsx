@@ -105,17 +105,13 @@ export default function SkillsAndAbilities({
 
   const handleSkillChange = useCallback(
     (index: number, field: string, value: string) => {
-      setSkills(prevSkills => {
-        const updatedSkills = [...prevSkills]
-        updatedSkills[index] = {
-          ...updatedSkills[index],
-          [field]: value
-        }
-
-        return updatedSkills
+      setSkills(prev => {
+        const updated = [...prev]
+        updated[index] = { ...updated[index], [field]: value }
+        debouncedReduxUpdate(updated)
+        return updated
       })
     },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     [debouncedReduxUpdate]
   )
 
