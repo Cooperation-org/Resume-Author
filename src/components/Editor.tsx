@@ -65,7 +65,7 @@ const ResumeEditor: React.FC = () => {
   const resume = useSelector((state: RootState) => state?.resume.resume)
   const { instances } = useGoogleDrive()
   const accessToken = getLocalStorage('auth')
-  const refreshToken = getLocalStorage('refreshToken')
+  const refreshToken = getLocalStorage('refresh_token')
 
   const requiredSections = [
     'Professional Summary',
