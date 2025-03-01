@@ -14,7 +14,6 @@ import {
 import {
   SVGSectionIcon,
   SVGDownIcon,
-  SVGAddcredential,
   SVGAddFiles,
   SVGDeleteSection
 } from '../../../assets/svgs'
@@ -497,12 +496,6 @@ export default function VolunteerWork({
                   gap: '15px'
                 }}
               >
-                <StyledButton
-                  startIcon={<SVGAddcredential />}
-                  onClick={() => onAddCredential && onAddCredential('')}
-                >
-                  Add credential(s)
-                </StyledButton>
                 <StyledButton startIcon={<SVGAddFiles />} onClick={onAddFiles}>
                   Add file(s)
                 </StyledButton>

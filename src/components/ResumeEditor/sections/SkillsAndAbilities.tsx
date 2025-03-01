@@ -1,12 +1,7 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react'
 import { Box, Typography, Button, IconButton } from '@mui/material'
 import TextEditor from '../../TextEditor/Texteditor'
-import {
-  SVGDownIcon,
-  SVGAddcredential,
-  SVGAddFiles,
-  SVGDeleteSection
-} from '../../../assets/svgs'
+import { SVGDownIcon, SVGAddFiles, SVGDeleteSection } from '../../../assets/svgs'
 import { StyledButton } from './StyledButton'
 import { useDispatch, useSelector } from 'react-redux'
 import { updateSection } from '../../../redux/slices/resume'
@@ -305,12 +300,6 @@ export default function SkillsAndAbilities({
                   gap: '15px'
                 }}
               >
-                <StyledButton
-                  startIcon={<SVGAddcredential />}
-                  onClick={() => onAddCredential && onAddCredential('')}
-                >
-                  Add credential(s)
-                </StyledButton>
                 <StyledButton startIcon={<SVGAddFiles />} onClick={onAddFiles}>
                   Add file(s)
                 </StyledButton>

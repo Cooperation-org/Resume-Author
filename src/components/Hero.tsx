@@ -10,15 +10,12 @@ import SelectCards from './landingPageSections/SelectCards'
 import MoreAbout from './landingPageSections/MoreAboutResumeAuthor'
 import Footer from './landingPageSections/Footer'
 import { getLocalStorage } from '../tools/cookie'
+import { login } from '../tools/auth'
 
 const Hero = () => {
   const token = getLocalStorage('auth')
   const handleLogin = () => {
-    if (token) {
-      window.location.href = '/resume/new'
-    } else {
-      window.location.href = '/login'
-    }
+    login('/resume/import')
   }
   return (
     <div>
@@ -89,7 +86,7 @@ const Hero = () => {
                 }
               }}
             >
-              Created for you by the
+              Created for you by the{' '}
               <Box
                 component='span'
                 sx={{
