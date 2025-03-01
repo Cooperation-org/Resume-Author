@@ -31,6 +31,7 @@ import { AppDispatch } from '../redux/store'
 import { deleteResume, duplicateResume, updateTitle } from '../redux/slices/myresumes'
 import { SVGBadge } from '../assets/svgs'
 import { storeFileTokens } from '../firebase/storage'
+import html2pdf from 'html2pdf.js'
 
 const ActionButton = styled(Button)(({ theme }) => ({
   textTransform: 'none',
@@ -209,6 +210,28 @@ const ResumeCard: React.FC<ResumeCardProps> = ({
       navigate(`/resume/preview/${id}`)
     }
   }
+  const exportResumeToPDF = (data: any) => {
+    const element = document.getElementById('resume-preview')
+    if (!element) return
+
+    const options = {
+      margin: [0, 0, 0, 0],
+      filename: `${data.contact.fullName}_Resume.pdf`,
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2, useCORS: true, logging: true },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    }
+
+    const metadata = {
+      title: `${data.contact.fullName}'s Resume`,
+      creator: 'Reactive Resume',
+      subject: 'Resume',
+      keywords: ['Resume', 'CV', data.contact.fullName],
+      custom: { resumeData: JSON.stringify(data) }
+    }
+
+    html2pdf().set(metadata).from(element).set(options).save()
+  }
 
   return (
     <>
@@ -315,7 +338,11 @@ const ResumeCard: React.FC<ResumeCardProps> = ({
                         Copy Link
                       </ActionButton>
                     </Tooltip>
-                    <ActionButton size='small' startIcon={<DownloadIcon />}>
+                    <ActionButton
+                      onClick={() => exportResumeToPDF(resume)}
+                      size='small'
+                      startIcon={<DownloadIcon />}
+                    >
                       Download PDF
                     </ActionButton>
                     <ActionButton

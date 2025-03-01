@@ -31,7 +31,7 @@ export const handleRedirect = async ({ navigate }: { navigate: NavigateFunction 
 
   if (!code) {
     console.error('No authorization code found')
-    navigate('/login')
+    navigate('/')
     return
   }
 
@@ -54,7 +54,7 @@ export const handleRedirect = async ({ navigate }: { navigate: NavigateFunction 
     navigate(returnPath, { replace: true })
   } catch (error) {
     console.error('Error during token exchange or user info fetch:', error)
-    navigate('/login')
+    navigate('/')
   }
 }
 

@@ -3,7 +3,6 @@ import { Box, TextField, Typography, Button, IconButton } from '@mui/material'
 import {
   SVGSectionIcon,
   SVGDownIcon,
-  SVGAddcredential,
   SVGAddFiles,
   SVGDeleteSection
 } from '../../../assets/svgs'
@@ -364,12 +363,6 @@ export default function Projects({
                   gap: '15px'
                 }}
               >
-                <StyledButton
-                  startIcon={<SVGAddcredential />}
-                  onClick={() => onAddCredential && onAddCredential('')}
-                >
-                  Add credential(s)
-                </StyledButton>
                 <StyledButton startIcon={<SVGAddFiles />} onClick={onAddFiles}>
                   Add file(s)
                 </StyledButton>
