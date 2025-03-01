@@ -98,7 +98,7 @@ const ResumeEditor: React.FC = () => {
 
   const handlePreview = () => {
     console.log(resume)
-    navigate('/resume/preview')
+    navigate('/resume/view')
   }
 
   const handleSaveDraft = async () => {
