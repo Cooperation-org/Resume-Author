@@ -266,9 +266,7 @@ const ResumeCard: React.FC<ResumeCardProps> = ({
   }
 
   const handleCopyLink = () => {
-    navigator.clipboard.writeText(
-      `https://resume.allskillscount.org/resume/preview/${id}`
-    )
+    navigator.clipboard.writeText(`https://resume.allskillscount.org/resume/view/${id}`)
     setShowCopiedTooltip(true)
     setTimeout(() => setShowCopiedTooltip(false), 2000)
     handleMenuClose()
@@ -284,9 +282,9 @@ const ResumeCard: React.FC<ResumeCardProps> = ({
 
   const handlePreviewResume = () => {
     if (isDraft) {
-      navigate('/resume/preview')
+      navigate('/resume/view')
     } else {
-      navigate(`/resume/preview/${id}`)
+      navigate(`/resume/view/${id}`)
     }
   }
   const exportResumeToPDF = (data: any) => {
