@@ -61,40 +61,67 @@ const StyledCard = styled(Card)(() => ({
 
 // Helper function to format date as "Month Day, Year"
 const formatDate = (dateString: string): string => {
-  const date = new Date(dateString)
-  return date.toLocaleDateString('en-US', {
-    month: 'long',
-    day: 'numeric',
-    year: 'numeric'
-  })
+  try {
+    const date = new Date(dateString)
+    // Check if date is valid
+    if (isNaN(date.getTime())) {
+      console.error('Invalid date string:', dateString)
+      return 'Invalid date'
+    }
+    return date.toLocaleDateString('en-US', {
+      month: 'long',
+      day: 'numeric',
+      year: 'numeric'
+    })
+  } catch (error) {
+    console.error('Error formatting date:', error)
+    return 'Invalid date'
+  }
 }
 
 // Helper function to get time ago string (e.g., "2 days ago", "3 hours ago")
 const getTimeAgo = (dateString: string): string => {
-  const date = new Date(dateString)
-  const now = new Date()
-  const diffMs = now.getTime() - date.getTime()
+  try {
+    const date = new Date(dateString)
 
-  // Convert to appropriate units
-  const diffSecs = Math.floor(diffMs / 1000)
-  const diffMins = Math.floor(diffSecs / 60)
-  const diffHours = Math.floor(diffMins / 60)
-  const diffDays = Math.floor(diffHours / 24)
-  const diffMonths = Math.floor(diffDays / 30)
-  const diffYears = Math.floor(diffDays / 365)
+    // Check if date is valid
+    if (isNaN(date.getTime())) {
+      console.error('Invalid date string in getTimeAgo:', dateString)
+      return 'Recently'
+    }
 
-  if (diffYears > 0) {
-    return `${diffYears} ${diffYears === 1 ? 'year' : 'years'} ago`
-  } else if (diffMonths > 0) {
-    return `${diffMonths} ${diffMonths === 1 ? 'month' : 'months'} ago`
-  } else if (diffDays > 0) {
-    return `${diffDays} ${diffDays === 1 ? 'day' : 'days'} ago`
-  } else if (diffHours > 0) {
-    return `${diffHours} ${diffHours === 1 ? 'hour' : 'hours'} ago`
-  } else if (diffMins > 0) {
-    return `${diffMins} ${diffMins === 1 ? 'minute' : 'minutes'} ago`
-  } else {
-    return `${diffSecs} ${diffSecs === 1 ? 'second' : 'seconds'} ago`
+    const now = new Date()
+    const diffMs = now.getTime() - date.getTime()
+
+    // Sanity check - if date is in the future or too far in the past, return a generic message
+    if (diffMs < 0) {
+      return 'Just now'
+    }
+
+    // Convert to appropriate units
+    const diffSecs = Math.floor(diffMs / 1000)
+    const diffMins = Math.floor(diffSecs / 60)
+    const diffHours = Math.floor(diffMins / 60)
+    const diffDays = Math.floor(diffHours / 24)
+    const diffMonths = Math.floor(diffDays / 30)
+    const diffYears = Math.floor(diffDays / 365)
+
+    if (diffYears > 0) {
+      return `${diffYears} ${diffYears === 1 ? 'year' : 'years'} ago`
+    } else if (diffMonths > 0) {
+      return `${diffMonths} ${diffMonths === 1 ? 'month' : 'months'} ago`
+    } else if (diffDays > 0) {
+      return `${diffDays} ${diffDays === 1 ? 'day' : 'days'} ago`
+    } else if (diffHours > 0) {
+      return `${diffHours} ${diffHours === 1 ? 'hour' : 'hours'} ago`
+    } else if (diffMins > 0) {
+      return `${diffMins} ${diffMins === 1 ? 'minute' : 'minutes'} ago`
+    } else {
+      return `${diffSecs <= 0 ? 'Just now' : `${diffSecs} ${diffSecs === 1 ? 'second' : 'seconds'} ago`}`
+    }
+  } catch (error) {
+    console.error('Error calculating time ago:', error)
+    return 'Recently'
   }
 }
 
@@ -119,13 +146,58 @@ const ResumeCard: React.FC<ResumeCardProps> = ({
   // Format the date
   const formattedDate = formatDate(date)
 
-  // Get time ago for the appropriate timestamp
-  // For drafts, use lastUpdated; for non-drafts, use the date prop
-  const timeAgo = isDraft
-    ? resume?.content?.lastUpdated
-      ? getTimeAgo(resume.content.lastUpdated)
-      : 'Just now'
-    : getTimeAgo(date)
+  // Get time ago for the appropriate timestamp based on whether it's a draft or signed resume
+  const getResumeDate = (): string => {
+    // Add some helpful debug logging to understand the resume data structure
+    console.log(
+      `ResumeCard (${isDraft ? 'Draft' : 'Signed'}) - ID: ${id}, Title: ${title}`
+    )
+
+    if (isDraft) {
+      // For drafts, we expect the date in content.lastUpdated
+      if (resume?.content?.lastUpdated) {
+        console.log('Using draft resume.content.lastUpdated:', resume.content.lastUpdated)
+        return resume.content.lastUpdated
+      } else {
+        // Log potential issues with draft resume structure
+        console.log(
+          'Draft resume missing content.lastUpdated, using fallback date:',
+          date
+        )
+        console.log(
+          'Draft resume content structure:',
+          resume?.content ? Object.keys(resume.content) : 'No content'
+        )
+        return date // Use the date prop as fallback
+      }
+    } else {
+      // For signed resumes, we expect the date in content.issuanceDate
+      if (resume?.content?.issuanceDate) {
+        console.log(
+          'Using signed resume.content.issuanceDate:',
+          resume.content.issuanceDate
+        )
+        return resume.content.issuanceDate
+      } else {
+        // Log potential issues with signed resume structure
+        console.log(
+          'Signed resume missing content.issuanceDate, using fallback date:',
+          date
+        )
+        console.log(
+          'Signed resume content structure:',
+          resume?.content ? Object.keys(resume.content) : 'No content'
+        )
+        return date
+      }
+    }
+  }
+
+  const resumeDate = getResumeDate()
+  const timeAgo = getTimeAgo(resumeDate)
+
+  // Additional logging to debug time calculations
+  console.log(`Resume time details - Date: ${resumeDate}, TimeAgo: ${timeAgo}`)
 
   const inputRef = useRef<HTMLInputElement | null>(null)
 
@@ -189,7 +261,9 @@ const ResumeCard: React.FC<ResumeCardProps> = ({
   }
 
   const handleCopyLink = () => {
-    navigator.clipboard.writeText(`https://example.com/resume/${id}`)
+    navigator.clipboard.writeText(
+      `https://resume.allskillscount.org/resume/preview/${id}`
+    )
     setShowCopiedTooltip(true)
     setTimeout(() => setShowCopiedTooltip(false), 2000)
     handleMenuClose()
@@ -300,9 +374,7 @@ const ResumeCard: React.FC<ResumeCardProps> = ({
                   color='text.secondary'
                   sx={{ mt: 0.5, fontSize: '0.875rem' }}
                 >
-                  {isDraft
-                    ? `DRAFT - ${timeAgo}`
-                    : `${timeAgo} - ${credentials} Credentials`}
+                  {isDraft ? `DRAFT - ${timeAgo}` : `${timeAgo}`}
                 </Typography>
               </Box>
             </Box>

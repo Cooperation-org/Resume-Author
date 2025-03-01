@@ -7,7 +7,8 @@ import {
   linearProgressClasses,
   styled,
   IconButton,
-  TextField
+  TextField,
+  CircularProgress
 } from '@mui/material'
 import LeftSidebar from './ResumeEditor/LeftSidebar'
 import RightSidebar from './ResumeEditor/RightSidebar'
@@ -61,6 +62,8 @@ const ResumeEditor: React.FC = () => {
   ])
   const [isEditingName, setIsEditingName] = useState(false)
   const [resumeName, setResumeName] = useState('Untitled')
+  const [isDraftSaving, setIsDraftSaving] = useState(false)
+  const [isSigningSaving, setIsSigningSaving] = useState(false)
 
   const resume = useSelector((state: RootState) => state?.resume.resume)
   const { instances } = useGoogleDrive()
@@ -99,38 +102,95 @@ const ResumeEditor: React.FC = () => {
   }
 
   const handleSaveDraft = async () => {
-    const savedResume = await instances?.resumeManager?.saveResume({
-      resume: resume,
-      type: 'unsigned'
-    })
-    console.log('Saved Resume:', savedResume)
+    try {
+      setIsDraftSaving(true)
+      const savedResume = await instances?.resumeManager?.saveResume({
+        resume: resume,
+        type: 'unsigned'
+      })
+      console.log('Saved Resume:', savedResume)
+    } catch (error) {
+      console.error('Error saving draft:', error)
+    } finally {
+      setIsDraftSaving(false)
+    }
   }
 
   const handleSignAndSave = async () => {
-    const keyPair = await instances?.resumeVC?.generateKeyPair()
-    const didDoc = await instances?.resumeVC?.createDID({
-      keyPair
-    })
+    if (!instances?.resumeVC || !instances?.resumeManager) {
+      console.error('Required services not available')
+      return
+    }
 
-    console.log('FORM DATA', resume)
+    // Set up a timer to ensure loading finishes after 3 seconds
+    setIsSigningSaving(true)
+    const loadingTimer = setTimeout(() => {
+      setIsSigningSaving(false)
+    }, 3000)
 
-    const signedResume = await instances?.resumeVC?.sign({
-      formData: resume,
-      issuerDid: didDoc.id,
-      keyPair
-    })
-    const file = await instances?.resumeManager?.saveResume({
-      resume: signedResume,
-      type: 'sign'
-    })
-    await storeFileTokens({
-      googleFileId: file.id,
-      tokens: {
-        accessToken: accessToken || '',
-        refreshToken: refreshToken || ''
+    try {
+      // Generate key pair
+      const keyPair = await instances.resumeVC.generateKeyPair()
+      if (!keyPair) {
+        throw new Error('Failed to generate key pair')
       }
-    })
-    console.log('resume', signedResume)
+
+      // Create DID document
+      const didDoc = await instances.resumeVC.createDID({
+        keyPair
+      })
+      if (!didDoc) {
+        throw new Error('Failed to create DID document')
+      }
+
+      console.log('FORM DATA', resume)
+
+      // Sign resume
+      const signedResume = await instances.resumeVC.sign({
+        formData: resume,
+        issuerDid: didDoc.id,
+        keyPair
+      })
+      if (!signedResume) {
+        throw new Error('Failed to sign resume')
+      }
+
+      // Save resume
+      const file = await instances.resumeManager.saveResume({
+        resume: signedResume,
+        type: 'sign'
+      })
+      if (!file || !file.id) {
+        throw new Error('Failed to save resume')
+      }
+
+      // Store tokens
+      await storeFileTokens({
+        googleFileId: file.id,
+        tokens: {
+          accessToken: accessToken || '',
+          refreshToken: refreshToken || ''
+        }
+      })
+
+      console.log('Resume successfully signed and saved:', signedResume)
+
+      // If process completes before 3 seconds, clear the timer
+      // and manually set loading state to false
+      if (loadingTimer) {
+        clearTimeout(loadingTimer)
+        setIsSigningSaving(false)
+      }
+    } catch (error) {
+      console.error('Error signing and saving:', error)
+      // If error occurs before 3 seconds, clear the timer
+      // and manually set loading state to false
+      if (loadingTimer) {
+        clearTimeout(loadingTimer)
+        setIsSigningSaving(false)
+      }
+    }
+    // Note: No finally block needed as the timeout handles the loading state
   }
 
   const handleEditNameClick = () => {
@@ -240,15 +300,27 @@ const ResumeEditor: React.FC = () => {
           <Button onClick={handlePreview} variant='outlined' sx={ButtonStyles}>
             Preview
           </Button>
-          <Button variant='outlined' sx={ButtonStyles} onClick={handleSaveDraft}>
-            Save as Draft
+          <Button
+            variant='outlined'
+            sx={ButtonStyles}
+            onClick={handleSaveDraft}
+            disabled={isDraftSaving}
+            startIcon={
+              isDraftSaving ? <CircularProgress size={20} color='inherit' /> : null
+            }
+          >
+            {isDraftSaving ? 'Saving...' : 'Save as Draft'}
           </Button>
           <Button
             variant='outlined'
             sx={{ ...ButtonStyles, color: 'white', bgcolor: '#614BC4' }}
             onClick={handleSignAndSave}
+            disabled={isSigningSaving}
+            startIcon={
+              isSigningSaving ? <CircularProgress size={20} color='inherit' /> : null
+            }
           >
-            Save and Sign
+            {isSigningSaving ? 'Saving...' : 'Save and Sign'}
           </Button>
         </Box>
       </Box>
@@ -295,39 +367,6 @@ const ResumeEditor: React.FC = () => {
             activeSections={sectionOrder}
             onAddSection={handleAddSection}
           />
-          {/* Autocomplete for Adding New Sections */}
-          {/* {addSectionOpen && (
-            <Box
-              sx={{
-                display: 'flex',
-                gap: 2,
-                alignItems: 'center'
-              }}
-            >
-              <Autocomplete
-                options={AllSections}
-                value={selectedSection}
-                onChange={handleSectionSelect}
-                renderInput={params => (
-                  <TextField
-                    {...params}
-                    label='Add Section'
-                    placeholder='Type to search...'
-                    variant='outlined'
-                    fullWidth
-                  />
-                )}
-                fullWidth
-              />
-              <Button
-                onClick={handleAddSelectedSection}
-                disabled={!selectedSection}
-                sx={{ borderRadius: 5 }}
-              >
-                Add
-              </Button>
-            </Box>
-          )} */}
         </Box>
 
         <RightSidebar />
