@@ -1,7 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react'
 import {
   Box,
-  CircularProgress,
   Typography,
   Dialog,
   DialogTitle,
