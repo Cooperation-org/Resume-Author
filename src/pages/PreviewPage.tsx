@@ -1,5 +1,6 @@
 import React from 'react'
-import { Box, CircularProgress, Typography, Button } from '@mui/material'
+import { Box, CircularProgress, Typography, IconButton } from '@mui/material'
+import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf'
 import { useSelector } from 'react-redux'
 import { RootState } from '../redux/store'
 import ResumePreview from '../components/resumePreview'
@@ -8,24 +9,26 @@ import html2pdf from 'html2pdf.js'
 const PreviewPage = () => {
   const resumeData = useSelector((state: RootState) => state.resume?.resume)
 
-  const exportResumeToPDF = (data: any) => {
+  const exportResumeToPDF = () => {
+    if (!resumeData) return
+
     const element = document.getElementById('resume-preview')
     if (!element) return
 
     const options = {
       margin: [0, 0, 0, 0],
-      filename: `${data.contact.fullName}_Resume.pdf`,
+      filename: `${resumeData.contact.fullName}_Resume.pdf`,
       image: { type: 'jpeg', quality: 0.98 },
       html2canvas: { scale: 2, useCORS: true, logging: true },
       jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
     }
 
     const metadata = {
-      title: `${data.contact.fullName}'s Resume`,
+      title: `${resumeData.contact.fullName}'s Resume`,
       creator: 'Reactive Resume',
       subject: 'Resume',
-      keywords: ['Resume', 'CV', data.contact.fullName],
-      custom: { resumeData: JSON.stringify(data) }
+      keywords: ['Resume', 'CV', resumeData.contact.fullName],
+      custom: { resumeData: JSON.stringify(resumeData) }
     }
 
     html2pdf().set(metadata).from(element).set(options).save()
@@ -52,13 +55,46 @@ const PreviewPage = () => {
 
   return (
     <Box sx={{ width: '100%', minHeight: '100vh', bgcolor: 'background.default' }}>
-      <Button
-        variant='contained'
-        onClick={() => exportResumeToPDF(resumeData)}
-        sx={{ position: 'fixed', top: 20, right: 20, zIndex: 1000 }}
+      <Box
+        sx={{
+          position: 'fixed',
+          bottom: '20px',
+          right: '20px',
+          zIndex: 1000,
+          display: { xs: 'none', sm: 'block' },
+          '@media print': {
+            display: 'none'
+          }
+        }}
       >
-        Export as PDF
-      </Button>
+        <Box
+          sx={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: '8px'
+          }}
+        >
+          <IconButton
+            onClick={() => exportResumeToPDF()}
+            sx={{
+              width: '36px',
+              height: '36px',
+              borderRadius: '4px',
+              transition: 'transform, background-color',
+              '&:hover': {
+                bgcolor: 'action.hover',
+                transform: 'scale(1)'
+              },
+              '&:active': {
+                transform: 'scale(0.95)'
+              }
+            }}
+          >
+            <PictureAsPdfIcon sx={{ width: '36px', height: '36px' }} />
+          </IconButton>
+        </Box>
+      </Box>
       <ResumePreview data={resumeData} />
     </Box>
   )

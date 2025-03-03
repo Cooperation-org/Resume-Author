@@ -11,7 +11,7 @@ import {
 import { GoogleDriveStorage } from '@cooperation/vc-storage'
 import { getLocalStorage } from '../tools/cookie'
 import ResumePreview from './resumePreview'
-import DownloadIcon from '@mui/icons-material/Download'
+import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf'
 import CloseIcon from '@mui/icons-material/Close'
 import html2pdf from 'html2pdf.js'
 
@@ -347,7 +347,7 @@ const ResumePreviewDialog: React.FC<ResumePreviewDialogProps> = ({
         <Box>
           <Tooltip title='Download PDF'>
             <IconButton onClick={() => exportResumeToPDF(resumeData)}>
-              <DownloadIcon />
+              <PictureAsPdfIcon />
             </IconButton>
           </Tooltip>
           <IconButton onClick={onClose}>
