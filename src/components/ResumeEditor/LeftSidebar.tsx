@@ -260,8 +260,8 @@ const LeftSidebar = () => {
             <TextField
               placeholder='Enter your Instagram URL'
               fullWidth
-              value={resume?.contact?.socialLinks?.twitter || ''} // Using twitter field for Instagram
-              onChange={e => handleLinksChange('twitter', e.target.value)}
+              value={resume?.contact?.socialLinks?.instagram || ''}
+              onChange={e => handleLinksChange('instagram', e.target.value)}
               size='small'
               sx={placeholderStyle}
             />

@@ -12,6 +12,8 @@ const PAGE_SIZE = {
 }
 const HEADER_HEIGHT_PX = 125
 const FOOTER_HEIGHT_PX = 15
+const CONTENT_BUFFER_PX = 130
+const MIN_BOTTOM_SPACE_PX = 70
 
 const mmToPx = (mm: number) => mm * 3.779527559
 
@@ -645,21 +647,25 @@ const usePagination = (content: ReactNode[]) => {
   useLayoutEffect(() => {
     const timeoutId = setTimeout(() => {
       measureAndPaginate()
-    }, 100)
+    }, 500)
 
     function measureAndPaginate() {
       if (!measureRef.current) return
 
       const fullPageHeightPx = mmToPx(parseFloat(PAGE_SIZE.height))
-      const contentMaxHeightPx = fullPageHeightPx - HEADER_HEIGHT_PX - FOOTER_HEIGHT_PX
+      const contentMaxHeightPx =
+        fullPageHeightPx - HEADER_HEIGHT_PX - FOOTER_HEIGHT_PX - CONTENT_BUFFER_PX
 
       const contentElements = Array.from(measureRef.current.children || [])
       if (contentElements.length === 0) {
-        setTimeout(measureAndPaginate, 100)
+        setTimeout(measureAndPaginate, 200)
         return
       }
 
-      const contentHeights = contentElements.map(el => el.getBoundingClientRect().height)
+      const contentHeights = contentElements.map(el => {
+        const height = el.getBoundingClientRect().height
+        return height + 10
+      })
 
       let currentPage: ReactNode[] = []
       let currentHeight = 0
@@ -669,7 +675,12 @@ const usePagination = (content: ReactNode[]) => {
         const section = content[i]
         const sectionHeight = contentHeights[i]
 
-        if (currentHeight + sectionHeight > contentMaxHeightPx) {
+        const remainingSpace = contentMaxHeightPx - currentHeight
+        const wouldUseMoreThan75Percent = sectionHeight > remainingSpace * 0.75
+        if (
+          wouldUseMoreThan75Percent ||
+          currentHeight + sectionHeight > contentMaxHeightPx - MIN_BOTTOM_SPACE_PX
+        ) {
           if (currentPage.length > 0) {
             paginated.push([...currentPage])
             currentPage = []
@@ -678,11 +689,8 @@ const usePagination = (content: ReactNode[]) => {
 
           if (sectionHeight > contentMaxHeightPx) {
             paginated.push([section])
-          } else {
-            currentPage.push(section)
-            currentHeight = sectionHeight
+            continue
           }
-          continue
         }
 
         currentPage.push(section)
@@ -693,13 +701,18 @@ const usePagination = (content: ReactNode[]) => {
         paginated.push(currentPage)
       }
 
-      setPages(paginated)
+      if (paginated.length > 0) {
+        setPages(paginated)
+      }
       measuredRef.current = true
+
+      // console.log(`Pagination complete: ${paginated.length} pages created`)
+      paginated.forEach((page, i) => {
+        // console.log(`Page ${i + 1}: ${page.length} sections`)
+      })
     }
 
-    if (!measuredRef.current) {
-      measureAndPaginate()
-    }
+    measuredRef.current = false
 
     const handleResize = () => {
       measuredRef.current = false
@@ -716,10 +729,11 @@ const usePagination = (content: ReactNode[]) => {
   return { pages, measureRef }
 }
 
-const ResumePreview: React.FC<ResumePreviewProps> = ({ data: propData }) => {
+const ResumePreview: React.FC<{ data?: Resume }> = ({ data: propData }) => {
   const storeResume = useSelector((state: RootState) => state.resume?.resume)
   const resume = propData || storeResume
-
+  const [initialRenderComplete, setInitialRenderComplete] = useState(false)
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [currentUrl, setCurrentUrl] = useState<string>('')
 
   useEffect(() => {
@@ -728,42 +742,48 @@ const ResumePreview: React.FC<ResumePreviewProps> = ({ data: propData }) => {
 
   const contentSections: ReactNode[] = []
   const { pages, measureRef } = usePagination(contentSections)
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      setInitialRenderComplete(true)
+    }, 500)
+    return () => clearTimeout(timeoutId)
+  }, [])
 
   if (!resume) return null
 
-  if (resume.summary) {
+  if (resume?.summary) {
     contentSections.push(<SummarySection key='summary' summary={resume.summary} />)
   }
   if (
-    resume.contact?.socialLinks &&
+    resume?.contact?.socialLinks &&
     Object.values(resume.contact.socialLinks).some(link => !!link)
   ) {
     contentSections.push(
       <SocialLinksSection key='social' socialLinks={resume.contact.socialLinks} />
     )
   }
-  if (resume.experience?.items?.length) {
+  if (resume?.experience?.items?.length) {
     contentSections.push(
       <ExperienceSection key='experience' items={resume.experience.items} />
     )
   }
-  if (resume.certifications?.items?.length) {
+  if (resume?.certifications?.items?.length) {
     contentSections.push(
       <CertificationsSection key='certifications' items={resume.certifications.items} />
     )
   }
-  if (resume.awards?.items?.length) {
+  if (resume?.awards?.items?.length) {
     contentSections.push(<AwardsSection key='awards' items={resume.awards.items} />)
   }
-  if (resume.education?.items?.length) {
+  if (resume?.education?.items?.length) {
     contentSections.push(
       <EducationSection key='education' items={resume.education.items} />
     )
   }
-  if (resume.skills?.items?.length) {
+  if (resume?.skills?.items?.length) {
     contentSections.push(<SkillsSection key='skills' items={resume.skills.items} />)
   }
-  if (resume.professionalAffiliations?.items?.length) {
+  if (resume?.professionalAffiliations?.items?.length) {
     contentSections.push(
       <ProfessionalAffiliationsSection
         key='affiliations'
@@ -771,25 +791,25 @@ const ResumePreview: React.FC<ResumePreviewProps> = ({ data: propData }) => {
       />
     )
   }
-  if (resume.languages?.items?.length) {
+  if (resume?.languages?.items?.length) {
     contentSections.push(
       <LanguagesSection key='languages' items={resume.languages.items} />
     )
   }
-  if (resume.hobbiesAndInterests?.length) {
+  if (resume?.hobbiesAndInterests?.length) {
     contentSections.push(
       <HobbiesSection key='hobbies' items={resume.hobbiesAndInterests} />
     )
   }
-  if (resume.projects?.items?.length) {
+  if (resume?.projects?.items?.length) {
     contentSections.push(<ProjectsSection key='projects' items={resume.projects.items} />)
   }
-  if (resume.publications?.items?.length) {
+  if (resume?.publications?.items?.length) {
     contentSections.push(
       <PublicationsSection key='publications' items={resume.publications.items} />
     )
   }
-  if (resume.volunteerWork?.items?.length) {
+  if (resume?.volunteerWork?.items?.length) {
     contentSections.push(
       <VolunteerWorkSection key='volunteer' items={resume.volunteerWork.items} />
     )
@@ -812,7 +832,6 @@ const ResumePreview: React.FC<ResumePreviewProps> = ({ data: propData }) => {
           visibility: 'hidden',
           position: 'absolute',
           width: PAGE_SIZE.width,
-
           py: '20px',
           px: '73px'
         }}
@@ -820,54 +839,64 @@ const ResumePreview: React.FC<ResumePreviewProps> = ({ data: propData }) => {
         {contentSections}
       </Box>
 
-      {pages.map((pageContent, pageIndex) => (
-        <Box
-          key={`page-${pageIndex}`}
-          sx={{
-            width: PAGE_SIZE.width,
-            height: PAGE_SIZE.height,
-            position: 'relative',
-            bgcolor: '#fff',
-            border: '1px solid #78809A',
-            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-            mx: 'auto',
-            mb: '30px',
-            '@media print': {
-              width: '100%',
-              height: '100%',
-              margin: 0,
-              padding: 0,
-              boxShadow: 'none'
-            }
-          }}
-        >
-          <PageHeader fullName={resume.contact?.fullName || 'Your Name'} />
-
-          {/* Content area: leftover after header and footer */}
+      {initialRenderComplete &&
+        pages.length > 0 &&
+        pages.map((pageContent, pageIndex) => (
           <Box
+            key={`page-${pageIndex}`}
             sx={{
-              py: '20px',
-              px: '73px',
-              overflow: 'hidden',
+              width: PAGE_SIZE.width,
+              height: PAGE_SIZE.height,
               position: 'relative',
-
-              height: `calc(${PAGE_SIZE.height} - ${HEADER_HEIGHT_PX}px - ${FOOTER_HEIGHT_PX}px)`
+              bgcolor: '#fff',
+              border: '1px solid #78809A',
+              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+              mx: 'auto',
+              mb: '30px',
+              '@media print': {
+                width: '100%',
+                height: '100%',
+                margin: 0,
+                padding: 0,
+                boxShadow: 'none'
+              }
             }}
           >
-            {pageContent}
-          </Box>
+            <PageHeader fullName={resume.contact?.fullName || 'Your Name'} />
 
-          <Box sx={{ position: 'absolute', bottom: 0, left: 0, right: 0 }}>
-            <PageFooter
-              fullName={resume.contact?.fullName || 'Your Name'}
-              email={resume.contact?.email || 'email@example.com'}
-              phone={resume.contact?.phone}
-              pageNumber={pageIndex + 1}
-              totalPages={pages.length}
-            />
+            <Box
+              sx={{
+                py: '20px',
+                px: '73px',
+                overflow: 'visible',
+                position: 'relative',
+                height: `calc(${PAGE_SIZE.height} - ${HEADER_HEIGHT_PX}px - ${FOOTER_HEIGHT_PX}px - ${MIN_BOTTOM_SPACE_PX}px)`,
+                maxHeight: `calc(${PAGE_SIZE.height} - ${HEADER_HEIGHT_PX}px - ${FOOTER_HEIGHT_PX}px - ${MIN_BOTTOM_SPACE_PX}px)`,
+                mb: `${MIN_BOTTOM_SPACE_PX}px`
+              }}
+            >
+              {pageContent}
+            </Box>
+
+            <Box
+              sx={{
+                position: 'absolute',
+                bottom: 0,
+                left: 0,
+                right: 0,
+                width: '100%'
+              }}
+            >
+              <PageFooter
+                fullName={resume.contact?.fullName || 'Your Name'}
+                email={resume.contact?.email || 'email@example.com'}
+                phone={resume.contact?.phone}
+                pageNumber={pageIndex + 1}
+                totalPages={pages.length}
+              />
+            </Box>
           </Box>
-        </Box>
-      ))}
+        ))}
     </Box>
   )
 }

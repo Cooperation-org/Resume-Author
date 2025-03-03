@@ -36,7 +36,7 @@ const PreviewPageFromDrive: React.FC = () => {
       linkedin: safeGet(socialLinks, ['linkedin'], ''),
       github: safeGet(socialLinks, ['github'], ''),
       portfolio: safeGet(socialLinks, ['portfolio'], ''),
-      twitter: safeGet(socialLinks, ['twitter'], '')
+      instagram: safeGet(socialLinks, ['instagram'], '')
     }),
     [safeGet]
   )
