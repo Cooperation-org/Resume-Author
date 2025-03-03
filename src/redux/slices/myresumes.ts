@@ -1,3 +1,4 @@
+import { refreshAccessToken } from './../../tools/auth'
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit'
 import { GoogleDriveStorage, Resume as ResumeManager } from '@cooperation/vc-storage'
 import { getLocalStorage } from '../../tools/cookie'
@@ -78,22 +79,36 @@ const initialState: ResumeState = {
 
 // ✅ Fetch Resumes (Signed & Unsigned)
 export const fetchUserResumes = createAsyncThunk('resume/fetchUserResumes', async () => {
-  const accessToken = getLocalStorage('auth')
-  if (!accessToken) {
-    throw new Error('Access token not found')
-  }
+  try {
+    const accessToken = getLocalStorage('auth')
+    const refreshAccessToken = getLocalStorage('refresh_token')
+    if (!accessToken || !refreshAccessToken) {
+      throw new Error('Access token not found')
+    }
 
-  const storage = new GoogleDriveStorage(accessToken)
-  const resumeManager = new ResumeManager(storage)
+    const storage = new GoogleDriveStorage(accessToken)
+    const resumeManager = new ResumeManager(storage)
 
-  const resumeVCs = await resumeManager.getSignedResumes()
-  console.log(resumeVCs)
+    const resumeVCs = await resumeManager.getSignedResumes()
+    console.log(resumeVCs)
 
-  const resumeSessions = await resumeManager.getNonSignedResumes()
+    const resumeSessions = await resumeManager.getNonSignedResumes()
 
-  return {
-    signed: resumeVCs,
-    unsigned: resumeSessions
+    return {
+      signed: resumeVCs,
+      unsigned: resumeSessions
+    }
+  } catch (error) {
+    console.error('Error fetching resumes:', error)
+    if (
+      error instanceof Error &&
+      /auth|token|credential|OAuth|authentication/i.test(error.message)
+    ) {
+      // Refresh access token
+      console.log('Refreshing access token...')
+      await refreshAccessToken(getLocalStorage('refresh_token') as string)
+    }
+    throw error
   }
 })
 

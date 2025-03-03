@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { Box, IconButton, Typography } from '@mui/material'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import {
   SVGRightLine,
   SVGCopySidebar,
@@ -100,14 +100,20 @@ const Sidebar = ({ onToggle, isExpanded }: SidebarProps) => {
     <Box sx={boxStyles} key='rightLine'>
       <IconButton onClick={onToggle}>
         {isExpanded && (
-          <>
+          <Link
+            style={{
+              display: 'flex',
+              alignItems: 'center'
+            }}
+            to='/'
+          >
             <img src={logo} alt='Résumé Author' style={{ height: '50px' }} />
             <Typography
               sx={{ ...ui, fontSize: '20px', mr: '10px', ml: '10px', color: '#FFF' }}
             >
               Resume Author
             </Typography>
-          </>
+          </Link>
         )}
         <SVGRightLine />
       </IconButton>
