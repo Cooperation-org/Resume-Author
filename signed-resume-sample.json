@@ -21,7 +21,7 @@
       "linkedin": "https://schema.org/sameAs",
       "github": "https://schema.org/sameAs",
       "portfolio": "https://schema.org/url",
-      "twitter": "https://schema.org/sameAs",
+      "instagram": "https://schema.org/sameAs",
       "experience": { "@id": "https://schema.org/WorkExperience", "@container": "@list" },
       "employmentHistory": {
         "@id": "https://schema.org/employmentHistory",
@@ -105,7 +105,7 @@
           "linkedin": "https://linkedin.com/in/johndoe",
           "github": "https://github.com/johndoe",
           "portfolio": "https://johndoe.dev",
-          "twitter": "https://twitter.com/johndoe"
+          "instagram": "https://instagram.com/johndoe"
         }
       }
     },

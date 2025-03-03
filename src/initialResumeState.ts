@@ -21,7 +21,7 @@ export const initialState: ResumeState = {
         linkedin: '',
         github: '',
         portfolio: '',
-        twitter: ''
+        instagram: ''
       }
     },
 

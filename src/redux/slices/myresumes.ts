@@ -41,7 +41,7 @@ interface Contact {
     linkedin?: string
     github?: string
     portfolio?: string
-    twitter?: string
+    instagram?: string
   }
 }
 
