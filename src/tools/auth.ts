@@ -113,3 +113,35 @@ const fetchUserInfo = async (token: string) => {
     throw error // Re-throw the error to handle it in the calling function
   }
 }
+
+const client_id = process.env.REACT_APP_GOOGLE_CLIENT_ID || ''
+const client_secret = process.env.REACT_APP_GOOGLE_CLIENT_SECRET || ''
+
+export const refreshAccessToken = async (refreshToken: string) => {
+  try {
+    const response = await fetch('https://oauth2.googleapis.com/token', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded'
+      },
+      body: new URLSearchParams({
+        client_id,
+        client_secret,
+        refresh_token: refreshToken,
+        grant_type: 'refresh_token'
+      })
+    })
+
+    const data = await response.json()
+    const newAccessToken = data.access_token
+    console.log('🚀 ~ refreshAccessToken ~ newAccessToken:', newAccessToken)
+
+    // Update the access token in Firestore
+    localStorage.setItem('auth', newAccessToken)
+
+    return newAccessToken
+  } catch (error) {
+    console.error('Error refreshing access token:', error)
+    throw error
+  }
+}
