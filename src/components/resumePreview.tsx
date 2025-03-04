@@ -378,7 +378,7 @@ const SkillsSection: React.FC<{ items: Skill[] }> = ({ items }) => (
               ml: item.verificationStatus === 'verified' ? 1 : 0
             }}
           >
-            <HTMLWithVerifiedLinks htmlContent={item.skills || item.name} />
+            <HTMLWithVerifiedLinks htmlContent={item.skills || ''} />
           </Typography>
         </Box>
       ))}

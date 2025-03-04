@@ -13,6 +13,17 @@ export const cleanHTML = (htmlContent: string): string => {
     .replace(/style="[^"]*"/g, '')
 }
 
+interface HTMLContentProps {
+  htmlContent: string | undefined
+}
+
+export const HTMLContent: React.FC<HTMLContentProps> = ({ htmlContent }) => {
+  if (!htmlContent) return null
+
+  const cleanedHTML = cleanHTML(htmlContent)
+  return <div dangerouslySetInnerHTML={{ __html: cleanedHTML }} />
+}
+
 export const HTMLWithVerifiedLinks: React.FC<{ htmlContent: string }> = ({
   htmlContent
 }) => {
