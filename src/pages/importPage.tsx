@@ -120,7 +120,9 @@ export default function ImportPage(props: any) {
           </Section>
         </Box>
         <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-          <StyledButton>Go to My Resumes </StyledButton>
+          <StyledButton onClick={() => (window.location.href = '/myresumes')}>
+            Go to My Resumes{' '}
+          </StyledButton>{' '}
         </Box>
       </InnerContainer>
       <Box
