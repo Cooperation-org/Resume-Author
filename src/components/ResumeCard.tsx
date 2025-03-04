@@ -210,8 +210,7 @@ const ResumeCard: React.FC<ResumeCardProps> = ({
   const resumeManager = new Resume(storage)
 
   const handleEditTitle = () => {
-    setIsEditing(true)
-    setTimeout(() => inputRef.current?.focus(), 0)
+    navigate(`/resume/new?id=${id}`)
   }
 
   const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
