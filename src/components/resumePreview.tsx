@@ -1,6 +1,6 @@
 import React, { useRef, useState, ReactNode, useLayoutEffect, useEffect } from 'react'
 import { Box, Typography, Link } from '@mui/material'
-import { QRCodeSVG } from 'qrcode.react'
+import ResumeQRCode from './ResumeQRCode'
 import { BlueVerifiedBadge } from '../assets/svgs'
 import { useSelector } from 'react-redux'
 import { RootState } from '../redux/store'
@@ -93,12 +93,18 @@ const LinkWithFavicon: React.FC<{ url: string; platform?: string }> = ({
   )
 }
 
-const PageHeader: React.FC<{ fullName: string }> = ({ fullName }) => {
-  const [currentUrl, setCurrentUrl] = useState<string>('')
+// Updated PageHeader component
+const PageHeader: React.FC<{ fullName: string; forcedId?: string }> = ({
+  fullName,
+  forcedId
+}) => {
+  const [resumeLink, setResumeLink] = useState<string>('')
+  const [hasValidId, setHasValidId] = useState<boolean>(false)
 
-  useEffect(() => {
-    setCurrentUrl(window.location.href)
-  }, [])
+  const handleLinkGenerated = (link: string, isValid: boolean) => {
+    setResumeLink(link)
+    setHasValidId(isValid)
+  }
 
   return (
     <Box
@@ -115,9 +121,18 @@ const PageHeader: React.FC<{ fullName: string }> = ({ fullName }) => {
         </Typography>
       </Box>
       <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
-        <Box sx={{ textAlign: 'center', py: '20px', mr: '15px' }}>
-          <Typography
-            variant='caption'
+        <Box
+          sx={{
+            textAlign: 'center',
+            py: '20px',
+            mr: '15px',
+            display: hasValidId ? 'block' : 'none' // Hide when no valid ID
+          }}
+        >
+          <Link
+            href={resumeLink}
+            target='_blank'
+            rel='noopener noreferrer'
             sx={{
               color: '#000',
               textAlign: 'center',
@@ -126,13 +141,14 @@ const PageHeader: React.FC<{ fullName: string }> = ({ fullName }) => {
               fontStyle: 'normal',
               fontWeight: 400,
               lineHeight: '16px',
-              textDecorationLine: 'underline'
+              textDecorationLine: 'underline',
+              cursor: 'pointer'
             }}
           >
             View a verifiable <br />
             presentation of this <br />
             resume
-          </Typography>
+          </Link>
         </Box>
         <Box
           sx={{
@@ -144,12 +160,12 @@ const PageHeader: React.FC<{ fullName: string }> = ({ fullName }) => {
             backgroundColor: '#2563EB'
           }}
         >
-          <QRCodeSVG
-            value={currentUrl || window.location.href}
+          <ResumeQRCode
             size={86}
-            level='L'
             bgColor='transparent'
             fgColor='#fff'
+            forcedId={forcedId}
+            onLinkGenerated={handleLinkGenerated}
           />
         </Box>
       </Box>
@@ -157,18 +173,23 @@ const PageHeader: React.FC<{ fullName: string }> = ({ fullName }) => {
   )
 }
 
+// Updated PageFooter component
 const PageFooter: React.FC<{
   fullName: string
   email: string
   phone?: string
   pageNumber: number
   totalPages: number
-}> = ({ fullName, email, phone, pageNumber, totalPages }) => {
-  const [currentUrl, setCurrentUrl] = useState<string>('')
+  forcedId?: string
+}> = ({ fullName, email, phone, pageNumber, totalPages, forcedId }) => {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [resumeLink, setResumeLink] = useState<string>('')
+  const [hasValidId, setHasValidId] = useState<boolean>(false)
 
-  useEffect(() => {
-    setCurrentUrl(window.location.href)
-  }, [])
+  const handleLinkGenerated = (link: string, isValid: boolean) => {
+    setResumeLink(link)
+    setHasValidId(isValid)
+  }
 
   return (
     <Box
@@ -209,13 +230,15 @@ const PageFooter: React.FC<{
           {email}
         </a>
       </Typography>
-      <QRCodeSVG
-        value={currentUrl || window.location.href}
-        size={32}
-        level='H'
-        bgColor='transparent'
-        fgColor='#000'
-      />
+      {hasValidId && (
+        <ResumeQRCode
+          size={32}
+          bgColor='transparent'
+          fgColor='#000'
+          forcedId={forcedId}
+          onLinkGenerated={handleLinkGenerated}
+        />
+      )}
     </Box>
   )
 }
@@ -729,7 +752,10 @@ const usePagination = (content: ReactNode[]) => {
   return { pages, measureRef }
 }
 
-const ResumePreview: React.FC<{ data?: Resume }> = ({ data: propData }) => {
+const ResumePreview: React.FC<{ data?: Resume; forcedId?: string }> = ({
+  data: propData,
+  forcedId
+}) => {
   const storeResume = useSelector((state: RootState) => state.resume?.resume || null)
   const resume = propData || storeResume
   const [initialRenderComplete, setInitialRenderComplete] = useState(false)
@@ -862,7 +888,10 @@ const ResumePreview: React.FC<{ data?: Resume }> = ({ data: propData }) => {
               }
             }}
           >
-            <PageHeader fullName={resume.contact?.fullName || 'Your Name'} />
+            <PageHeader
+              fullName={resume.contact?.fullName || 'Your Name'}
+              forcedId={forcedId}
+            />
 
             <Box
               sx={{
@@ -893,6 +922,7 @@ const ResumePreview: React.FC<{ data?: Resume }> = ({ data: propData }) => {
                 phone={resume.contact?.phone}
                 pageNumber={pageIndex + 1}
                 totalPages={pages.length}
+                forcedId={forcedId}
               />
             </Box>
           </Box>
