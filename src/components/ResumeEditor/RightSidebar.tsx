@@ -1,5 +1,4 @@
 import { Box, Typography, Button, Divider, Stack } from '@mui/material'
-import { getLocalStorage } from '../../tools/cookie'
 import { login } from '../../tools/auth'
 import { useSelector } from 'react-redux'
 import { useState, useEffect } from 'react'
@@ -12,13 +11,13 @@ import {
 import { useLocation } from 'react-router-dom'
 import { fetchVCs } from '../../redux/slices/vc'
 import { useDispatch } from 'react-redux'
-import { AppDispatch } from '../../redux/store'
+import { AppDispatch, RootState } from '../../redux/store'
 
 const RightSidebar = () => {
   const location = useLocation()
   const [selectedClaims, setSelectedClaims] = useState<string[]>([])
   const [uploadedFiles, setUploadedFiles] = useState<string[]>([])
-  const accessToken = getLocalStorage('auth')
+  const { accessToken, isAuthenticated } = useSelector((state: RootState) => state.auth)
   const dispatch: AppDispatch = useDispatch()
   const { vcs } = useSelector((state: any) => state.vcReducer)
 
@@ -118,7 +117,7 @@ const RightSidebar = () => {
             button.
           </Typography>
           <Button
-            disabled={!!accessToken}
+            disabled={!!accessToken && isAuthenticated}
             fullWidth
             variant='outlined'
             sx={{

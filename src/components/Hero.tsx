@@ -9,13 +9,20 @@ import WhoBenefitsSection from './landingPageSections/WhoBenefitsSection'
 import SelectCards from './landingPageSections/SelectCards'
 import MoreAbout from './landingPageSections/MoreAboutResumeAuthor'
 import Footer from './landingPageSections/Footer'
-import { getLocalStorage } from '../tools/cookie'
 import { login } from '../tools/auth'
+import { useSelector } from 'react-redux'
+import { RootState } from '../redux/store'
+import { useNavigate } from 'react-router-dom'
 
 const Hero = () => {
-  const token = getLocalStorage('auth')
+  const isAuthenticated = useSelector((state: RootState) => state.auth.isAuthenticated)
+  const navigate = useNavigate()
   const handleLogin = () => {
-    login('/resume/import')
+    if (!isAuthenticated) {
+      login('/resume/import')
+    } else {
+      navigate('/resume/import')
+    }
   }
   return (
     <div>
@@ -69,7 +76,9 @@ const Hero = () => {
                   fonstFamily: 'Nunito Sans'
                 }}
               >
-                {!token ? 'Login or Sign Up with Google Drive' : 'Start Your Resume'}
+                {!isAuthenticated
+                  ? 'Login or Sign Up with Google Drive'
+                  : 'Start Your Resume'}
               </Button>
             </Stack>
 
