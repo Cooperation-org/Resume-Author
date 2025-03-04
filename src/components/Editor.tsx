@@ -22,6 +22,7 @@ import { updateSection } from '../redux/slices/resume'
 import OptionalSectionsManager from './ResumeEditor/OptionalSectionCard'
 import { storeFileTokens } from '../firebase/storage'
 import { getLocalStorage } from '../tools/cookie'
+import { prepareResumeForVC } from '../tools/resumeAdapter'
 
 const ButtonStyles = {
   border: '2px solid #3A35A2',
@@ -143,11 +144,16 @@ const ResumeEditor: React.FC = () => {
         throw new Error('Failed to create DID document')
       }
 
-      console.log('FORM DATA', resume)
+      if (!resume) {
+        console.error('Resume is null, cannot prepare for VC')
+        return
+      }
+      const preparedResume = prepareResumeForVC(resume)
+      console.log('PREPARED FORM DATA', preparedResume)
 
       // Sign resume
       const signedResume = await instances.resumeVC.sign({
-        formData: resume,
+        formData: preparedResume,
         issuerDid: didDoc.id,
         keyPair
       })
