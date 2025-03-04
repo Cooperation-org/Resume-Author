@@ -363,7 +363,7 @@ const ResumePreviewDialog: React.FC<ResumePreviewDialogProps> = ({
           overflow: 'auto'
         }}
       >
-        {resumeData && <ResumePreview data={resumeData} />}
+        {resumeData && <ResumePreview data={resumeData} forcedId={id} />}
       </DialogContent>
     </Dialog>
   )

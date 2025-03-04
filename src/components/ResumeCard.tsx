@@ -265,7 +265,8 @@ const ResumeCard: React.FC<ResumeCardProps> = ({
   }
 
   const handleCopyLink = () => {
-    navigator.clipboard.writeText(`https://resume.allskillscount.org/resume/view/${id}`)
+    const resumeUrl = `https://resume.allskillscount.org/resume/view/${id}`
+    navigator.clipboard.writeText(resumeUrl)
     setShowCopiedTooltip(true)
     setTimeout(() => setShowCopiedTooltip(false), 2000)
     handleMenuClose()
