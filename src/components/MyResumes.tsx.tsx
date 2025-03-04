@@ -1,14 +1,21 @@
 import { Box, Typography } from '@mui/material'
 import ResumeCard from './ResumeCard'
 import { Link } from 'react-router-dom'
-import { useSelector } from 'react-redux'
-import { RootState } from '../redux/store'
+import { useSelector, useDispatch } from 'react-redux'
+import { RootState, AppDispatch } from '../redux/store'
+import { useEffect } from 'react'
+import { fetchUserResumes } from '../redux/slices/myresumes'
 
 const ResumeScreen: React.FC = () => {
+  const dispatch = useDispatch<AppDispatch>()
   const { signed, unsigned, status, error } = useSelector(
     (state: RootState) => state.myresumes
   )
   console.log('🚀 ~ unsigned:', unsigned)
+
+  useEffect(() => {
+    dispatch(fetchUserResumes())
+  }, [dispatch])
 
   return (
     <Box
@@ -80,7 +87,7 @@ const ResumeScreen: React.FC = () => {
 
       {/* Show Message if No Resumes Exist */}
       {signed.length + unsigned.length === 0 && status === 'succeeded' && (
-        <Typography>You don’t have any resumes.</Typography>
+        <Typography>You don't have any resumes.</Typography>
       )}
     </Box>
   )
