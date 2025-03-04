@@ -282,7 +282,7 @@ const ResumeCard: React.FC<ResumeCardProps> = ({
 
   const handlePreviewResume = () => {
     if (isDraft) {
-      navigate('/resume/view')
+      navigate(`/resume/edit/${id}`)
     } else {
       navigate(`/resume/view/${id}`)
     }
@@ -371,7 +371,7 @@ const ResumeCard: React.FC<ResumeCardProps> = ({
                     <ActionButton
                       size='small'
                       startIcon={<EditOutlinedIcon />}
-                      onClick={handleEditTitle}
+                      onClick={() => navigate(`/resume/edit/${id}`)}
                     >
                       Edit
                     </ActionButton>

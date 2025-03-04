@@ -13,12 +13,14 @@ interface SkillsAndAbilitiesProps {
   onAddFiles?: () => void
   onDelete?: () => void
   onAddCredential?: (text: string) => void
+  initialData?: any
 }
 
 export default function SkillsAndAbilities({
   onAddFiles,
   onDelete,
-  onAddCredential
+  onAddCredential,
+  initialData
 }: SkillsAndAbilitiesProps) {
   const dispatch = useDispatch()
   const resume = useSelector((state: RootState) => state.resume.resume)

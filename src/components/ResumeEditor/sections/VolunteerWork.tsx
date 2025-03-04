@@ -41,12 +41,14 @@ interface VolunteerWorkProps {
   onAddFiles?: () => void
   onDelete?: () => void
   onAddCredential?: (text: string) => void
+  initialData?: any
 }
 
 export default function VolunteerWork({
   onAddFiles,
   onDelete,
-  onAddCredential
+  onAddCredential,
+  initialData
 }: VolunteerWorkProps) {
   const dispatch = useDispatch()
   const resume = useSelector((state: RootState) => state.resume.resume)

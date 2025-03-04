@@ -15,13 +15,15 @@ interface SectionDetailsProps {
   onDelete?: () => void
   onAddFiles?: () => void
   onAddCredential?: (text: string) => void
+  sectionData?: any
 }
 
 export default function SectionDetails({
   sectionId,
   onDelete,
   onAddFiles,
-  onAddCredential
+  onAddCredential,
+  sectionData
 }: SectionDetailsProps) {
   const renderSection = () => {
     switch (sectionId) {
@@ -31,6 +33,7 @@ export default function SectionDetails({
             onAddFiles={onAddFiles}
             onDelete={onDelete}
             onAddCredential={onAddCredential}
+            initialData={sectionData}
           />
         )
       case 'Work Experience':
@@ -39,6 +42,7 @@ export default function SectionDetails({
             onAddFiles={onAddFiles}
             onDelete={onDelete}
             onAddCredential={onAddCredential}
+            initialData={sectionData}
           />
         )
       case 'Education':
@@ -47,6 +51,7 @@ export default function SectionDetails({
             onAddFiles={onAddFiles}
             onDelete={onDelete}
             onAddCredential={onAddCredential}
+            initialData={sectionData}
           />
         )
       case 'Professional Affiliations':
@@ -55,6 +60,7 @@ export default function SectionDetails({
             onAddFiles={onAddFiles}
             onDelete={onDelete}
             onAddCredential={onAddCredential}
+            initialData={sectionData}
           />
         )
       case 'Skills and Abilities':
@@ -63,6 +69,7 @@ export default function SectionDetails({
             onAddFiles={onAddFiles}
             onDelete={onDelete}
             onAddCredential={onAddCredential}
+            initialData={sectionData}
           />
         )
       case 'Hobbies and Interests':
@@ -71,6 +78,7 @@ export default function SectionDetails({
             onAddFiles={onAddFiles}
             onDelete={onDelete}
             onAddCredential={onAddCredential}
+            initialData={sectionData}
           />
         )
       case 'Projects':
@@ -79,6 +87,7 @@ export default function SectionDetails({
             onAddFiles={onAddFiles}
             onDelete={onDelete}
             onAddCredential={onAddCredential}
+            initialData={sectionData}
           />
         )
       case 'Volunteer Work':
@@ -87,6 +96,7 @@ export default function SectionDetails({
             onAddFiles={onAddFiles}
             onDelete={onDelete}
             onAddCredential={onAddCredential}
+            initialData={sectionData}
           />
         )
       case 'Certifications and Licenses':
@@ -95,6 +105,7 @@ export default function SectionDetails({
             onAddFiles={onAddFiles}
             onDelete={onDelete}
             onAddCredential={onAddCredential}
+            initialData={sectionData}
           />
         )
       default:

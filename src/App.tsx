@@ -21,6 +21,8 @@ import LoginScanStep from './pages/LoginScanStep'
 import Faq from './pages/FAQ'
 import SignUpStep2 from './pages/signUpStep2'
 import PreviewPageFromDrive from './pages/PreviewPageFromDrive'
+import Editor from './components/Editor'
+import DraftEditor from './components/DraftEditor'
 
 const App = () => {
   const dispatch: AppDispatch = useDispatch()
@@ -51,6 +53,7 @@ const App = () => {
         <Route path='/login-scan' element={<LoginScanStep />} />
         <Route path='/faq' element={<Faq />} />
         <Route path='/SignUp2' element={<SignUpStep2 />} />
+        <Route path='/resume/edit/:id' element={<DraftEditor />} />
       </Routes>
     </Router>
   )

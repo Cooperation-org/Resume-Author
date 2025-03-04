@@ -18,12 +18,14 @@ interface ProjectsProps {
   onAddFiles?: () => void
   onDelete?: () => void
   onAddCredential?: (text: string) => void
+  initialData?: any
 }
 
 export default function Projects({
   onAddFiles,
   onDelete,
-  onAddCredential
+  onAddCredential,
+  initialData
 }: ProjectsProps) {
   const dispatch = useDispatch()
   const resume = useSelector((state: RootState) => state.resume.resume)

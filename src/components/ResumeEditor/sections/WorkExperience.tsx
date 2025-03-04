@@ -43,6 +43,7 @@ interface WorkExperienceProps {
   onAddCredential?: (text: string) => void
   selectedCredentials?: string[]
   originalItem?: any
+  initialData?: any
 }
 
 interface CredentialItem {
@@ -56,7 +57,8 @@ interface CredentialItem {
 export default function WorkExperience({
   onAddFiles,
   onDelete,
-  onAddCredential
+  onAddCredential,
+  initialData
 }: WorkExperienceProps) {
   const dispatch = useDispatch()
   const resume = useSelector((state: RootState) => state.resume.resume)
@@ -65,22 +67,9 @@ export default function WorkExperience({
   const [showCredentialsOverlay, setShowCredentialsOverlay] = useState(false)
   const [activeSectionIndex, setActiveSectionIndex] = useState<number | null>(null)
 
-  const [workExperiences, setWorkExperiences] = useState<WorkExperience[]>([
-    {
-      title: '',
-      company: '',
-      duration: '',
-      currentlyEmployed: false,
-      description: '',
-      showDuration: true,
-      position: '',
-      startDate: '',
-      achievements: [],
-      id: '',
-      verificationStatus: 'unverified',
-      credentialLink: ''
-    }
-  ])
+  const [workExperiences, setWorkExperiences] = useState<WorkExperience[]>(
+    initialData?.items || []
+  )
   const [expandedItems, setExpandedItems] = useState<Record<number, boolean>>({
     0: true
   })
@@ -141,6 +130,13 @@ export default function WorkExperience({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [resume])
+
+  useEffect(() => {
+    if (initialData?.items) {
+      setWorkExperiences(initialData.items)
+    }
+  }, [initialData])
+
   useEffect(() => {
     return () => {
       if (reduxUpdateTimeoutRef.current) {

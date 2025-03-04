@@ -27,12 +27,14 @@ interface CertificationsAndLicensesProps {
   onAddFiles?: () => void
   onDelete?: () => void
   onAddCredential?: (text: string) => void
+  initialData?: any
 }
 
 export default function CertificationsAndLicenses({
   onAddFiles,
   onDelete,
-  onAddCredential
+  onAddCredential,
+  initialData
 }: CertificationsAndLicensesProps) {
   const dispatch = useDispatch()
   const resume = useSelector((state: RootState) => state.resume.resume)

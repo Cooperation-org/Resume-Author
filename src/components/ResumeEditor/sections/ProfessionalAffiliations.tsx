@@ -54,12 +54,14 @@ interface ProfessionalAffiliationsProps {
   onDelete?: () => void
   onAddCredential?: (text: string) => void
   selectedCredentials?: string[]
+  initialData?: any
 }
 
 export default function ProfessionalAffiliations({
   onAddFiles,
   onDelete,
-  onAddCredential
+  onAddCredential,
+  initialData
 }: ProfessionalAffiliationsProps) {
   const dispatch = useDispatch()
   const resume = useSelector((state: RootState) => state.resume.resume)

@@ -43,12 +43,14 @@ interface EducationProps {
   onDelete?: () => void
   onAddCredential?: (text: string) => void
   selectedCredentials?: string[]
+  initialData?: any
 }
 
 export default function Education({
   onAddFiles,
   onDelete,
-  onAddCredential
+  onAddCredential,
+  initialData
 }: EducationProps) {
   const dispatch = useDispatch()
   const resume = useSelector((state: RootState) => state.resume.resume)

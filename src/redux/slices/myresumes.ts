@@ -2,6 +2,7 @@ import { refreshAccessToken } from './../../tools/auth'
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit'
 import { GoogleDriveStorage, Resume as ResumeManager } from '@cooperation/vc-storage'
 import { getLocalStorage } from '../../tools/cookie'
+import { RootState } from '../../redux/store'
 
 // Define Resume Types
 interface IssuerInfo {
@@ -68,6 +69,7 @@ interface ResumeState {
   unsigned: Resume[]
   status: 'idle' | 'loading' | 'succeeded' | 'failed'
   error: string | null
+  currentDraft?: Resume
 }
 
 const initialState: ResumeState = {
@@ -111,6 +113,29 @@ export const fetchUserResumes = createAsyncThunk('resume/fetchUserResumes', asyn
     throw error
   }
 })
+
+// Add a new action to set the current draft resume
+export const setCurrentDraftResume = createAsyncThunk(
+  'myresumes/setCurrentDraftResume',
+  async (resumeId: string, { getState, rejectWithValue }) => {
+    try {
+      const state = getState() as RootState
+      const { signed, unsigned } = state.myresumes
+
+      // Find the resume in unsigned (drafts)
+      const draftResume = unsigned.find(resume => resume.id === resumeId)
+
+      if (!draftResume) {
+        throw new Error('Draft resume not found')
+      }
+
+      return draftResume
+    } catch (error) {
+      console.error('Error setting current draft resume:', error)
+      return rejectWithValue((error as Error).message)
+    }
+  }
+)
 
 // Redux Slice
 const resumeSlice = createSlice({
@@ -194,6 +219,9 @@ const resumeSlice = createSlice({
       .addCase(fetchUserResumes.rejected, (state, action) => {
         state.status = 'failed'
         state.error = action.error.message || 'Failed to fetch resumes'
+      })
+      .addCase(setCurrentDraftResume.fulfilled, (state, action) => {
+        state.currentDraft = action.payload
       })
   }
 })

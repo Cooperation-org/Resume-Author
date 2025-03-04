@@ -1,6 +1,8 @@
 import React from 'react'
 import { Paper, Box, Typography, Button } from '@mui/material'
 import SectionDetails from './SectionDetails'
+import { useSelector } from 'react-redux'
+import { RootState } from '../../redux/store'
 
 interface SectionProps {
   sectionId: string
@@ -17,6 +19,40 @@ const Section: React.FC<SectionProps> = ({
   onAddCredential,
   isRemovable = false
 }) => {
+  const resume = useSelector((state: RootState) => state.resume.resume)
+
+  // Helper function to map UI section names to data structure keys
+  const getSectionKey = (sectionId: string): string => {
+    const mapping: { [key: string]: string } = {
+      'Professional Summary': 'summary',
+      'Work Experience': 'experience',
+      Education: 'education',
+      'Skills and Abilities': 'skills',
+      'Professional Affiliations': 'professionalAffiliations',
+      Projects: 'projects',
+      'Certifications and Licenses': 'certifications',
+      'Volunteer Work': 'volunteerWork',
+      'Hobbies and Interests': 'hobbiesAndInterests',
+      Languages: 'languages'
+    }
+    return mapping[sectionId] || sectionId.toLowerCase().replace(/\s+/g, '')
+  }
+
+  // Get section data from the resume, handling both direct and content-nested structures
+  const getSectionData = () => {
+    if (!resume) return null
+
+    const sectionKey = getSectionKey(sectionId)
+
+    // Check if data is in content structure (draft resume)
+    if ((resume as any).content && (resume as any).content[sectionKey]) {
+      return (resume as any).content[sectionKey]
+    }
+
+    // Otherwise check direct path
+    return (resume as any)[sectionKey]
+  }
+
   return (
     <Paper
       sx={{
@@ -68,6 +104,7 @@ const Section: React.FC<SectionProps> = ({
         onDelete={onDelete}
         onAddFiles={onAddFiles}
         onAddCredential={onAddCredential}
+        sectionData={getSectionData()}
       />
     </Paper>
   )

@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import {
   Box,
   Button,
@@ -18,7 +18,7 @@ import { RootState } from '../redux/store'
 import { SVGEditName } from '../assets/svgs'
 import useGoogleDrive from '../hooks/useGoogleDrive'
 import { useNavigate } from 'react-router-dom'
-import { updateSection } from '../redux/slices/resume'
+import { updateSection, setSelectedResume } from '../redux/slices/resume'
 import OptionalSectionsManager from './ResumeEditor/OptionalSectionCard'
 import { storeFileTokens } from '../firebase/storage'
 import { getLocalStorage } from '../tools/cookie'
@@ -50,7 +50,13 @@ const BorderLinearProgress = styled(LinearProgress)(({ theme }) => ({
   }
 }))
 
-const ResumeEditor: React.FC = () => {
+// Add a prop to accept draft data
+interface EditorProps {
+  draftData?: any
+  resumeData?: any
+}
+
+const ResumeEditor: React.FC<EditorProps> = ({ draftData, resumeData }) => {
   const navigate = useNavigate()
   const dispatch = useDispatch()
   const [sectionOrder, setSectionOrder] = useState<string[]>([
@@ -77,6 +83,55 @@ const ResumeEditor: React.FC = () => {
     'Professional Affiliations',
     'Skills and Abilities'
   ]
+
+  // Update useEffect to handle both draft and resume data
+  useEffect(() => {
+    if (draftData) {
+      // Set resume name
+      if (draftData.content?.name) {
+        setResumeName(draftData.content.name)
+      } else if (draftData.content?.contact?.fullName) {
+        setResumeName(draftData.content.contact.fullName)
+      }
+
+      // Update section order based on available sections in the draft
+      const availableSections: string[] = []
+
+      // Always include required sections first
+      requiredSections.forEach(section => {
+        availableSections.push(section)
+      })
+
+      // Add any additional sections from the draft
+      if (draftData.content) {
+        const sectionMapping = {
+          experience: 'Work Experience',
+          education: 'Education',
+          skills: 'Skills and Abilities',
+          professionalAffiliations: 'Professional Affiliations',
+          summary: 'Professional Summary',
+          projects: 'Projects',
+          certifications: 'Certifications and Licenses',
+          volunteerWork: 'Volunteer Work',
+          hobbiesAndInterests: 'Hobbies and Interests',
+          languages: 'Languages'
+        }
+
+        Object.keys(draftData.content).forEach(key => {
+          const sectionName = sectionMapping[key as keyof typeof sectionMapping]
+          if (
+            sectionName &&
+            !requiredSections.includes(sectionName) &&
+            draftData.content[key]?.items?.length > 0
+          ) {
+            availableSections.push(sectionName)
+          }
+        })
+      }
+
+      setSectionOrder(availableSections)
+    }
+  }, [draftData, requiredSections])
 
   const handleAddSection = (sectionId: string) => {
     setSectionOrder(prev => [...prev, sectionId])
