@@ -400,7 +400,7 @@ const ProfessionalAffiliationsSection: React.FC<{ items: ProfessionalAffiliation
               variant='subtitle1'
               sx={{ fontWeight: 700, fontSize: '16px', fontFamily: 'Arial' }}
             >
-              {item.name}
+              {item.name || item.role || 'Affiliation'}
               {item.organization && ` of the ${item.organization}`}
             </Typography>
             {(item.startDate || item.endDate) && (
