@@ -25,6 +25,16 @@ const Section = styled(Box)(() => ({
   cursor: 'pointer'
 }))
 
+const DisabledSection = styled(Section)(() => ({
+  backgroundColor: '#F3F4F6',
+  border: '1px solid #D1D5DB',
+  cursor: 'not-allowed',
+  opacity: 0.7,
+  '& h6, & svg path, & p': {
+    color: '#6B7280'
+  }
+}))
+
 const StyledButton = styled(Button)({
   color: '#2563EB',
   textAlign: 'center',
@@ -93,20 +103,30 @@ export default function ImportPage(props: any) {
               Build a resume from a blank template
             </Typography>
           </Section>
-          <Section aria-disabled={true} sx={{ width: { xs: '250px', md: '400px' } }}>
-            <Typography variant='h6' sx={{ color: '#07142B', fontWeight: 'bold' }}>
+          <DisabledSection sx={{ width: { xs: '250px', md: '400px' } }}>
+            <Typography
+              variant='h6'
+              sx={{
+                color: '#6B7280',
+                fontWeight: 'bold',
+                opacity: 0.7
+              }}
+            >
               Upload Resume
             </Typography>
-            <SVGUpload />
+            <Box sx={{ opacity: 0.7 }}>
+              <SVGUpload />
+            </Box>
             <Box
               sx={{
                 display: 'flex',
                 flexDirection: 'column',
-                alignItems: 'center'
+                alignItems: 'center',
+                opacity: 0.7
               }}
             >
               <Box sx={{ display: 'flex', gap: 1 }}>
-                <Typography variant='body2' sx={{ color: '#1F2937' }}>
+                <Typography variant='body2' sx={{ color: '#6B7280' }}>
                   Supported file types
                 </Typography>
               </Box>
@@ -114,10 +134,10 @@ export default function ImportPage(props: any) {
                 variant='caption'
                 sx={{ color: '#9CA3AF', textAlign: 'center', marginX: 12 }}
               >
-                (doc, docx, pdf, rtf, json, txt)
+                (Coming Soon)
               </Typography>
             </Box>
-          </Section>
+          </DisabledSection>
         </Box>
         <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
           <StyledButton onClick={() => (window.location.href = '/myresumes')}>

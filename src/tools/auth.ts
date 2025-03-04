@@ -1,5 +1,7 @@
 import { NavigateFunction } from 'react-router-dom'
 import { setLocalStorage } from './cookie'
+import { setAuth } from '../redux/slices/auth'
+import { store } from '../redux/store'
 
 export const login = async (from?: string) => {
   const clientId = process.env.REACT_APP_GOOGLE_CLIENT_ID
@@ -43,15 +45,20 @@ export const handleRedirect = async ({ navigate }: { navigate: NavigateFunction 
       throw new Error('Failed to retrieve access token or refresh token')
     }
 
+    // First dispatch the auth state
+    store.dispatch(setAuth({ accessToken: access_token }))
+
+    // Then set localStorage
     setLocalStorage('auth', access_token)
     setLocalStorage('refresh_token', refresh_token)
 
-    // Fetch user info if needed
+    // Fetch user info
     await fetchUserInfo(access_token)
 
-    // Navigate to the original path after successful login
-    console.log(':  Navigating to', returnPath)
-    navigate(returnPath, { replace: true })
+    // Add a small delay before navigation to ensure state is updated
+    setTimeout(() => {
+      navigate(returnPath, { replace: true })
+    }, 100)
   } catch (error) {
     console.error('Error during token exchange or user info fetch:', error)
     navigate('/')

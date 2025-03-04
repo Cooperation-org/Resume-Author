@@ -10,6 +10,9 @@ import {
 } from '../../assets/svgs'
 import logo from '../../assets/logo.png'
 import { removeCookie, removeLocalStorage } from '../../tools/cookie'
+import { useDispatch } from 'react-redux'
+import { clearAuth } from '../../redux/slices/auth'
+import Notification from '../common/Notification'
 
 interface SidebarProps {
   onToggle: () => void
@@ -27,6 +30,8 @@ const ui = {
 const Sidebar = ({ onToggle, isExpanded }: SidebarProps) => {
   const [selectedItem, setSelectedItem] = useState<string>('')
   const navigate = useNavigate()
+  const dispatch = useDispatch()
+  const [showNotification, setShowNotification] = useState(false)
 
   const boxStyles = {
     display: 'flex',
@@ -94,6 +99,8 @@ const Sidebar = ({ onToggle, isExpanded }: SidebarProps) => {
     removeCookie('auth_token')
     removeLocalStorage('user_info')
     removeLocalStorage('auth')
+    dispatch(clearAuth())
+    setShowNotification(true)
   }
 
   const Icons = [
@@ -144,7 +151,17 @@ const Sidebar = ({ onToggle, isExpanded }: SidebarProps) => {
     </IconButton>
   ]
 
-  return <Box sx={containerStyles}>{Icons.map(item => item)}</Box>
+  return (
+    <>
+      <Box sx={containerStyles}>{Icons.map(item => item)}</Box>
+      <Notification
+        open={showNotification}
+        message="You've been successfully logged out"
+        severity='success'
+        onClose={() => setShowNotification(false)}
+      />
+    </>
+  )
 }
 
 export default Sidebar
