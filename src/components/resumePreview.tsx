@@ -730,7 +730,7 @@ const usePagination = (content: ReactNode[]) => {
 }
 
 const ResumePreview: React.FC<{ data?: Resume }> = ({ data: propData }) => {
-  const storeResume = useSelector((state: RootState) => state.resume?.resume)
+  const storeResume = useSelector((state: RootState) => state.resume?.resume || null)
   const resume = propData || storeResume
   const [initialRenderComplete, setInitialRenderComplete] = useState(false)
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
