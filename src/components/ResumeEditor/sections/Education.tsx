@@ -73,7 +73,8 @@ export default function Education({
       credentialLink: '',
       degree: '',
       field: '',
-      startDate: ''
+      startDate: '',
+      endDate: ''
     }
   ])
 
@@ -100,6 +101,38 @@ export default function Education({
     [dispatch]
   )
 
+  const calculateDuration = (
+    startDate: string,
+    endDate: string | undefined,
+    currentlyEnrolled: boolean
+  ): string => {
+    if (!startDate) return '1 year'
+
+    const endDateObj = currentlyEnrolled || !endDate ? new Date() : new Date(endDate)
+    const startDateObj = new Date(startDate)
+
+    if (isNaN(startDateObj.getTime()) || isNaN(endDateObj.getTime())) {
+      return '1 year'
+    }
+    let years = endDateObj.getFullYear() - startDateObj.getFullYear()
+    let months = endDateObj.getMonth() - startDateObj.getMonth()
+    if (months < 0) {
+      years--
+      months += 12
+    }
+    let durationString = ''
+    if (years > 0) {
+      durationString += `${years} year${years !== 1 ? 's' : ''}`
+    }
+
+    if (months > 0 || years === 0) {
+      if (durationString) durationString += ' '
+      durationString += `${months} month${months !== 1 ? 's' : ''}`
+    }
+
+    return durationString || 'Less than a month'
+  }
+
   // Load existing education from Redux
   useEffect(() => {
     if (resume?.education?.items && resume.education.items.length > 0) {
@@ -118,6 +151,7 @@ export default function Education({
         verificationStatus: item.verificationStatus || 'unverified',
         credentialLink: item.credentialLink || '',
         selectedCredentials: item.selectedCredentials || [],
+        endDate: item.endDate || '',
         ...item
       }))
 
@@ -141,6 +175,53 @@ export default function Education({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [resume])
 
+  useEffect(() => {
+    educations.forEach((education, index) => {
+      if (education.showDuration && education.startDate) {
+        const calculatedDuration = calculateDuration(
+          education.startDate,
+          education.endDate,
+          education.currentlyEnrolled
+        )
+
+        if (calculatedDuration && calculatedDuration !== education.duration) {
+          setEducations(prev => {
+            const updated = [...prev]
+            updated[index] = {
+              ...updated[index],
+              duration: calculatedDuration
+            }
+            return updated
+          })
+
+          if (reduxUpdateTimeoutRef.current) {
+            clearTimeout(reduxUpdateTimeoutRef.current)
+          }
+
+          reduxUpdateTimeoutRef.current = setTimeout(() => {
+            dispatch(
+              updateSection({
+                sectionId: 'education',
+                content: {
+                  items: educations.map((edu, i) =>
+                    i === index ? { ...edu, duration: calculatedDuration } : edu
+                  )
+                }
+              })
+            )
+          }, 1000)
+        }
+      }
+    })
+  }, [
+    educations
+      .map(
+        edu =>
+          `${edu.startDate}-${edu.endDate}-${edu.currentlyEnrolled}-${edu.showDuration}`
+      )
+      .join('|')
+  ])
+
   // Cleanup timeout on unmount
   useEffect(() => {
     return () => {
@@ -158,6 +239,18 @@ export default function Education({
           ...updatedEducations[index],
           [field]: value
         }
+
+        if (field === 'showDuration' && value === true) {
+          const edu = updatedEducations[index]
+          if (edu.startDate) {
+            updatedEducations[index].duration = calculateDuration(
+              edu.startDate,
+              edu.endDate,
+              edu.currentlyEnrolled
+            )
+          }
+        }
+
         if (field !== 'description') {
           debouncedReduxUpdate(updatedEducations)
         }
@@ -213,7 +306,8 @@ export default function Education({
       credentialLink: '',
       degree: '',
       field: '',
-      startDate: ''
+      startDate: '',
+      endDate: ''
     }
 
     setEducations(prevEducations => {
@@ -426,16 +520,48 @@ export default function Education({
                 </Box>
               </Box>
 
-              <Box display='flex' alignItems='center' gap={2}>
+              {education.showDuration ? (
                 <TextField
                   sx={{ bgcolor: '#FFF' }}
                   size='small'
-                  placeholder='Enter total duration'
+                  placeholder='Enter total duration (e.g., 4 years)'
                   value={education.duration}
                   onChange={e => handleEducationChange(index, 'duration', e.target.value)}
                   variant='outlined'
+                  fullWidth
                 />
-              </Box>
+              ) : (
+                <Box display='flex' alignItems='center' gap={2}>
+                  <TextField
+                    sx={{ bgcolor: '#FFF', width: '50%' }}
+                    size='small'
+                    label='Start Date'
+                    type='date'
+                    value={education.startDate}
+                    onChange={e =>
+                      handleEducationChange(index, 'startDate', e.target.value)
+                    }
+                    InputLabelProps={{
+                      shrink: true
+                    }}
+                  />
+                  {!education.currentlyEnrolled && (
+                    <TextField
+                      sx={{ bgcolor: '#FFF', width: '50%' }}
+                      size='small'
+                      label='End Date'
+                      type='date'
+                      value={education.endDate}
+                      onChange={e =>
+                        handleEducationChange(index, 'endDate', e.target.value)
+                      }
+                      InputLabelProps={{
+                        shrink: true
+                      }}
+                    />
+                  )}
+                </Box>
+              )}
 
               <FormGroup row sx={{ gap: 2 }}>
                 <FormControlLabel

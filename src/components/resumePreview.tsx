@@ -426,7 +426,7 @@ const ProfessionalAffiliationsSection: React.FC<{ items: ProfessionalAffiliation
               {item.name || item.role || 'Affiliation'}
               {item.organization && ` of the ${item.organization}`}
             </Typography>
-            {(item.startDate || item.endDate) && (
+            {(item.startDate || item.endDate || item.duration) && (
               <Typography
                 variant='body2'
                 sx={{
@@ -437,7 +437,7 @@ const ProfessionalAffiliationsSection: React.FC<{ items: ProfessionalAffiliation
                 }}
               >
                 {item.showDuration
-                  ? `Duration: ${item.startDate} - ${item.endDate || 'Present'}`
+                  ? `Duration: ${item.duration}`
                   : `${item.startDate} - ${item.endDate || 'Present'}`}
               </Typography>
             )}
@@ -647,7 +647,9 @@ const VolunteerWorkSection: React.FC<{ items: VolunteerWork[] }> = ({ items }) =
           variant='body2'
           sx={{ fontFamily: 'Arial', fontSize: '16px', fontWeight: 400 }}
         >
-          {item.startDate} - {item.endDate || 'Present'}
+          {item.showDuration
+            ? `Duration: ${item.duration}`
+            : `${item.startDate} - ${item.endDate || 'Present'}`}
         </Typography>
         {item.description && (
           <Typography
