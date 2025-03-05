@@ -36,19 +36,6 @@ const PinkSwitch = styled(Switch)(({ theme }) => ({
   }
 }))
 
-// interface ProfessionalAffiliation {
-//   name: string
-//   organization: string
-//   startDate: string
-//   endDate: string
-//   showDuration: boolean
-//   activeAffiliation: boolean
-//   id: string
-//   verificationStatus: string
-//   credentialLink: string
-//   [key: string]: any
-// }
-
 interface ProfessionalAffiliationsProps {
   onAddFiles?: () => void
   onDelete?: () => void
@@ -78,7 +65,8 @@ export default function ProfessionalAffiliations({
       activeAffiliation: false,
       id: '',
       verificationStatus: 'unverified',
-      credentialLink: ''
+      credentialLink: '',
+      duration: ''
     }
   ])
 
@@ -105,6 +93,36 @@ export default function ProfessionalAffiliations({
     [dispatch]
   )
 
+  const calculateDuration = (startDate: string, endDate: string) => {
+    if (!startDate || !endDate) return ''
+
+    try {
+      const start = new Date(startDate)
+      const end = new Date(endDate)
+      let years = end.getFullYear() - start.getFullYear()
+      let months = end.getMonth() - start.getMonth()
+
+      if (months < 0) {
+        years--
+        months += 12
+      }
+
+      let result = ''
+      if (years > 0) {
+        result += `${years} year${years > 1 ? 's' : ''}`
+      }
+
+      if (months > 0) {
+        if (result) result += ' '
+        result += `${months} month${months > 1 ? 's' : ''}`
+      }
+
+      return result || 'Less than a month'
+    } catch (error) {
+      return ''
+    }
+  }
+
   // Load existing affiliations from Redux
   useEffect(() => {
     if (
@@ -122,6 +140,7 @@ export default function ProfessionalAffiliations({
         id: item.id || '',
         verificationStatus: item.verificationStatus || 'unverified',
         credentialLink: item.credentialLink || '',
+        duration: item.duration || '',
         ...item
       }))
 
@@ -145,6 +164,49 @@ export default function ProfessionalAffiliations({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [resume])
 
+  useEffect(() => {
+    affiliations.forEach((affiliation, index) => {
+      if (affiliation.startDate && affiliation.endDate) {
+        const calculatedDuration = calculateDuration(
+          affiliation.startDate,
+          affiliation.endDate
+        )
+
+        if (calculatedDuration && calculatedDuration !== affiliation.duration) {
+          setAffiliations(prev => {
+            const updated = [...prev]
+            updated[index] = {
+              ...updated[index],
+              duration: calculatedDuration
+            }
+            return updated
+          })
+          if (reduxUpdateTimeoutRef.current) {
+            clearTimeout(reduxUpdateTimeoutRef.current)
+          }
+
+          reduxUpdateTimeoutRef.current = setTimeout(() => {
+            dispatch(
+              updateSection({
+                sectionId: 'professionalAffiliations',
+                content: {
+                  items: affiliations.map((aff, i) =>
+                    i === index ? { ...aff, duration: calculatedDuration } : aff
+                  )
+                }
+              })
+            )
+          }, 1000)
+        }
+      }
+    })
+  }, [
+    affiliations
+      .map(aff => `${aff.startDate}-${aff.endDate}-${aff.showDuration}`)
+      .join('|'),
+    dispatch
+  ])
+
   // Cleanup timeout on unmount
   useEffect(() => {
     return () => {
@@ -162,6 +224,16 @@ export default function ProfessionalAffiliations({
           ...updatedAffiliations[index],
           [field]: value
         }
+        if (field === 'showDuration' && value === true) {
+          const aff = updatedAffiliations[index]
+          if (aff.startDate && aff.endDate) {
+            updatedAffiliations[index].duration = calculateDuration(
+              aff.startDate,
+              aff.endDate
+            )
+          }
+        }
+
         if (field !== 'description') {
           debouncedReduxUpdate(updatedAffiliations)
         }
@@ -182,7 +254,8 @@ export default function ProfessionalAffiliations({
       activeAffiliation: false,
       id: '',
       verificationStatus: 'unverified',
-      credentialLink: ''
+      credentialLink: '',
+      duration: ''
     }
 
     setAffiliations(prevAffiliations => {
@@ -384,11 +457,24 @@ export default function ProfessionalAffiliations({
                 />
               </Box>
 
-              {!affiliation.showDuration ? (
+              {affiliation.showDuration ? (
+                <TextField
+                  sx={{ bgcolor: '#FFF' }}
+                  size='small'
+                  placeholder='Enter total duration (e.g., 2 years)'
+                  value={affiliation.duration}
+                  onChange={e =>
+                    handleAffiliationChange(index, 'duration', e.target.value)
+                  }
+                  variant='outlined'
+                  fullWidth
+                />
+              ) : (
                 <Box display='flex' gap={2}>
                   <TextField
-                    sx={{ bgcolor: '#FFF' }}
+                    sx={{ bgcolor: '#FFF', width: '50%' }}
                     size='small'
+                    label='Start Date'
                     type='date'
                     value={affiliation.startDate}
                     onChange={e =>
@@ -396,25 +482,20 @@ export default function ProfessionalAffiliations({
                     }
                     InputLabelProps={{ shrink: true }}
                   />
-                  <TextField
-                    sx={{ bgcolor: '#FFF' }}
-                    size='small'
-                    type='date'
-                    value={affiliation.endDate}
-                    onChange={e =>
-                      handleAffiliationChange(index, 'endDate', e.target.value)
-                    }
-                    InputLabelProps={{ shrink: true }}
-                  />
+                  {!affiliation.activeAffiliation && (
+                    <TextField
+                      sx={{ bgcolor: '#FFF', width: '50%' }}
+                      size='small'
+                      label='End Date'
+                      type='date'
+                      value={affiliation.endDate}
+                      onChange={e =>
+                        handleAffiliationChange(index, 'endDate', e.target.value)
+                      }
+                      InputLabelProps={{ shrink: true }}
+                    />
+                  )}
                 </Box>
-              ) : (
-                <TextField
-                  sx={{ bgcolor: '#FFF' }}
-                  size='small'
-                  placeholder='Enter total duration'
-                  value={`${affiliation.startDate} - ${affiliation.endDate}`}
-                  disabled
-                />
               )}
 
               <FormControlLabel

@@ -76,6 +76,36 @@ export default function VolunteerWork({
     0: true
   })
 
+  const calculateDuration = (
+    startDate: string,
+    endDate: string | undefined,
+    currentlyVolunteering: boolean
+  ): string => {
+    if (!startDate) return ''
+    const endDateObj = currentlyVolunteering || !endDate ? new Date() : new Date(endDate)
+    const startDateObj = new Date(startDate)
+    if (isNaN(startDateObj.getTime()) || isNaN(endDateObj.getTime())) {
+      return ''
+    }
+    let years = endDateObj.getFullYear() - startDateObj.getFullYear()
+    let months = endDateObj.getMonth() - startDateObj.getMonth()
+    if (months < 0) {
+      years--
+      months += 12
+    }
+    let durationString = ''
+    if (years > 0) {
+      durationString += `${years} year${years !== 1 ? 's' : ''}`
+    }
+
+    if (months > 0 || years === 0) {
+      if (durationString) durationString += ' '
+      durationString += `${months} month${months !== 1 ? 's' : ''}`
+    }
+
+    return durationString || 'Less than a month'
+  }
+
   const debouncedReduxUpdate = useCallback(
     (items: VolunteerWork[]) => {
       if (reduxUpdateTimeoutRef.current) {
@@ -94,6 +124,51 @@ export default function VolunteerWork({
     },
     [dispatch]
   )
+  useEffect(() => {
+    volunteerWorks.forEach((volunteer, index) => {
+      if (volunteer.showDuration && volunteer.startDate) {
+        const calculatedDuration = calculateDuration(
+          volunteer.startDate,
+          volunteer.endDate,
+          volunteer.currentlyVolunteering
+        )
+
+        if (calculatedDuration && calculatedDuration !== volunteer.duration) {
+          setVolunteerWorks(prev => {
+            const updated = [...prev]
+            updated[index] = {
+              ...updated[index],
+              duration: calculatedDuration
+            }
+            return updated
+          })
+          if (reduxUpdateTimeoutRef.current) {
+            clearTimeout(reduxUpdateTimeoutRef.current)
+          }
+
+          reduxUpdateTimeoutRef.current = setTimeout(() => {
+            dispatch(
+              updateSection({
+                sectionId: 'volunteerWork',
+                content: {
+                  items: volunteerWorks.map((vol, i) =>
+                    i === index ? { ...vol, duration: calculatedDuration } : vol
+                  )
+                }
+              })
+            )
+          }, 1000)
+        }
+      }
+    })
+  }, [
+    volunteerWorks
+      .map(
+        vol =>
+          `${vol.startDate}-${vol.endDate}-${vol.currentlyVolunteering}-${vol.showDuration}`
+      )
+      .join('|')
+  ])
 
   useEffect(() => {
     if (resume?.volunteerWork?.items && resume.volunteerWork.items.length > 0) {
@@ -150,6 +225,18 @@ export default function VolunteerWork({
           ...updatedVolunteerWorks[index],
           [field]: value
         }
+
+        if (field === 'showDuration' && value === true) {
+          const vol = updatedVolunteerWorks[index]
+          if (vol.startDate) {
+            updatedVolunteerWorks[index].duration = calculateDuration(
+              vol.startDate,
+              vol.endDate,
+              vol.currentlyVolunteering
+            )
+          }
+        }
+
         if (field !== 'description') {
           debouncedReduxUpdate(updatedVolunteerWorks)
         }

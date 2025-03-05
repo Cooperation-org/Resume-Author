@@ -75,6 +75,7 @@ export default function WorkExperience({
       showDuration: true,
       position: '',
       startDate: '',
+      endDate: '',
       achievements: [],
       id: '',
       verificationStatus: 'unverified',
@@ -116,6 +117,7 @@ export default function WorkExperience({
         showDuration: item.showDuration === undefined ? true : Boolean(item.showDuration),
         position: item.position || '',
         startDate: item.startDate || '',
+        endDate: item.endDate || '',
         achievements: item.achievements || [],
         id: item?.originalItem?.id || '',
         verificationStatus: item.verificationStatus || 'unverified',
@@ -149,6 +151,81 @@ export default function WorkExperience({
     }
   }, [])
 
+  const calculateDuration = (
+    startDate: string,
+    endDate: string | undefined,
+    currentlyEmployed: boolean
+  ): string => {
+    if (!startDate) return ''
+    const endDateObj = currentlyEmployed || !endDate ? new Date() : new Date(endDate)
+    const startDateObj = new Date(startDate)
+    if (isNaN(startDateObj.getTime()) || isNaN(endDateObj.getTime())) {
+      return ''
+    }
+    let years = endDateObj.getFullYear() - startDateObj.getFullYear()
+    let months = endDateObj.getMonth() - startDateObj.getMonth()
+    if (months < 0) {
+      years--
+      months += 12
+    }
+    let durationString = ''
+    if (years > 0) {
+      durationString += `${years} year${years !== 1 ? 's' : ''}`
+    }
+
+    if (months > 0 || years === 0) {
+      if (durationString) durationString += ' '
+      durationString += `${months} month${months !== 1 ? 's' : ''}`
+    }
+
+    return durationString || 'Less than a month'
+  }
+  useEffect(() => {
+    workExperiences.forEach((experience, index) => {
+      if (experience.showDuration && experience.startDate) {
+        const calculatedDuration = calculateDuration(
+          experience.startDate,
+          experience.endDate,
+          experience.currentlyEmployed
+        )
+
+        if (calculatedDuration && calculatedDuration !== experience.duration) {
+          setWorkExperiences(prev => {
+            const updated = [...prev]
+            updated[index] = {
+              ...updated[index],
+              duration: calculatedDuration
+            }
+            return updated
+          })
+          if (reduxUpdateTimeoutRef.current) {
+            clearTimeout(reduxUpdateTimeoutRef.current)
+          }
+
+          reduxUpdateTimeoutRef.current = setTimeout(() => {
+            dispatch(
+              updateSection({
+                sectionId: 'experience',
+                content: {
+                  items: workExperiences.map((exp, i) =>
+                    i === index ? { ...exp, duration: calculatedDuration } : exp
+                  )
+                }
+              })
+            )
+          }, 1000)
+        }
+      }
+    })
+  }, [
+    workExperiences
+      .map(
+        exp =>
+          `${exp.startDate}-${exp.endDate}-${exp.currentlyEmployed}-${exp.showDuration}`
+      )
+      .join('|')
+  ])
+
   const handleWorkExperienceChange = useCallback(
     (index: number, field: string, value: any) => {
       setWorkExperiences(prevExperiences => {
@@ -157,6 +234,17 @@ export default function WorkExperience({
           ...updatedExperiences[index],
           [field]: value
         }
+        if (field === 'showDuration' && value === true) {
+          const exp = updatedExperiences[index]
+          if (exp.startDate) {
+            updatedExperiences[index].duration = calculateDuration(
+              exp.startDate,
+              exp.endDate,
+              exp.currentlyEmployed
+            )
+          }
+        }
+
         if (field !== 'description') {
           debouncedReduxUpdate(updatedExperiences)
         }
@@ -206,6 +294,7 @@ export default function WorkExperience({
       showDuration: true,
       position: '',
       startDate: '',
+      endDate: '',
       achievements: [],
       id: '',
       verificationStatus: 'unverified',
@@ -410,34 +499,67 @@ export default function WorkExperience({
                 </Box>
               </Box>
 
-              <Box display='flex' alignItems='center' gap={2}>
+              {experience.showDuration ? (
                 <TextField
                   sx={{ bgcolor: '#FFF' }}
                   size='small'
-                  placeholder='Enter total duration'
+                  placeholder='Enter total duration (e.g., 2 years)'
                   value={experience.duration}
                   onChange={e =>
                     handleWorkExperienceChange(index, 'duration', e.target.value)
                   }
                   variant='outlined'
+                  fullWidth
                 />
-                <Box display='flex' alignItems='center' gap={1}>
-                  <FormControlLabel
-                    control={
-                      <Checkbox
-                        checked={experience.currentlyEmployed}
-                        onChange={e =>
-                          handleWorkExperienceChange(
-                            index,
-                            'currentlyEmployed',
-                            e.target.checked
-                          )
-                        }
-                      />
+              ) : (
+                <Box display='flex' alignItems='center' gap={2}>
+                  <TextField
+                    sx={{ bgcolor: '#FFF', width: '50%' }}
+                    size='small'
+                    label='Start Date'
+                    type='date'
+                    value={experience.startDate}
+                    onChange={e =>
+                      handleWorkExperienceChange(index, 'startDate', e.target.value)
                     }
-                    label='Currently employed here'
+                    InputLabelProps={{
+                      shrink: true
+                    }}
                   />
+                  {!experience.currentlyEmployed && (
+                    <TextField
+                      sx={{ bgcolor: '#FFF', width: '50%' }}
+                      size='small'
+                      label='End Date'
+                      type='date'
+                      value={experience.endDate}
+                      onChange={e =>
+                        handleWorkExperienceChange(index, 'endDate', e.target.value)
+                      }
+                      InputLabelProps={{
+                        shrink: true
+                      }}
+                    />
+                  )}
                 </Box>
+              )}
+
+              <Box display='flex' alignItems='center' gap={1}>
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={experience.currentlyEmployed}
+                      onChange={e =>
+                        handleWorkExperienceChange(
+                          index,
+                          'currentlyEmployed',
+                          e.target.checked
+                        )
+                      }
+                    />
+                  }
+                  label='Currently employed here'
+                />
               </Box>
 
               <Typography

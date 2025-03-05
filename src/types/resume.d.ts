@@ -155,6 +155,7 @@ interface ProfessionalAffiliation extends VerifiableItem {
   role?: string
   startDate: string
   endDate?: string
+  duration?: string
   membershipId?: string
   description?: string
   benefits?: string[]
