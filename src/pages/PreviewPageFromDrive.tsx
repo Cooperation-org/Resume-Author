@@ -132,23 +132,36 @@ const PreviewPageFromDrive: React.FC = () => {
             items: [
               ...(resumeContent.employmentHistory || []),
               ...(resumeContent.experience || [])
-            ].map(
-              (exp: Record<string, any>): WorkExperience => ({
-                id: exp.id || '',
-                title: exp.title || '',
-                company: exp.organization?.tradeName || exp.company || '',
-                position: exp.title || '',
-                startDate: exp.startDate || '',
-                endDate: exp.endDate || '',
-                description: exp.description || '',
-                achievements: [],
-                currentlyEmployed: exp.stillEmployed || false,
-                duration: '',
-                showDuration: false,
-                verificationStatus: 'unverified',
-                credentialLink: ''
-              })
-            )
+            ]
+              .filter(
+                (exp, index, self) =>
+                  self.findIndex(
+                    t =>
+                      // Compare multiple fields to ensure uniqueness
+                      t.id === exp.id ||
+                      (t.title === exp.title &&
+                        t.company === (exp.organization?.tradeName || exp.company) &&
+                        t.startDate === exp.startDate &&
+                        t.endDate === exp.endDate)
+                  ) === index
+              )
+              .map(
+                (exp: Record<string, any>): WorkExperience => ({
+                  id: exp.id || '',
+                  title: exp.title || '',
+                  company: exp.organization?.tradeName || exp.company || '',
+                  position: exp.title || '',
+                  startDate: exp.startDate || '',
+                  endDate: exp.endDate || '',
+                  description: exp.description || '',
+                  achievements: [],
+                  currentlyEmployed: exp.stillEmployed || false,
+                  duration: '',
+                  showDuration: false,
+                  verificationStatus: 'unverified',
+                  credentialLink: ''
+                })
+              )
           },
           education: {
             items: (resumeContent.educationAndLearning || []).map(
