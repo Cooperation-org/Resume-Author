@@ -22,6 +22,7 @@ import { useDispatch, useSelector } from 'react-redux'
 import { updateSection } from '../../../redux/slices/resume'
 import { RootState } from '../../../redux/store'
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline'
+import CloseIcon from '@mui/icons-material/Close'
 import CredentialOverlay from '../../CredentialsOverlay'
 
 const PinkSwitch = styled(Switch)(({ theme }) => ({
@@ -40,22 +41,42 @@ interface ProfessionalAffiliationsProps {
   onAddFiles?: () => void
   onDelete?: () => void
   onAddCredential?: (text: string) => void
-  selectedCredentials?: string[]
+}
+
+interface AffiliationItem {
+  name: string
+  organization: string
+  startDate: string
+  endDate: string
+  showDuration: boolean
+  activeAffiliation: boolean
+  id: string
+  verificationStatus: string
+  credentialLink: string
+  duration: string
+  selectedCredentials: SelectedCredential[]
+}
+
+interface SelectedCredential {
+  id: string
+  url: string
+  name: string
 }
 
 export default function ProfessionalAffiliations({
   onAddFiles,
   onDelete,
   onAddCredential
-}: ProfessionalAffiliationsProps) {
+}: Readonly<ProfessionalAffiliationsProps>) {
   const dispatch = useDispatch()
   const resume = useSelector((state: RootState) => state.resume.resume)
   const reduxUpdateTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const initialLoadRef = useRef(true)
   const [showCredentialsOverlay, setShowCredentialsOverlay] = useState(false)
   const [activeSectionIndex, setActiveSectionIndex] = useState<number | null>(null)
+  const vcs = useSelector((state: any) => state.vcReducer.vcs)
 
-  const [affiliations, setAffiliations] = useState<ProfessionalAffiliation[]>([
+  const [affiliations, setAffiliations] = useState<AffiliationItem[]>([
     {
       name: '',
       organization: '',
@@ -66,7 +87,8 @@ export default function ProfessionalAffiliations({
       id: '',
       verificationStatus: 'unverified',
       credentialLink: '',
-      duration: ''
+      duration: '',
+      selectedCredentials: []
     }
   ])
 
@@ -75,7 +97,7 @@ export default function ProfessionalAffiliations({
   })
 
   const debouncedReduxUpdate = useCallback(
-    (items: ProfessionalAffiliation[]) => {
+    (items: AffiliationItem[]) => {
       if (reduxUpdateTimeoutRef.current) {
         clearTimeout(reduxUpdateTimeoutRef.current)
       }
@@ -93,7 +115,7 @@ export default function ProfessionalAffiliations({
     [dispatch]
   )
 
-  const calculateDuration = (startDate: string, endDate: string) => {
+  const calculateDuration = (startDate: string, endDate: string): string => {
     if (!startDate || !endDate) return ''
 
     try {
@@ -141,6 +163,7 @@ export default function ProfessionalAffiliations({
         verificationStatus: item.verificationStatus || 'unverified',
         credentialLink: item.credentialLink || '',
         duration: item.duration || '',
+        selectedCredentials: item.selectedCredentials || [],
         ...item
       }))
 
@@ -163,6 +186,10 @@ export default function ProfessionalAffiliations({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [resume])
+
+  const dateChangeString = affiliations
+    .map(aff => `${aff.startDate}-${aff.endDate}-${aff.showDuration}`)
+    .join('|')
 
   useEffect(() => {
     affiliations.forEach((affiliation, index) => {
@@ -200,12 +227,7 @@ export default function ProfessionalAffiliations({
         }
       }
     })
-  }, [
-    affiliations
-      .map(aff => `${aff.startDate}-${aff.endDate}-${aff.showDuration}`)
-      .join('|'),
-    dispatch
-  ])
+  }, [dateChangeString, dispatch, affiliations])
 
   // Cleanup timeout on unmount
   useEffect(() => {
@@ -245,7 +267,7 @@ export default function ProfessionalAffiliations({
   )
 
   const handleAddAnotherItem = useCallback(() => {
-    const emptyItem: ProfessionalAffiliation = {
+    const emptyItem: AffiliationItem = {
       name: '',
       organization: '',
       startDate: '',
@@ -255,7 +277,8 @@ export default function ProfessionalAffiliations({
       id: '',
       verificationStatus: 'unverified',
       credentialLink: '',
-      duration: ''
+      duration: '',
+      selectedCredentials: []
     }
 
     setAffiliations(prevAffiliations => {
@@ -333,18 +356,27 @@ export default function ProfessionalAffiliations({
   }, [])
 
   const handleCredentialSelect = useCallback(
-    (selectedCredentials: string[]) => {
-      if (activeSectionIndex !== null && selectedCredentials.length > 0) {
-        const credentialLinks = selectedCredentials.map(
-          credentialId => `https://linkedcreds.allskillscount.org/view/${credentialId}`
-        )
+    (selectedCredentialIDs: string[]) => {
+      if (activeSectionIndex !== null && selectedCredentialIDs.length > 0) {
+        const selectedCredentials = selectedCredentialIDs.map(id => {
+          const credential = vcs.find((c: any) => (c?.originalItem?.id || c.id) === id)
+
+          return {
+            id: id,
+            url: `https://linkedcreds.allskillscount.org/view/${id}`,
+            name:
+              credential?.credentialSubject?.achievement[0]?.name ||
+              `Credential ${id.substring(0, 5)}...`
+          }
+        })
+
         setAffiliations(prevAffiliations => {
           const updatedAffiliations = [...prevAffiliations]
           updatedAffiliations[activeSectionIndex] = {
             ...updatedAffiliations[activeSectionIndex],
             verificationStatus: 'verified',
-            credentialLink: credentialLinks[0],
-            selectedCredentials: credentialLinks
+            credentialLink: selectedCredentials[0].url,
+            selectedCredentials: selectedCredentials
           }
 
           dispatch(
@@ -363,14 +395,48 @@ export default function ProfessionalAffiliations({
       setShowCredentialsOverlay(false)
       setActiveSectionIndex(null)
     },
-    [activeSectionIndex, dispatch]
+    [activeSectionIndex, dispatch, vcs]
+  )
+
+  const handleRemoveCredential = useCallback(
+    (affiliationIndex: number, credentialIndex: number) => {
+      setAffiliations(prevAffiliations => {
+        const updatedAffiliations = [...prevAffiliations]
+        const affiliation = { ...updatedAffiliations[affiliationIndex] }
+        const updatedCredentials = (affiliation.selectedCredentials || []).filter(
+          (_, i) => i !== credentialIndex
+        )
+
+        affiliation.selectedCredentials = updatedCredentials
+        if (updatedCredentials.length === 0) {
+          affiliation.verificationStatus = 'unverified'
+          affiliation.credentialLink = ''
+        } else {
+          affiliation.credentialLink = updatedCredentials[0]?.url || ''
+        }
+
+        updatedAffiliations[affiliationIndex] = affiliation
+
+        dispatch(
+          updateSection({
+            sectionId: 'professionalAffiliations',
+            content: {
+              items: updatedAffiliations
+            }
+          })
+        )
+
+        return updatedAffiliations
+      })
+    },
+    [dispatch]
   )
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       {affiliations.map((affiliation, index) => (
         <Box
-          key={index}
+          key={`affiliation-${index}`}
           sx={{
             backgroundColor: '#F1F1FB',
             px: '20px',
@@ -472,7 +538,13 @@ export default function ProfessionalAffiliations({
               ) : (
                 <Box display='flex' gap={2}>
                   <TextField
-                    sx={{ bgcolor: '#FFF', width: '50%' }}
+                    sx={{
+                      bgcolor: '#FFF',
+                      width: '50%',
+                      '& .MuiInputLabel-root': {
+                        transform: 'translate(14px, -9px) scale(0.75)'
+                      }
+                    }}
                     size='small'
                     label='Start Date'
                     type='date'
@@ -484,7 +556,13 @@ export default function ProfessionalAffiliations({
                   />
                   {!affiliation.activeAffiliation && (
                     <TextField
-                      sx={{ bgcolor: '#FFF', width: '50%' }}
+                      sx={{
+                        bgcolor: '#FFF',
+                        width: '50%',
+                        '& .MuiInputLabel-root': {
+                          transform: 'translate(14px, -9px) scale(0.75)'
+                        }
+                      }}
                       size='small'
                       label='End Date'
                       type='date'
@@ -520,20 +598,47 @@ export default function ProfessionalAffiliations({
                     <Typography variant='body2' sx={{ fontWeight: 'bold', mb: 1 }}>
                       Verified Credentials:
                     </Typography>
-                    {affiliation.selectedCredentials.map((link: any, linkIndex: any) => (
-                      <Typography
-                        key={linkIndex}
-                        variant='body2'
+                    {affiliation.selectedCredentials.map((credential, credIndex) => (
+                      <Box
+                        key={`credential-${credential.id}-${credIndex}`}
                         sx={{
-                          color: 'primary.main',
-                          textDecoration: 'underline',
-                          cursor: 'pointer',
-                          mb: 0.5
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          mb: 0.5,
+                          backgroundColor: '#f5f5f5',
+                          p: 0.5,
+                          borderRadius: 1
                         }}
-                        onClick={() => window.open(link, '_blank')}
                       >
-                        Credential {linkIndex + 1}
-                      </Typography>
+                        <Typography
+                          variant='body2'
+                          sx={{
+                            color: 'primary.main',
+                            textDecoration: 'underline',
+                            cursor: 'pointer'
+                          }}
+                          onClick={() => window.open(credential.url, '_blank')}
+                        >
+                          {credential.name || `Credential ${credIndex + 1}`}
+                        </Typography>
+                        <IconButton
+                          size='small'
+                          onClick={e => {
+                            e.stopPropagation()
+                            handleRemoveCredential(index, credIndex)
+                          }}
+                          sx={{
+                            p: 0.5,
+                            color: 'grey.500',
+                            '&:hover': {
+                              color: 'error.main'
+                            }
+                          }}
+                        >
+                          <CloseIcon fontSize='small' />
+                        </IconButton>
+                      </Box>
                     ))}
                   </Box>
                 )}
@@ -629,6 +734,12 @@ export default function ProfessionalAffiliations({
             setActiveSectionIndex(null)
           }}
           onSelect={handleCredentialSelect}
+          initialSelectedCredentials={
+            activeSectionIndex !== null &&
+            affiliations[activeSectionIndex]?.selectedCredentials
+              ? affiliations[activeSectionIndex].selectedCredentials
+              : []
+          }
         />
       )}
     </Box>

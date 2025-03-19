@@ -1,4 +1,4 @@
-import { Box, Typography, Button, Divider, Stack } from '@mui/material'
+import { Box, Typography, Button, Divider, Stack, CircularProgress } from '@mui/material'
 import { login } from '../../tools/auth'
 import { useSelector } from 'react-redux'
 import { useState, useEffect } from 'react'
@@ -19,13 +19,29 @@ const RightSidebar = () => {
   const [uploadedFiles, setUploadedFiles] = useState<string[]>([])
   const { accessToken, isAuthenticated } = useSelector((state: RootState) => state.auth)
   const dispatch: AppDispatch = useDispatch()
-  const { vcs } = useSelector((state: any) => state.vcReducer)
+  const { vcs, loading } = useSelector((state: any) => state.vcReducer)
+  const [isLoading, setIsLoading] = useState<boolean>(true)
 
   // Redux state connection kept for future use
   useEffect(() => {
-    // Dispatch the thunk to fetch VCs
+    // Dispatch the thunk to fetch VCs and set our local loading state
+    setIsLoading(true)
     dispatch(fetchVCs())
+      .then(() => {
+        setTimeout(() => {
+          setIsLoading(false)
+        }, 500)
+      })
+      .catch(() => {
+        setIsLoading(false)
+      })
   }, [dispatch])
+
+  useEffect(() => {
+    if (loading) {
+      setIsLoading(true)
+    }
+  }, [loading])
 
   useEffect(() => {
     const savedFiles = JSON.parse(localStorage.getItem('uploadedFiles') ?? '[]')
@@ -79,6 +95,19 @@ const RightSidebar = () => {
         return newFiles
       })
     }
+  }
+
+  const handleRefresh = () => {
+    setIsLoading(true)
+    dispatch(fetchVCs())
+      .then(() => {
+        setTimeout(() => {
+          setIsLoading(false)
+        }, 500)
+      })
+      .catch(() => {
+        setIsLoading(false)
+      })
   }
 
   return (
@@ -141,7 +170,7 @@ const RightSidebar = () => {
             To check for new credentials in your wallet, select the refresh button below:
           </Typography>
           <Button
-            onClick={() => alert('Pressed!')}
+            onClick={handleRefresh}
             variant='outlined'
             fullWidth
             sx={{
@@ -169,6 +198,11 @@ const RightSidebar = () => {
           }}
         >
           Your Credentials
+          {isLoading && (
+            <Box component='span' sx={{ ml: 1, color: '#9CA3AF' }}>
+              (Loading...)
+            </Box>
+          )}
         </Typography>
 
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
@@ -193,33 +227,75 @@ const RightSidebar = () => {
           sx={{
             maxHeight: vcs?.length > 10 ? 531 : 'auto',
             overflowY: vcs?.length > 10 ? 'auto' : 'visible',
-            paddingRight: 1
+            paddingRight: 1,
+            minHeight: '100px'
           }}
         >
-          <Stack spacing={2}>
-            {vcs?.map((vc: any) => (
-              <Box sx={{ display: 'flex', alignItems: 'center' }} key={vc.id}>
-                <Box sx={{ width: 24, height: 24, mr: '10px', display: 'flex' }}>
-                  {selectedClaims.includes(vc.id)
-                    ? checkmarkBlueSVG()
-                    : checkmarkgraySVG()}
+          {isLoading ? (
+            <Box
+              sx={{
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                height: '100px'
+              }}
+            >
+              <CircularProgress size={36} sx={{ color: '#3A35A2' }} />
+            </Box>
+          ) : vcs && vcs.length > 0 ? (
+            <Stack spacing={2}>
+              {vcs.map((vc: any) => (
+                <Box sx={{ display: 'flex', alignItems: 'center' }} key={vc.id}>
+                  <Box sx={{ width: 24, height: 24, mr: '10px', display: 'flex' }}>
+                    {selectedClaims.includes(vc.id)
+                      ? checkmarkBlueSVG()
+                      : checkmarkgraySVG()}
+                  </Box>
+                  {!vc?.credentialSubject?.achievement?.[0]?.name ? (
+                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                      <CircularProgress size={16} sx={{ color: '#3A35A2', mr: 1 }} />
+                      <Typography
+                        sx={{
+                          fontSize: 16,
+                          fontWeight: 500,
+                          color: '#9CA3AF',
+                          fontFamily: 'Nunito Sans'
+                        }}
+                      >
+                        Loading credential...
+                      </Typography>
+                    </Box>
+                  ) : (
+                    <Typography
+                      sx={{
+                        fontSize: 16,
+                        fontWeight: 500,
+                        color: '#2563EB',
+                        textDecoration: 'underline',
+                        fontFamily: 'Nunito Sans',
+                        cursor: 'pointer'
+                      }}
+                      onClick={() => handleClaimToggle(vc.id)}
+                    >
+                      {vc.credentialSubject.achievement[0].name}
+                    </Typography>
+                  )}
                 </Box>
-                <Typography
-                  sx={{
-                    fontSize: 16,
-                    fontWeight: 500,
-                    color: '#2563EB',
-                    textDecoration: 'underline',
-                    fontFamily: 'Nunito Sans',
-                    cursor: 'pointer'
-                  }}
-                  onClick={() => handleClaimToggle(vc.id)}
-                >
-                  {vc?.credentialSubject?.achievement[0]?.name}
-                </Typography>
-              </Box>
-            ))}
-          </Stack>
+              ))}
+            </Stack>
+          ) : (
+            <Box sx={{ display: 'flex', justifyContent: 'center', py: 2 }}>
+              <Typography
+                sx={{
+                  fontSize: 16,
+                  color: '#9CA3AF',
+                  fontFamily: 'Nunito Sans'
+                }}
+              >
+                No credentials found.
+              </Typography>
+            </Box>
+          )}
         </Box>
       </Box>
 
