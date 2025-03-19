@@ -7,6 +7,7 @@ import { useDispatch, useSelector } from 'react-redux'
 import { updateSection } from '../../../redux/slices/resume'
 import { RootState } from '../../../redux/store'
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline'
+import CloseIcon from '@mui/icons-material/Close'
 import CredentialOverlay from '../../CredentialsOverlay'
 
 interface SkillsAndAbilitiesProps {
@@ -15,24 +16,40 @@ interface SkillsAndAbilitiesProps {
   onAddCredential?: (text: string) => void
 }
 
+interface SkillItem {
+  skills: string
+  id: string
+  verificationStatus: string
+  credentialLink: string
+  selectedCredentials: SelectedCredential[]
+}
+
+interface SelectedCredential {
+  id: string
+  url: string
+  name: string
+}
+
 export default function SkillsAndAbilities({
   onAddFiles,
   onDelete,
   onAddCredential
-}: SkillsAndAbilitiesProps) {
+}: Readonly<SkillsAndAbilitiesProps>) {
   const dispatch = useDispatch()
   const resume = useSelector((state: RootState) => state.resume.resume)
   const reduxUpdateTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const initialLoadRef = useRef(true)
   const [showCredentialsOverlay, setShowCredentialsOverlay] = useState(false)
   const [activeSectionIndex, setActiveSectionIndex] = useState<number | null>(null)
+  const vcs = useSelector((state: any) => state.vcReducer.vcs)
 
-  const [Skills, setSkills] = useState<Skill[]>([
+  const [skills, setSkills] = useState<SkillItem[]>([
     {
       skills: '',
       id: '',
       verificationStatus: 'unverified',
-      credentialLink: ''
+      credentialLink: '',
+      selectedCredentials: []
     }
   ])
 
@@ -41,7 +58,7 @@ export default function SkillsAndAbilities({
   })
 
   const debouncedReduxUpdate = useCallback(
-    (items: Skill[]) => {
+    (items: SkillItem[]) => {
       if (reduxUpdateTimeoutRef.current) {
         clearTimeout(reduxUpdateTimeoutRef.current)
       }
@@ -67,10 +84,11 @@ export default function SkillsAndAbilities({
         id: item.id || '',
         verificationStatus: item.verificationStatus || 'unverified',
         credentialLink: item.credentialLink || '',
+        selectedCredentials: item.selectedCredentials || [],
         ...item
       }))
 
-      const shouldUpdate = initialLoadRef.current || typedItems.length !== Skills.length
+      const shouldUpdate = initialLoadRef.current || typedItems.length !== skills.length
 
       if (shouldUpdate) {
         initialLoadRef.current = false
@@ -111,11 +129,12 @@ export default function SkillsAndAbilities({
   )
 
   const handleAddAnotherItem = useCallback(() => {
-    const emptyItem: Skill = {
+    const emptyItem: SkillItem = {
       skills: '',
       id: '',
       verificationStatus: 'unverified',
-      credentialLink: ''
+      credentialLink: '',
+      selectedCredentials: []
     }
 
     setSkills(prevSkills => {
@@ -133,16 +152,16 @@ export default function SkillsAndAbilities({
       return updatedSkills
     })
 
-    const newIndex = Skills.length
+    const newIndex = skills.length
     setExpandedItems(prev => ({
       ...prev,
       [newIndex]: true
     }))
-  }, [Skills.length, dispatch])
+  }, [skills.length, dispatch])
 
   const handleDeleteSkill = useCallback(
     (index: number) => {
-      if (Skills.length <= 1) {
+      if (skills.length <= 1) {
         if (onDelete) onDelete()
         return
       }
@@ -163,19 +182,21 @@ export default function SkillsAndAbilities({
 
       setExpandedItems(prev => {
         const newExpandedState: Record<number, boolean> = {}
-        Skills.filter((_, i) => i !== index).forEach((_, i) => {
-          if (i === 0 && Skills.length - 1 === 1) {
-            newExpandedState[i] = true
-          } else if (i < index) {
-            newExpandedState[i] = prev[i] || false
-          } else {
-            newExpandedState[i] = prev[i + 1] || false
-          }
-        })
+        skills
+          .filter((_, i) => i !== index)
+          .forEach((_, i) => {
+            if (i === 0 && skills.length - 1 === 1) {
+              newExpandedState[i] = true
+            } else if (i < index) {
+              newExpandedState[i] = prev[i] || false
+            } else {
+              newExpandedState[i] = prev[i + 1] || false
+            }
+          })
         return newExpandedState
       })
     },
-    [Skills, dispatch, onDelete]
+    [skills, dispatch, onDelete]
   )
 
   const toggleExpanded = useCallback((index: number) => {
@@ -191,17 +212,27 @@ export default function SkillsAndAbilities({
   }, [])
 
   const handleCredentialSelect = useCallback(
-    (selectedCredentials: string[]) => {
-      if (activeSectionIndex !== null && selectedCredentials.length > 0) {
-        const credentialId = selectedCredentials[0]
-        const credentialLink = `https://linkedcreds.allskillscount.org/view/${credentialId}`
+    (selectedCredentialIDs: string[]) => {
+      if (activeSectionIndex !== null && selectedCredentialIDs.length > 0) {
+        const selectedCredentials = selectedCredentialIDs.map(id => {
+          const credential = vcs.find((c: any) => (c?.originalItem?.id || c.id) === id)
+
+          return {
+            id: id,
+            url: `https://linkedcreds.allskillscount.org/view/${id}`,
+            name:
+              credential?.credentialSubject?.achievement[0]?.name ||
+              `Credential ${id.substring(0, 5)}...`
+          }
+        })
 
         setSkills(prevSkills => {
           const updatedSkills = [...prevSkills]
           updatedSkills[activeSectionIndex] = {
             ...updatedSkills[activeSectionIndex],
             verificationStatus: 'verified',
-            credentialLink: credentialLink
+            credentialLink: selectedCredentials[0].url,
+            selectedCredentials: selectedCredentials
           }
 
           dispatch(
@@ -220,15 +251,51 @@ export default function SkillsAndAbilities({
       setShowCredentialsOverlay(false)
       setActiveSectionIndex(null)
     },
-    [activeSectionIndex, dispatch]
+    [activeSectionIndex, dispatch, vcs]
+  )
+
+  const handleRemoveCredential = useCallback(
+    (skillIndex: number, credentialIndex: number) => {
+      setSkills(prevSkills => {
+        const updatedSkills = [...prevSkills]
+        const skill = { ...updatedSkills[skillIndex] }
+
+        const updatedCredentials = (skill.selectedCredentials || []).filter(
+          (_, i) => i !== credentialIndex
+        )
+
+        skill.selectedCredentials = updatedCredentials
+
+        if (updatedCredentials.length === 0) {
+          skill.verificationStatus = 'unverified'
+          skill.credentialLink = ''
+        } else {
+          skill.credentialLink = updatedCredentials[0]?.url || ''
+        }
+
+        updatedSkills[skillIndex] = skill
+
+        dispatch(
+          updateSection({
+            sectionId: 'skills',
+            content: {
+              items: updatedSkills
+            }
+          })
+        )
+
+        return updatedSkills
+      })
+    },
+    [dispatch]
   )
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       <Typography variant='h6'>Skills and Abilities</Typography>
-      {Skills.map((Skill, index) => (
+      {skills.map((skill, index) => (
         <Box
-          key={index}
+          key={`skill-${index}`}
           sx={{
             backgroundColor: '#F1F1FB',
             px: '20px',
@@ -286,10 +353,60 @@ export default function SkillsAndAbilities({
             <>
               <TextEditor
                 key={`editor-${index}`}
-                value={Skill.skills || ''}
+                value={skill.skills || ''}
                 onChange={val => handleSkillChange(index, 'skills', val)}
                 onAddCredential={onAddCredential}
               />
+
+              {skill.selectedCredentials && skill.selectedCredentials.length > 0 && (
+                <Box sx={{ mt: 2 }}>
+                  <Typography variant='body2' sx={{ fontWeight: 'bold', mb: 1 }}>
+                    Verified Credentials:
+                  </Typography>
+                  {skill.selectedCredentials.map((credential, credIndex) => (
+                    <Box
+                      key={`credential-${credential.id}-${credIndex}`}
+                      sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        mb: 0.5,
+                        backgroundColor: '#f5f5f5',
+                        p: 0.5,
+                        borderRadius: 1
+                      }}
+                    >
+                      <Typography
+                        variant='body2'
+                        sx={{
+                          color: 'primary.main',
+                          textDecoration: 'underline',
+                          cursor: 'pointer'
+                        }}
+                        onClick={() => window.open(credential.url, '_blank')}
+                      >
+                        {credential.name || `Credential ${credIndex + 1}`}
+                      </Typography>
+                      <IconButton
+                        size='small'
+                        onClick={e => {
+                          e.stopPropagation()
+                          handleRemoveCredential(index, credIndex)
+                        }}
+                        sx={{
+                          p: 0.5,
+                          color: 'grey.500',
+                          '&:hover': {
+                            color: 'error.main'
+                          }
+                        }}
+                      >
+                        <CloseIcon fontSize='small' />
+                      </IconButton>
+                    </Box>
+                  ))}
+                </Box>
+              )}
 
               <Box
                 sx={{
@@ -325,7 +442,7 @@ export default function SkillsAndAbilities({
         <Button
           variant='contained'
           color='primary'
-          onClick={() => handleOpenCredentialsOverlay(Skills.length - 1)}
+          onClick={() => handleOpenCredentialsOverlay(skills.length - 1)}
           sx={{
             borderRadius: '4px',
             width: '100%',
@@ -382,6 +499,11 @@ export default function SkillsAndAbilities({
             setActiveSectionIndex(null)
           }}
           onSelect={handleCredentialSelect}
+          initialSelectedCredentials={
+            activeSectionIndex !== null && skills[activeSectionIndex]?.selectedCredentials
+              ? skills[activeSectionIndex].selectedCredentials
+              : []
+          }
         />
       )}
     </Box>

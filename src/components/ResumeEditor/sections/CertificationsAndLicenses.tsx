@@ -6,7 +6,8 @@ import {
   Checkbox,
   FormControlLabel,
   Button,
-  IconButton
+  IconButton,
+  Tooltip
 } from '@mui/material'
 import {
   SVGSectionIcon,
@@ -19,6 +20,8 @@ import { useDispatch, useSelector } from 'react-redux'
 import { updateSection } from '../../../redux/slices/resume'
 import { RootState } from '../../../redux/store'
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline'
+import VerifiedIcon from '@mui/icons-material/Verified'
+import CloseIcon from '@mui/icons-material/Close'
 import CredentialOverlay from '../../CredentialsOverlay'
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider'
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns'
@@ -29,19 +32,40 @@ interface CertificationsAndLicensesProps {
   onAddCredential?: (text: string) => void
 }
 
+interface CertificationItem {
+  name: string
+  issuer: string
+  issueDate: string
+  expiryDate: string
+  credentialId: string
+  noExpiration: boolean
+  id: string
+  verificationStatus: string
+  credentialLink: string
+  selectedCredentials: SelectedCredential[]
+}
+
+interface SelectedCredential {
+  id: string
+  url: string
+  name: string
+  isAttestation?: boolean
+}
+
 export default function CertificationsAndLicenses({
   onAddFiles,
   onDelete,
   onAddCredential
-}: CertificationsAndLicensesProps) {
+}: Readonly<CertificationsAndLicensesProps>) {
   const dispatch = useDispatch()
   const resume = useSelector((state: RootState) => state.resume.resume)
   const reduxUpdateTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const initialLoadRef = useRef(true)
   const [showCredentialsOverlay, setShowCredentialsOverlay] = useState(false)
   const [activeSectionIndex, setActiveSectionIndex] = useState<number | null>(null)
+  const vcs = useSelector((state: any) => state.vcReducer.vcs)
 
-  const [certifications, setCertifications] = useState<Certification[]>([
+  const [certifications, setCertifications] = useState<CertificationItem[]>([
     {
       name: '',
       issuer: '',
@@ -51,7 +75,8 @@ export default function CertificationsAndLicenses({
       noExpiration: false,
       id: '',
       verificationStatus: 'unverified',
-      credentialLink: ''
+      credentialLink: '',
+      selectedCredentials: []
     }
   ])
 
@@ -60,7 +85,7 @@ export default function CertificationsAndLicenses({
   })
 
   const debouncedReduxUpdate = useCallback(
-    (items: Certification[]) => {
+    (items: CertificationItem[]) => {
       if (reduxUpdateTimeoutRef.current) {
         clearTimeout(reduxUpdateTimeoutRef.current)
       }
@@ -90,6 +115,7 @@ export default function CertificationsAndLicenses({
         id: item.id || '',
         verificationStatus: item.verificationStatus || 'unverified',
         credentialLink: item.credentialLink || '',
+        selectedCredentials: item.selectedCredentials || [],
         ...item
       }))
 
@@ -142,7 +168,7 @@ export default function CertificationsAndLicenses({
   )
 
   const handleAddAnotherItem = useCallback(() => {
-    const emptyItem: Certification = {
+    const emptyItem: CertificationItem = {
       name: '',
       issuer: '',
       issueDate: '',
@@ -151,7 +177,8 @@ export default function CertificationsAndLicenses({
       noExpiration: false,
       id: '',
       verificationStatus: 'unverified',
-      credentialLink: ''
+      credentialLink: '',
+      selectedCredentials: []
     }
 
     setCertifications(prevCertifications => {
@@ -229,18 +256,45 @@ export default function CertificationsAndLicenses({
   }, [])
 
   const handleCredentialSelect = useCallback(
-    (selectedCredentials: string[]) => {
-      if (activeSectionIndex !== null && selectedCredentials.length > 0) {
-        const credentialId = selectedCredentials[0]
-        const credentialLink = `https://linkedcreds.allskillscount.org/view/${credentialId}`
+    (selectedCredentialIDs: string[]) => {
+      if (activeSectionIndex !== null && selectedCredentialIDs.length > 0) {
+        const selectedCredentials = selectedCredentialIDs.map(id => {
+          const credential = vcs.find((c: any) => (c?.originalItem?.id || c.id) === id)
+
+          return {
+            id: id,
+            url: `https://linkedcreds.allskillscount.org/view/${id}`,
+            name:
+              credential?.credentialSubject?.achievement[0]?.name ||
+              `Credential ${id.substring(0, 5)}...`,
+            isAttestation: false
+          }
+        })
 
         setCertifications(prevCertifications => {
           const updatedCertifications = [...prevCertifications]
+          const currentCert = updatedCertifications[activeSectionIndex]
+          const isAttestation = currentCert.name && currentCert.issuer
+          if (isAttestation) {
+            selectedCredentials.forEach(cred => {
+              cred.isAttestation = true
+            })
+          }
+
           updatedCertifications[activeSectionIndex] = {
-            ...updatedCertifications[activeSectionIndex],
+            ...currentCert,
             verificationStatus: 'verified',
-            credentialLink: credentialLink,
-            credentialId: credentialId
+            credentialLink: selectedCredentials[0].url,
+            // If not an attestation, we can use the first credential to populate cert details
+            ...(!isAttestation && selectedCredentials[0]
+              ? {
+                  credentialId: selectedCredentials[0].id
+                }
+              : {}),
+            selectedCredentials: [
+              ...(currentCert.selectedCredentials || []),
+              ...selectedCredentials
+            ]
           }
 
           dispatch(
@@ -259,7 +313,41 @@ export default function CertificationsAndLicenses({
       setShowCredentialsOverlay(false)
       setActiveSectionIndex(null)
     },
-    [activeSectionIndex, dispatch]
+    [activeSectionIndex, dispatch, vcs]
+  )
+
+  const handleRemoveCredential = useCallback(
+    (certificationIndex: number, credentialIndex: number) => {
+      setCertifications(prevCertifications => {
+        const updatedCertifications = [...prevCertifications]
+        const certification = { ...updatedCertifications[certificationIndex] }
+
+        const updatedCredentials = (certification.selectedCredentials || []).filter(
+          (_, i) => i !== credentialIndex
+        )
+
+        certification.selectedCredentials = updatedCredentials
+        if (updatedCredentials.length === 0) {
+          certification.verificationStatus = 'unverified'
+          certification.credentialLink = ''
+        } else {
+          certification.credentialLink = updatedCredentials[0]?.url || ''
+        }
+
+        updatedCertifications[certificationIndex] = certification
+        dispatch(
+          updateSection({
+            sectionId: 'certifications',
+            content: {
+              items: updatedCertifications
+            }
+          })
+        )
+
+        return updatedCertifications
+      })
+    },
+    [dispatch]
   )
 
   return (
@@ -272,7 +360,7 @@ export default function CertificationsAndLicenses({
 
       {certifications.map((certification, index) => (
         <Box
-          key={index}
+          key={`certification-${index}`}
           sx={{
             backgroundColor: '#F1F1FB',
             px: '20px',
@@ -298,6 +386,11 @@ export default function CertificationsAndLicenses({
                   <Typography variant='body1' sx={{ fontWeight: 'medium' }}>
                     {certification.name || 'Untitled Certification'}
                   </Typography>
+                  {certification.verificationStatus === 'verified' && (
+                    <Tooltip title='Verified credential'>
+                      <VerifiedIcon sx={{ color: '#34C759', fontSize: 18 }} />
+                    </Tooltip>
+                  )}
                 </>
               ) : (
                 <Box display='flex' alignItems='center'>
@@ -349,7 +442,12 @@ export default function CertificationsAndLicenses({
                       Issue Date
                     </Typography>
                     <TextField
-                      sx={{ bgcolor: '#FFF' }}
+                      sx={{
+                        bgcolor: '#FFF',
+                        '& .MuiInputLabel-root': {
+                          transform: 'translate(14px, -9px) scale(0.75)'
+                        }
+                      }}
                       size='small'
                       fullWidth
                       type='date'
@@ -366,7 +464,12 @@ export default function CertificationsAndLicenses({
                       Expiry Date
                     </Typography>
                     <TextField
-                      sx={{ bgcolor: '#FFF' }}
+                      sx={{
+                        bgcolor: '#FFF',
+                        '& .MuiInputLabel-root': {
+                          transform: 'translate(14px, -9px) scale(0.75)'
+                        }
+                      }}
                       size='small'
                       fullWidth
                       type='date'
@@ -404,6 +507,71 @@ export default function CertificationsAndLicenses({
                   handleCertificationChange(index, 'credentialId', e.target.value)
                 }
               />
+
+              {certification.selectedCredentials &&
+                certification.selectedCredentials.length > 0 && (
+                  <Box sx={{ mt: 2 }}>
+                    <Typography variant='body2' sx={{ fontWeight: 'bold', mb: 1 }}>
+                      {certification.selectedCredentials.some(c => c.isAttestation)
+                        ? 'Credential Attestations:'
+                        : 'Digital Credentials:'}
+                    </Typography>
+                    {certification.selectedCredentials.map((credential, credIndex) => (
+                      <Box
+                        key={`credential-${credential.id}-${credIndex}`}
+                        sx={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          mb: 0.5,
+                          backgroundColor: credential.isAttestation
+                            ? '#f0f7ff'
+                            : '#f5f5f5',
+                          p: 0.5,
+                          borderRadius: 1,
+                          border: credential.isAttestation ? '1px solid #d0e8ff' : 'none'
+                        }}
+                      >
+                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                          {credential.isAttestation && (
+                            <Tooltip title='Attestation verifying this certification'>
+                              <VerifiedIcon
+                                sx={{ color: '#1976d2', fontSize: 16, mr: 0.5 }}
+                              />
+                            </Tooltip>
+                          )}
+                          <Typography
+                            variant='body2'
+                            sx={{
+                              color: 'primary.main',
+                              textDecoration: 'underline',
+                              cursor: 'pointer'
+                            }}
+                            onClick={() => window.open(credential.url, '_blank')}
+                          >
+                            {credential.name || `Credential ${credIndex + 1}`}
+                          </Typography>
+                        </Box>
+                        <IconButton
+                          size='small'
+                          onClick={e => {
+                            e.stopPropagation()
+                            handleRemoveCredential(index, credIndex)
+                          }}
+                          sx={{
+                            p: 0.5,
+                            color: 'grey.500',
+                            '&:hover': {
+                              color: 'error.main'
+                            }
+                          }}
+                        >
+                          <CloseIcon fontSize='small' />
+                        </IconButton>
+                      </Box>
+                    ))}
+                  </Box>
+                )}
 
               <Box
                 sx={{
@@ -496,6 +664,12 @@ export default function CertificationsAndLicenses({
             setActiveSectionIndex(null)
           }}
           onSelect={handleCredentialSelect}
+          initialSelectedCredentials={
+            activeSectionIndex !== null &&
+            certifications[activeSectionIndex]?.selectedCredentials
+              ? certifications[activeSectionIndex].selectedCredentials
+              : []
+          }
         />
       )}
     </Box>

@@ -6,7 +6,20 @@ import { fetchVCs } from '../redux/slices/vc'
 
 interface CredentialOverlayProps {
   onClose?: () => void
-  onSelect: any
+  onSelect: (selectedCredentials: string[]) => void
+  initialSelectedCredentials?: Array<{ id: string; url?: string; name?: string }>
+}
+
+interface CredentialItem {
+  originalItem?: {
+    id: string
+  }
+  id: string
+  credentialSubject?: {
+    achievement: Array<{
+      name: string
+    }>
+  }
 }
 
 const StyledScrollbar = styled(Box)({
@@ -23,8 +36,14 @@ const StyledScrollbar = styled(Box)({
   }
 })
 
-const CredentialOverlay: React.FC<CredentialOverlayProps> = ({ onClose, onSelect }) => {
-  const [selectedCredentials, setSelectedCredentials] = useState<string[]>([])
+const CredentialOverlay: React.FC<CredentialOverlayProps> = ({
+  onClose,
+  onSelect,
+  initialSelectedCredentials = []
+}) => {
+  const initialSelectedIDs = initialSelectedCredentials.map(cred => cred.id)
+  const [selectedCredentials, setSelectedCredentials] =
+    useState<string[]>(initialSelectedIDs)
 
   const dispatch: AppDispatch = useDispatch()
   const { vcs } = useSelector((state: any) => state.vcReducer)
@@ -38,11 +57,13 @@ const CredentialOverlay: React.FC<CredentialOverlayProps> = ({ onClose, onSelect
     if (selectedCredentials.length === vcs.length) {
       setSelectedCredentials([])
     } else {
-      setSelectedCredentials(vcs.map((cred: any) => cred?.originalItem?.id || cred.id))
+      setSelectedCredentials(
+        vcs.map((cred: CredentialItem) => cred?.originalItem?.id || cred.id)
+      )
     }
   }
 
-  const handleToggleCredential = (credential: any) => {
+  const handleToggleCredential = (credential: CredentialItem) => {
     const credentialId = credential?.originalItem?.id || credential.id
     setSelectedCredentials(prev =>
       prev.includes(credentialId)
@@ -137,7 +158,7 @@ const CredentialOverlay: React.FC<CredentialOverlayProps> = ({ onClose, onSelect
                 }}
               >
                 <Checkbox
-                  checked={selectedCredentials.length === vcs.length}
+                  checked={selectedCredentials.length === vcs.length && vcs.length > 0}
                   onChange={handleSelectAll}
                   sx={{
                     '&.Mui-checked': {
@@ -157,9 +178,9 @@ const CredentialOverlay: React.FC<CredentialOverlayProps> = ({ onClose, onSelect
                 </Typography>
               </Box>
 
-              {vcs.map((credential: any, index: any) => (
+              {vcs.map((credential: CredentialItem, index: number) => (
                 <Box
-                  key={credential.id}
+                  key={credential.id || index}
                   sx={{
                     display: 'flex',
                     alignItems: 'center',
@@ -186,7 +207,8 @@ const CredentialOverlay: React.FC<CredentialOverlayProps> = ({ onClose, onSelect
                       fontFamily: 'Nunito Sans'
                     }}
                   >
-                    {credential?.credentialSubject?.achievement[0]?.name}
+                    {credential?.credentialSubject?.achievement[0]?.name ||
+                      'Unnamed Credential'}
                   </Typography>
                 </Box>
               ))}
@@ -229,6 +251,7 @@ const CredentialOverlay: React.FC<CredentialOverlayProps> = ({ onClose, onSelect
           <Button
             onClick={handleContinue}
             variant='contained'
+            disabled={selectedCredentials.length === 0}
             sx={{
               color: '#fff',
               bgcolor: '#6B79F6',
@@ -243,6 +266,11 @@ const CredentialOverlay: React.FC<CredentialOverlayProps> = ({ onClose, onSelect
               border: '3px solid #6B79F6',
               '&:hover': {
                 bgcolor: '#292489'
+              },
+              '&.Mui-disabled': {
+                bgcolor: '#9EA3F3',
+                color: '#fff',
+                opacity: 0.7
               }
             }}
           >

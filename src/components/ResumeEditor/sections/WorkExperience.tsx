@@ -23,6 +23,7 @@ import { useDispatch, useSelector } from 'react-redux'
 import { updateSection } from '../../../redux/slices/resume'
 import { RootState } from '../../../redux/store'
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline'
+import CloseIcon from '@mui/icons-material/Close'
 import CredentialOverlay from '../../CredentialsOverlay'
 
 const PinkSwitch = styled(Switch)(({ theme }) => ({
@@ -41,15 +42,29 @@ interface WorkExperienceProps {
   onAddFiles?: () => void
   onDelete?: () => void
   onAddCredential?: (text: string) => void
-  selectedCredentials?: string[]
-  originalItem?: any
 }
 
-interface CredentialItem {
-  originalItem?: {
-    id: string
-  }
+interface WorkExperienceItem {
+  title: string
+  company: string
+  duration: string
+  currentlyEmployed: boolean
+  description: string
+  showDuration: boolean
+  position: string
+  startDate: string
+  endDate: string
+  achievements: string[]
   id: string
+  verificationStatus: string
+  credentialLink: string
+  selectedCredentials: SelectedCredential[]
+}
+
+interface SelectedCredential {
+  id: string
+  url: string
+  name: string
 }
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
@@ -57,15 +72,16 @@ export default function WorkExperience({
   onAddFiles,
   onDelete,
   onAddCredential
-}: WorkExperienceProps) {
+}: Readonly<WorkExperienceProps>) {
   const dispatch = useDispatch()
   const resume = useSelector((state: RootState) => state.resume.resume)
   const reduxUpdateTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const initialLoadRef = useRef(true)
   const [showCredentialsOverlay, setShowCredentialsOverlay] = useState(false)
   const [activeSectionIndex, setActiveSectionIndex] = useState<number | null>(null)
+  const vcs = useSelector((state: any) => state.vcReducer.vcs)
 
-  const [workExperiences, setWorkExperiences] = useState<WorkExperience[]>([
+  const [workExperiences, setWorkExperiences] = useState<WorkExperienceItem[]>([
     {
       title: '',
       company: '',
@@ -79,7 +95,8 @@ export default function WorkExperience({
       achievements: [],
       id: '',
       verificationStatus: 'unverified',
-      credentialLink: ''
+      credentialLink: '',
+      selectedCredentials: []
     }
   ])
   const [expandedItems, setExpandedItems] = useState<Record<number, boolean>>({
@@ -87,7 +104,7 @@ export default function WorkExperience({
   })
 
   const debouncedReduxUpdate = useCallback(
-    (items: WorkExperience[]) => {
+    (items: WorkExperienceItem[]) => {
       if (reduxUpdateTimeoutRef.current) {
         clearTimeout(reduxUpdateTimeoutRef.current)
       }
@@ -122,6 +139,7 @@ export default function WorkExperience({
         id: item?.originalItem?.id || '',
         verificationStatus: item.verificationStatus || 'unverified',
         credentialLink: item.credentialLink || '',
+        selectedCredentials: item.selectedCredentials || [],
         ...item
       }))
       const shouldUpdate =
@@ -180,6 +198,14 @@ export default function WorkExperience({
 
     return durationString || 'Less than a month'
   }
+
+  const dateChangeString = workExperiences
+    .map(
+      exp =>
+        `${exp.startDate}-${exp.endDate}-${exp.currentlyEmployed}-${exp.showDuration}`
+    )
+    .join('|')
+
   useEffect(() => {
     workExperiences.forEach((experience, index) => {
       if (experience.showDuration && experience.startDate) {
@@ -217,14 +243,7 @@ export default function WorkExperience({
         }
       }
     })
-  }, [
-    workExperiences
-      .map(
-        exp =>
-          `${exp.startDate}-${exp.endDate}-${exp.currentlyEmployed}-${exp.showDuration}`
-      )
-      .join('|')
-  ])
+  }, [dateChangeString, dispatch, workExperiences])
 
   const handleWorkExperienceChange = useCallback(
     (index: number, field: string, value: any) => {
@@ -285,7 +304,7 @@ export default function WorkExperience({
   )
 
   const handleAddAnotherItem = useCallback(() => {
-    const emptyItem: WorkExperience = {
+    const emptyItem: WorkExperienceItem = {
       title: '',
       company: '',
       duration: '',
@@ -298,7 +317,8 @@ export default function WorkExperience({
       achievements: [],
       id: '',
       verificationStatus: 'unverified',
-      credentialLink: ''
+      credentialLink: '',
+      selectedCredentials: []
     }
 
     setWorkExperiences(prevExperiences => {
@@ -346,8 +366,8 @@ export default function WorkExperience({
       setExpandedItems(prev => {
         const newExpandedState: Record<number, boolean> = {}
         workExperiences
-          .filter((_, i) => i !== index)
-          .forEach((_, i) => {
+          .filter((_, i: number) => i !== index)
+          .forEach((_, i: number) => {
             if (i === 0 && workExperiences.length - 1 === 1) {
               newExpandedState[i] = true
             } else if (i < index) {
@@ -375,21 +395,28 @@ export default function WorkExperience({
   }, [])
 
   const handleCredentialSelect = useCallback(
-    (selectedCredentials: CredentialItem[]) => {
-      if (activeSectionIndex !== null && selectedCredentials.length > 0) {
-        const credentialLinks = selectedCredentials.map(
-          credentialId => `https://linkedcreds.allskillscount.org/view/${credentialId}`
-        )
-        console.log(selectedCredentials)
+    (selectedCredentialIDs: string[]) => {
+      if (activeSectionIndex !== null && selectedCredentialIDs.length > 0) {
+        const selectedCredentials = selectedCredentialIDs.map(id => {
+          const credential = vcs.find((c: any) => (c?.originalItem?.id || c.id) === id)
+
+          return {
+            id: id,
+            url: `https://linkedcreds.allskillscount.org/view/${id}`,
+            name:
+              credential?.credentialSubject?.achievement[0]?.name ||
+              `Credential ${id.substring(0, 5)}...`
+          }
+        })
 
         setWorkExperiences(prevExperiences => {
           const updatedExperiences = [...prevExperiences]
           updatedExperiences[activeSectionIndex] = {
             ...updatedExperiences[activeSectionIndex],
             verificationStatus: 'verified',
-            credentialLink: credentialLinks[0],
-            selectedCredentials: credentialLinks
-          } as any
+            credentialLink: selectedCredentials[0].url,
+            selectedCredentials: selectedCredentials
+          }
 
           dispatch(
             updateSection({
@@ -407,14 +434,48 @@ export default function WorkExperience({
       setShowCredentialsOverlay(false)
       setActiveSectionIndex(null)
     },
-    [activeSectionIndex, dispatch]
+    [activeSectionIndex, dispatch, vcs]
+  )
+
+  const handleRemoveCredential = useCallback(
+    (experienceIndex: number, credentialIndex: number) => {
+      setWorkExperiences(prevExperiences => {
+        const updatedExperiences = [...prevExperiences]
+        const experience = { ...updatedExperiences[experienceIndex] }
+        const updatedCredentials = (experience.selectedCredentials || []).filter(
+          (_, i) => i !== credentialIndex
+        )
+
+        experience.selectedCredentials = updatedCredentials
+        if (updatedCredentials.length === 0) {
+          experience.verificationStatus = 'unverified'
+          experience.credentialLink = ''
+        } else {
+          experience.credentialLink = updatedCredentials[0]?.url || ''
+        }
+
+        updatedExperiences[experienceIndex] = experience
+
+        dispatch(
+          updateSection({
+            sectionId: 'experience',
+            content: {
+              items: updatedExperiences
+            }
+          })
+        )
+
+        return updatedExperiences
+      })
+    },
+    [dispatch]
   )
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       {workExperiences.map((experience, index) => (
         <Box
-          key={index}
+          key={`experience-${index}`}
           sx={{
             backgroundColor: '#F1F1FB',
             px: '20px',
@@ -514,7 +575,13 @@ export default function WorkExperience({
               ) : (
                 <Box display='flex' alignItems='center' gap={2}>
                   <TextField
-                    sx={{ bgcolor: '#FFF', width: '50%' }}
+                    sx={{
+                      bgcolor: '#FFF',
+                      width: '50%',
+                      '& .MuiInputLabel-root': {
+                        transform: 'translate(14px, -9px) scale(0.75)'
+                      }
+                    }}
                     size='small'
                     label='Start Date'
                     type='date'
@@ -528,7 +595,13 @@ export default function WorkExperience({
                   />
                   {!experience.currentlyEmployed && (
                     <TextField
-                      sx={{ bgcolor: '#FFF', width: '50%' }}
+                      sx={{
+                        bgcolor: '#FFF',
+                        width: '50%',
+                        '& .MuiInputLabel-root': {
+                          transform: 'translate(14px, -9px) scale(0.75)'
+                        }
+                      }}
                       size='small'
                       label='End Date'
                       type='date'
@@ -586,20 +659,47 @@ export default function WorkExperience({
                     <Typography variant='body2' sx={{ fontWeight: 'bold', mb: 1 }}>
                       Verified Credentials:
                     </Typography>
-                    {experience.selectedCredentials.map((link: any, linkIndex: any) => (
-                      <Typography
-                        key={linkIndex}
-                        variant='body2'
+                    {experience.selectedCredentials.map((credential, credIndex) => (
+                      <Box
+                        key={`credential-${credential.id}-${credIndex}`}
                         sx={{
-                          color: 'primary.main',
-                          textDecoration: 'underline',
-                          cursor: 'pointer',
-                          mb: 0.5
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          mb: 0.5,
+                          backgroundColor: '#f5f5f5',
+                          p: 0.5,
+                          borderRadius: 1
                         }}
-                        onClick={() => console.log(experience)}
                       >
-                        Credential {linkIndex + 1}
-                      </Typography>
+                        <Typography
+                          variant='body2'
+                          sx={{
+                            color: 'primary.main',
+                            textDecoration: 'underline',
+                            cursor: 'pointer'
+                          }}
+                          onClick={() => window.open(credential.url, '_blank')}
+                        >
+                          {credential.name || `Credential ${credIndex + 1}`}
+                        </Typography>
+                        <IconButton
+                          size='small'
+                          onClick={e => {
+                            e.stopPropagation()
+                            handleRemoveCredential(index, credIndex)
+                          }}
+                          sx={{
+                            p: 0.5,
+                            color: 'grey.500',
+                            '&:hover': {
+                              color: 'error.main'
+                            }
+                          }}
+                        >
+                          <CloseIcon fontSize='small' />
+                        </IconButton>
+                      </Box>
                     ))}
                   </Box>
                 )}
@@ -695,6 +795,12 @@ export default function WorkExperience({
             setActiveSectionIndex(null)
           }}
           onSelect={handleCredentialSelect}
+          initialSelectedCredentials={
+            activeSectionIndex !== null &&
+            workExperiences[activeSectionIndex]?.selectedCredentials
+              ? workExperiences[activeSectionIndex].selectedCredentials
+              : []
+          }
         />
       )}
     </Box>

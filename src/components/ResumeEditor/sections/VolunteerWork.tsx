@@ -23,6 +23,7 @@ import { useDispatch, useSelector } from 'react-redux'
 import { updateSection } from '../../../redux/slices/resume'
 import { RootState } from '../../../redux/store'
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline'
+import CloseIcon from '@mui/icons-material/Close'
 import CredentialOverlay from '../../CredentialsOverlay'
 
 const PinkSwitch = styled(Switch)(({ theme }) => ({
@@ -43,19 +44,42 @@ interface VolunteerWorkProps {
   onAddCredential?: (text: string) => void
 }
 
+interface VolunteerWorkItem {
+  role: string
+  organization: string
+  location: string
+  startDate: string
+  endDate: string
+  currentlyVolunteering: boolean
+  description: string
+  showDuration: boolean
+  duration: string
+  id: string
+  verificationStatus: string
+  credentialLink: string
+  selectedCredentials: SelectedCredential[]
+}
+
+interface SelectedCredential {
+  id: string
+  url: string
+  name: string
+}
+
 export default function VolunteerWork({
   onAddFiles,
   onDelete,
   onAddCredential
-}: VolunteerWorkProps) {
+}: Readonly<VolunteerWorkProps>) {
   const dispatch = useDispatch()
   const resume = useSelector((state: RootState) => state.resume.resume)
   const reduxUpdateTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const initialLoadRef = useRef(true)
   const [showCredentialsOverlay, setShowCredentialsOverlay] = useState(false)
   const [activeSectionIndex, setActiveSectionIndex] = useState<number | null>(null)
+  const vcs = useSelector((state: any) => state.vcReducer.vcs)
 
-  const [volunteerWorks, setVolunteerWorks] = useState<VolunteerWork[]>([
+  const [volunteerWorks, setVolunteerWorks] = useState<VolunteerWorkItem[]>([
     {
       role: '',
       organization: '',
@@ -68,7 +92,8 @@ export default function VolunteerWork({
       duration: '',
       id: '',
       verificationStatus: 'unverified',
-      credentialLink: ''
+      credentialLink: '',
+      selectedCredentials: []
     }
   ])
 
@@ -107,7 +132,7 @@ export default function VolunteerWork({
   }
 
   const debouncedReduxUpdate = useCallback(
-    (items: VolunteerWork[]) => {
+    (items: VolunteerWorkItem[]) => {
       if (reduxUpdateTimeoutRef.current) {
         clearTimeout(reduxUpdateTimeoutRef.current)
       }
@@ -124,6 +149,14 @@ export default function VolunteerWork({
     },
     [dispatch]
   )
+
+  const dateChangeString = volunteerWorks
+    .map(
+      vol =>
+        `${vol.startDate}-${vol.endDate}-${vol.currentlyVolunteering}-${vol.showDuration}`
+    )
+    .join('|')
+
   useEffect(() => {
     volunteerWorks.forEach((volunteer, index) => {
       if (volunteer.showDuration && volunteer.startDate) {
@@ -161,14 +194,7 @@ export default function VolunteerWork({
         }
       }
     })
-  }, [
-    volunteerWorks
-      .map(
-        vol =>
-          `${vol.startDate}-${vol.endDate}-${vol.currentlyVolunteering}-${vol.showDuration}`
-      )
-      .join('|')
-  ])
+  }, [dateChangeString, dispatch, volunteerWorks])
 
   useEffect(() => {
     if (resume?.volunteerWork?.items && resume.volunteerWork.items.length > 0) {
@@ -186,6 +212,7 @@ export default function VolunteerWork({
         id: item.id || '',
         verificationStatus: item.verificationStatus || 'unverified',
         credentialLink: item.credentialLink || '',
+        selectedCredentials: item.selectedCredentials || [],
         ...item
       }))
 
@@ -277,7 +304,7 @@ export default function VolunteerWork({
   )
 
   const handleAddAnotherItem = useCallback(() => {
-    const emptyItem: VolunteerWork = {
+    const emptyItem: VolunteerWorkItem = {
       role: '',
       organization: '',
       location: '',
@@ -289,7 +316,8 @@ export default function VolunteerWork({
       duration: '',
       id: '',
       verificationStatus: 'unverified',
-      credentialLink: ''
+      credentialLink: '',
+      selectedCredentials: []
     }
 
     setVolunteerWorks(prevVolunteerWorks => {
@@ -367,17 +395,27 @@ export default function VolunteerWork({
   }, [])
 
   const handleCredentialSelect = useCallback(
-    (selectedCredentials: string[]) => {
-      if (activeSectionIndex !== null && selectedCredentials.length > 0) {
-        const credentialId = selectedCredentials[0]
-        const credentialLink = `https://linkedcreds.allskillscount.org/view/${credentialId}`
+    (selectedCredentialIDs: string[]) => {
+      if (activeSectionIndex !== null && selectedCredentialIDs.length > 0) {
+        const selectedCredentials = selectedCredentialIDs.map(id => {
+          const credential = vcs.find((c: any) => (c?.originalItem?.id || c.id) === id)
+
+          return {
+            id: id,
+            url: `https://linkedcreds.allskillscount.org/view/${id}`,
+            name:
+              credential?.credentialSubject?.achievement[0]?.name ||
+              `Credential ${id.substring(0, 5)}...`
+          }
+        })
 
         setVolunteerWorks(prevVolunteerWorks => {
           const updatedVolunteerWorks = [...prevVolunteerWorks]
           updatedVolunteerWorks[activeSectionIndex] = {
             ...updatedVolunteerWorks[activeSectionIndex],
             verificationStatus: 'verified',
-            credentialLink: credentialLink
+            credentialLink: selectedCredentials[0].url,
+            selectedCredentials: selectedCredentials
           }
 
           dispatch(
@@ -396,7 +434,41 @@ export default function VolunteerWork({
       setShowCredentialsOverlay(false)
       setActiveSectionIndex(null)
     },
-    [activeSectionIndex, dispatch]
+    [activeSectionIndex, dispatch, vcs]
+  )
+
+  const handleRemoveCredential = useCallback(
+    (volunteerIndex: number, credentialIndex: number) => {
+      setVolunteerWorks(prevVolunteerWorks => {
+        const updatedVolunteerWorks = [...prevVolunteerWorks]
+        const volunteer = { ...updatedVolunteerWorks[volunteerIndex] }
+        const updatedCredentials = (volunteer.selectedCredentials || []).filter(
+          (_, i) => i !== credentialIndex
+        )
+
+        volunteer.selectedCredentials = updatedCredentials
+        if (updatedCredentials.length === 0) {
+          volunteer.verificationStatus = 'unverified'
+          volunteer.credentialLink = ''
+        } else {
+          volunteer.credentialLink = updatedCredentials[0]?.url || ''
+        }
+
+        updatedVolunteerWorks[volunteerIndex] = volunteer
+
+        dispatch(
+          updateSection({
+            sectionId: 'volunteerWork',
+            content: {
+              items: updatedVolunteerWorks
+            }
+          })
+        )
+
+        return updatedVolunteerWorks
+      })
+    },
+    [dispatch]
   )
 
   return (
@@ -409,7 +481,7 @@ export default function VolunteerWork({
 
       {volunteerWorks.map((volunteer, index) => (
         <Box
-          key={index}
+          key={`volunteer-${index}`}
           sx={{
             backgroundColor: '#F1F1FB',
             px: '20px',
@@ -523,7 +595,13 @@ export default function VolunteerWork({
               ) : (
                 <Box display='flex' gap={2}>
                   <TextField
-                    sx={{ bgcolor: '#FFF', width: '50%' }}
+                    sx={{
+                      bgcolor: '#FFF',
+                      width: '50%',
+                      '& .MuiInputLabel-root': {
+                        transform: 'translate(14px, -9px) scale(0.75)'
+                      }
+                    }}
                     size='small'
                     type='date'
                     label='Start Date'
@@ -534,7 +612,13 @@ export default function VolunteerWork({
                     InputLabelProps={{ shrink: true }}
                   />
                   <TextField
-                    sx={{ bgcolor: '#FFF', width: '50%' }}
+                    sx={{
+                      bgcolor: '#FFF',
+                      width: '50%',
+                      '& .MuiInputLabel-root': {
+                        transform: 'translate(14px, -9px) scale(0.75)'
+                      }
+                    }}
                     size='small'
                     type='date'
                     label='End Date'
@@ -573,6 +657,57 @@ export default function VolunteerWork({
                 onChange={val => handleDescriptionChange(index, val)}
                 onAddCredential={onAddCredential}
               />
+
+              {volunteer.selectedCredentials &&
+                volunteer.selectedCredentials.length > 0 && (
+                  <Box sx={{ mt: 2 }}>
+                    <Typography variant='body2' sx={{ fontWeight: 'bold', mb: 1 }}>
+                      Verified Credentials:
+                    </Typography>
+                    {volunteer.selectedCredentials.map((credential, credIndex) => (
+                      <Box
+                        key={`credential-${credential.id}-${credIndex}`}
+                        sx={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          mb: 0.5,
+                          backgroundColor: '#f5f5f5',
+                          p: 0.5,
+                          borderRadius: 1
+                        }}
+                      >
+                        <Typography
+                          variant='body2'
+                          sx={{
+                            color: 'primary.main',
+                            textDecoration: 'underline',
+                            cursor: 'pointer'
+                          }}
+                          onClick={() => window.open(credential.url, '_blank')}
+                        >
+                          {credential.name || `Credential ${credIndex + 1}`}
+                        </Typography>
+                        <IconButton
+                          size='small'
+                          onClick={e => {
+                            e.stopPropagation()
+                            handleRemoveCredential(index, credIndex)
+                          }}
+                          sx={{
+                            p: 0.5,
+                            color: 'grey.500',
+                            '&:hover': {
+                              color: 'error.main'
+                            }
+                          }}
+                        >
+                          <CloseIcon fontSize='small' />
+                        </IconButton>
+                      </Box>
+                    ))}
+                  </Box>
+                )}
 
               <Box
                 sx={{
@@ -665,6 +800,12 @@ export default function VolunteerWork({
             setActiveSectionIndex(null)
           }}
           onSelect={handleCredentialSelect}
+          initialSelectedCredentials={
+            activeSectionIndex !== null &&
+            volunteerWorks[activeSectionIndex]?.selectedCredentials
+              ? volunteerWorks[activeSectionIndex].selectedCredentials
+              : []
+          }
         />
       )}
     </Box>

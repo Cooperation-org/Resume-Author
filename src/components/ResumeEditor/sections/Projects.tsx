@@ -12,6 +12,7 @@ import { useDispatch, useSelector } from 'react-redux'
 import { updateSection } from '../../../redux/slices/resume'
 import { RootState } from '../../../redux/store'
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline'
+import CloseIcon from '@mui/icons-material/Close'
 import CredentialOverlay from '../../CredentialsOverlay'
 
 interface ProjectsProps {
@@ -20,28 +21,46 @@ interface ProjectsProps {
   onAddCredential?: (text: string) => void
 }
 
+interface ProjectItem {
+  name: string
+  description: string
+  url: string
+  id: string
+  verificationStatus: string
+  credentialLink: string
+  technologies: string[]
+  selectedCredentials: SelectedCredential[]
+}
+
+interface SelectedCredential {
+  id: string
+  url: string
+  name: string
+}
+
 export default function Projects({
   onAddFiles,
   onDelete,
   onAddCredential
-}: ProjectsProps) {
+}: Readonly<ProjectsProps>) {
   const dispatch = useDispatch()
   const resume = useSelector((state: RootState) => state.resume.resume)
   const reduxUpdateTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const initialLoadRef = useRef(true)
   const [showCredentialsOverlay, setShowCredentialsOverlay] = useState(false)
   const [activeSectionIndex, setActiveSectionIndex] = useState<number | null>(null)
+  const vcs = useSelector((state: any) => state.vcReducer.vcs)
 
-  const [projects, setProjects] = useState<Project[]>([
+  const [projects, setProjects] = useState<ProjectItem[]>([
     {
       name: '',
       description: '',
       url: '',
       id: '',
       verificationStatus: 'unverified',
-
       credentialLink: '',
-      technologies: []
+      technologies: [],
+      selectedCredentials: []
     }
   ])
 
@@ -50,7 +69,7 @@ export default function Projects({
   })
 
   const debouncedReduxUpdate = useCallback(
-    (items: Project[]) => {
+    (items: ProjectItem[]) => {
       if (reduxUpdateTimeoutRef.current) {
         clearTimeout(reduxUpdateTimeoutRef.current)
       }
@@ -77,6 +96,8 @@ export default function Projects({
         id: item.id || '',
         verificationStatus: item.verificationStatus || 'unverified',
         credentialLink: item.credentialLink || '',
+        technologies: item.technologies || [],
+        selectedCredentials: item.selectedCredentials || [],
         ...item
       }))
 
@@ -155,14 +176,15 @@ export default function Projects({
   )
 
   const handleAddAnotherItem = useCallback(() => {
-    const emptyItem: Project = {
+    const emptyItem: ProjectItem = {
       name: '',
       description: '',
       url: '',
       id: '',
       verificationStatus: 'unverified',
       credentialLink: '',
-      technologies: []
+      technologies: [],
+      selectedCredentials: []
     }
 
     setProjects(prevProjects => {
@@ -240,17 +262,27 @@ export default function Projects({
   }, [])
 
   const handleCredentialSelect = useCallback(
-    (selectedCredentials: string[]) => {
-      if (activeSectionIndex !== null && selectedCredentials.length > 0) {
-        const credentialId = selectedCredentials[0]
-        const credentialLink = `https://linkedcreds.allskillscount.org/view/${credentialId}`
+    (selectedCredentialIDs: string[]) => {
+      if (activeSectionIndex !== null && selectedCredentialIDs.length > 0) {
+        const selectedCredentials = selectedCredentialIDs.map(id => {
+          const credential = vcs.find((c: any) => (c?.originalItem?.id || c.id) === id)
+
+          return {
+            id: id,
+            url: `https://linkedcreds.allskillscount.org/view/${id}`,
+            name:
+              credential?.credentialSubject?.achievement[0]?.name ||
+              `Credential ${id.substring(0, 5)}...`
+          }
+        })
 
         setProjects(prevProjects => {
           const updatedProjects = [...prevProjects]
           updatedProjects[activeSectionIndex] = {
             ...updatedProjects[activeSectionIndex],
             verificationStatus: 'verified',
-            credentialLink: credentialLink
+            credentialLink: selectedCredentials[0].url,
+            selectedCredentials: selectedCredentials
           }
 
           dispatch(
@@ -269,14 +301,49 @@ export default function Projects({
       setShowCredentialsOverlay(false)
       setActiveSectionIndex(null)
     },
-    [activeSectionIndex, dispatch]
+    [activeSectionIndex, dispatch, vcs]
+  )
+
+  const handleRemoveCredential = useCallback(
+    (projectIndex: number, credentialIndex: number) => {
+      setProjects(prevProjects => {
+        const updatedProjects = [...prevProjects]
+        const project = { ...updatedProjects[projectIndex] }
+
+        const updatedCredentials = (project.selectedCredentials || []).filter(
+          (_, i) => i !== credentialIndex
+        )
+
+        project.selectedCredentials = updatedCredentials
+        if (updatedCredentials.length === 0) {
+          project.verificationStatus = 'unverified'
+          project.credentialLink = ''
+        } else {
+          project.credentialLink = updatedCredentials[0]?.url || ''
+        }
+
+        updatedProjects[projectIndex] = project
+
+        dispatch(
+          updateSection({
+            sectionId: 'projects',
+            content: {
+              items: updatedProjects
+            }
+          })
+        )
+
+        return updatedProjects
+      })
+    },
+    [dispatch]
   )
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       {projects.map((project, index) => (
         <Box
-          key={index}
+          key={`project-${index}`}
           sx={{
             backgroundColor: '#F1F1FB',
             px: '20px',
@@ -353,6 +420,56 @@ export default function Projects({
                 onChange={val => handleDescriptionChange(index, val)}
                 onAddCredential={onAddCredential}
               />
+
+              {project.selectedCredentials && project.selectedCredentials.length > 0 && (
+                <Box sx={{ mt: 2 }}>
+                  <Typography variant='body2' sx={{ fontWeight: 'bold', mb: 1 }}>
+                    Verified Credentials:
+                  </Typography>
+                  {project.selectedCredentials.map((credential, credIndex) => (
+                    <Box
+                      key={`credential-${credential.id}-${credIndex}`}
+                      sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        mb: 0.5,
+                        backgroundColor: '#f5f5f5',
+                        p: 0.5,
+                        borderRadius: 1
+                      }}
+                    >
+                      <Typography
+                        variant='body2'
+                        sx={{
+                          color: 'primary.main',
+                          textDecoration: 'underline',
+                          cursor: 'pointer'
+                        }}
+                        onClick={() => window.open(credential.url, '_blank')}
+                      >
+                        {credential.name || `Credential ${credIndex + 1}`}
+                      </Typography>
+                      <IconButton
+                        size='small'
+                        onClick={e => {
+                          e.stopPropagation()
+                          handleRemoveCredential(index, credIndex)
+                        }}
+                        sx={{
+                          p: 0.5,
+                          color: 'grey.500',
+                          '&:hover': {
+                            color: 'error.main'
+                          }
+                        }}
+                      >
+                        <CloseIcon fontSize='small' />
+                      </IconButton>
+                    </Box>
+                  ))}
+                </Box>
+              )}
 
               <Box
                 sx={{
@@ -445,6 +562,12 @@ export default function Projects({
             setActiveSectionIndex(null)
           }}
           onSelect={handleCredentialSelect}
+          initialSelectedCredentials={
+            activeSectionIndex !== null &&
+            projects[activeSectionIndex]?.selectedCredentials
+              ? projects[activeSectionIndex].selectedCredentials
+              : []
+          }
         />
       )}
     </Box>
