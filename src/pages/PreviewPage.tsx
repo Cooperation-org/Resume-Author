@@ -1,12 +1,16 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { Box, CircularProgress, Typography, IconButton } from '@mui/material'
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf'
 import { useSelector } from 'react-redux'
 import { RootState } from '../redux/store'
 import ResumePreview from '../components/resumePreview'
+import ResumePreviewTopbar from '../components/ResumePreviewTopbar'
 import html2pdf from 'html2pdf.js'
 
 const PreviewPage = () => {
+  const [isDraftSaving, setIsDraftSaving] = useState(false)
+  const [isSigningSaving, setIsSigningSaving] = useState(false)
+
   const resumeData = useSelector((state: RootState) => state.resume?.resume)
 
   const exportResumeToPDF = () => {
@@ -54,7 +58,20 @@ const PreviewPage = () => {
   }
 
   return (
-    <Box sx={{ width: '100%', minHeight: '100vh', bgcolor: 'background.default' }}>
+    <Box
+      sx={{
+        width: '100%',
+        minHeight: '100vh',
+        bgcolor: 'background.default'
+      }}
+    >
+      <ResumePreviewTopbar
+        isDraftSaving={isDraftSaving}
+        isSigningSaving={isSigningSaving}
+        setIsDraftSaving={setIsDraftSaving}
+        setIsSigningSaving={setIsSigningSaving}
+      />
+
       <Box
         sx={{
           position: 'fixed',
