@@ -389,7 +389,7 @@ const SkillsSection: React.FC<{ items: Skill[] }> = ({ items }) => (
             display: 'flex',
             alignItems: 'flex-start',
             gap: 1,
-            width: 'calc(50% - 8px)'
+            width: 'calc(100% - 8px)'
           }}
         >
           {item.verificationStatus === 'verified' && <BlueVerifiedBadge />}
@@ -472,7 +472,7 @@ const LanguagesSection: React.FC<{ items: Language[] }> = ({ items }) => (
             display: 'flex',
             alignItems: 'center',
             gap: 1,
-            width: 'calc(50% - 8px)'
+            width: 'calc(100% - 8px)'
           }}
         >
           <Typography sx={{ fontWeight: 400, fontSize: '16px', fontFamily: 'Arial' }}>
