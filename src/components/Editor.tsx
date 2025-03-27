@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import {
   Box,
   Button,
@@ -17,8 +17,8 @@ import { useSelector, useDispatch } from 'react-redux'
 import { RootState } from '../redux/store'
 import { SVGEditName } from '../assets/svgs'
 import useGoogleDrive from '../hooks/useGoogleDrive'
-import { useNavigate } from 'react-router-dom'
-import { updateSection } from '../redux/slices/resume'
+import { useNavigate, useLocation } from 'react-router-dom'
+import { updateSection, setSelectedResume } from '../redux/slices/resume'
 import OptionalSectionsManager from './ResumeEditor/OptionalSectionCard'
 import { storeFileTokens } from '../firebase/storage'
 import { getLocalStorage } from '../tools/cookie'
@@ -53,6 +53,7 @@ const BorderLinearProgress = styled(LinearProgress)(({ theme }) => ({
 
 const ResumeEditor: React.FC = () => {
   const navigate = useNavigate()
+  const location = useLocation()
   const dispatch = useDispatch()
   const [sectionOrder, setSectionOrder] = useState<string[]>([
     'Professional Summary',
@@ -65,11 +66,58 @@ const ResumeEditor: React.FC = () => {
   const [resumeName, setResumeName] = useState('Untitled')
   const [isDraftSaving, setIsDraftSaving] = useState(false)
   const [isSigningSaving, setIsSigningSaving] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
 
   const resume = useSelector((state: RootState) => state?.resume.resume)
   const { instances } = useGoogleDrive()
   const accessToken = getLocalStorage('auth')
   const refreshToken = getLocalStorage('refresh_token')
+
+  // Parse the query parameters to get the resume ID
+  useEffect(() => {
+    const queryParams = new URLSearchParams(location.search)
+    const resumeId = queryParams.get('id')
+
+    if (resumeId && instances) {
+      const fetchResumeData = async () => {
+        setIsLoading(true)
+
+        try {
+          // @ts-ignore - We've already checked that instances exists
+          const fileData = await instances.storage.retrieve(resumeId)
+
+          if (fileData) {
+            // Use any data we get directly
+            // @ts-ignore - We're handling the data as a generic object
+            const resumeData = fileData.data || fileData
+
+            // Dispatch to Redux
+            dispatch(setSelectedResume(resumeData))
+
+            // Try to set resume name if we can find it
+            try {
+              // @ts-ignore - Handling different possible structures
+              const name =
+                resumeData.contact?.fullName || resumeData.name || 'Untitled Resume'
+              setResumeName(name)
+            } catch (e) {
+              setResumeName('Untitled Resume')
+            }
+
+            console.log('Resume loaded successfully')
+          } else {
+            console.error('Retrieved resume data is empty')
+          }
+        } catch (error) {
+          console.error('Error retrieving resume data:', error)
+        } finally {
+          setIsLoading(false)
+        }
+      }
+
+      fetchResumeData()
+    }
+  }, [location.search, instances, dispatch])
 
   const requiredSections = [
     'Professional Summary',
@@ -233,60 +281,146 @@ const ResumeEditor: React.FC = () => {
   }
 
   return (
-    <Box sx={{ p: 6 }}>
-      <Box
-        sx={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          mb: '20px'
-        }}
-      >
-        <Box sx={{ display: 'flex', gap: '15px', flexDirection: 'column' }}>
-          <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
-            {isEditingName ? (
-              <TextField
-                value={resumeName}
-                onChange={handleNameChange}
-                onBlur={handleNameSave}
-                onKeyDown={handleNameKeyPress}
-                autoFocus
-                variant='standard'
-                sx={{
-                  '& .MuiInputBase-input': {
-                    color: '#000',
-                    fontFamily: 'Poppins',
-                    fontSize: '42px',
-                    fontStyle: 'normal',
-                    fontWeight: 600,
-                    lineHeight: '55.88px'
-                  },
-                  '& .MuiInput-underline:before': {
-                    borderBottomColor: '#614BC4'
-                  },
-                  '& .MuiInput-underline:after': {
-                    borderBottomColor: '#614BC4'
-                  }
-                }}
-              />
-            ) : (
+    <Box
+      sx={{
+        display: 'flex',
+        flexDirection: 'column',
+        height: '100%',
+        mx: 'auto',
+        mt: 3,
+        pr: 6,
+        pl: 6
+      }}
+    >
+      {isLoading ? (
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            height: '100vh'
+          }}
+        >
+          <CircularProgress />
+          <Typography sx={{ ml: 2 }}>Loading resume data...</Typography>
+        </Box>
+      ) : (
+        <>
+          {/* Header */}
+          <Box
+            sx={{
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'space-between',
+              padding: '0 20px'
+            }}
+          >
+            {/* Resume Name */}
+            <Box
+              sx={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 1
+              }}
+            >
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                {isEditingName ? (
+                  <TextField
+                    autoFocus
+                    value={resumeName}
+                    onChange={handleNameChange}
+                    onBlur={handleNameSave}
+                    onKeyPress={handleNameKeyPress}
+                    variant='standard'
+                    sx={{ fontWeight: 'bold' }}
+                  />
+                ) : (
+                  <>
+                    <Typography
+                      sx={{
+                        fontWeight: 700,
+                        fontSize: '1.25rem',
+                        color: '#2E2E48'
+                      }}
+                    >
+                      {resumeName}
+                    </Typography>
+                    <IconButton onClick={handleEditNameClick} size='small'>
+                      <SVGEditName />
+                    </IconButton>
+                  </>
+                )}
+              </Box>
+            </Box>
+
+            {/* Action Buttons */}
+            <Box
+              sx={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                mb: 2
+              }}
+            >
               <Typography
                 sx={{
-                  color: '#000',
-                  fontFamily: 'Poppins',
-                  fontSize: '42px',
+                  color: '#2E2E48',
+                  fontFamily: 'Nunito Sans',
+                  fontSize: '16px',
                   fontStyle: 'normal',
-                  fontWeight: 600,
-                  lineHeight: '55.88px'
+                  fontWeight: 500,
+                  lineHeight: 'normal',
+                  letterSpacing: '0.16px'
                 }}
               >
-                {resume?.name || 'Untitled'}
+                Name your resume with your first and last name so recruiters can easily
+                locate your resume.
               </Typography>
-            )}
-            <IconButton onClick={handleEditNameClick}>
-              <SVGEditName />
-            </IconButton>
+              <Box sx={{ display: 'flex', gap: 2 }}>
+                <Button
+                  onClick={handlePreview}
+                  sx={{
+                    ...ButtonStyles,
+                    backgroundColor: '#3A35A2',
+                    color: 'white',
+                    '&:hover': { backgroundColor: '#322e8e' }
+                  }}
+                >
+                  Preview
+                </Button>
+                <Button
+                  onClick={handleSaveDraft}
+                  disabled={isDraftSaving}
+                  sx={{
+                    ...ButtonStyles,
+                    backgroundColor: 'white',
+                    '&:hover': { backgroundColor: '#f5f5f5' }
+                  }}
+                  startIcon={
+                    isDraftSaving && <CircularProgress size={20} color='inherit' />
+                  }
+                >
+                  {isDraftSaving ? 'Saving...' : 'Save Draft'}
+                </Button>
+                <Button
+                  onClick={handleSignAndSave}
+                  disabled={isSigningSaving}
+                  sx={{
+                    ...ButtonStyles,
+                    backgroundColor: 'white',
+                    '&:hover': { backgroundColor: '#f5f5f5' }
+                  }}
+                  startIcon={
+                    isSigningSaving && <CircularProgress size={20} color='inherit' />
+                  }
+                >
+                  {isSigningSaving ? 'Signing...' : 'Sign And Save'}
+                </Button>
+              </Box>
+            </Box>
           </Box>
+          {/* Rest of the component */}
+          <BorderLinearProgress variant='determinate' value={100} />
           <Typography
             sx={{
               color: '#2E2E48',
@@ -295,88 +429,45 @@ const ResumeEditor: React.FC = () => {
               fontStyle: 'normal',
               fontWeight: 500,
               lineHeight: 'normal',
-              letterSpacing: '0.16px'
+              letterSpacing: '0.16px',
+              mt: '20px'
             }}
           >
-            Name your resume with your first and last name so recruiters can easily locate
-            your resume.
+            Any section left blank will not appear on your resume.
           </Typography>
-        </Box>
-        <Box sx={{ display: 'flex', gap: '10px' }}>
-          <Button onClick={handlePreview} variant='outlined' sx={ButtonStyles}>
-            Preview
-          </Button>
-          <Button
-            variant='outlined'
-            sx={ButtonStyles}
-            onClick={handleSaveDraft}
-            disabled={isDraftSaving}
-            startIcon={
-              isDraftSaving ? <CircularProgress size={20} color='inherit' /> : null
-            }
-          >
-            {isDraftSaving ? 'Saving...' : 'Save as Draft'}
-          </Button>
-          <Button
-            variant='outlined'
-            sx={{ ...ButtonStyles, color: 'white', bgcolor: '#614BC4' }}
-            onClick={handleSignAndSave}
-            disabled={isSigningSaving}
-            startIcon={
-              isSigningSaving ? <CircularProgress size={20} color='inherit' /> : null
-            }
-          >
-            {isSigningSaving ? 'Saving...' : 'Save and Sign'}
-          </Button>
-        </Box>
-      </Box>
+          <Box sx={{ display: 'flex', gap: 4, mt: 2 }}>
+            <LeftSidebar />
 
-      <BorderLinearProgress variant='determinate' value={100} />
-      <Typography
-        sx={{
-          color: '#2E2E48',
-          fontFamily: 'DM Sans',
-          fontSize: '16px',
-          fontStyle: 'normal',
-          fontWeight: 500,
-          lineHeight: 'normal',
-          letterSpacing: '0.16px',
-          mt: '20px'
-        }}
-      >
-        Any section left blank will not appear on your resume.
-      </Typography>
-      <Box sx={{ display: 'flex', gap: 4, mt: 2 }}>
-        <LeftSidebar />
+            {/* Main Content */}
+            <Box
+              sx={{
+                display: 'flex',
+                flexDirection: 'column',
+                flex: 1
+              }}
+            >
+              {sectionOrder.map(sectionId => (
+                <Section
+                  key={sectionId}
+                  sectionId={sectionId}
+                  onDelete={() => handleRemoveSection(sectionId)}
+                  onAddFiles={handleAddFiles}
+                  onAddCredential={handleAddCredential}
+                  isRemovable={!requiredSections.includes(sectionId)}
+                />
+              ))}
 
-        {/* Main Content */}
-        <Box
-          sx={{
-            display: 'flex',
-            flexDirection: 'column',
-            flex: 1
-          }}
-        >
-          {sectionOrder.map(sectionId => (
-            <Section
-              key={sectionId}
-              sectionId={sectionId}
-              onDelete={() => handleRemoveSection(sectionId)}
-              onAddFiles={handleAddFiles}
-              onAddCredential={handleAddCredential}
-              isRemovable={!requiredSections.includes(sectionId)}
-            />
-          ))}
+              {/* Optional sections manager */}
+              <OptionalSectionsManager
+                activeSections={sectionOrder}
+                onAddSection={handleAddSection}
+              />
+            </Box>
 
-          {/* Optional sections manager */}
-          <OptionalSectionsManager
-            activeSections={sectionOrder}
-            onAddSection={handleAddSection}
-          />
-        </Box>
-
-        <RightSidebar />
-      </Box>
+            <RightSidebar />
+          </Box>
+        </>
+      )}
     </Box>
   )
 }
