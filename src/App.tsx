@@ -21,6 +21,7 @@ import LoginScanStep from './pages/LoginScanStep'
 import Faq from './pages/FAQ'
 import SignUpStep2 from './pages/signUpStep2'
 import PreviewPageFromDrive from './pages/PreviewPageFromDrive'
+import EditResumePage from './pages/EditResumePage'
 
 const App = () => {
   const dispatch: AppDispatch = useDispatch()
@@ -36,6 +37,7 @@ const App = () => {
         <Route element={<Layout />}>
           <Route path='/' element={<Home />} />
           <Route path='/resume/new' element={<Resume />} />
+          <Route path='/resume/edit/:id' element={<EditResumePage />} />
           <Route path='/resume/import' element={<ImportPage />} />
           <Route path='/resume/view' element={<PreviewPage />} />
           <Route path='/resume/view/:id' element={<PreviewPageFromDrive />} />

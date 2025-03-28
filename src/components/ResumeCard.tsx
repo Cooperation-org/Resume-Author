@@ -118,7 +118,9 @@ const getTimeAgo = (dateString: string): string => {
     } else if (diffMins > 0) {
       return `${diffMins} ${diffMins === 1 ? 'minute' : 'minutes'} ago`
     } else {
-      return `${diffSecs <= 0 ? 'Just now' : `${diffSecs} ${diffSecs === 1 ? 'second' : 'seconds'} ago`}`
+      return diffSecs <= 0
+        ? 'Just now'
+        : `${diffSecs} ${diffSecs === 1 ? 'second' : 'seconds'} ago`
     }
   } catch (error) {
     console.error('Error calculating time ago:', error)
@@ -140,7 +142,7 @@ const ResumeCard: React.FC<ResumeCardProps> = ({
   const [isEditing, setIsEditing] = useState(false)
   const [editedTitle, setEditedTitle] = useState(title)
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [isLoading, setIsLoading] = useState(false)
+  const [isLoading, setIsLoading] = useState(false) //NOSONAR
   const [showCopiedTooltip, setShowCopiedTooltip] = useState(false)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [previewDialogOpen, setPreviewDialogOpen] = useState(false)
@@ -152,71 +154,36 @@ const ResumeCard: React.FC<ResumeCardProps> = ({
 
   // Get time ago for the appropriate timestamp based on whether it's a draft or signed resume
   const getResumeDate = (): string => {
-    // Add some helpful debug logging to understand the resume data structure
-    console.log(
-      `ResumeCard (${isDraft ? 'Draft' : 'Signed'}) - ID: ${id}, Title: ${title}`
-    )
-
     if (isDraft) {
       // For drafts, we expect the date in content.lastUpdated
       if (resume?.content?.lastUpdated) {
-        console.log('Using draft resume.content.lastUpdated:', resume.content.lastUpdated)
         return resume.content.lastUpdated
       } else {
-        // Log potential issues with draft resume structure
-        console.log(
-          'Draft resume missing content.lastUpdated, using fallback date:',
-          date
-        )
-        console.log(
-          'Draft resume content structure:',
-          resume?.content ? Object.keys(resume.content) : 'No content'
-        )
-        return date // Use the date prop as fallback
-      }
-    } else {
-      // For signed resumes, we expect the date in content.issuanceDate
-      if (resume?.content?.issuanceDate) {
-        console.log(
-          'Using signed resume.content.issuanceDate:',
-          resume.content.issuanceDate
-        )
-        return resume.content.issuanceDate
-      } else {
-        // Log potential issues with signed resume structure
-        console.log(
-          'Signed resume missing content.issuanceDate, using fallback date:',
-          date
-        )
-        console.log(
-          'Signed resume content structure:',
-          resume?.content ? Object.keys(resume.content) : 'No content'
-        )
         return date
       }
+    } else if (resume?.content?.issuanceDate) {
+      return resume.content.issuanceDate
+    } else {
+      return date
     }
   }
-
   const resumeDate = getResumeDate()
   const timeAgo = getTimeAgo(resumeDate)
 
-  // Additional logging to debug time calculations
-  console.log(`Resume time details - Date: ${resumeDate}, TimeAgo: ${timeAgo}`)
-
   const inputRef = useRef<HTMLInputElement | null>(null)
-
   const accessToken = getLocalStorage('auth')
   const storage = new GoogleDriveStorage(accessToken as string)
   const resumeManager = new Resume(storage)
 
-  const handleEditTitle = () => {
-    navigate(`/resume/new?id=${id}`)
+  const handleEditResume = () => {
+    navigate(`/resume/edit/${id}`)
   }
 
   const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setEditedTitle(e.target.value)
   }
-  const handleBlurOrEnter = async (e?: React.KeyboardEvent<HTMLInputElement>) => {
+
+  const handleBlurOrEnter = async (e?: React.KeyboardEvent<HTMLElement>) => {
     if (!e || e.key === 'Enter') {
       setIsEditing(false)
 
@@ -230,10 +197,8 @@ const ResumeCard: React.FC<ResumeCardProps> = ({
               type: isDraft ? 'unsigned' : 'signed'
             })
           )
-
           const newFileName = `${editedTitle}.json`
           await storage.updateFileData(id, { fileName: newFileName })
-
           console.log('✅ File renamed successfully:', newFileName)
         } catch (error) {
           console.error('❌ Error renaming file:', error)
@@ -245,7 +210,6 @@ const ResumeCard: React.FC<ResumeCardProps> = ({
   const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
     setMenuAnchor(event.currentTarget)
   }
-
   const handleMenuClose = () => {
     setMenuAnchor(null)
   }
@@ -256,12 +220,15 @@ const ResumeCard: React.FC<ResumeCardProps> = ({
 
   const handleDuplicateResume = async () => {
     dispatch(duplicateResume({ id, type: 'unsigned' }))
-    // resume.content.resume.title = `${title} - Copy`
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const file = await resumeManager.saveResume({
-      resume: resume.content,
-      type: 'unsigned'
-    })
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const file = await resumeManager.saveResume({
+        resume: resume.content,
+        type: 'unsigned'
+      })
+    } catch (err) {
+      console.error('Error duplicating resume:', err)
+    }
   }
 
   const handleCopyLink = () => {
@@ -287,6 +254,7 @@ const ResumeCard: React.FC<ResumeCardProps> = ({
       navigate(`/resume/view/${id}`)
     }
   }
+
   const exportResumeToPDF = (data: any) => {
     setPreviewDialogOpen(true)
   }
@@ -323,7 +291,7 @@ const ResumeCard: React.FC<ResumeCardProps> = ({
                     value={editedTitle}
                     onChange={handleTitleChange}
                     onBlur={() => handleBlurOrEnter()}
-                    onKeyDown={e => e.key === 'Enter' && handleBlurOrEnter(e as any)}
+                    onKeyDown={e => e.key === 'Enter' && handleBlurOrEnter(e)}
                     inputRef={inputRef}
                     autoFocus
                     variant='standard'
@@ -343,7 +311,6 @@ const ResumeCard: React.FC<ResumeCardProps> = ({
                   />
                 ) : (
                   <Box
-                    // to={`/resume/${id}`} // this will be after creating the review page and will replace box with link
                     style={{
                       fontWeight: 500,
                       textDecoration: 'underline',
@@ -371,7 +338,7 @@ const ResumeCard: React.FC<ResumeCardProps> = ({
                     <ActionButton
                       size='small'
                       startIcon={<EditOutlinedIcon />}
-                      onClick={handleEditTitle}
+                      onClick={handleEditResume}
                     >
                       Edit
                     </ActionButton>
@@ -417,7 +384,6 @@ const ResumeCard: React.FC<ResumeCardProps> = ({
             </Box>
           </Box>
 
-          {/* Menu for Additional Actions */}
           <Menu
             anchorEl={menuAnchor}
             open={Boolean(menuAnchor)}
@@ -438,11 +404,13 @@ const ResumeCard: React.FC<ResumeCardProps> = ({
           </Menu>
         </Box>
       </StyledCard>
+
       <DeleteConfirmationDialog
         open={deleteDialogOpen}
         onClose={() => setDeleteDialogOpen(false)}
         onConfirm={handleConfirmDelete}
       />
+
       <ResumePreviewDialog
         open={previewDialogOpen}
         onClose={() => setPreviewDialogOpen(false)}

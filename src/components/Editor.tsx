@@ -23,6 +23,9 @@ import OptionalSectionsManager from './ResumeEditor/OptionalSectionCard'
 import { storeFileTokens } from '../firebase/storage'
 import { getLocalStorage } from '../tools/cookie'
 import { prepareResumeForVC } from '../tools/resumeAdapter'
+interface ResumeEditorProps {
+  isEditMode?: boolean
+}
 
 const ButtonStyles = {
   border: '2px solid #3A35A2',
@@ -51,7 +54,7 @@ const BorderLinearProgress = styled(LinearProgress)(({ theme }) => ({
   }
 }))
 
-const ResumeEditor: React.FC = () => {
+const ResumeEditor: React.FC<ResumeEditorProps> = ({ isEditMode = false }) => {
   const navigate = useNavigate()
   const dispatch = useDispatch()
   const [sectionOrder, setSectionOrder] = useState<string[]>([
@@ -66,7 +69,7 @@ const ResumeEditor: React.FC = () => {
   const [isDraftSaving, setIsDraftSaving] = useState(false)
   const [isSigningSaving, setIsSigningSaving] = useState(false)
 
-  const resume = useSelector((state: RootState) => state?.resume.resume)
+  const resume = useSelector((state: RootState) => state.resume.resume)
   const { instances } = useGoogleDrive()
   const accessToken = getLocalStorage('auth')
   const refreshToken = getLocalStorage('refresh_token')
@@ -105,11 +108,12 @@ const ResumeEditor: React.FC = () => {
   const handleSaveDraft = async () => {
     try {
       setIsDraftSaving(true)
-      const savedResume = await instances?.resumeManager?.saveResume({
+      if (!instances?.resumeManager || !resume) return
+      const savedResume = await instances.resumeManager.saveResume({
         resume: resume,
         type: 'unsigned'
       })
-      console.log('Saved Resume:', savedResume)
+      console.log('Saved Resume (new file):', savedResume)
     } catch (error) {
       console.error('Error saving draft:', error)
     } finally {
@@ -132,18 +136,11 @@ const ResumeEditor: React.FC = () => {
     try {
       // Generate key pair
       const keyPair = await instances.resumeVC.generateKeyPair()
-      if (!keyPair) {
-        throw new Error('Failed to generate key pair')
-      }
+      if (!keyPair) throw new Error('Failed to generate key pair')
 
       // Create DID document
-      const didDoc = await instances.resumeVC.createDID({
-        keyPair
-      })
-      if (!didDoc) {
-        throw new Error('Failed to create DID document')
-      }
-
+      const didDoc = await instances.resumeVC.createDID({ keyPair })
+      if (!didDoc) throw new Error('Failed to create DID document')
       if (!resume) {
         console.error('Resume is null, cannot prepare for VC')
         return
@@ -157,25 +154,21 @@ const ResumeEditor: React.FC = () => {
         issuerDid: didDoc.id,
         keyPair
       })
-      if (!signedResume) {
-        throw new Error('Failed to sign resume')
-      }
+      if (!signedResume) throw new Error('Failed to sign resume')
 
       // Save resume
       const file = await instances.resumeManager.saveResume({
         resume: signedResume,
         type: 'sign'
       })
-      if (!file || !file.id) {
-        throw new Error('Failed to save resume')
-      }
+      if (!file?.id) throw new Error('Failed to save resume')
 
       // Store tokens
       await storeFileTokens({
         googleFileId: file.id,
         tokens: {
-          accessToken: accessToken || '',
-          refreshToken: refreshToken || ''
+          accessToken: accessToken ?? '',
+          refreshToken: refreshToken ?? ''
         }
       })
 
@@ -202,9 +195,7 @@ const ResumeEditor: React.FC = () => {
   const handleEditNameClick = () => {
     setIsEditingName(true)
     // Initialize with current resume name if available
-    if (resume && resume.name) {
-      setResumeName(resume.name)
-    }
+    setResumeName(resume?.name ?? 'Untitled')
   }
 
   const handleNameChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -213,7 +204,6 @@ const ResumeEditor: React.FC = () => {
 
   const handleNameSave = () => {
     if (!resume) return
-
     dispatch(updateSection({ sectionId: 'name', content: resumeName }))
     setIsEditingName(false)
   }
@@ -224,16 +214,18 @@ const ResumeEditor: React.FC = () => {
     } else if (event.key === 'Escape') {
       setIsEditingName(false)
       // Reset to original value
-      if (resume && resume.name) {
-        setResumeName(resume.name)
-      } else {
-        setResumeName('Untitled')
-      }
+      setResumeName(resume?.name ?? 'Untitled')
     }
   }
 
   return (
     <Box sx={{ p: 6 }}>
+      {isEditMode && (
+        <Typography variant='body1' sx={{ mb: 2, color: 'gray' }}>
+          Editing an existing resume
+        </Typography>
+      )}
+
       <Box
         sx={{
           display: 'flex',
@@ -257,16 +249,11 @@ const ResumeEditor: React.FC = () => {
                     color: '#000',
                     fontFamily: 'Poppins',
                     fontSize: '42px',
-                    fontStyle: 'normal',
                     fontWeight: 600,
                     lineHeight: '55.88px'
                   },
-                  '& .MuiInput-underline:before': {
-                    borderBottomColor: '#614BC4'
-                  },
-                  '& .MuiInput-underline:after': {
-                    borderBottomColor: '#614BC4'
-                  }
+                  '& .MuiInput-underline:before': { borderBottomColor: '#614BC4' },
+                  '& .MuiInput-underline:after': { borderBottomColor: '#614BC4' }
                 }}
               />
             ) : (
@@ -275,26 +262,24 @@ const ResumeEditor: React.FC = () => {
                   color: '#000',
                   fontFamily: 'Poppins',
                   fontSize: '42px',
-                  fontStyle: 'normal',
                   fontWeight: 600,
                   lineHeight: '55.88px'
                 }}
               >
-                {resume?.name || 'Untitled'}
+                {resume?.name ?? 'Untitled'}
               </Typography>
             )}
             <IconButton onClick={handleEditNameClick}>
               <SVGEditName />
             </IconButton>
           </Box>
+
           <Typography
             sx={{
               color: '#2E2E48',
               fontFamily: 'DM Sans',
               fontSize: '16px',
-              fontStyle: 'normal',
               fontWeight: 500,
-              lineHeight: 'normal',
               letterSpacing: '0.16px'
             }}
           >
@@ -302,10 +287,12 @@ const ResumeEditor: React.FC = () => {
             your resume.
           </Typography>
         </Box>
+
         <Box sx={{ display: 'flex', gap: '10px' }}>
           <Button onClick={handlePreview} variant='outlined' sx={ButtonStyles}>
             Preview
           </Button>
+
           <Button
             variant='outlined'
             sx={ButtonStyles}
@@ -317,6 +304,7 @@ const ResumeEditor: React.FC = () => {
           >
             {isDraftSaving ? 'Saving...' : 'Save as Draft'}
           </Button>
+
           <Button
             variant='outlined'
             sx={{ ...ButtonStyles, color: 'white', bgcolor: '#614BC4' }}
@@ -332,31 +320,25 @@ const ResumeEditor: React.FC = () => {
       </Box>
 
       <BorderLinearProgress variant='determinate' value={100} />
+
       <Typography
         sx={{
           color: '#2E2E48',
           fontFamily: 'DM Sans',
           fontSize: '16px',
-          fontStyle: 'normal',
           fontWeight: 500,
-          lineHeight: 'normal',
           letterSpacing: '0.16px',
           mt: '20px'
         }}
       >
         Any section left blank will not appear on your resume.
       </Typography>
+
       <Box sx={{ display: 'flex', gap: 4, mt: 2 }}>
         <LeftSidebar />
 
         {/* Main Content */}
-        <Box
-          sx={{
-            display: 'flex',
-            flexDirection: 'column',
-            flex: 1
-          }}
-        >
+        <Box sx={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
           {sectionOrder.map(sectionId => (
             <Section
               key={sectionId}
