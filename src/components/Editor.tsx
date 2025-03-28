@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import {
   Box,
   Button,
@@ -8,7 +8,10 @@ import {
   styled,
   IconButton,
   TextField,
-  CircularProgress
+  CircularProgress,
+  Tooltip,
+  Snackbar,
+  Alert
 } from '@mui/material'
 import LeftSidebar from './ResumeEditor/LeftSidebar'
 import RightSidebar from './ResumeEditor/RightSidebar'
@@ -23,6 +26,7 @@ import OptionalSectionsManager from './ResumeEditor/OptionalSectionCard'
 import { storeFileTokens } from '../firebase/storage'
 import { getLocalStorage } from '../tools/cookie'
 import { prepareResumeForVC } from '../tools/resumeAdapter'
+
 interface ResumeEditorProps {
   isEditMode?: boolean
 }
@@ -68,11 +72,43 @@ const ResumeEditor: React.FC<ResumeEditorProps> = ({ isEditMode = false }) => {
   const [resumeName, setResumeName] = useState('Untitled')
   const [isDraftSaving, setIsDraftSaving] = useState(false)
   const [isSigningSaving, setIsSigningSaving] = useState(false)
+  const [error, setError] = useState<{
+    show: boolean
+    message: string
+    severity: 'error' | 'warning' | 'info' | 'success'
+  }>({
+    show: false,
+    message: '',
+    severity: 'error'
+  })
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
 
   const resume = useSelector((state: RootState) => state.resume.resume)
   const { instances } = useGoogleDrive()
-  const accessToken = getLocalStorage('auth')
-  const refreshToken = getLocalStorage('refresh_token')
+
+  const getTokens = () => ({
+    accessToken: getLocalStorage('auth'),
+    refreshToken: getLocalStorage('refresh_token')
+  })
+
+  useEffect(() => {
+    const checkAuth = () => {
+      const currentAccessToken = getLocalStorage('auth')
+      const currentRefreshToken = getLocalStorage('refresh_token')
+      setIsAuthenticated(!!currentAccessToken && !!currentRefreshToken)
+    }
+
+    checkAuth()
+
+    window.addEventListener('storage', checkAuth)
+
+    window.addEventListener('auth-state-changed', checkAuth)
+
+    return () => {
+      window.removeEventListener('storage', checkAuth)
+      window.removeEventListener('auth-state-changed', checkAuth)
+    }
+  }, [])
 
   const requiredSections = [
     'Professional Summary',
@@ -105,25 +141,85 @@ const ResumeEditor: React.FC<ResumeEditorProps> = ({ isEditMode = false }) => {
     navigate('/resume/view')
   }
 
+  const handleCloseError = () => {
+    setError({ ...error, show: false })
+  }
+
   const handleSaveDraft = async () => {
     try {
       setIsDraftSaving(true)
-      if (!instances?.resumeManager || !resume) return
+
+      if (!isAuthenticated) {
+        setError({
+          show: true,
+          message: 'You need to sign in to save your resume as a draft',
+          severity: 'warning'
+        })
+        return
+      }
+
+      if (!instances?.resumeManager || !resume) {
+        setError({
+          show: true,
+          message: 'Unable to save resume. Please try again later.',
+          severity: 'error'
+        })
+        return
+      }
+
       const savedResume = await instances.resumeManager.saveResume({
         resume: resume,
         type: 'unsigned'
       })
       console.log('Saved Resume (new file):', savedResume)
+
+      setError({
+        show: true,
+        message: 'Resume draft saved successfully!',
+        severity: 'success'
+      })
     } catch (error) {
       console.error('Error saving draft:', error)
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error occurred'
+
+      if (
+        errorMessage.includes('Invalid Credentials') ||
+        errorMessage.includes('UNAUTHENTICATED')
+      ) {
+        setError({
+          show: true,
+          message: 'Authentication error. Please sign in again.',
+          severity: 'error'
+        })
+      } else {
+        setError({
+          show: true,
+          message: `Error saving draft: ${errorMessage}`,
+          severity: 'error'
+        })
+      }
     } finally {
       setIsDraftSaving(false)
     }
   }
 
   const handleSignAndSave = async () => {
+    if (!isAuthenticated) {
+      setError({
+        show: true,
+        message: 'You need to sign in to sign and save your resume',
+        severity: 'warning'
+      })
+      return
+    }
+
     if (!instances?.resumeVC || !instances?.resumeManager) {
-      console.error('Required services not available')
+      setError({
+        show: true,
+        message: 'Required services not available. Please try again later.',
+        severity: 'error'
+      })
       return
     }
 
@@ -141,10 +237,11 @@ const ResumeEditor: React.FC<ResumeEditorProps> = ({ isEditMode = false }) => {
       // Create DID document
       const didDoc = await instances.resumeVC.createDID({ keyPair })
       if (!didDoc) throw new Error('Failed to create DID document')
+
       if (!resume) {
-        console.error('Resume is null, cannot prepare for VC')
-        return
+        throw new Error('Resume is null, cannot prepare for VC')
       }
+
       const preparedResume = prepareResumeForVC(resume)
       console.log('PREPARED FORM DATA', preparedResume)
 
@@ -163,7 +260,7 @@ const ResumeEditor: React.FC<ResumeEditorProps> = ({ isEditMode = false }) => {
       })
       if (!file?.id) throw new Error('Failed to save resume')
 
-      // Store tokens
+      const { accessToken, refreshToken } = getTokens()
       await storeFileTokens({
         googleFileId: file.id,
         tokens: {
@@ -174,6 +271,12 @@ const ResumeEditor: React.FC<ResumeEditorProps> = ({ isEditMode = false }) => {
 
       console.log('Resume successfully signed and saved:', signedResume)
 
+      setError({
+        show: true,
+        message: 'Resume successfully signed and saved!',
+        severity: 'success'
+      })
+
       // If process completes before 3 seconds, clear the timer
       // and manually set loading state to false
       if (loadingTimer) {
@@ -182,6 +285,26 @@ const ResumeEditor: React.FC<ResumeEditorProps> = ({ isEditMode = false }) => {
       }
     } catch (error) {
       console.error('Error signing and saving:', error)
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error occurred'
+
+      if (
+        errorMessage.includes('Invalid Credentials') ||
+        errorMessage.includes('UNAUTHENTICATED')
+      ) {
+        setError({
+          show: true,
+          message: 'Authentication error. Please sign in again.',
+          severity: 'error'
+        })
+      } else {
+        setError({
+          show: true,
+          message: `Error signing and saving: ${errorMessage}`,
+          severity: 'error'
+        })
+      }
+
       // If error occurs before 3 seconds, clear the timer
       // and manually set loading state to false
       if (loadingTimer) {
@@ -293,29 +416,37 @@ const ResumeEditor: React.FC<ResumeEditorProps> = ({ isEditMode = false }) => {
             Preview
           </Button>
 
-          <Button
-            variant='outlined'
-            sx={ButtonStyles}
-            onClick={handleSaveDraft}
-            disabled={isDraftSaving}
-            startIcon={
-              isDraftSaving ? <CircularProgress size={20} color='inherit' /> : null
-            }
-          >
-            {isDraftSaving ? 'Saving...' : 'Save as Draft'}
-          </Button>
+          <Tooltip title={!isAuthenticated ? 'Sign in to save your resume' : ''}>
+            <span>
+              <Button
+                variant='outlined'
+                sx={ButtonStyles}
+                onClick={handleSaveDraft}
+                disabled={isDraftSaving || !isAuthenticated}
+                startIcon={
+                  isDraftSaving ? <CircularProgress size={20} color='inherit' /> : null
+                }
+              >
+                {isDraftSaving ? 'Saving...' : 'Save as Draft'}
+              </Button>
+            </span>
+          </Tooltip>
 
-          <Button
-            variant='outlined'
-            sx={{ ...ButtonStyles, color: 'white', bgcolor: '#614BC4' }}
-            onClick={handleSignAndSave}
-            disabled={isSigningSaving}
-            startIcon={
-              isSigningSaving ? <CircularProgress size={20} color='inherit' /> : null
-            }
-          >
-            {isSigningSaving ? 'Saving...' : 'Save and Sign'}
-          </Button>
+          <Tooltip title={!isAuthenticated ? 'Sign in to sign and save your resume' : ''}>
+            <span>
+              <Button
+                variant='outlined'
+                sx={{ ...ButtonStyles, color: 'white', bgcolor: '#614BC4' }}
+                onClick={handleSignAndSave}
+                disabled={isSigningSaving || !isAuthenticated}
+                startIcon={
+                  isSigningSaving ? <CircularProgress size={20} color='inherit' /> : null
+                }
+              >
+                {isSigningSaving ? 'Saving...' : 'Save and Sign'}
+              </Button>
+            </span>
+          </Tooltip>
         </Box>
       </Box>
 
@@ -359,6 +490,20 @@ const ResumeEditor: React.FC<ResumeEditorProps> = ({ isEditMode = false }) => {
 
         <RightSidebar />
       </Box>
+      <Snackbar
+        open={error.show}
+        autoHideDuration={6000}
+        onClose={handleCloseError}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert
+          onClose={handleCloseError}
+          severity={error.severity}
+          sx={{ width: '100%' }}
+        >
+          {error.message}
+        </Alert>
+      </Snackbar>
     </Box>
   )
 }
