@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import {
   Box,
   Typography,
@@ -6,7 +6,10 @@ import {
   createTheme,
   CircularProgress,
   useMediaQuery,
-  Stack
+  Stack,
+  Tooltip,
+  Snackbar,
+  Alert
 } from '@mui/material'
 import { useNavigate } from 'react-router-dom'
 import { useSelector } from 'react-redux'
@@ -91,19 +94,67 @@ const ResumePreviewTopbar: React.FC<ResumePreviewTopbarProps> = ({
   const navigate = useNavigate()
   const resume = useSelector((state: RootState) => state?.resume.resume)
   const { instances } = useGoogleDrive()
-  const accessToken = getLocalStorage('auth')
-  const refreshToken = getLocalStorage('refresh_token')
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [error, setError] = useState<{
+    show: boolean
+    message: string
+    severity: 'error' | 'warning' | 'info' | 'success'
+  }>({
+    show: false,
+    message: '',
+    severity: 'error'
+  })
+
+  const getTokens = () => ({
+    accessToken: getLocalStorage('auth'),
+    refreshToken: getLocalStorage('refresh_token')
+  })
+
+  useEffect(() => {
+    const checkAuth = () => {
+      const { accessToken, refreshToken } = getTokens()
+      setIsAuthenticated(!!accessToken && !!refreshToken)
+    }
+
+    checkAuth()
+
+    window.addEventListener('storage', checkAuth)
+
+    window.addEventListener('auth-state-changed', checkAuth)
+
+    return () => {
+      window.removeEventListener('storage', checkAuth)
+      window.removeEventListener('auth-state-changed', checkAuth)
+    }
+  }, [])
 
   const isXs = useMediaQuery(theme.breakpoints.down('sm'))
   const isSm = useMediaQuery(theme.breakpoints.between('sm', 'md'))
+
+  const handleCloseError = () => {
+    setError({ ...error, show: false })
+  }
 
   const handleBackToEdit = () => {
     navigate('/resume/new')
   }
 
   const handleSaveDraft = async () => {
+    if (!isAuthenticated) {
+      setError({
+        show: true,
+        message: 'You need to sign in to save your resume as a draft',
+        severity: 'warning'
+      })
+      return
+    }
+
     if (!instances?.resumeManager) {
-      console.error('Resume manager not available')
+      setError({
+        show: true,
+        message: 'Resume manager not available. Please try again later.',
+        severity: 'error'
+      })
       return
     }
 
@@ -113,8 +164,33 @@ const ResumePreviewTopbar: React.FC<ResumePreviewTopbarProps> = ({
         type: 'unsigned'
       })
       console.log('Saved Resume:', savedResume)
+
+      setError({
+        show: true,
+        message: 'Resume draft saved successfully!',
+        severity: 'success'
+      })
     } catch (error) {
       console.error('Error saving draft:', error)
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error occurred'
+
+      if (
+        errorMessage.includes('Invalid Credentials') ||
+        errorMessage.includes('UNAUTHENTICATED')
+      ) {
+        setError({
+          show: true,
+          message: 'Authentication error. Please sign in again.',
+          severity: 'error'
+        })
+      } else {
+        setError({
+          show: true,
+          message: `Error saving draft: ${errorMessage}`,
+          severity: 'error'
+        })
+      }
     }
   }
 
@@ -131,8 +207,21 @@ const ResumePreviewTopbar: React.FC<ResumePreviewTopbarProps> = ({
   }
 
   const handleSignAndSave = async () => {
+    if (!isAuthenticated) {
+      setError({
+        show: true,
+        message: 'You need to sign in to sign and save your resume',
+        severity: 'warning'
+      })
+      return
+    }
+
     if (!instances?.resumeVC || !instances?.resumeManager) {
-      console.error('Required services not available')
+      setError({
+        show: true,
+        message: 'Required services not available. Please try again later.',
+        severity: 'error'
+      })
       return
     }
 
@@ -150,9 +239,9 @@ const ResumePreviewTopbar: React.FC<ResumePreviewTopbarProps> = ({
       }
 
       if (!resume) {
-        console.error('Resume is null, cannot prepare for VC')
-        return
+        throw new Error('Resume is null, cannot prepare for VC')
       }
+
       const preparedResume = prepareResumeForVC(resume)
       console.log('PREPARED FORM DATA', preparedResume)
 
@@ -173,6 +262,7 @@ const ResumePreviewTopbar: React.FC<ResumePreviewTopbarProps> = ({
         throw new Error('Failed to save resume')
       }
 
+      const { accessToken, refreshToken } = getTokens()
       await storeFileTokens({
         googleFileId: file.id,
         tokens: {
@@ -182,8 +272,37 @@ const ResumePreviewTopbar: React.FC<ResumePreviewTopbarProps> = ({
       })
 
       console.log('Resume successfully signed and saved:', signedResume)
+
+      setError({
+        show: true,
+        message: 'Resume successfully signed and saved!',
+        severity: 'success'
+      })
+
+      setTimeout(() => {
+        navigate('/resume/import')
+      }, 1500)
     } catch (error) {
       console.error('Error signing and saving:', error)
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error occurred'
+
+      if (
+        errorMessage.includes('Invalid Credentials') ||
+        errorMessage.includes('UNAUTHENTICATED')
+      ) {
+        setError({
+          show: true,
+          message: 'Authentication error. Please sign in again.',
+          severity: 'error'
+        })
+      } else {
+        setError({
+          show: true,
+          message: `Error signing and saving: ${errorMessage}`,
+          severity: 'error'
+        })
+      }
     }
   }
 
@@ -197,7 +316,6 @@ const ResumePreviewTopbar: React.FC<ResumePreviewTopbarProps> = ({
     if (typeof setIsSigningSaving === 'function') {
       setIsSigningSaving(false)
     }
-    navigate('/resume/import')
   }
 
   const getButtonSx = (baseWidth: string) => ({
@@ -418,36 +536,48 @@ const ResumePreviewTopbar: React.FC<ResumePreviewTopbarProps> = ({
               >
                 Back to Edit
               </Button>
-              <Button
-                variant='outlined'
-                onClick={onSaveDraft}
-                disabled={isDraftSaving}
-                startIcon={
-                  isDraftSaving ? (
-                    <CircularProgress size={isXs ? 16 : 20} color='inherit' />
-                  ) : null
-                }
-                sx={getButtonSx('175px')}
+
+              <Tooltip title={!isAuthenticated ? 'Sign in to save your resume' : ''}>
+                <span>
+                  <Button
+                    variant='outlined'
+                    onClick={onSaveDraft}
+                    disabled={isDraftSaving || !isAuthenticated}
+                    startIcon={
+                      isDraftSaving ? (
+                        <CircularProgress size={isXs ? 16 : 20} color='inherit' />
+                      ) : null
+                    }
+                    sx={getButtonSx('175px')}
+                  >
+                    {isDraftSaving ? 'Saving...' : 'Save as Draft'}
+                  </Button>
+                </span>
+              </Tooltip>
+
+              <Tooltip
+                title={!isAuthenticated ? 'Sign in to sign and save your resume' : ''}
               >
-                {isDraftSaving ? 'Saving...' : 'Save as Draft'}
-              </Button>
-              <Button
-                variant='contained'
-                onClick={onSignAndSave}
-                disabled={isSigningSaving}
-                startIcon={
-                  isSigningSaving ? (
-                    <CircularProgress size={isXs ? 16 : 20} color='inherit' />
-                  ) : null
-                }
-                sx={{
-                  ...getButtonSx('181px'),
-                  backgroundColor: '#3a35a2',
-                  color: '#ffffff'
-                }}
-              >
-                {isSigningSaving ? 'Saving...' : 'Sign and Save'}
-              </Button>
+                <span>
+                  <Button
+                    variant='contained'
+                    onClick={onSignAndSave}
+                    disabled={isSigningSaving || !isAuthenticated}
+                    startIcon={
+                      isSigningSaving ? (
+                        <CircularProgress size={isXs ? 16 : 20} color='inherit' />
+                      ) : null
+                    }
+                    sx={{
+                      ...getButtonSx('181px'),
+                      backgroundColor: '#3a35a2',
+                      color: '#ffffff'
+                    }}
+                  >
+                    {isSigningSaving ? 'Saving...' : 'Sign and Save'}
+                  </Button>
+                </span>
+              </Tooltip>
             </Stack>
           </Box>
         </Box>
@@ -469,7 +599,8 @@ const ResumePreviewTopbar: React.FC<ResumePreviewTopbarProps> = ({
               md: '0 10px'
             },
             zIndex: 16,
-            m: 0
+            m: 0,
+            mb: 2
           }}
         >
           <Box
@@ -493,6 +624,21 @@ const ResumePreviewTopbar: React.FC<ResumePreviewTopbarProps> = ({
           />
         </Box>
       </Box>
+
+      <Snackbar
+        open={error.show}
+        autoHideDuration={6000}
+        onClose={handleCloseError}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert
+          onClose={handleCloseError}
+          severity={error.severity}
+          sx={{ width: '100%' }}
+        >
+          {error.message}
+        </Alert>
+      </Snackbar>
     </Box>
   )
 }
