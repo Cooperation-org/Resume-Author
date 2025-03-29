@@ -33,6 +33,7 @@ import { AppDispatch } from '../redux/store'
 import { deleteResume, duplicateResume, updateTitle } from '../redux/slices/myresumes'
 import { SVGBadge } from '../assets/svgs'
 import ResumePreviewDialog from './ResumePreviewDialog'
+import { transformVCtoDraft } from '../tools/transformVCtoDraft'
 
 const ActionButton = styled(Button)(({ theme }) => ({
   textTransform: 'none',
@@ -219,11 +220,37 @@ const ResumeCard: React.FC<ResumeCardProps> = ({
   }
 
   const handleDuplicateResume = async () => {
-    dispatch(duplicateResume({ id, type: 'unsigned' }))
     try {
+      dispatch(duplicateResume({ id, type: 'unsigned' }))
+
+      const duplicationData = JSON.parse(JSON.stringify(resume.content))
+
+      let originalTitle = 'Untitled'
+      const isSigned = !!duplicationData?.credentialSubject?.person?.name?.formattedName
+
+      if (isSigned) {
+        originalTitle = duplicationData.credentialSubject.person.name.formattedName
+      } else if (duplicationData?.name) {
+        originalTitle = duplicationData.name
+      }
+
+      const newTitle = `${originalTitle} (Copy)`
+
+      if (isSigned) {
+        duplicationData.credentialSubject.person.name.formattedName = newTitle
+      } else {
+        duplicationData.name = newTitle
+      }
+
+      let finalData = duplicationData
+
+      if (isSigned) {
+        finalData = transformVCtoDraft(duplicationData)
+      }
+
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const file = await resumeManager.saveResume({
-        resume: resume.content,
+        resume: finalData,
         type: 'unsigned'
       })
     } catch (err) {

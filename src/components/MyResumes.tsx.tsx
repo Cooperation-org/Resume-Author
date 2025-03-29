@@ -176,8 +176,13 @@ const ResumeScreen: React.FC = () => {
             <ResumeCard
               key={resume?.id}
               id={resume?.id}
-              title={resume?.content?.credentialSubject?.person?.name?.formattedName}
-              date={new Date(resume?.content?.issuanceDate).toLocaleDateString()}
+              title={
+                resume?.content?.credentialSubject?.person?.name?.formattedName ||
+                'Untitled (Signed)'
+              }
+              date={new Date(
+                resume?.content?.issuanceDate || Date.now()
+              ).toLocaleDateString()}
               credentials={0}
               isDraft={false}
               resume={resume}
@@ -193,8 +198,10 @@ const ResumeScreen: React.FC = () => {
             <ResumeCard
               key={resume.id}
               id={resume.id}
-              title={resume?.content?.contact?.fullName?.split('.')[0]}
-              date={new Date().toLocaleDateString()}
+              title={resume?.content?.name || 'Untitled (Draft)'}
+              date={new Date(
+                resume?.content?.lastUpdated || Date.now()
+              ).toLocaleDateString()}
               credentials={0}
               isDraft={true}
               resume={resume}

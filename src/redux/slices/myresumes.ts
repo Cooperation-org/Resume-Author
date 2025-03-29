@@ -55,6 +55,8 @@ interface Resume {
   contact: Contact
   summary: string
   content: {
+    lastUpdated: number
+    name: string
     issuanceDate: string | number | Date
     credentialSubject: any
     contact: any
@@ -193,7 +195,7 @@ const resumeSlice = createSlice({
       })
       .addCase(fetchUserResumes.rejected, (state, action) => {
         state.status = 'failed'
-        state.error = action.error.message || 'Failed to fetch resumes'
+        state.error = action.error.message ?? 'Failed to fetch resumes'
       })
   }
 })
