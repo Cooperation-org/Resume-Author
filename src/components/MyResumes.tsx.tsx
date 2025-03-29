@@ -5,17 +5,27 @@ import { useSelector, useDispatch } from 'react-redux'
 import { RootState, AppDispatch } from '../redux/store'
 import { useEffect } from 'react'
 import { fetchUserResumes } from '../redux/slices/myresumes'
+import useDraftResume from '../hooks/useDraftResume'
 
 const ResumeScreen: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>()
   const { signed, unsigned, status, error } = useSelector(
     (state: RootState) => state.myresumes
   )
-  console.log('🚀 ~ unsigned:', unsigned)
+
+  // Get all drafts from localStorage but don't change the UI
+  const { getAllDrafts } = useDraftResume(null)
+  // We'll keep track of which drafts have local changes
+  const localDrafts = getAllDrafts()
 
   useEffect(() => {
     dispatch(fetchUserResumes())
   }, [dispatch])
+
+  // Check if a resume has unsaved changes in localStorage (used internally)
+  const hasLocalDraft = (resumeId: string) => {
+    return Boolean(localDrafts[resumeId])
+  }
 
   return (
     <Box
@@ -82,6 +92,10 @@ const ResumeScreen: React.FC = () => {
           credentials={0}
           isDraft={true}
           resume={resume}
+          // We'll pass these props, but since the ResumeCard component
+          // doesn't handle them yet, they won't change the UI
+          hasLocalChanges={hasLocalDraft(resume.id)}
+          localDraftTime={localDrafts[resume.id]?.localStorageLastUpdated || null}
         />
       ))}
 

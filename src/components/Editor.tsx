@@ -23,6 +23,7 @@ import OptionalSectionsManager from './ResumeEditor/OptionalSectionCard'
 import { storeFileTokens } from '../firebase/storage'
 import { getLocalStorage } from '../tools/cookie'
 import { prepareResumeForVC } from '../tools/resumeAdapter'
+import useDraftResume from '../hooks/useDraftResume'
 
 const ButtonStyles = {
   border: '2px solid #3A35A2',
@@ -68,21 +69,50 @@ const ResumeEditor: React.FC = () => {
   const [isSigningSaving, setIsSigningSaving] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
 
+  // Get resumeId from URL parameters
+  const queryParams = new URLSearchParams(location.search)
+  const resumeId = queryParams.get('id')
+
+  // Initialize our draft resume hook
+  const { hasDraft, loadDraftFromStorage, saveDraftToStorage, clearDraftFromStorage } =
+    useDraftResume(resumeId)
+
   const resume = useSelector((state: RootState) => state?.resume.resume)
   const { instances } = useGoogleDrive()
   const accessToken = getLocalStorage('auth')
   const refreshToken = getLocalStorage('refresh_token')
 
-  // Parse the query parameters to get the resume ID
+  // Load resume data - first check localStorage, then fall back to Google Drive
   useEffect(() => {
-    const queryParams = new URLSearchParams(location.search)
-    const resumeId = queryParams.get('id')
-
     if (resumeId && instances) {
       const fetchResumeData = async () => {
         setIsLoading(true)
 
         try {
+          // First check if we have a draft in localStorage
+          if (hasDraft()) {
+            const draftData = loadDraftFromStorage()
+            if (draftData) {
+              console.log('Using draft from localStorage')
+
+              // Try to set resume name if available
+              try {
+                // @ts-ignore - Handling different possible structures
+                const name =
+                  draftData.contact?.fullName || draftData.name || 'Untitled Resume'
+                setResumeName(name)
+              } catch (e) {
+                setResumeName('Untitled Resume')
+              }
+
+              // Set the resume data in Redux
+              dispatch(setSelectedResume(draftData))
+              setIsLoading(false)
+              return
+            }
+          }
+
+          // If no localStorage draft, fetch from Google Drive
           // @ts-ignore - We've already checked that instances exists
           const fileData = await instances.storage.retrieve(resumeId)
 
@@ -104,7 +134,7 @@ const ResumeEditor: React.FC = () => {
               setResumeName('Untitled Resume')
             }
 
-            console.log('Resume loaded successfully')
+            console.log('Resume loaded successfully from Google Drive')
           } else {
             console.error('Retrieved resume data is empty')
           }
@@ -117,7 +147,20 @@ const ResumeEditor: React.FC = () => {
 
       fetchResumeData()
     }
-  }, [location.search, instances, dispatch])
+  }, [resumeId, instances, hasDraft, loadDraftFromStorage, dispatch])
+
+  // Auto-save to localStorage when resume changes
+  useEffect(() => {
+    if (resume && resumeId) {
+      // Skip initial load to prevent saving the just-loaded resume
+      const timeoutId = setTimeout(() => {
+        console.log('Auto-saving draft to localStorage...')
+        saveDraftToStorage()
+      }, 1500) // Debounce to avoid too frequent saving
+
+      return () => clearTimeout(timeoutId)
+    }
+  }, [resume, resumeId, saveDraftToStorage])
 
   const requiredSections = [
     'Professional Summary',
@@ -153,10 +196,22 @@ const ResumeEditor: React.FC = () => {
   const handleSaveDraft = async () => {
     try {
       setIsDraftSaving(true)
+
+      // First save to localStorage
+      saveDraftToStorage()
+
+      // Then save to Google Drive
       const savedResume = await instances?.resumeManager?.saveResume({
         resume: resume,
         type: 'unsigned'
       })
+
+      // If successfully saved to Google Drive, clear localStorage
+      if (savedResume && savedResume.id) {
+        clearDraftFromStorage()
+        console.log('Resume saved to Google Drive, localStorage draft cleared')
+      }
+
       console.log('Saved Resume:', savedResume)
     } catch (error) {
       console.error('Error saving draft:', error)
@@ -178,6 +233,9 @@ const ResumeEditor: React.FC = () => {
     }, 3000)
 
     try {
+      // Clear any drafts when signing the resume
+      clearDraftFromStorage()
+
       // Generate key pair
       const keyPair = await instances.resumeVC.generateKeyPair()
       if (!keyPair) {

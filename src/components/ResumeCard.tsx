@@ -51,6 +51,9 @@ interface ResumeCardProps {
   credentials: number
   isDraft?: boolean
   resume: any
+  // Props for local storage functionality (not visually used yet)
+  hasLocalChanges?: boolean
+  localDraftTime?: string | null
 }
 
 const StyledCard = styled(Card)(() => ({
@@ -132,7 +135,9 @@ const ResumeCard: React.FC<ResumeCardProps> = ({
   date,
   credentials,
   isDraft,
-  resume
+  resume,
+  hasLocalChanges,
+  localDraftTime
 }) => {
   const dispatch: AppDispatch = useDispatch()
   const navigate = useNavigate()
