@@ -5,6 +5,8 @@ import { useSelector, useDispatch } from 'react-redux'
 import { RootState, AppDispatch } from '../redux/store'
 import { useEffect } from 'react'
 import { fetchUserResumes } from '../redux/slices/myresumes'
+import { refreshAccessToken } from '../tools/auth'
+import { getLocalStorage } from '../tools/cookie'
 
 const ResumeScreen: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>()
@@ -14,12 +16,51 @@ const ResumeScreen: React.FC = () => {
   console.log('🚀 ~ unsigned:', unsigned)
 
   useEffect(() => {
-    dispatch(fetchUserResumes())
+    const fetchResumes = async () => {
+      try {
+        await dispatch(fetchUserResumes()).unwrap()
+      } catch (error) {
+        console.error('Error fetching resumes:', error)
+
+        if (
+          error instanceof Error &&
+          /auth|token|credential|OAuth|authentication/i.test(error.message)
+        ) {
+          try {
+            const refreshToken = getLocalStorage('refresh_token')
+            if (refreshToken) {
+              console.log('Refreshing access token...')
+              await refreshAccessToken(refreshToken)
+
+              dispatch(fetchUserResumes())
+            }
+          } catch (refreshError) {
+            console.error('Error refreshing token:', refreshError)
+          }
+        }
+      }
+    }
+
+    fetchResumes()
   }, [dispatch])
+  const handleRetryWithRefresh = async () => {
+    try {
+      const refreshToken = getLocalStorage('refresh_token')
+      if (refreshToken) {
+        await refreshAccessToken(refreshToken)
+      }
+      dispatch(fetchUserResumes())
+    } catch (error) {
+      console.error('Error refreshing token:', error)
+    }
+  }
+
   const renderErrorMessage = () => {
     if (
       error?.includes('invalid authentication credentials') ||
-      error?.includes('OAuth')
+      error?.includes('OAuth') ||
+      error?.includes('Access token not found') ||
+      error?.includes('access token not found')
     ) {
       return (
         <Paper elevation={0} sx={{ p: 4, textAlign: 'center', borderRadius: 2 }}>
@@ -41,13 +82,18 @@ const ResumeScreen: React.FC = () => {
               '&:hover': { bgcolor: '#3f38b5' }
             }}
             component={Link}
-            to='/login'
+            to='/'
           >
             Sign In
           </Button>
         </Paper>
       )
-    } else if (error?.includes('Root folder') || error?.includes('not found')) {
+    } else if (
+      error?.includes('Root folder') ||
+      (error?.includes('not found') &&
+        !error?.includes('token') &&
+        !error?.includes('Access'))
+    ) {
       return (
         <Paper elevation={0} sx={{ p: 4, textAlign: 'center', borderRadius: 2 }}>
           <Typography
@@ -94,7 +140,7 @@ const ResumeScreen: React.FC = () => {
               borderRadius: '40px',
               '&:hover': { bgcolor: '#3f38b5' }
             }}
-            onClick={() => dispatch(fetchUserResumes())}
+            onClick={handleRetryWithRefresh}
           >
             Try Again
           </Button>
