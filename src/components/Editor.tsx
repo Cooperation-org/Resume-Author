@@ -170,6 +170,7 @@ const ResumeEditor: React.FC = () => {
         throw new Error('Failed to save resume')
       }
 
+      await instances.resumeManager.saveResumeDraft(resume, file.id)
       // Store tokens
       await storeFileTokens({
         googleFileId: file.id,
