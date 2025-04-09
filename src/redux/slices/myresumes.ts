@@ -1,7 +1,7 @@
 import { refreshAccessToken } from './../../tools/auth'
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit'
-import { GoogleDriveStorage, Resume as ResumeManager } from '@cooperation/vc-storage'
 import { getLocalStorage } from '../../tools/cookie'
+import StorageService from '../../tools/storage-singlton'
 
 // Define Resume Types
 interface IssuerInfo {
@@ -81,17 +81,21 @@ const initialState: ResumeState = {
 export const fetchUserResumes = createAsyncThunk('resume/fetchUserResumes', async () => {
   try {
     const accessToken = getLocalStorage('auth')
-    const refreshAccessToken = getLocalStorage('refresh_token')
-    if (!accessToken || !refreshAccessToken) {
+    const refreshToken = getLocalStorage('refresh_token')
+
+    if (!accessToken || !refreshToken) {
       throw new Error('Access token not found')
     }
 
-    const storage = new GoogleDriveStorage(accessToken)
-    const resumeManager = new ResumeManager(storage)
+    // Get singleton instance and initialize it
+    const storageService = StorageService.getInstance()
+    storageService.initialize(accessToken)
 
+    // Get the resume manager from the service
+    const resumeManager = storageService.getResumeManager()
+
+    // Fetch resumes
     const resumeVCs = await resumeManager.getSignedResumes()
-    console.log(resumeVCs)
-
     const resumeSessions = await resumeManager.getNonSignedResumes()
 
     return {
