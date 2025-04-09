@@ -80,13 +80,15 @@ interface ResumePreviewTopbarProps {
   isSigningSaving?: boolean
   setIsDraftSaving?: React.Dispatch<React.SetStateAction<boolean>>
   setIsSigningSaving?: React.Dispatch<React.SetStateAction<boolean>>
+  resumeId?: string | null
 }
 
 const ResumePreviewTopbar: React.FC<ResumePreviewTopbarProps> = ({
   isDraftSaving = false,
   isSigningSaving = false,
   setIsDraftSaving,
-  setIsSigningSaving
+  setIsSigningSaving,
+  resumeId
 }) => {
   const navigate = useNavigate()
   const resume = useSelector((state: RootState) => state?.resume.resume)
@@ -98,7 +100,20 @@ const ResumePreviewTopbar: React.FC<ResumePreviewTopbarProps> = ({
   const isSm = useMediaQuery(theme.breakpoints.between('sm', 'md'))
 
   const handleBackToEdit = () => {
-    navigate('/resume/new')
+    // Use the resumeId prop if available, otherwise check URL
+    if (resumeId) {
+      navigate(`/resume/new?id=${resumeId}`)
+    } else {
+      // Fallback to checking URL if prop not provided
+      const queryParams = new URLSearchParams(window.location.search)
+      const urlResumeId = queryParams.get('id')
+
+      if (urlResumeId) {
+        navigate(`/resume/new?id=${urlResumeId}`)
+      } else {
+        navigate('/resume/new')
+      }
+    }
   }
 
   const handleSaveDraft = async () => {

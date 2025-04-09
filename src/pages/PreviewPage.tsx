@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Box, CircularProgress, Typography, IconButton } from '@mui/material'
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf'
 import { useSelector } from 'react-redux'
@@ -6,10 +6,16 @@ import { RootState } from '../redux/store'
 import ResumePreview from '../components/resumePreview'
 import ResumePreviewTopbar from '../components/ResumePreviewTopbar'
 import html2pdf from 'html2pdf.js'
+import { useLocation } from 'react-router-dom'
 
 const PreviewPage = () => {
   const [isDraftSaving, setIsDraftSaving] = useState(false)
   const [isSigningSaving, setIsSigningSaving] = useState(false)
+  const location = useLocation()
+
+  // Get resumeId from URL parameters
+  const queryParams = new URLSearchParams(location.search)
+  const resumeId = queryParams.get('id')
 
   const resumeData = useSelector((state: RootState) => state.resume?.resume)
 
@@ -70,6 +76,7 @@ const PreviewPage = () => {
         isSigningSaving={isSigningSaving}
         setIsDraftSaving={setIsDraftSaving}
         setIsSigningSaving={setIsSigningSaving}
+        resumeId={resumeId}
       />
 
       <Box

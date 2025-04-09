@@ -99,8 +99,12 @@ const Sidebar = ({ onToggle, isExpanded }: SidebarProps) => {
     removeCookie('auth_token')
     removeLocalStorage('user_info')
     removeLocalStorage('auth')
+    removeLocalStorage('refresh_token')
     dispatch(clearAuth())
     setShowNotification(true)
+    setTimeout(() => {
+      window.location.reload()
+    }, 1500)
   }
 
   const Icons = [
