@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { GoogleDriveStorage, Resume, ResumeVC } from '@cooperation/vc-storage'
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { getLocalStorage } from '../tools/cookie'
+import StorageService from '../storage-singlton'
 
 interface ClaimDetail {
   data: {
@@ -24,64 +25,69 @@ interface ClaimDetail {
     }
   }
 }
-
 const useGoogleDrive = () => {
   const accessToken = getLocalStorage('auth')
-  // if (!accessToken) {
-  //   throw new Error('Access token not found')
-  // }
-
-  const [instances, setInstances] = useState<{
-    storage: GoogleDriveStorage | null
-    resumeManager: Resume | null
-    resumeVC: ResumeVC | null
-  } | null>({
-    storage: null,
-    resumeManager: null,
-    resumeVC: null
-  })
+  const [isInitialized, setIsInitialized] = useState(false)
 
   useEffect(() => {
     if (accessToken) {
       try {
-        const storageInstance = new GoogleDriveStorage(accessToken)
-        const resumeManager = new Resume(storageInstance)
-        const resumeVC = new ResumeVC()
-        setInstances({
-          storage: storageInstance,
-          resumeManager,
-          resumeVC
-        })
+        // Initialize the singleton with current token
+        const storageService = StorageService.getInstance()
+        storageService.initialize(accessToken)
+        setIsInitialized(true)
       } catch (error) {
         console.error('Error initializing GoogleDriveStorage:', error)
+        setIsInitialized(false)
       }
     } else {
       console.warn('No access token available.')
+      setIsInitialized(false)
     }
   }, [accessToken])
 
-  const memoizedStorage = instances?.storage
-
   const getContent = useCallback(
     async (fileID: string): Promise<ClaimDetail | null> => {
-      if (!memoizedStorage) {
+      if (!isInitialized) {
         console.warn('Storage instance is not available.')
         return null
       }
+
       try {
-        const file = await memoizedStorage.retrieve(fileID)
+        const storageService = StorageService.getInstance()
+        const storage = storageService.getStorage()
+        const file = await storage.retrieve(fileID)
         return file as unknown as ClaimDetail
       } catch (error) {
         console.error('Error retrieving file:', error)
         return null
       }
     },
-    [memoizedStorage]
+    [isInitialized]
   )
+
+  // Get instances from the singleton
+  const getInstances = useCallback(() => {
+    if (!isInitialized) {
+      return {
+        storage: null,
+        resumeManager: null,
+        resumeVC: null
+      }
+    }
+
+    const storageService = StorageService.getInstance()
+    return {
+      storage: storageService.getStorage(),
+      resumeManager: storageService.getResumeManager(),
+      resumeVC: storageService.getResumeVC()
+    }
+  }, [isInitialized])
 
   return {
     getContent,
-    instances
+    instances: getInstances(),
+    isInitialized
   }
 }
 
