@@ -102,13 +102,13 @@ const ResumeEditor: React.FC = () => {
   const resumeId = queryParams.get('id')
 
   const resume = useSelector((state: RootState) => state?.resume.resume)
-  const { instances } = useGoogleDrive()
+  const { instances, isInitialized } = useGoogleDrive()
   const accessToken = getLocalStorage('auth')
   const refreshToken = getLocalStorage('refresh_token')
 
   // Load resume data from Google Drive
   useEffect(() => {
-    if (resumeId && instances) {
+    if (resumeId && isInitialized) {
       const fetchResumeData = async () => {
         setIsLoading(true)
 
@@ -146,7 +146,7 @@ const ResumeEditor: React.FC = () => {
 
       fetchResumeData()
     }
-  }, [resumeId, instances, dispatch])
+  }, [resumeId, isInitialized, dispatch])
 
   // Check if resume has been modified using the optimized hash comparison
   useEffect(() => {
