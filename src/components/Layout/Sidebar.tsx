@@ -1,6 +1,6 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Box, IconButton, Typography } from '@mui/material'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
 import {
   SVGRightLine,
   SVGCopySidebar,
@@ -30,8 +30,25 @@ const ui = {
 const Sidebar = ({ onToggle, isExpanded }: SidebarProps) => {
   const [selectedItem, setSelectedItem] = useState<string>('')
   const navigate = useNavigate()
+  const location = useLocation()
   const dispatch = useDispatch()
   const [showNotification, setShowNotification] = useState(false)
+
+  // Add useEffect to check the current route path and set the selected item
+  useEffect(() => {
+    const path = location.pathname
+
+    if (path.includes('/myresumes')) {
+      setSelectedItem('copy')
+    } else if (path.includes('/resume/new')) {
+      setSelectedItem('add')
+    } else if (path.includes('/faq')) {
+      setSelectedItem('faq')
+    } else {
+      // Default or home route
+      setSelectedItem('')
+    }
+  }, [location.pathname])
 
   const boxStyles = {
     display: 'flex',
