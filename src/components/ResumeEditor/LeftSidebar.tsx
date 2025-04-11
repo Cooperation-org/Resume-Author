@@ -33,15 +33,12 @@ const LeftSidebar = () => {
     let updatedContact = { ...resume.contact }
 
     if (field === 'location') {
-      const locations = value
-        .split(',')
-        .map(loc => loc.trim())
-        .filter(Boolean)
+      // Store the location value directly without processing
       updatedContact = {
         ...updatedContact,
         location: {
           ...updatedContact.location,
-          city: locations.join(', ') // Store all locations in city field
+          city: value // Store the raw input value
         } as any
       }
     } else {
@@ -185,17 +182,31 @@ const LeftSidebar = () => {
         </Box>
         <Box sx={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 1 }}>
           <FormLabel sx={labelStyles}>Location</FormLabel>
-          <Box sx={{ display: 'flex', gap: '5px', alignItems: 'center' }}>
-            <Box sx={boxStyle}>
+          <Box sx={{ display: 'flex', gap: '5px', alignItems: 'center', width: '100%' }}>
+            <Box sx={{ ...boxStyle, alignSelf: 'flex-start', mt: 1 }}>
               <SVGLocation />
             </Box>
             <TextField
-              placeholder='City, state or province'
+              placeholder='Address, City, State, Country, Postal Code'
               fullWidth
+              multiline
+              minRows={2}
+              maxRows={4}
               value={resume?.contact?.location?.city || ''}
               onChange={e => handleContactChange('location', e.target.value)}
-              size='small'
-              sx={placeholderStyle}
+              sx={{
+                ...placeholderStyle,
+                width: '100%',
+                '& .MuiInputBase-root': {
+                  alignItems: 'flex-start',
+                  padding: '8px 12px'
+                },
+                '& .MuiOutlinedInput-input': {
+                  overflowY: 'auto',
+                  resize: 'none',
+                  minHeight: '60px'
+                }
+              }}
             />
           </Box>
         </Box>
