@@ -44,6 +44,12 @@ interface VolunteerWorkProps {
   onAddCredential?: (text: string) => void
 }
 
+interface SelectedCredential {
+  id: string
+  url: string
+  name: string
+}
+
 interface VolunteerWorkItem {
   role: string
   organization: string
@@ -52,18 +58,11 @@ interface VolunteerWorkItem {
   endDate: string
   currentlyVolunteering: boolean
   description: string
-  showDuration: boolean
   duration: string
   id: string
   verificationStatus: string
   credentialLink: string
   selectedCredentials: SelectedCredential[]
-}
-
-interface SelectedCredential {
-  id: string
-  url: string
-  name: string
 }
 
 export default function VolunteerWork({
@@ -88,7 +87,6 @@ export default function VolunteerWork({
       endDate: '',
       currentlyVolunteering: false,
       description: '',
-      showDuration: false,
       duration: '',
       id: '',
       verificationStatus: 'unverified',
@@ -100,6 +98,8 @@ export default function VolunteerWork({
   const [expandedItems, setExpandedItems] = useState<Record<number, boolean>>({
     0: true
   })
+
+  const [useDuration, setUseDuration] = useState<boolean[]>([false])
 
   const calculateDuration = (
     startDate: string,
@@ -122,12 +122,10 @@ export default function VolunteerWork({
     if (years > 0) {
       durationString += `${years} year${years !== 1 ? 's' : ''}`
     }
-
     if (months > 0 || years === 0) {
       if (durationString) durationString += ' '
       durationString += `${months} month${months !== 1 ? 's' : ''}`
     }
-
     return durationString || 'Less than a month'
   }
 
@@ -140,9 +138,7 @@ export default function VolunteerWork({
         dispatch(
           updateSection({
             sectionId: 'volunteerWork',
-            content: {
-              items: items
-            }
+            content: { items }
           })
         )
       }, 500)
@@ -151,85 +147,74 @@ export default function VolunteerWork({
   )
 
   const dateChangeString = volunteerWorks
-    .map(
-      vol =>
-        `${vol.startDate}-${vol.endDate}-${vol.currentlyVolunteering}-${vol.showDuration}`
-    )
+    .map(vol => `${vol.startDate}-${vol.endDate}-${vol.currentlyVolunteering}`)
     .join('|')
 
   useEffect(() => {
     volunteerWorks.forEach((volunteer, index) => {
-      if (volunteer.showDuration && volunteer.startDate) {
-        const calculatedDuration = calculateDuration(
-          volunteer.startDate,
-          volunteer.endDate,
-          volunteer.currentlyVolunteering
-        )
-
-        if (calculatedDuration && calculatedDuration !== volunteer.duration) {
-          setVolunteerWorks(prev => {
-            const updated = [...prev]
-            updated[index] = {
-              ...updated[index],
-              duration: calculatedDuration
+      if (useDuration[index]) {
+        if (volunteer.startDate) {
+          const calc = calculateDuration(
+            volunteer.startDate,
+            volunteer.endDate,
+            volunteer.currentlyVolunteering
+          )
+          if (calc && calc !== volunteer.duration) {
+            setVolunteerWorks(prev => {
+              const updated = [...prev]
+              updated[index] = { ...updated[index], duration: calc }
+              return updated
+            })
+            if (reduxUpdateTimeoutRef.current) {
+              clearTimeout(reduxUpdateTimeoutRef.current)
             }
-            return updated
-          })
-          if (reduxUpdateTimeoutRef.current) {
-            clearTimeout(reduxUpdateTimeoutRef.current)
+            reduxUpdateTimeoutRef.current = setTimeout(() => {
+              dispatch(
+                updateSection({
+                  sectionId: 'volunteerWork',
+                  content: {
+                    items: volunteerWorks.map((v, i) =>
+                      i === index ? { ...v, duration: calc } : v
+                    )
+                  }
+                })
+              )
+            }, 1000)
           }
-
-          reduxUpdateTimeoutRef.current = setTimeout(() => {
-            dispatch(
-              updateSection({
-                sectionId: 'volunteerWork',
-                content: {
-                  items: volunteerWorks.map((vol, i) =>
-                    i === index ? { ...vol, duration: calculatedDuration } : vol
-                  )
-                }
-              })
-            )
-          }, 1000)
         }
       }
     })
-  }, [dateChangeString, dispatch, volunteerWorks])
+  }, [dateChangeString, dispatch, volunteerWorks, useDuration])
 
   useEffect(() => {
     if (resume?.volunteerWork?.items && resume.volunteerWork.items.length > 0) {
-      const typedItems = resume.volunteerWork.items.map((item: any) => ({
+      const typed = resume.volunteerWork.items.map((item: any) => ({
         role: item.role || '',
         organization: item.organization || '',
         location: item.location || '',
         startDate: item.startDate || '',
         endDate: item.endDate || '',
-        currentlyVolunteering: Boolean(item.currentlyVolunteering),
+        currentlyVolunteering: !!item.currentlyVolunteering,
         description: item.description || '',
-        showDuration:
-          item.showDuration === undefined ? false : Boolean(item.showDuration),
         duration: item.duration || '',
         id: item.id || '',
         verificationStatus: item.verificationStatus || 'unverified',
         credentialLink: item.credentialLink || '',
-        selectedCredentials: item.selectedCredentials || [],
-        ...item
-      }))
+        selectedCredentials: item.selectedCredentials || []
+      })) as VolunteerWorkItem[]
 
-      const shouldUpdate =
-        initialLoadRef.current || typedItems.length !== volunteerWorks.length
-
-      if (shouldUpdate) {
+      const needUpdate = initialLoadRef.current || typed.length !== volunteerWorks.length
+      if (needUpdate) {
         initialLoadRef.current = false
-
-        setVolunteerWorks(typedItems)
-        if (typedItems.length !== Object.keys(expandedItems).length) {
-          const initialExpanded: Record<number, boolean> = {}
-          typedItems.forEach((_, index) => {
-            initialExpanded[index] =
-              index < Object.keys(expandedItems).length ? expandedItems[index] : true
+        setVolunteerWorks(typed)
+        const arr = typed.map(t => !!(!t.startDate && !t.endDate))
+        setUseDuration(arr)
+        if (typed.length !== Object.keys(expandedItems).length) {
+          const initExp: Record<number, boolean> = {}
+          typed.forEach((_, i) => {
+            initExp[i] = i < Object.keys(expandedItems).length ? expandedItems[i] : true
           })
-          setExpandedItems(initialExpanded)
+          setExpandedItems(initExp)
         }
       }
     }
@@ -246,65 +231,52 @@ export default function VolunteerWork({
 
   const handleVolunteerWorkChange = useCallback(
     (index: number, field: string, value: any) => {
-      setVolunteerWorks(prevVolunteerWorks => {
-        const updatedVolunteerWorks = [...prevVolunteerWorks]
-        updatedVolunteerWorks[index] = {
-          ...updatedVolunteerWorks[index],
-          [field]: value
+      setVolunteerWorks(prev => {
+        const updated = [...prev]
+        const item = { ...updated[index], [field]: value }
+        if (!useDuration[index]) {
+          item.duration = ''
+        } else if (field === 'startDate' || field === 'endDate') {
+          item.duration = calculateDuration(
+            item.startDate,
+            item.endDate,
+            item.currentlyVolunteering
+          )
         }
-
-        if (field === 'showDuration' && value === true) {
-          const vol = updatedVolunteerWorks[index]
-          if (vol.startDate) {
-            updatedVolunteerWorks[index].duration = calculateDuration(
-              vol.startDate,
-              vol.endDate,
-              vol.currentlyVolunteering
-            )
-          }
-        }
-
+        updated[index] = item
         if (field !== 'description') {
-          debouncedReduxUpdate(updatedVolunteerWorks)
+          debouncedReduxUpdate(updated)
         }
-
-        return updatedVolunteerWorks
+        return updated
       })
     },
-    [debouncedReduxUpdate]
+    [debouncedReduxUpdate, useDuration]
   )
 
   const handleDescriptionChange = useCallback(
-    (index: number, value: string) => {
-      setVolunteerWorks(prevVolunteerWorks => {
-        const updatedVolunteerWorks = [...prevVolunteerWorks]
-        updatedVolunteerWorks[index] = {
-          ...updatedVolunteerWorks[index],
-          description: value
-        }
+    (index: number, val: string) => {
+      setVolunteerWorks(prev => {
+        const updated = [...prev]
+        updated[index] = { ...updated[index], description: val }
         if (reduxUpdateTimeoutRef.current) {
           clearTimeout(reduxUpdateTimeoutRef.current)
         }
-
         reduxUpdateTimeoutRef.current = setTimeout(() => {
           dispatch(
             updateSection({
               sectionId: 'volunteerWork',
-              content: {
-                items: updatedVolunteerWorks
-              }
+              content: { items: updated }
             })
           )
         }, 1000)
-
-        return updatedVolunteerWorks
+        return updated
       })
     },
     [dispatch]
   )
 
   const handleAddAnotherItem = useCallback(() => {
-    const emptyItem: VolunteerWorkItem = {
+    const newItem: VolunteerWorkItem = {
       role: '',
       organization: '',
       location: '',
@@ -312,28 +284,23 @@ export default function VolunteerWork({
       endDate: '',
       currentlyVolunteering: false,
       description: '',
-      showDuration: false,
       duration: '',
       id: '',
       verificationStatus: 'unverified',
       credentialLink: '',
       selectedCredentials: []
     }
-
-    setVolunteerWorks(prevVolunteerWorks => {
-      const updatedVolunteerWorks = [...prevVolunteerWorks, emptyItem]
-
+    setVolunteerWorks(prev => {
+      const arr = [...prev, newItem]
       dispatch(
         updateSection({
           sectionId: 'volunteerWork',
-          content: {
-            items: updatedVolunteerWorks
-          }
+          content: { items: arr }
         })
       )
-
-      return updatedVolunteerWorks
+      return arr
     })
+    setUseDuration(prev => [...prev, false])
 
     const newIndex = volunteerWorks.length
     setExpandedItems(prev => ({
@@ -348,89 +315,73 @@ export default function VolunteerWork({
         if (onDelete) onDelete()
         return
       }
-
-      setVolunteerWorks(prevVolunteerWorks => {
-        const updatedVolunteerWorks = prevVolunteerWorks.filter((_, i) => i !== index)
+      setVolunteerWorks(prev => {
+        const arr = prev.filter((_, i) => i !== index)
         dispatch(
           updateSection({
             sectionId: 'volunteerWork',
-            content: {
-              items: updatedVolunteerWorks
-            }
+            content: { items: arr }
           })
         )
-
-        return updatedVolunteerWorks
+        return arr
       })
+      setUseDuration(prev => prev.filter((_, i) => i !== index))
 
       setExpandedItems(prev => {
-        const newExpandedState: Record<number, boolean> = {}
+        const newExp: Record<number, boolean> = {}
         volunteerWorks
           .filter((_, i) => i !== index)
           .forEach((_, i) => {
-            if (i === 0 && volunteerWorks.length - 1 === 1) {
-              newExpandedState[i] = true
-            } else if (i < index) {
-              newExpandedState[i] = prev[i] || false
-            } else {
-              newExpandedState[i] = prev[i + 1] || false
-            }
+            newExp[i] = prev[i + (i >= index ? 1 : 0)] || false
           })
-        return newExpandedState
+        return newExp
       })
     },
     [volunteerWorks, dispatch, onDelete]
   )
 
-  const toggleExpanded = useCallback((index: number) => {
+  const toggleExpanded = useCallback((i: number) => {
     setExpandedItems(prev => ({
       ...prev,
-      [index]: !prev[index]
+      [i]: !prev[i]
     }))
   }, [])
 
-  const handleOpenCredentialsOverlay = useCallback((index: number) => {
-    setActiveSectionIndex(index)
+  const handleOpenCredentialsOverlay = useCallback((i: number) => {
+    setActiveSectionIndex(i)
     setShowCredentialsOverlay(true)
   }, [])
 
   const handleCredentialSelect = useCallback(
-    (selectedCredentialIDs: string[]) => {
-      if (activeSectionIndex !== null && selectedCredentialIDs.length > 0) {
-        const selectedCredentials = selectedCredentialIDs.map(id => {
-          const credential = vcs.find((c: any) => (c?.originalItem?.id || c.id) === id)
-
+    (ids: string[]) => {
+      if (activeSectionIndex !== null && ids.length > 0) {
+        const selected = ids.map(id => {
+          const c = vcs.find((r: any) => (r?.originalItem?.id || r.id) === id)
           return {
-            id: id,
+            id,
             url: `https://linkedcreds.allskillscount.org/view/${id}`,
             name:
-              credential?.credentialSubject?.achievement[0]?.name ||
+              c?.credentialSubject?.achievement?.[0]?.name ||
               `Credential ${id.substring(0, 5)}...`
           }
         })
-
-        setVolunteerWorks(prevVolunteerWorks => {
-          const updatedVolunteerWorks = [...prevVolunteerWorks]
-          updatedVolunteerWorks[activeSectionIndex] = {
-            ...updatedVolunteerWorks[activeSectionIndex],
+        setVolunteerWorks(prev => {
+          const updated = [...prev]
+          updated[activeSectionIndex] = {
+            ...updated[activeSectionIndex],
             verificationStatus: 'verified',
-            credentialLink: selectedCredentials[0].url,
-            selectedCredentials: selectedCredentials
+            credentialLink: selected[0].url,
+            selectedCredentials: selected
           }
-
           dispatch(
             updateSection({
               sectionId: 'volunteerWork',
-              content: {
-                items: updatedVolunteerWorks
-              }
+              content: { items: updated }
             })
           )
-
-          return updatedVolunteerWorks
+          return updated
         })
       }
-
       setShowCredentialsOverlay(false)
       setActiveSectionIndex(null)
     },
@@ -438,34 +389,26 @@ export default function VolunteerWork({
   )
 
   const handleRemoveCredential = useCallback(
-    (volunteerIndex: number, credentialIndex: number) => {
-      setVolunteerWorks(prevVolunteerWorks => {
-        const updatedVolunteerWorks = [...prevVolunteerWorks]
-        const volunteer = { ...updatedVolunteerWorks[volunteerIndex] }
-        const updatedCredentials = (volunteer.selectedCredentials || []).filter(
-          (_, i) => i !== credentialIndex
-        )
-
-        volunteer.selectedCredentials = updatedCredentials
-        if (updatedCredentials.length === 0) {
-          volunteer.verificationStatus = 'unverified'
-          volunteer.credentialLink = ''
+    (volIndex: number, credIndex: number) => {
+      setVolunteerWorks(prev => {
+        const updated = [...prev]
+        const vol = { ...updated[volIndex] }
+        const newCreds = vol.selectedCredentials.filter((_, i) => i !== credIndex)
+        vol.selectedCredentials = newCreds
+        if (!newCreds.length) {
+          vol.verificationStatus = 'unverified'
+          vol.credentialLink = ''
         } else {
-          volunteer.credentialLink = updatedCredentials[0]?.url || ''
+          vol.credentialLink = newCreds[0].url
         }
-
-        updatedVolunteerWorks[volunteerIndex] = volunteer
-
+        updated[volIndex] = vol
         dispatch(
           updateSection({
             sectionId: 'volunteerWork',
-            content: {
-              items: updatedVolunteerWorks
-            }
+            content: { items: updated }
           })
         )
-
-        return updatedVolunteerWorks
+        return updated
       })
     },
     [dispatch]
@@ -569,17 +512,39 @@ export default function VolunteerWork({
                 <Typography variant='body1'>Dates</Typography>
                 <Box display='flex' alignItems='center'>
                   <PinkSwitch
-                    checked={volunteer.showDuration}
-                    onChange={e =>
-                      handleVolunteerWorkChange(index, 'showDuration', e.target.checked)
-                    }
+                    checked={useDuration[index]}
+                    onChange={() => {
+                      setUseDuration(prev => {
+                        const arr = [...prev]
+                        arr[index] = !arr[index]
+                        setVolunteerWorks(pV => {
+                          const up = [...pV]
+                          if (!arr[index]) {
+                            up[index] = {
+                              ...up[index],
+                              duration: ''
+                            }
+                          } else {
+                            up[index] = {
+                              ...up[index],
+                              startDate: '',
+                              endDate: '',
+                              currentlyVolunteering: false
+                            }
+                          }
+                          debouncedReduxUpdate(up)
+                          return up
+                        })
+                        return arr
+                      })
+                    }}
                     sx={{ color: '#34C759' }}
                   />
                   <Typography>Show duration instead of exact dates</Typography>
                 </Box>
               </Box>
 
-              {volunteer.showDuration ? (
+              {useDuration[index] ? (
                 <TextField
                   sx={{ bgcolor: '#FFF' }}
                   size='small'
@@ -658,56 +623,55 @@ export default function VolunteerWork({
                 onAddCredential={onAddCredential}
               />
 
-              {volunteer.selectedCredentials &&
-                volunteer.selectedCredentials.length > 0 && (
-                  <Box sx={{ mt: 2 }}>
-                    <Typography variant='body2' sx={{ fontWeight: 'bold', mb: 1 }}>
-                      Verified Credentials:
-                    </Typography>
-                    {volunteer.selectedCredentials.map((credential, credIndex) => (
-                      <Box
-                        key={`credential-${credential.id}-${credIndex}`}
+              {volunteer.selectedCredentials.length > 0 && (
+                <Box sx={{ mt: 2 }}>
+                  <Typography variant='body2' sx={{ fontWeight: 'bold', mb: 1 }}>
+                    Verified Credentials:
+                  </Typography>
+                  {volunteer.selectedCredentials.map((credential, credIndex) => (
+                    <Box
+                      key={`credential-${credential.id}-${credIndex}`}
+                      sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        mb: 0.5,
+                        backgroundColor: '#f5f5f5',
+                        p: 0.5,
+                        borderRadius: 1
+                      }}
+                    >
+                      <Typography
+                        variant='body2'
                         sx={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'space-between',
-                          mb: 0.5,
-                          backgroundColor: '#f5f5f5',
+                          color: 'primary.main',
+                          textDecoration: 'underline',
+                          cursor: 'pointer'
+                        }}
+                        onClick={() => window.open(credential.url, '_blank')}
+                      >
+                        {credential.name || `Credential ${credIndex + 1}`}
+                      </Typography>
+                      <IconButton
+                        size='small'
+                        onClick={e => {
+                          e.stopPropagation()
+                          handleRemoveCredential(index, credIndex)
+                        }}
+                        sx={{
                           p: 0.5,
-                          borderRadius: 1
+                          color: 'grey.500',
+                          '&:hover': {
+                            color: 'error.main'
+                          }
                         }}
                       >
-                        <Typography
-                          variant='body2'
-                          sx={{
-                            color: 'primary.main',
-                            textDecoration: 'underline',
-                            cursor: 'pointer'
-                          }}
-                          onClick={() => window.open(credential.url, '_blank')}
-                        >
-                          {credential.name || `Credential ${credIndex + 1}`}
-                        </Typography>
-                        <IconButton
-                          size='small'
-                          onClick={e => {
-                            e.stopPropagation()
-                            handleRemoveCredential(index, credIndex)
-                          }}
-                          sx={{
-                            p: 0.5,
-                            color: 'grey.500',
-                            '&:hover': {
-                              color: 'error.main'
-                            }
-                          }}
-                        >
-                          <CloseIcon fontSize='small' />
-                        </IconButton>
-                      </Box>
-                    ))}
-                  </Box>
-                )}
+                        <CloseIcon fontSize='small' />
+                      </IconButton>
+                    </Box>
+                  ))}
+                </Box>
+              )}
 
               <Box
                 sx={{
@@ -801,8 +765,7 @@ export default function VolunteerWork({
           }}
           onSelect={handleCredentialSelect}
           initialSelectedCredentials={
-            activeSectionIndex !== null &&
-            volunteerWorks[activeSectionIndex]?.selectedCredentials
+            activeSectionIndex !== null
               ? volunteerWorks[activeSectionIndex].selectedCredentials
               : []
           }

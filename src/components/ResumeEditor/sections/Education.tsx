@@ -40,9 +40,9 @@ const PinkSwitch = styled(Switch)(({ theme }) => ({
 }))
 
 interface EducationProps {
-  onAddFiles?: () => void
-  onDelete?: () => void
-  onAddCredential?: (text: string) => void
+  readonly onAddFiles?: () => void
+  readonly onDelete?: () => void
+  readonly onAddCredential?: (text: string) => void
 }
 
 interface EducationItem {
@@ -50,7 +50,6 @@ interface EducationItem {
   programName: string
   institution: string
   duration: string
-  showDuration: boolean
   currentlyEnrolled: boolean
   inProgress: boolean
   awardEarned: boolean
@@ -75,14 +74,14 @@ export default function Education({
   onAddFiles,
   onDelete,
   onAddCredential
-}: Readonly<EducationProps>) {
+}: EducationProps) {
   const dispatch = useDispatch()
   const resume = useSelector((state: RootState) => state.resume.resume)
+  const vcs = useSelector((state: any) => state.vcReducer.vcs)
   const reduxUpdateTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const initialLoadRef = useRef(true)
   const [showCredentialsOverlay, setShowCredentialsOverlay] = useState(false)
   const [activeSectionIndex, setActiveSectionIndex] = useState<number | null>(null)
-  const vcs = useSelector((state: any) => state.vcReducer.vcs)
 
   const [educations, setEducations] = useState<EducationItem[]>([
     {
@@ -90,7 +89,6 @@ export default function Education({
       programName: '',
       institution: '',
       duration: '1 year',
-      showDuration: false,
       currentlyEnrolled: false,
       inProgress: false,
       awardEarned: false,
@@ -106,10 +104,9 @@ export default function Education({
     }
   ])
 
-  const [expandedItems, setExpandedItems] = useState<Record<number, boolean>>({
-    0: true
-  })
+  const [expandedItems, setExpandedItems] = useState<Record<number, boolean>>({ 0: true })
 
+  const [useDuration, setUseDuration] = useState<boolean[]>([false])
   const debouncedReduxUpdate = useCallback(
     (items: EducationItem[]) => {
       if (reduxUpdateTimeoutRef.current) {
@@ -119,9 +116,7 @@ export default function Education({
         dispatch(
           updateSection({
             sectionId: 'education',
-            content: {
-              items: items
-            }
+            content: { items }
           })
         )
       }, 500)
@@ -129,39 +124,35 @@ export default function Education({
     [dispatch]
   )
 
-  const calculateDuration = (
+  function calculateDuration(
     startDate: string,
     endDate: string | undefined,
     currentlyEnrolled: boolean
-  ): string => {
+  ): string {
     if (!startDate) return '1 year'
 
-    const endDateObj = currentlyEnrolled || !endDate ? new Date() : new Date(endDate)
-    const startDateObj = new Date(startDate)
-
-    if (isNaN(startDateObj.getTime()) || isNaN(endDateObj.getTime())) {
+    const endObj = currentlyEnrolled || !endDate ? new Date() : new Date(endDate)
+    const startObj = new Date(startDate)
+    if (isNaN(startObj.getTime()) || isNaN(endObj.getTime())) {
       return '1 year'
     }
-    let years = endDateObj.getFullYear() - startDateObj.getFullYear()
-    let months = endDateObj.getMonth() - startDateObj.getMonth()
+
+    let years = endObj.getFullYear() - startObj.getFullYear()
+    let months = endObj.getMonth() - startObj.getMonth()
     if (months < 0) {
       years--
       months += 12
     }
-    let durationString = ''
-    if (years > 0) {
-      durationString += `${years} year${years !== 1 ? 's' : ''}`
-    }
 
-    if (months > 0 || years === 0) {
-      if (durationString) durationString += ' '
-      durationString += `${months} month${months !== 1 ? 's' : ''}`
+    let str = ''
+    if (years > 0) str += `${years} year${years !== 1 ? 's' : ''}`
+    if (months > 0 || (years === 0 && months >= 0)) {
+      if (str) str += ' '
+      str += `${months} month${months !== 1 ? 's' : ''}`
     }
-
-    return durationString || 'Less than a month'
+    return str || 'Less than a month'
   }
 
-  // Load existing education from Redux
   useEffect(() => {
     if (resume?.education?.items && resume.education.items.length > 0) {
       const typedItems = resume.education.items.map((item: any) => ({
@@ -169,11 +160,9 @@ export default function Education({
         programName: item.programName || '',
         institution: item.institution || '',
         duration: item.duration || '1 year',
-        showDuration:
-          item.showDuration === undefined ? false : Boolean(item.showDuration),
-        currentlyEnrolled: Boolean(item.currentlyEnrolled),
-        inProgress: Boolean(item.inProgress),
-        awardEarned: Boolean(item.awardEarned),
+        currentlyEnrolled: !!item.currentlyEnrolled,
+        inProgress: !!item.inProgress,
+        awardEarned: !!item.awardEarned,
         description: item.description || '',
         id: item.id || '',
         verificationStatus: item.verificationStatus || 'unverified',
@@ -182,140 +171,80 @@ export default function Education({
         degree: item.degree || '',
         field: item.field || '',
         startDate: item.startDate || '',
-        endDate: item.endDate || '',
-        ...item
-      }))
+        endDate: item.endDate || ''
+      })) as EducationItem[]
 
       const shouldUpdate =
         initialLoadRef.current || typedItems.length !== educations.length
-
       if (shouldUpdate) {
         initialLoadRef.current = false
-
         setEducations(typedItems)
+        const localDurations = typedItems.map(edu => !edu.startDate)
+        setUseDuration(localDurations)
+
         if (typedItems.length !== Object.keys(expandedItems).length) {
           const initialExpanded: Record<number, boolean> = {}
-          typedItems.forEach((_, index) => {
-            initialExpanded[index] =
-              index < Object.keys(expandedItems).length ? expandedItems[index] : true
+          typedItems.forEach((_, idx) => {
+            initialExpanded[idx] =
+              idx < Object.keys(expandedItems).length ? expandedItems[idx] : true
           })
           setExpandedItems(initialExpanded)
         }
       }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [resume])
-
-  const dateChangeString = educations
-    .map(
-      edu =>
-        `${edu.startDate}-${edu.endDate}-${edu.currentlyEnrolled}-${edu.showDuration}`
-    )
-    .join('|')
-
-  useEffect(() => {
-    educations.forEach((education, index) => {
-      if (education.showDuration && education.startDate) {
-        const calculatedDuration = calculateDuration(
-          education.startDate,
-          education.endDate,
-          education.currentlyEnrolled
-        )
-
-        if (calculatedDuration && calculatedDuration !== education.duration) {
-          setEducations(prev => {
-            const updated = [...prev]
-            updated[index] = {
-              ...updated[index],
-              duration: calculatedDuration
-            }
-            return updated
-          })
-
-          if (reduxUpdateTimeoutRef.current) {
-            clearTimeout(reduxUpdateTimeoutRef.current)
-          }
-
-          reduxUpdateTimeoutRef.current = setTimeout(() => {
-            dispatch(
-              updateSection({
-                sectionId: 'education',
-                content: {
-                  items: educations.map((edu, i) =>
-                    i === index ? { ...edu, duration: calculatedDuration } : edu
-                  )
-                }
-              })
-            )
-          }, 1000)
-        }
-      }
-    })
-  }, [dateChangeString, dispatch, educations])
-
-  // Cleanup timeout on unmount
-  useEffect(() => {
     return () => {
       if (reduxUpdateTimeoutRef.current) {
         clearTimeout(reduxUpdateTimeoutRef.current)
       }
     }
-  }, [])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [resume])
 
   const handleEducationChange = useCallback(
-    (index: number, field: string, value: any) => {
-      setEducations(prevEducations => {
-        const updatedEducations = [...prevEducations]
-        updatedEducations[index] = {
-          ...updatedEducations[index],
-          [field]: value
+    (index: number, field: keyof EducationItem, value: any) => {
+      setEducations(prev => {
+        const updated = [...prev]
+        const ed = { ...updated[index], [field]: value }
+
+        if (!useDuration[index]) {
+          ed.duration = ''
+        } else if (
+          field === 'startDate' ||
+          field === 'endDate' ||
+          field === 'currentlyEnrolled'
+        ) {
+          ed.duration = calculateDuration(ed.startDate, ed.endDate, ed.currentlyEnrolled)
         }
 
-        if (field === 'showDuration' && value === true) {
-          const edu = updatedEducations[index]
-          if (edu.startDate) {
-            updatedEducations[index].duration = calculateDuration(
-              edu.startDate,
-              edu.endDate,
-              edu.currentlyEnrolled
-            )
-          }
-        }
-
+        updated[index] = ed
         if (field !== 'description') {
-          debouncedReduxUpdate(updatedEducations)
+          debouncedReduxUpdate(updated)
         }
-
-        return updatedEducations
+        return updated
       })
     },
-    [debouncedReduxUpdate]
+    [debouncedReduxUpdate, useDuration]
   )
 
+  /** For the text editor => separate 1s debounce. **/
   const handleDescriptionChange = useCallback(
     (index: number, value: string) => {
-      setEducations(prevEducations => {
-        const updatedEducations = [...prevEducations]
-        updatedEducations[index] = {
-          ...updatedEducations[index],
-          description: value
-        }
+      setEducations(prev => {
+        const updated = [...prev]
+        updated[index] = { ...updated[index], description: value }
+
         if (reduxUpdateTimeoutRef.current) {
           clearTimeout(reduxUpdateTimeoutRef.current)
         }
-
         reduxUpdateTimeoutRef.current = setTimeout(() => {
           dispatch(
             updateSection({
               sectionId: 'education',
-              content: {
-                items: updatedEducations
-              }
+              content: { items: updated }
             })
           )
         }, 1000)
-
-        return updatedEducations
+        return updated
       })
     },
     [dispatch]
@@ -327,7 +256,6 @@ export default function Education({
       programName: '',
       institution: '',
       duration: '1 year',
-      showDuration: false,
       currentlyEnrolled: false,
       inProgress: false,
       awardEarned: false,
@@ -342,20 +270,18 @@ export default function Education({
       selectedCredentials: []
     }
 
-    setEducations(prevEducations => {
-      const updatedEducations = [...prevEducations, emptyItem]
-
+    setEducations(prev => {
+      const updated = [...prev, emptyItem]
       dispatch(
         updateSection({
           sectionId: 'education',
-          content: {
-            items: updatedEducations
-          }
+          content: { items: updated }
         })
       )
-
-      return updatedEducations
+      return updated
     })
+
+    setUseDuration(prev => [...prev, false])
 
     const newIndex = educations.length
     setExpandedItems(prev => ({
@@ -371,34 +297,27 @@ export default function Education({
         return
       }
 
-      setEducations(prevEducations => {
-        const updatedEducations = prevEducations.filter((_, i) => i !== index)
+      setEducations(prev => {
+        const updated = prev.filter((_, i) => i !== index)
         dispatch(
           updateSection({
             sectionId: 'education',
-            content: {
-              items: updatedEducations
-            }
+            content: { items: updated }
           })
         )
-
-        return updatedEducations
+        return updated
       })
 
+      setUseDuration(prev => prev.filter((_, i) => i !== index))
+
       setExpandedItems(prev => {
-        const newExpandedState: Record<number, boolean> = {}
+        const newExp: Record<number, boolean> = {}
         educations
           .filter((_, i) => i !== index)
           .forEach((_, i) => {
-            if (i === 0 && educations.length - 1 === 1) {
-              newExpandedState[i] = true
-            } else if (i < index) {
-              newExpandedState[i] = prev[i] || false
-            } else {
-              newExpandedState[i] = prev[i + 1] || false
-            }
+            newExp[i] = prev[i + (i >= index ? 1 : 0)] || false
           })
-        return newExpandedState
+        return newExp
       })
     },
     [educations, dispatch, onDelete]
@@ -426,33 +345,28 @@ export default function Education({
             id: id,
             url: `https://linkedcreds.allskillscount.org/view/${id}`,
             name:
-              credential?.credentialSubject?.achievement[0]?.name ||
+              credential?.credentialSubject?.achievement?.[0]?.name ||
               `Credential ${id.substring(0, 5)}...`
           }
         })
 
-        setEducations(prevEducations => {
-          const updatedEducations = [...prevEducations]
-          updatedEducations[activeSectionIndex] = {
-            ...updatedEducations[activeSectionIndex],
+        setEducations(prev => {
+          const updated = [...prev]
+          updated[activeSectionIndex] = {
+            ...updated[activeSectionIndex],
             verificationStatus: 'verified',
             credentialLink: selectedCredentials[0].url,
-            selectedCredentials: selectedCredentials
+            selectedCredentials
           }
-
           dispatch(
             updateSection({
               sectionId: 'education',
-              content: {
-                items: updatedEducations
-              }
+              content: { items: updated }
             })
           )
-
-          return updatedEducations
+          return updated
         })
       }
-
       setShowCredentialsOverlay(false)
       setActiveSectionIndex(null)
     },
@@ -461,32 +375,29 @@ export default function Education({
 
   const handleRemoveCredential = useCallback(
     (educationIndex: number, credentialIndex: number) => {
-      setEducations(prevEducations => {
-        const updatedEducations = [...prevEducations]
-        const education = { ...updatedEducations[educationIndex] }
-        const updatedCredentials = (education.selectedCredentials || []).filter(
+      setEducations(prev => {
+        const updated = [...prev]
+        const education = { ...updated[educationIndex] }
+        const newCreds = education.selectedCredentials.filter(
           (_, i) => i !== credentialIndex
         )
 
-        education.selectedCredentials = updatedCredentials
-        if (updatedCredentials.length === 0) {
+        education.selectedCredentials = newCreds
+        if (!newCreds.length) {
           education.verificationStatus = 'unverified'
           education.credentialLink = ''
         } else {
-          education.credentialLink = updatedCredentials[0]?.url || ''
+          education.credentialLink = newCreds[0].url
         }
 
-        updatedEducations[educationIndex] = education
+        updated[educationIndex] = education
         dispatch(
           updateSection({
             sectionId: 'education',
-            content: {
-              items: updatedEducations
-            }
+            content: { items: updated }
           })
         )
-
-        return updatedEducations
+        return updated
       })
     },
     [dispatch]
@@ -583,17 +494,35 @@ export default function Education({
                 <Typography variant='body1'>Dates</Typography>
                 <Box display='flex' alignItems='center'>
                   <PinkSwitch
-                    checked={education.showDuration}
-                    onChange={e =>
-                      handleEducationChange(index, 'showDuration', e.target.checked)
-                    }
+                    checked={!!useDuration[index]}
+                    onChange={() => {
+                      setUseDuration(prev => {
+                        const newArr = [...prev]
+                        newArr[index] = !newArr[index]
+
+                        setEducations(prevEdu => {
+                          const eduArr = [...prevEdu]
+                          const item = { ...eduArr[index] }
+                          if (newArr[index]) {
+                            item.startDate = ''
+                            item.endDate = ''
+                          } else {
+                            item.duration = ''
+                          }
+                          eduArr[index] = item
+                          debouncedReduxUpdate(eduArr)
+                          return eduArr
+                        })
+                        return newArr
+                      })
+                    }}
                     sx={{ color: '#34C759' }}
                   />
                   <Typography>Show duration instead of exact dates</Typography>
                 </Box>
               </Box>
 
-              {education.showDuration ? (
+              {useDuration[index] ? (
                 <TextField
                   sx={{ bgcolor: '#FFF' }}
                   size='small'
@@ -620,9 +549,7 @@ export default function Education({
                     onChange={e =>
                       handleEducationChange(index, 'startDate', e.target.value)
                     }
-                    InputLabelProps={{
-                      shrink: true
-                    }}
+                    InputLabelProps={{ shrink: true }}
                   />
                   {!education.currentlyEnrolled && (
                     <TextField
@@ -640,9 +567,7 @@ export default function Education({
                       onChange={e =>
                         handleEducationChange(index, 'endDate', e.target.value)
                       }
-                      InputLabelProps={{
-                        shrink: true
-                      }}
+                      InputLabelProps={{ shrink: true }}
                     />
                   )}
                 </Box>
@@ -697,64 +622,62 @@ export default function Education({
                 onChange={val => handleDescriptionChange(index, val)}
                 onAddCredential={onAddCredential}
               />
-              {education.selectedCredentials &&
-                education.selectedCredentials.length > 0 && (
-                  <Box sx={{ mt: 2 }}>
-                    <Typography variant='body2' sx={{ fontWeight: 'bold', mb: 1 }}>
-                      Verified Credentials:
-                    </Typography>
-                    {education.selectedCredentials.map((credential, credIndex) => (
-                      <Box
-                        key={`credential-${credential.id}-${credIndex}`}
+
+              {!!education.selectedCredentials.length && (
+                <Box sx={{ mt: 2 }}>
+                  <Typography variant='body2' sx={{ fontWeight: 'bold', mb: 1 }}>
+                    Verified Credentials:
+                  </Typography>
+                  {education.selectedCredentials.map((credential, credIndex) => (
+                    <Box
+                      key={`credential-${credential.id}-${credIndex}`}
+                      sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        mb: 0.5,
+                        backgroundColor: '#f5f5f5',
+                        p: 0.5,
+                        borderRadius: 1
+                      }}
+                    >
+                      <Typography
+                        variant='body2'
                         sx={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'space-between',
-                          mb: 0.5,
-                          backgroundColor: '#f5f5f5',
+                          color: 'primary.main',
+                          textDecoration: 'underline',
+                          cursor: 'pointer'
+                        }}
+                        onClick={() => window.open(credential.url, '_blank')}
+                      >
+                        {credential.name || `Credential ${credIndex + 1}`}
+                      </Typography>
+                      <IconButton
+                        size='small'
+                        onClick={e => {
+                          e.stopPropagation()
+                          handleRemoveCredential(index, credIndex)
+                        }}
+                        sx={{
                           p: 0.5,
-                          borderRadius: 1
+                          color: 'grey.500',
+                          '&:hover': { color: 'error.main' }
                         }}
                       >
-                        <Typography
-                          variant='body2'
-                          sx={{
-                            color: 'primary.main',
-                            textDecoration: 'underline',
-                            cursor: 'pointer'
-                          }}
-                          onClick={() => window.open(credential.url, '_blank')}
-                        >
-                          {credential.name || `Credential ${credIndex + 1}`}
-                        </Typography>
-                        <IconButton
-                          size='small'
-                          onClick={e => {
-                            e.stopPropagation()
-                            handleRemoveCredential(index, credIndex)
-                          }}
-                          sx={{
-                            p: 0.5,
-                            color: 'grey.500',
-                            '&:hover': {
-                              color: 'error.main'
-                            }
-                          }}
-                        >
-                          <CloseIcon fontSize='small' />
-                        </IconButton>
-                      </Box>
-                    ))}
-                  </Box>
-                )}
+                        <CloseIcon fontSize='small' />
+                      </IconButton>
+                    </Box>
+                  ))}
+                </Box>
+              )}
 
               <Box
                 sx={{
                   display: 'flex',
                   justifyContent: 'space-between',
                   alignItems: 'center',
-                  marginTop: '20px',
-                  gap: '15px'
+                  mt: 2,
+                  gap: 2
                 }}
               >
                 <StyledButton startIcon={<SVGAddFiles />} onClick={onAddFiles}>
@@ -840,8 +763,7 @@ export default function Education({
           }}
           onSelect={handleCredentialSelect}
           initialSelectedCredentials={
-            activeSectionIndex !== null &&
-            educations[activeSectionIndex]?.selectedCredentials
+            activeSectionIndex !== null
               ? educations[activeSectionIndex].selectedCredentials
               : []
           }

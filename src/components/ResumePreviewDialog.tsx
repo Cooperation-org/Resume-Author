@@ -42,7 +42,7 @@ const ResumePreviewDialog: React.FC<ResumePreviewDialogProps> = ({
   const [resumeData, setResumeData] = useState<any | null>(null)
   const [error, setError] = useState<string | null>(null)
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [isLoading, setIsLoading] = useState(true)
+  const [isLoading, setIsLoading] = useState(true) //NOSONAR
 
   const safeGet = useCallback((obj: any, path: string[], defaultValue = ''): string => {
     return path.reduce(
@@ -105,7 +105,7 @@ const ResumePreviewDialog: React.FC<ResumePreviewDialogProps> = ({
 
         const transformedResumeData = {
           id: '',
-          lastUpdated: parsedContent.issuanceDate || new Date().toISOString(),
+          lastUpdated: parsedContent.issuanceDate ?? new Date().toISOString(),
           name: safeGet(resumeContent, ['person', 'name', 'formattedName'], ''),
           version: 1,
           contact: {
@@ -152,7 +152,6 @@ const ResumePreviewDialog: React.FC<ResumePreviewDialogProps> = ({
               startDate: exp.startDate || '',
               endDate: exp.endDate || '',
               description: exp.description || '',
-              achievements: [],
               currentlyEmployed: exp.stillEmployed || false,
               duration: '',
               showDuration: false,

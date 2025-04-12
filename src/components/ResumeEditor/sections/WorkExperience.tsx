@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react'
+import React, { useState, useCallback, useEffect, useRef } from 'react'
 import {
   Box,
   TextField,
@@ -44,30 +44,27 @@ interface WorkExperienceProps {
   onAddCredential?: (text: string) => void
 }
 
-interface WorkExperienceItem {
-  title: string
-  company: string
-  duration: string
-  currentlyEmployed: boolean
-  description: string
-  showDuration: boolean
-  position: string
-  startDate: string
-  endDate: string
-  achievements: string[]
-  id: string
-  verificationStatus: string
-  credentialLink: string
-  selectedCredentials: SelectedCredential[]
-}
-
 interface SelectedCredential {
   id: string
   url: string
   name: string
 }
 
-// eslint-disable-next-line @typescript-eslint/no-redeclare
+interface WorkExperienceItem {
+  title: string
+  company: string
+  duration: string
+  currentlyEmployed: boolean
+  description: string
+  position: string
+  startDate: string
+  endDate: string
+  id: string
+  verificationStatus: string
+  credentialLink: string
+  selectedCredentials: SelectedCredential[]
+}
+
 export default function WorkExperience({
   onAddFiles,
   onDelete,
@@ -75,11 +72,12 @@ export default function WorkExperience({
 }: Readonly<WorkExperienceProps>) {
   const dispatch = useDispatch()
   const resume = useSelector((state: RootState) => state.resume.resume)
+  const vcs = useSelector((state: any) => state.vcReducer.vcs)
   const reduxUpdateTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const initialLoadRef = useRef(true)
+
   const [showCredentialsOverlay, setShowCredentialsOverlay] = useState(false)
   const [activeSectionIndex, setActiveSectionIndex] = useState<number | null>(null)
-  const vcs = useSelector((state: any) => state.vcReducer.vcs)
 
   const [workExperiences, setWorkExperiences] = useState<WorkExperienceItem[]>([
     {
@@ -88,20 +86,22 @@ export default function WorkExperience({
       duration: '',
       currentlyEmployed: false,
       description: '',
-      showDuration: true,
       position: '',
       startDate: '',
       endDate: '',
-      achievements: [],
       id: '',
       verificationStatus: 'unverified',
       credentialLink: '',
       selectedCredentials: []
     }
   ])
+
   const [expandedItems, setExpandedItems] = useState<Record<number, boolean>>({
     0: true
   })
+
+  // Local toggle to show/hide duration vs start/end date
+  const [useDuration, setUseDuration] = useState<boolean[]>([true])
 
   const debouncedReduxUpdate = useCallback(
     (items: WorkExperienceItem[]) => {
@@ -112,9 +112,7 @@ export default function WorkExperience({
         dispatch(
           updateSection({
             sectionId: 'experience',
-            content: {
-              items: items
-            }
+            content: { items }
           })
         )
       }, 500)
@@ -122,119 +120,59 @@ export default function WorkExperience({
     [dispatch]
   )
 
-  // Load existing work experience from Redux
-  useEffect(() => {
-    if (resume?.experience?.items && resume.experience.items.length > 0) {
-      const typedItems = resume.experience.items.map((item: any) => ({
-        title: item.title || '',
-        company: item.company || '',
-        duration: item.duration || '',
-        currentlyEmployed: Boolean(item.currentlyEmployed),
-        description: item.description || '',
-        showDuration: item.showDuration === undefined ? true : Boolean(item.showDuration),
-        position: item.position || '',
-        startDate: item.startDate || '',
-        endDate: item.endDate || '',
-        achievements: item.achievements || [],
-        id: item?.originalItem?.id || '',
-        verificationStatus: item.verificationStatus || 'unverified',
-        credentialLink: item.credentialLink || '',
-        selectedCredentials: item.selectedCredentials || [],
-        ...item
-      }))
-      const shouldUpdate =
-        initialLoadRef.current || typedItems.length !== workExperiences.length
-
-      if (shouldUpdate) {
-        initialLoadRef.current = false
-
-        setWorkExperiences(typedItems)
-        if (typedItems.length !== Object.keys(expandedItems).length) {
-          const initialExpanded: Record<number, boolean> = {}
-          typedItems.forEach((_, index) => {
-            initialExpanded[index] =
-              index < Object.keys(expandedItems).length ? expandedItems[index] : true
-          })
-          setExpandedItems(initialExpanded)
-        }
-      }
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [resume])
-  useEffect(() => {
-    return () => {
-      if (reduxUpdateTimeoutRef.current) {
-        clearTimeout(reduxUpdateTimeoutRef.current)
-      }
-    }
-  }, [])
-
   const calculateDuration = (
     startDate: string,
     endDate: string | undefined,
     currentlyEmployed: boolean
   ): string => {
     if (!startDate) return ''
-    const endDateObj = currentlyEmployed || !endDate ? new Date() : new Date(endDate)
-    const startDateObj = new Date(startDate)
-    if (isNaN(startDateObj.getTime()) || isNaN(endDateObj.getTime())) {
+    const end = currentlyEmployed || !endDate ? new Date() : new Date(endDate)
+    const start = new Date(startDate)
+    if (isNaN(start.getTime()) || isNaN(end.getTime())) {
       return ''
     }
-    let years = endDateObj.getFullYear() - startDateObj.getFullYear()
-    let months = endDateObj.getMonth() - startDateObj.getMonth()
+    let years = end.getFullYear() - start.getFullYear()
+    let months = end.getMonth() - start.getMonth()
     if (months < 0) {
       years--
       months += 12
     }
-    let durationString = ''
+    let result = ''
     if (years > 0) {
-      durationString += `${years} year${years !== 1 ? 's' : ''}`
+      result += `${years} year${years !== 1 ? 's' : ''}`
     }
-
-    if (months > 0 || years === 0) {
-      if (durationString) durationString += ' '
-      durationString += `${months} month${months !== 1 ? 's' : ''}`
+    if (months > 0 || (years === 0 && months >= 0)) {
+      if (result) result += ' '
+      result += `${months} month${months !== 1 ? 's' : ''}`
     }
-
-    return durationString || 'Less than a month'
+    return result || 'Less than a month'
   }
 
   const dateChangeString = workExperiences
     .map(
-      exp =>
-        `${exp.startDate}-${exp.endDate}-${exp.currentlyEmployed}-${exp.showDuration}`
+      (exp, i) =>
+        `${exp.startDate}-${exp.endDate}-${exp.currentlyEmployed}-${useDuration[i]}`
     )
     .join('|')
 
   useEffect(() => {
-    workExperiences.forEach((experience, index) => {
-      if (experience.showDuration && experience.startDate) {
-        const calculatedDuration = calculateDuration(
-          experience.startDate,
-          experience.endDate,
-          experience.currentlyEmployed
-        )
-
-        if (calculatedDuration && calculatedDuration !== experience.duration) {
+    workExperiences.forEach((exp, i) => {
+      if (useDuration[i] && exp.startDate) {
+        const calc = calculateDuration(exp.startDate, exp.endDate, exp.currentlyEmployed)
+        if (calc && calc !== exp.duration) {
           setWorkExperiences(prev => {
             const updated = [...prev]
-            updated[index] = {
-              ...updated[index],
-              duration: calculatedDuration
-            }
+            updated[i] = { ...updated[i], duration: calc }
             return updated
           })
-          if (reduxUpdateTimeoutRef.current) {
-            clearTimeout(reduxUpdateTimeoutRef.current)
-          }
-
+          if (reduxUpdateTimeoutRef.current) clearTimeout(reduxUpdateTimeoutRef.current)
           reduxUpdateTimeoutRef.current = setTimeout(() => {
             dispatch(
               updateSection({
                 sectionId: 'experience',
                 content: {
-                  items: workExperiences.map((exp, i) =>
-                    i === index ? { ...exp, duration: calculatedDuration } : exp
+                  items: workExperiences.map((item, idx) =>
+                    idx === i ? { ...item, duration: calc } : item
                   )
                 }
               })
@@ -243,61 +181,90 @@ export default function WorkExperience({
         }
       }
     })
-  }, [dateChangeString, dispatch, workExperiences])
+  }, [dateChangeString, dispatch, workExperiences, useDuration])
+
+  useEffect(() => {
+    if (resume?.experience?.items && resume.experience.items.length > 0) {
+      const typedItems = resume.experience.items.map((item: any) => ({
+        title: item.title || '',
+        company: item.company || '',
+        duration: item.duration || '',
+        currentlyEmployed: !!item.currentlyEmployed,
+        description: item.description || '',
+        position: item.position || '',
+        startDate: item.startDate || '',
+        endDate: item.endDate || '',
+        id: item.id || '',
+        verificationStatus: item.verificationStatus || 'unverified',
+        credentialLink: item.credentialLink || '',
+        selectedCredentials: item.selectedCredentials || [],
+        ...item
+      })) as WorkExperienceItem[]
+
+      const needUpdate =
+        initialLoadRef.current || typedItems.length !== workExperiences.length
+      if (needUpdate) {
+        initialLoadRef.current = false
+        setWorkExperiences(typedItems)
+        const toggles = typedItems.map(t => !!(!t.startDate && !t.endDate))
+        setUseDuration(toggles)
+        if (typedItems.length !== Object.keys(expandedItems).length) {
+          const initExp: Record<number, boolean> = {}
+          typedItems.forEach((_, idx) => {
+            initExp[idx] =
+              idx < Object.keys(expandedItems).length ? expandedItems[idx] : true
+          })
+          setExpandedItems(initExp)
+        }
+      }
+    }
+    return () => {
+      if (reduxUpdateTimeoutRef.current) {
+        clearTimeout(reduxUpdateTimeoutRef.current)
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [resume])
 
   const handleWorkExperienceChange = useCallback(
-    (index: number, field: string, value: any) => {
-      setWorkExperiences(prevExperiences => {
-        const updatedExperiences = [...prevExperiences]
-        updatedExperiences[index] = {
-          ...updatedExperiences[index],
-          [field]: value
+    (index: number, field: string, val: any) => {
+      setWorkExperiences(prev => {
+        const updated = [...prev]
+        const item = { ...updated[index], [field]: val }
+        if (!useDuration[index]) {
+          item.duration = ''
+        } else if (field === 'startDate' || field === 'endDate') {
+          item.duration = calculateDuration(
+            item.startDate,
+            item.endDate,
+            item.currentlyEmployed
+          )
         }
-        if (field === 'showDuration' && value === true) {
-          const exp = updatedExperiences[index]
-          if (exp.startDate) {
-            updatedExperiences[index].duration = calculateDuration(
-              exp.startDate,
-              exp.endDate,
-              exp.currentlyEmployed
-            )
-          }
-        }
-
+        updated[index] = item
         if (field !== 'description') {
-          debouncedReduxUpdate(updatedExperiences)
+          debouncedReduxUpdate(updated)
         }
-
-        return updatedExperiences
+        return updated
       })
     },
-    [debouncedReduxUpdate]
+    [debouncedReduxUpdate, useDuration]
   )
 
   const handleDescriptionChange = useCallback(
     (index: number, value: string) => {
-      setWorkExperiences(prevExperiences => {
-        const updatedExperiences = [...prevExperiences]
-        updatedExperiences[index] = {
-          ...updatedExperiences[index],
-          description: value
-        }
-        if (reduxUpdateTimeoutRef.current) {
-          clearTimeout(reduxUpdateTimeoutRef.current)
-        }
-
+      setWorkExperiences(prev => {
+        const updated = [...prev]
+        updated[index] = { ...updated[index], description: value }
+        if (reduxUpdateTimeoutRef.current) clearTimeout(reduxUpdateTimeoutRef.current)
         reduxUpdateTimeoutRef.current = setTimeout(() => {
           dispatch(
             updateSection({
               sectionId: 'experience',
-              content: {
-                items: updatedExperiences
-              }
+              content: { items: updated }
             })
           )
         }, 1000)
-
-        return updatedExperiences
+        return updated
       })
     },
     [dispatch]
@@ -310,31 +277,25 @@ export default function WorkExperience({
       duration: '',
       currentlyEmployed: false,
       description: '',
-      showDuration: true,
       position: '',
       startDate: '',
       endDate: '',
-      achievements: [],
       id: '',
       verificationStatus: 'unverified',
       credentialLink: '',
       selectedCredentials: []
     }
-
-    setWorkExperiences(prevExperiences => {
-      const updatedExperiences = [...prevExperiences, emptyItem]
-
+    setWorkExperiences(prev => {
+      const arr = [...prev, emptyItem]
       dispatch(
         updateSection({
           sectionId: 'experience',
-          content: {
-            items: updatedExperiences
-          }
+          content: { items: arr }
         })
       )
-
-      return updatedExperiences
+      return arr
     })
+    setUseDuration(prev => [...prev, true])
 
     const newIndex = workExperiences.length
     setExpandedItems(prev => ({
@@ -349,88 +310,73 @@ export default function WorkExperience({
         if (onDelete) onDelete()
         return
       }
-
-      setWorkExperiences(prevExperiences => {
-        const updatedExperiences = prevExperiences.filter((_, i) => i !== index)
+      setWorkExperiences(prev => {
+        const updated = prev.filter((_, i) => i !== index)
         dispatch(
           updateSection({
             sectionId: 'experience',
-            content: {
-              items: updatedExperiences
-            }
+            content: { items: updated }
           })
         )
-
-        return updatedExperiences
+        return updated
       })
+      setUseDuration(prev => prev.filter((_, i) => i !== index))
+
       setExpandedItems(prev => {
-        const newExpandedState: Record<number, boolean> = {}
+        const newExpanded: Record<number, boolean> = {}
         workExperiences
-          .filter((_, i: number) => i !== index)
-          .forEach((_, i: number) => {
-            if (i === 0 && workExperiences.length - 1 === 1) {
-              newExpandedState[i] = true
-            } else if (i < index) {
-              newExpandedState[i] = prev[i] || false
-            } else {
-              newExpandedState[i] = prev[i + 1] || false
-            }
+          .filter((_, i) => i !== index)
+          .forEach((_, i) => {
+            newExpanded[i] = prev[i + (i >= index ? 1 : 0)] || false
           })
-        return newExpandedState
+        return newExpanded
       })
     },
     [workExperiences, dispatch, onDelete]
   )
 
-  const toggleExpanded = useCallback((index: number) => {
+  const toggleExpanded = useCallback((i: number) => {
     setExpandedItems(prev => ({
       ...prev,
-      [index]: !prev[index]
+      [i]: !prev[i]
     }))
   }, [])
 
-  const handleOpenCredentialsOverlay = useCallback((index: number) => {
-    setActiveSectionIndex(index)
+  const handleOpenCredentialsOverlay = useCallback((i: number) => {
+    setActiveSectionIndex(i)
     setShowCredentialsOverlay(true)
   }, [])
 
   const handleCredentialSelect = useCallback(
-    (selectedCredentialIDs: string[]) => {
-      if (activeSectionIndex !== null && selectedCredentialIDs.length > 0) {
-        const selectedCredentials = selectedCredentialIDs.map(id => {
-          const credential = vcs.find((c: any) => (c?.originalItem?.id || c.id) === id)
-
+    (selectedIDs: string[]) => {
+      if (activeSectionIndex !== null && selectedIDs.length > 0) {
+        const selected = selectedIDs.map(id => {
+          const c = vcs.find((r: any) => (r?.originalItem?.id || r.id) === id)
           return {
-            id: id,
+            id,
             url: `https://linkedcreds.allskillscount.org/view/${id}`,
             name:
-              credential?.credentialSubject?.achievement[0]?.name ||
+              c?.credentialSubject?.achievement?.[0]?.name ||
               `Credential ${id.substring(0, 5)}...`
           }
         })
-
-        setWorkExperiences(prevExperiences => {
-          const updatedExperiences = [...prevExperiences]
-          updatedExperiences[activeSectionIndex] = {
-            ...updatedExperiences[activeSectionIndex],
+        setWorkExperiences(prev => {
+          const updated = [...prev]
+          updated[activeSectionIndex] = {
+            ...updated[activeSectionIndex],
             verificationStatus: 'verified',
-            credentialLink: selectedCredentials[0].url,
-            selectedCredentials: selectedCredentials
+            credentialLink: selected[0].url,
+            selectedCredentials: selected
           }
-
           dispatch(
             updateSection({
               sectionId: 'experience',
-              content: {
-                items: updatedExperiences
-              }
+              content: { items: updated }
             })
           )
-
-          return updatedExperiences
+          return updated
         })
       }
-
       setShowCredentialsOverlay(false)
       setActiveSectionIndex(null)
     },
@@ -438,34 +384,27 @@ export default function WorkExperience({
   )
 
   const handleRemoveCredential = useCallback(
-    (experienceIndex: number, credentialIndex: number) => {
-      setWorkExperiences(prevExperiences => {
-        const updatedExperiences = [...prevExperiences]
-        const experience = { ...updatedExperiences[experienceIndex] }
-        const updatedCredentials = (experience.selectedCredentials || []).filter(
-          (_, i) => i !== credentialIndex
-        )
+    (expIndex: number, credIndex: number) => {
+      setWorkExperiences(prev => {
+        const updated = [...prev]
+        const exp = { ...updated[expIndex] }
+        const newCreds = exp.selectedCredentials.filter((_, i) => i !== credIndex)
 
-        experience.selectedCredentials = updatedCredentials
-        if (updatedCredentials.length === 0) {
-          experience.verificationStatus = 'unverified'
-          experience.credentialLink = ''
+        exp.selectedCredentials = newCreds
+        if (!newCreds.length) {
+          exp.verificationStatus = 'unverified'
+          exp.credentialLink = ''
         } else {
-          experience.credentialLink = updatedCredentials[0]?.url || ''
+          exp.credentialLink = newCreds[0].url
         }
-
-        updatedExperiences[experienceIndex] = experience
-
+        updated[expIndex] = exp
         dispatch(
           updateSection({
             sectionId: 'experience',
-            content: {
-              items: updatedExperiences
-            }
+            content: { items: updated }
           })
         )
-
-        return updatedExperiences
+        return updated
       })
     },
     [dispatch]
@@ -550,17 +489,36 @@ export default function WorkExperience({
                 <Typography variant='body1'>Dates</Typography>
                 <Box display='flex' alignItems='center'>
                   <PinkSwitch
-                    checked={experience.showDuration}
-                    onChange={e =>
-                      handleWorkExperienceChange(index, 'showDuration', e.target.checked)
-                    }
+                    checked={useDuration[index]}
+                    onChange={() => {
+                      setUseDuration(prev => {
+                        const arr = [...prev]
+                        arr[index] = !arr[index]
+                        setWorkExperiences(p => {
+                          const up = [...p]
+                          if (!arr[index]) {
+                            up[index] = { ...up[index], duration: '' }
+                          } else {
+                            up[index] = {
+                              ...up[index],
+                              startDate: '',
+                              endDate: '',
+                              currentlyEmployed: false
+                            }
+                          }
+                          debouncedReduxUpdate(up)
+                          return up
+                        })
+                        return arr
+                      })
+                    }}
                     sx={{ color: '#34C759' }}
                   />
                   <Typography>Show duration instead of exact dates</Typography>
                 </Box>
               </Box>
 
-              {experience.showDuration ? (
+              {useDuration[index] ? (
                 <TextField
                   sx={{ bgcolor: '#FFF' }}
                   size='small'
@@ -653,56 +611,56 @@ export default function WorkExperience({
                 onChange={val => handleDescriptionChange(index, val)}
                 onAddCredential={onAddCredential}
               />
-              {experience.selectedCredentials &&
-                experience.selectedCredentials.length > 0 && (
-                  <Box sx={{ mt: 2 }}>
-                    <Typography variant='body2' sx={{ fontWeight: 'bold', mb: 1 }}>
-                      Verified Credentials:
-                    </Typography>
-                    {experience.selectedCredentials.map((credential, credIndex) => (
-                      <Box
-                        key={`credential-${credential.id}-${credIndex}`}
+
+              {experience.selectedCredentials.length > 0 && (
+                <Box sx={{ mt: 2 }}>
+                  <Typography variant='body2' sx={{ fontWeight: 'bold', mb: 1 }}>
+                    Verified Credentials:
+                  </Typography>
+                  {experience.selectedCredentials.map((credential, credIndex) => (
+                    <Box
+                      key={`credential-${credential.id}-${credIndex}`}
+                      sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        mb: 0.5,
+                        backgroundColor: '#f5f5f5',
+                        p: 0.5,
+                        borderRadius: 1
+                      }}
+                    >
+                      <Typography
+                        variant='body2'
                         sx={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'space-between',
-                          mb: 0.5,
-                          backgroundColor: '#f5f5f5',
+                          color: 'primary.main',
+                          textDecoration: 'underline',
+                          cursor: 'pointer'
+                        }}
+                        onClick={() => window.open(credential.url, '_blank')}
+                      >
+                        {credential.name || `Credential ${credIndex + 1}`}
+                      </Typography>
+                      <IconButton
+                        size='small'
+                        onClick={e => {
+                          e.stopPropagation()
+                          handleRemoveCredential(index, credIndex)
+                        }}
+                        sx={{
                           p: 0.5,
-                          borderRadius: 1
+                          color: 'grey.500',
+                          '&:hover': {
+                            color: 'error.main'
+                          }
                         }}
                       >
-                        <Typography
-                          variant='body2'
-                          sx={{
-                            color: 'primary.main',
-                            textDecoration: 'underline',
-                            cursor: 'pointer'
-                          }}
-                          onClick={() => window.open(credential.url, '_blank')}
-                        >
-                          {credential.name || `Credential ${credIndex + 1}`}
-                        </Typography>
-                        <IconButton
-                          size='small'
-                          onClick={e => {
-                            e.stopPropagation()
-                            handleRemoveCredential(index, credIndex)
-                          }}
-                          sx={{
-                            p: 0.5,
-                            color: 'grey.500',
-                            '&:hover': {
-                              color: 'error.main'
-                            }
-                          }}
-                        >
-                          <CloseIcon fontSize='small' />
-                        </IconButton>
-                      </Box>
-                    ))}
-                  </Box>
-                )}
+                        <CloseIcon fontSize='small' />
+                      </IconButton>
+                    </Box>
+                  ))}
+                </Box>
+              )}
 
               <Box
                 sx={{
@@ -796,8 +754,7 @@ export default function WorkExperience({
           }}
           onSelect={handleCredentialSelect}
           initialSelectedCredentials={
-            activeSectionIndex !== null &&
-            workExperiences[activeSectionIndex]?.selectedCredentials
+            activeSectionIndex !== null
               ? workExperiences[activeSectionIndex].selectedCredentials
               : []
           }
