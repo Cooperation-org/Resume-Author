@@ -10,91 +10,131 @@ export const prepareResumeForVC = (resume: Resume | null): any => {
 
   const preparedResume = JSON.parse(JSON.stringify(resume))
 
-  if (preparedResume.languages && preparedResume.languages.items) {
+  if (preparedResume.languages?.items) {
     preparedResume.languages.items = preparedResume.languages.items.map((lang: any) => ({
-      language: lang.name || '',
-      proficiency: lang.proficiency || '',
-
+      language: lang.name ?? '',
+      proficiency: lang.proficiency ?? '',
       ...lang
     }))
   }
 
-  if (preparedResume.skills && preparedResume.skills.items) {
+  if (preparedResume.skills?.items) {
     preparedResume.skills.items = preparedResume.skills.items.map((skill: any) => {
       let skillName = skill.skills
       try {
-        if (skillName && skillName.includes('<')) {
+        if (skillName?.includes('<')) {
           const tempDiv = document.createElement('div')
           tempDiv.innerHTML = skillName
-          skillName = tempDiv.textContent || tempDiv.innerText || ''
+          skillName = tempDiv.textContent ?? tempDiv.innerText ?? ''
         }
       } catch (e) {
         console.warn('Error parsing skill HTML:', e)
       }
 
       return {
-        name: skillName || '',
-
+        name: skillName ?? '',
         originalSkills: skill.skills,
-
         ...skill
       }
     })
   }
 
-  if (preparedResume.experience && preparedResume.experience.items) {
+  if (preparedResume.experience?.items) {
     preparedResume.experience.items = preparedResume.experience.items.map((exp: any) => ({
       ...exp,
-      stillEmployed: exp.currentlyEmployed || false,
-
-      title: exp.title || exp.position || ''
+      stillEmployed: exp.currentlyEmployed ?? false,
+      title: exp.title ?? exp.position ?? '',
+      company: exp.company ?? ''
     }))
   }
 
-  if (preparedResume.education && preparedResume.education.items) {
+  if (preparedResume.education?.items) {
     preparedResume.education.items = preparedResume.education.items.map((edu: any) => ({
       ...edu,
-      degree: edu.degree || edu.type || '',
-      fieldOfStudy: edu.field || edu.fieldOfStudy || ''
+      degree: edu.degree ?? edu.type ?? '',
+      fieldOfStudy: edu.field ?? edu.fieldOfStudy ?? ''
     }))
   }
 
-  if (preparedResume.certifications && preparedResume.certifications.items) {
+  if (preparedResume.certifications?.items) {
     preparedResume.certifications.items = preparedResume.certifications.items.map(
       (cert: any) => ({
         ...cert,
-        date: cert.issueDate || cert.date || '',
-        url: cert.credentialLink || cert.url || ''
+        date: cert.issueDate ?? cert.date ?? '',
+        url: cert.credentialLink ?? cert.url ?? ''
+      })
+    )
+  }
+
+  if (preparedResume.professionalAffiliations?.items) {
+    preparedResume.professionalAffiliations.items =
+      preparedResume.professionalAffiliations.items.map((aff: any) => ({
+        ...aff,
+        role: aff.role ?? aff.name ?? ''
+      }))
+  }
+
+  if (preparedResume.projects?.items) {
+    preparedResume.projects.items = preparedResume.projects.items.map((proj: any) => ({
+      ...proj,
+      startDate: proj.startDate ?? '',
+      endDate: proj.endDate ?? ''
+    }))
+  }
+
+  if (preparedResume.awards?.items) {
+    preparedResume.awards.items = preparedResume.awards.items.map((award: any) => ({
+      title: award.title ?? '',
+      issuer: award.issuer ?? '',
+      date: award.date ?? award.issueDate ?? '',
+      description: award.description ?? '',
+      ...award
+    }))
+  }
+
+  if (preparedResume.publications?.items) {
+    preparedResume.publications.items = preparedResume.publications.items.map(
+      (pub: any) => ({
+        title: pub.title ?? '',
+        publisher: pub.publisher ?? '',
+        date: pub.date ?? pub.publishedDate ?? '',
+        url: pub.url ?? '',
+        ...pub
+      })
+    )
+  }
+
+  if (preparedResume.volunteerWork?.items) {
+    preparedResume.volunteerWork.items = preparedResume.volunteerWork.items.map(
+      (vol: any) => ({
+        ...vol,
+        role: vol.role ?? ''
       })
     )
   }
 
   if (
-    preparedResume.professionalAffiliations &&
-    preparedResume.professionalAffiliations.items
+    preparedResume.hobbiesAndInterests &&
+    !Array.isArray(preparedResume.hobbiesAndInterests)
   ) {
-    preparedResume.professionalAffiliations.items =
-      preparedResume.professionalAffiliations.items.map((aff: any) => ({
-        ...aff,
-        role: aff.role || aff.name || ''
-      }))
+    preparedResume.hobbiesAndInterests = []
   }
 
-  if (preparedResume.projects && preparedResume.projects.items) {
-    preparedResume.projects.items = preparedResume.projects.items.map((proj: any) => ({
-      ...proj,
-
-      startDate: proj.startDate || '',
-      endDate: proj.endDate || ''
-    }))
+  if (preparedResume.testimonials?.items) {
+    preparedResume.testimonials.items = preparedResume.testimonials.items.map(
+      (test: any) => ({
+        ...test,
+        author: test.author ?? '',
+        text: test.text ?? ''
+      })
+    )
   }
 
-  if (preparedResume.contact && preparedResume.contact.socialLinks) {
-    if (
-      !preparedResume.contact.socialLinks.twitter &&
-      preparedResume.contact.socialLinks.instagram
-    ) {
-      preparedResume.contact.socialLinks.twitter = ''
+  if (preparedResume.contact?.socialLinks) {
+    const links = preparedResume.contact.socialLinks
+
+    if (!links.twitter && links.instagram) {
+      links.twitter = links.instagram
     }
   }
 
@@ -105,52 +145,50 @@ export const prepareResumeForVC = (resume: Resume | null): any => {
  * Transform the VC format back to the Resume format for UI display
  */
 export const transformVCToResume = (vc: any): Resume => {
-  if (!vc || !vc.credentialSubject) {
+  if (!vc?.credentialSubject) {
     throw new Error('Invalid VC format')
   }
 
   const subject = vc.credentialSubject
-  const person = subject.person || {}
-  const contact = person.contact || {}
+  const person = subject.person ?? {}
+  const contact = person.contact ?? {}
 
   const resume: Partial<Resume> = {
-    id: vc.id || '',
-    lastUpdated: vc.issuanceDate || new Date().toISOString(),
-    name: person.name?.formattedName || 'Untitled Resume',
+    id: vc.id ?? '',
+    lastUpdated: vc.issuanceDate ?? new Date().toISOString(),
+    name: person.name?.formattedName ?? 'Untitled Resume',
     version: 1,
 
     contact: {
-      fullName: contact.fullName || '',
-      email: contact.email || '',
-      phone: contact.phone || '',
+      fullName: contact.fullName ?? '',
+      email: contact.email ?? '',
+      phone: contact.phone ?? '',
       location: {
-        street: contact.location?.street || '',
-        city: contact.location?.city || '',
-        state: contact.location?.state || '',
-        country: contact.location?.country || '',
-        postalCode: contact.location?.postalCode || ''
+        street: contact.location?.street ?? '',
+        city: contact.location?.city ?? '',
+        state: contact.location?.state ?? '',
+        country: contact.location?.country ?? '',
+        postalCode: contact.location?.postalCode ?? ''
       },
       socialLinks: {
-        linkedin: contact.socialLinks?.linkedin || '',
-        github: contact.socialLinks?.github || '',
-        portfolio: contact.socialLinks?.portfolio || '',
-        instagram: contact.socialLinks?.twitter || ''
+        linkedin: contact.socialLinks?.linkedin ?? '',
+        github: contact.socialLinks?.github ?? '',
+        portfolio: contact.socialLinks?.portfolio ?? '',
+        instagram: contact.socialLinks?.instagram ?? ''
       }
     },
 
-    summary: subject.narrative?.text || '',
+    summary: subject.narrative?.text ?? '',
 
     experience: {
-      items: (subject.experience || []).map((exp: any) => ({
-        title: exp.title || '',
-        company: exp.company || '',
-        duration: '',
-        currentlyEmployed: exp.stillEmployed || false,
-        description: exp.description || '',
-        showDuration: true,
-        position: exp.title || '',
-        startDate: exp.startDate || '',
-        achievements: [],
+      items: (subject.experience ?? []).map((exp: any) => ({
+        title: exp.title ?? '',
+        company: exp.company ?? '',
+        duration: exp.duration ?? '',
+        currentlyEmployed: exp.stillEmployed ?? false,
+        description: exp.description ?? '',
+        position: exp.title ?? '',
+        startDate: exp.startDate ?? '',
         id: '',
         verificationStatus: 'unverified',
         credentialLink: ''
@@ -158,12 +196,11 @@ export const transformVCToResume = (vc: any): Resume => {
     },
 
     education: {
-      items: (subject.educationAndLearning || []).map((edu: any) => ({
-        type: edu.degree || '',
-        programName: edu.fieldOfStudy || '',
-        institution: edu.institution || '',
+      items: (subject.educationAndLearning ?? []).map((edu: any) => ({
+        type: edu.degree ?? '',
+        programName: edu.fieldOfStudy ?? '',
+        institution: edu.institution ?? '',
         duration: '',
-        showDuration: false,
         currentlyEnrolled: false,
         inProgress: false,
         awardEarned: true,
@@ -172,15 +209,16 @@ export const transformVCToResume = (vc: any): Resume => {
         verificationStatus: 'unverified',
         credentialLink: '',
         selectedCredentials: [],
-        degree: edu.degree || '',
-        field: edu.fieldOfStudy || '',
-        startDate: edu.startDate || ''
+        degree: edu.degree ?? '',
+        field: edu.fieldOfStudy ?? '',
+        startDate: edu.startDate ?? '',
+        endDate: edu.endDate ?? ''
       }))
     },
 
     skills: {
-      items: (subject.skills || []).map((skill: any) => ({
-        skills: skill.originalSkills || `<p>${skill.name || ''}</p>`,
+      items: (subject.skills ?? []).map((skill: any) => ({
+        skills: skill.originalSkills ?? `<p>${skill.name ?? ''}</p>`,
         id: '',
         verificationStatus: 'unverified',
         credentialLink: ''
@@ -188,11 +226,11 @@ export const transformVCToResume = (vc: any): Resume => {
     },
 
     awards: {
-      items: (subject.awards || []).map((award: any) => ({
-        title: award.title || '',
-        issuer: award.issuer || '',
-        date: award.date || '',
-        description: award.description || '',
+      items: (subject.awards ?? []).map((award: any) => ({
+        title: award.title ?? '',
+        issuer: award.issuer ?? '',
+        date: award.date ?? '',
+        description: award.description ?? '',
         id: '',
         verificationStatus: 'unverified',
         credentialLink: ''
@@ -200,11 +238,11 @@ export const transformVCToResume = (vc: any): Resume => {
     },
 
     publications: {
-      items: (subject.publications || []).map((pub: any) => ({
-        title: pub.title || '',
-        publisher: pub.publisher || '',
-        publishedDate: pub.date || '',
-        url: pub.url || '',
+      items: (subject.publications ?? []).map((pub: any) => ({
+        title: pub.title ?? '',
+        publisher: pub.publisher ?? '',
+        publishedDate: pub.date ?? '',
+        url: pub.url ?? '',
         id: '',
         verificationStatus: 'unverified',
         credentialLink: '',
@@ -213,26 +251,25 @@ export const transformVCToResume = (vc: any): Resume => {
     },
 
     certifications: {
-      items: (subject.certifications || []).map((cert: any) => ({
-        name: cert.name || '',
-        issuer: cert.issuer || '',
-        issueDate: cert.date || '',
+      items: (subject.certifications ?? []).map((cert: any) => ({
+        name: cert.name ?? '',
+        issuer: cert.issuer ?? '',
+        issueDate: cert.date ?? '',
         expiryDate: '',
         credentialId: '',
         noExpiration: false,
         id: '',
         verificationStatus: 'unverified',
-        credentialLink: cert.url || ''
+        credentialLink: cert.url ?? ''
       }))
     },
 
     professionalAffiliations: {
-      items: (subject.professionalAffiliations || []).map((aff: any) => ({
-        name: aff.role || '',
-        organization: aff.organization || '',
-        startDate: aff.startDate || '',
-        endDate: aff.endDate || '',
-        showDuration: false,
+      items: (subject.professionalAffiliations ?? []).map((aff: any) => ({
+        name: aff.role ?? '',
+        organization: aff.organization ?? '',
+        startDate: aff.startDate ?? '',
+        endDate: aff.endDate ?? '',
         activeAffiliation: false,
         id: '',
         verificationStatus: 'unverified',
@@ -241,15 +278,14 @@ export const transformVCToResume = (vc: any): Resume => {
     },
 
     volunteerWork: {
-      items: (subject.volunteerWork || []).map((vol: any) => ({
-        role: vol.role || '',
-        organization: vol.organization || '',
+      items: (subject.volunteerWork ?? []).map((vol: any) => ({
+        role: vol.role ?? '',
+        organization: vol.organization ?? '',
         location: '',
-        startDate: vol.startDate || '',
-        endDate: vol.endDate || '',
+        startDate: vol.startDate ?? '',
+        endDate: vol.endDate ?? '',
         currentlyVolunteering: false,
-        description: vol.description || '',
-        showDuration: false,
+        description: vol.description ?? '',
         duration: '',
         id: '',
         verificationStatus: 'unverified',
@@ -257,19 +293,19 @@ export const transformVCToResume = (vc: any): Resume => {
       }))
     },
 
-    hobbiesAndInterests: subject.hobbiesAndInterests || [],
+    hobbiesAndInterests: subject.hobbiesAndInterests ?? [],
 
     languages: {
-      items: (subject.languages || []).map((lang: any) => ({
-        name: lang.language || '',
-        proficiency: lang.proficiency || ''
+      items: (subject.languages ?? []).map((lang: any) => ({
+        name: lang.language ?? '',
+        proficiency: lang.proficiency ?? ''
       }))
     },
 
     testimonials: {
-      items: (subject.testimonials || []).map((test: any) => ({
-        author: test.author || '',
-        text: test.text || '',
+      items: (subject.testimonials ?? []).map((test: any) => ({
+        author: test.author ?? '',
+        text: test.text ?? '',
         id: '',
         verificationStatus: 'unverified',
         credentialLink: ''
@@ -277,10 +313,10 @@ export const transformVCToResume = (vc: any): Resume => {
     },
 
     projects: {
-      items: (subject.projects || []).map((proj: any) => ({
-        name: proj.name || '',
-        description: proj.description || '',
-        url: proj.url || '',
+      items: (subject.projects ?? []).map((proj: any) => ({
+        name: proj.name ?? '',
+        description: proj.description ?? '',
+        url: proj.url ?? '',
         id: '',
         verificationStatus: 'unverified',
         credentialLink: '',

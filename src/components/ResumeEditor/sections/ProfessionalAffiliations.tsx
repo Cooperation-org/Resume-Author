@@ -48,7 +48,6 @@ interface AffiliationItem {
   organization: string
   startDate: string
   endDate: string
-  showDuration: boolean
   activeAffiliation: boolean
   id: string
   verificationStatus: string
@@ -82,7 +81,6 @@ export default function ProfessionalAffiliations({
       organization: '',
       startDate: '',
       endDate: '',
-      showDuration: false,
       activeAffiliation: false,
       id: '',
       verificationStatus: 'unverified',
@@ -92,9 +90,8 @@ export default function ProfessionalAffiliations({
     }
   ])
 
-  const [expandedItems, setExpandedItems] = useState<Record<number, boolean>>({
-    0: true
-  })
+  const [expandedItems, setExpandedItems] = useState<Record<number, boolean>>({ 0: true })
+  const [useDuration, setUseDuration] = useState<boolean[]>([false])
 
   const debouncedReduxUpdate = useCallback(
     (items: AffiliationItem[]) => {
@@ -106,7 +103,7 @@ export default function ProfessionalAffiliations({
           updateSection({
             sectionId: 'professionalAffiliations',
             content: {
-              items: items
+              items
             }
           })
         )
@@ -115,37 +112,31 @@ export default function ProfessionalAffiliations({
     [dispatch]
   )
 
-  const calculateDuration = (startDate: string, endDate: string): string => {
+  function calculateDuration(startDate: string, endDate: string): string {
     if (!startDate || !endDate) return ''
-
     try {
       const start = new Date(startDate)
       const end = new Date(endDate)
       let years = end.getFullYear() - start.getFullYear()
       let months = end.getMonth() - start.getMonth()
-
       if (months < 0) {
         years--
         months += 12
       }
-
       let result = ''
       if (years > 0) {
         result += `${years} year${years > 1 ? 's' : ''}`
       }
-
       if (months > 0) {
         if (result) result += ' '
         result += `${months} month${months > 1 ? 's' : ''}`
       }
-
       return result || 'Less than a month'
     } catch (error) {
       return ''
     }
   }
 
-  // Load existing affiliations from Redux
   useEffect(() => {
     if (
       resume?.professionalAffiliations?.items &&
@@ -156,78 +147,72 @@ export default function ProfessionalAffiliations({
         organization: item.organization || '',
         startDate: item.startDate || '',
         endDate: item.endDate || '',
-        showDuration:
-          item.showDuration === undefined ? false : Boolean(item.showDuration),
-        activeAffiliation: Boolean(item.activeAffiliation),
+        activeAffiliation: !!item.activeAffiliation,
         id: item.id || '',
         verificationStatus: item.verificationStatus || 'unverified',
         credentialLink: item.credentialLink || '',
         duration: item.duration || '',
-        selectedCredentials: item.selectedCredentials || [],
-        ...item
-      }))
+        selectedCredentials: item.selectedCredentials || []
+      })) as AffiliationItem[]
 
-      const shouldUpdate =
+      const needUpdate =
         initialLoadRef.current || typedItems.length !== affiliations.length
-
-      if (shouldUpdate) {
+      if (needUpdate) {
         initialLoadRef.current = false
-
         setAffiliations(typedItems)
+
+        const arr = typedItems.map(a => !!(!a.startDate && !a.endDate))
+        setUseDuration(arr)
+
         if (typedItems.length !== Object.keys(expandedItems).length) {
-          const initialExpanded: Record<number, boolean> = {}
-          typedItems.forEach((_, index) => {
-            initialExpanded[index] =
-              index < Object.keys(expandedItems).length ? expandedItems[index] : true
+          const initExp: Record<number, boolean> = {}
+          typedItems.forEach((_, idx) => {
+            initExp[idx] =
+              idx < Object.keys(expandedItems).length ? expandedItems[idx] : true
           })
-          setExpandedItems(initialExpanded)
+          setExpandedItems(initExp)
         }
+      }
+    }
+    return () => {
+      if (reduxUpdateTimeoutRef.current) {
+        clearTimeout(reduxUpdateTimeoutRef.current)
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [resume])
 
-  const dateChangeString = affiliations
-    .map(aff => `${aff.startDate}-${aff.endDate}-${aff.showDuration}`)
-    .join('|')
-
   useEffect(() => {
     affiliations.forEach((affiliation, index) => {
-      if (affiliation.startDate && affiliation.endDate) {
-        const calculatedDuration = calculateDuration(
-          affiliation.startDate,
-          affiliation.endDate
-        )
-
-        if (calculatedDuration && calculatedDuration !== affiliation.duration) {
-          setAffiliations(prev => {
-            const updated = [...prev]
-            updated[index] = {
-              ...updated[index],
-              duration: calculatedDuration
+      if (useDuration[index]) {
+        if (affiliation.startDate && affiliation.endDate) {
+          const newDur = calculateDuration(affiliation.startDate, affiliation.endDate)
+          if (newDur && newDur !== affiliation.duration) {
+            setAffiliations(prev => {
+              const updated = [...prev]
+              updated[index] = { ...updated[index], duration: newDur }
+              return updated
+            })
+            if (reduxUpdateTimeoutRef.current) {
+              clearTimeout(reduxUpdateTimeoutRef.current)
             }
-            return updated
-          })
-          if (reduxUpdateTimeoutRef.current) {
-            clearTimeout(reduxUpdateTimeoutRef.current)
+            reduxUpdateTimeoutRef.current = setTimeout(() => {
+              dispatch(
+                updateSection({
+                  sectionId: 'professionalAffiliations',
+                  content: {
+                    items: affiliations.map((aff, i) =>
+                      i === index ? { ...aff, duration: newDur } : aff
+                    )
+                  }
+                })
+              )
+            }, 1000)
           }
-
-          reduxUpdateTimeoutRef.current = setTimeout(() => {
-            dispatch(
-              updateSection({
-                sectionId: 'professionalAffiliations',
-                content: {
-                  items: affiliations.map((aff, i) =>
-                    i === index ? { ...aff, duration: calculatedDuration } : aff
-                  )
-                }
-              })
-            )
-          }, 1000)
         }
       }
     })
-  }, [dateChangeString, dispatch, affiliations])
+  }, [affiliations, useDuration, dispatch])
 
   // Cleanup timeout on unmount
   useEffect(() => {
@@ -240,30 +225,22 @@ export default function ProfessionalAffiliations({
 
   const handleAffiliationChange = useCallback(
     (index: number, field: string, value: any) => {
-      setAffiliations(prevAffiliations => {
-        const updatedAffiliations = [...prevAffiliations]
-        updatedAffiliations[index] = {
-          ...updatedAffiliations[index],
-          [field]: value
+      setAffiliations(prev => {
+        const updated = [...prev]
+        const aff = { ...updated[index], [field]: value }
+        if (!useDuration[index]) {
+          aff.duration = ''
+        } else if (field === 'startDate' || field === 'endDate') {
+          aff.duration = calculateDuration(aff.startDate, aff.endDate)
         }
-        if (field === 'showDuration' && value === true) {
-          const aff = updatedAffiliations[index]
-          if (aff.startDate && aff.endDate) {
-            updatedAffiliations[index].duration = calculateDuration(
-              aff.startDate,
-              aff.endDate
-            )
-          }
-        }
-
+        updated[index] = aff
         if (field !== 'description') {
-          debouncedReduxUpdate(updatedAffiliations)
+          debouncedReduxUpdate(updated)
         }
-
-        return updatedAffiliations
+        return updated
       })
     },
-    [debouncedReduxUpdate]
+    [debouncedReduxUpdate, useDuration]
   )
 
   const handleAddAnotherItem = useCallback(() => {
@@ -272,7 +249,6 @@ export default function ProfessionalAffiliations({
       organization: '',
       startDate: '',
       endDate: '',
-      showDuration: false,
       activeAffiliation: false,
       id: '',
       verificationStatus: 'unverified',
@@ -280,21 +256,17 @@ export default function ProfessionalAffiliations({
       duration: '',
       selectedCredentials: []
     }
-
-    setAffiliations(prevAffiliations => {
-      const updatedAffiliations = [...prevAffiliations, emptyItem]
-
+    setAffiliations(prev => {
+      const newAff = [...prev, emptyItem]
       dispatch(
         updateSection({
           sectionId: 'professionalAffiliations',
-          content: {
-            items: updatedAffiliations
-          }
+          content: { items: newAff }
         })
       )
-
-      return updatedAffiliations
+      return newAff
     })
+    setUseDuration(prev => [...prev, false])
 
     const newIndex = affiliations.length
     setExpandedItems(prev => ({
@@ -309,35 +281,26 @@ export default function ProfessionalAffiliations({
         if (onDelete) onDelete()
         return
       }
-
-      setAffiliations(prevAffiliations => {
-        const updatedAffiliations = prevAffiliations.filter((_, i) => i !== index)
+      setAffiliations(prev => {
+        const updated = prev.filter((_, i) => i !== index)
         dispatch(
           updateSection({
             sectionId: 'professionalAffiliations',
-            content: {
-              items: updatedAffiliations
-            }
+            content: { items: updated }
           })
         )
-
-        return updatedAffiliations
+        return updated
       })
+      setUseDuration(prev => prev.filter((_, i) => i !== index))
 
       setExpandedItems(prev => {
-        const newExpandedState: Record<number, boolean> = {}
+        const newExp: Record<number, boolean> = {}
         affiliations
           .filter((_, i) => i !== index)
           .forEach((_, i) => {
-            if (i === 0 && affiliations.length - 1 === 1) {
-              newExpandedState[i] = true
-            } else if (i < index) {
-              newExpandedState[i] = prev[i] || false
-            } else {
-              newExpandedState[i] = prev[i + 1] || false
-            }
+            newExp[i] = prev[i + (i >= index ? 1 : 0)] || false
           })
-        return newExpandedState
+        return newExp
       })
     },
     [affiliations, dispatch, onDelete]
@@ -359,39 +322,32 @@ export default function ProfessionalAffiliations({
     (selectedCredentialIDs: string[]) => {
       if (activeSectionIndex !== null && selectedCredentialIDs.length > 0) {
         const selectedCredentials = selectedCredentialIDs.map(id => {
-          const credential = vcs.find((c: any) => (c?.originalItem?.id || c.id) === id)
-
+          const c = vcs.find((r: any) => (r?.originalItem?.id || r.id) === id)
           return {
             id: id,
             url: `https://linkedcreds.allskillscount.org/view/${id}`,
             name:
-              credential?.credentialSubject?.achievement[0]?.name ||
+              c?.credentialSubject?.achievement?.[0]?.name ||
               `Credential ${id.substring(0, 5)}...`
           }
         })
-
-        setAffiliations(prevAffiliations => {
-          const updatedAffiliations = [...prevAffiliations]
-          updatedAffiliations[activeSectionIndex] = {
-            ...updatedAffiliations[activeSectionIndex],
+        setAffiliations(prev => {
+          const updated = [...prev]
+          updated[activeSectionIndex] = {
+            ...updated[activeSectionIndex],
             verificationStatus: 'verified',
             credentialLink: selectedCredentials[0].url,
-            selectedCredentials: selectedCredentials
+            selectedCredentials
           }
-
           dispatch(
             updateSection({
               sectionId: 'professionalAffiliations',
-              content: {
-                items: updatedAffiliations
-              }
+              content: { items: updated }
             })
           )
-
-          return updatedAffiliations
+          return updated
         })
       }
-
       setShowCredentialsOverlay(false)
       setActiveSectionIndex(null)
     },
@@ -399,34 +355,28 @@ export default function ProfessionalAffiliations({
   )
 
   const handleRemoveCredential = useCallback(
-    (affiliationIndex: number, credentialIndex: number) => {
-      setAffiliations(prevAffiliations => {
-        const updatedAffiliations = [...prevAffiliations]
-        const affiliation = { ...updatedAffiliations[affiliationIndex] }
-        const updatedCredentials = (affiliation.selectedCredentials || []).filter(
-          (_, i) => i !== credentialIndex
-        )
+    (affIndex: number, credIndex: number) => {
+      setAffiliations(prev => {
+        const updated = [...prev]
+        const aff = { ...updated[affIndex] }
+        const newCreds = aff.selectedCredentials.filter((_, i) => i !== credIndex)
 
-        affiliation.selectedCredentials = updatedCredentials
-        if (updatedCredentials.length === 0) {
-          affiliation.verificationStatus = 'unverified'
-          affiliation.credentialLink = ''
+        aff.selectedCredentials = newCreds
+        if (!newCreds.length) {
+          aff.verificationStatus = 'unverified'
+          aff.credentialLink = ''
         } else {
-          affiliation.credentialLink = updatedCredentials[0]?.url || ''
+          aff.credentialLink = newCreds[0].url
         }
 
-        updatedAffiliations[affiliationIndex] = affiliation
-
+        updated[affIndex] = aff
         dispatch(
           updateSection({
             sectionId: 'professionalAffiliations',
-            content: {
-              items: updatedAffiliations
-            }
+            content: { items: updated }
           })
         )
-
-        return updatedAffiliations
+        return updated
       })
     },
     [dispatch]
@@ -512,10 +462,31 @@ export default function ProfessionalAffiliations({
                 <FormControlLabel
                   control={
                     <PinkSwitch
-                      checked={affiliation.showDuration}
-                      onChange={e =>
-                        handleAffiliationChange(index, 'showDuration', e.target.checked)
-                      }
+                      checked={useDuration[index]}
+                      onChange={() => {
+                        setUseDuration(prev => {
+                          const arr = [...prev]
+                          arr[index] = !arr[index]
+                          setAffiliations(pA => {
+                            const upd = [...pA]
+                            if (arr[index]) {
+                              upd[index] = {
+                                ...upd[index],
+                                startDate: '',
+                                endDate: ''
+                              }
+                            } else {
+                              upd[index] = {
+                                ...upd[index],
+                                duration: ''
+                              }
+                            }
+                            debouncedReduxUpdate(upd)
+                            return upd
+                          })
+                          return arr
+                        })
+                      }}
                       sx={{ color: '#34C759' }}
                     />
                   }
@@ -523,7 +494,7 @@ export default function ProfessionalAffiliations({
                 />
               </Box>
 
-              {affiliation.showDuration ? (
+              {useDuration[index] ? (
                 <TextField
                   sx={{ bgcolor: '#FFF' }}
                   size='small'

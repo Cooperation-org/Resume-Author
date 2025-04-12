@@ -22,7 +22,7 @@ export default function SectionDetails({
   onDelete,
   onAddFiles,
   onAddCredential
-}: SectionDetailsProps) {
+}: Readonly<SectionDetailsProps>) {
   const renderSection = () => {
     switch (sectionId) {
       case 'Professional Summary':

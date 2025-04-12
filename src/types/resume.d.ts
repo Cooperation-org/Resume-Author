@@ -48,12 +48,10 @@ interface WorkExperience extends VerifiableItem {
   title: string
   duration: string
   currentlyEmployed: boolean
-  showDuration: boolean
   company: string
   endDate?: string
   location?: string
   description: string
-  achievements: string[]
   position?: string
   startDate?: string
   acheivements?: string[]
@@ -78,7 +76,6 @@ interface Education extends VerifiableItem {
   thesis?: string
   relevantCourses?: string[]
   duration: string
-  showDuration: boolean
   currentlyEnrolled: boolean
   inProgress: boolean
   description: string
@@ -159,7 +156,6 @@ interface ProfessionalAffiliation extends VerifiableItem {
   membershipId?: string
   description?: string
   benefits?: string[]
-  showDuration: boolean
   activeAffiliation: boolean
   id: string
   verificationStatus: string
@@ -174,10 +170,8 @@ interface VolunteerWork extends VerifiableItem {
   endDate?: string
   location?: string
   description?: string
-  achievements?: string[]
   currentlyVolunteering: boolean
   duration: string
-  showDuration: boolean
   credentialLink?: string
   cause?: string
 }

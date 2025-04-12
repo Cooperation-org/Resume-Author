@@ -7,7 +7,6 @@ import ResumePreview from '../components/resumePreview'
 import html2pdf from 'html2pdf.js'
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf'
 
-// Define a type for the raw credential data structure
 type RawCredentialData = {
   content?: {
     credentialSubject?: Record<string, any>
@@ -17,13 +16,18 @@ type RawCredentialData = {
   data?: Record<string, any>
 }
 
+interface Testimonial extends VerifiableItem {
+  author: string
+  text: string
+  credentialLink?: string
+}
+
 const PreviewPageFromDrive: React.FC = () => {
   const { id } = useParams<{ id: string }>()
   const [resumeData, setResumeData] = useState<Resume | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
-  // Type guard and helper functions
   const safeGet = useCallback((obj: any, path: string[], defaultValue = ''): string => {
     return path.reduce(
       (acc, key) => (acc && acc[key] !== undefined ? acc[key] : defaultValue),
@@ -36,7 +40,11 @@ const PreviewPageFromDrive: React.FC = () => {
       linkedin: safeGet(socialLinks, ['linkedin'], ''),
       github: safeGet(socialLinks, ['github'], ''),
       portfolio: safeGet(socialLinks, ['portfolio'], ''),
-      instagram: safeGet(socialLinks, ['instagram'], '')
+      instagram: safeGet(
+        socialLinks,
+        ['instagram'],
+        safeGet(socialLinks, ['twitter'], '')
+      )
     }),
     [safeGet]
   )
@@ -69,75 +77,111 @@ const PreviewPageFromDrive: React.FC = () => {
   useEffect(() => {
     const fetchResumeFromDrive = async () => {
       try {
-        // Get access token from local storage
         const accessToken = getLocalStorage('auth')
 
         if (!accessToken) {
           throw new Error('No authentication token found')
         }
 
-        // Initialize Google Drive Storage
         const storage = new GoogleDriveStorage(accessToken as string)
 
-        // Fetch the specific resume file by ID
         const fileData = await storage.retrieve(id!)
 
-        // Parse the file content
-        const parsedContent: RawCredentialData = fileData?.data || {}
+        let parsedContent: RawCredentialData = {}
+        if (fileData?.data) {
+          parsedContent = fileData.data
+        } else {
+          parsedContent = fileData ?? {}
+        }
 
-        // Determine the correct data structure
-        const resumeContent: Record<string, any> = parsedContent.content
-          ? parsedContent.content.credentialSubject || {}
-          : parsedContent.credentialSubject || {}
+        let resumeContent: Record<string, any> = {}
 
-        // Transform the data to match the Resume type
+        if (parsedContent?.credentialSubject) {
+          resumeContent = parsedContent.credentialSubject
+        } else if (parsedContent?.content?.credentialSubject) {
+          resumeContent = parsedContent.content.credentialSubject
+        } else if ((fileData as any)?.credentialSubject) {
+          resumeContent = (fileData as any).credentialSubject
+        } else if ((fileData as any)?.content?.credentialSubject) {
+          resumeContent = (fileData as any).content.credentialSubject
+        } else {
+          resumeContent = parsedContent ?? fileData ?? {}
+        }
+
+        console.log('Raw resume content:', resumeContent)
+
         const transformedResumeData: Resume = {
-          id: '',
-          lastUpdated: parsedContent.issuanceDate || new Date().toISOString(),
-          name: safeGet(resumeContent, ['person', 'name', 'formattedName'], ''),
+          id: id ?? '',
+          lastUpdated: parsedContent.issuanceDate ?? new Date().toISOString(),
+          name: safeGet(
+            resumeContent,
+            ['person', 'name', 'formattedName'],
+            safeGet(resumeContent, ['name'], 'Untitled Resume')
+          ),
           version: 1,
           contact: {
-            fullName: safeGet(resumeContent, ['person', 'contact', 'fullName'], ''),
-            email: safeGet(resumeContent, ['person', 'contact', 'email'], ''),
-            phone: safeGet(resumeContent, ['person', 'contact', 'phone'], ''),
+            fullName: safeGet(
+              resumeContent,
+              ['person', 'contact', 'fullName'],
+              safeGet(resumeContent, ['contact', 'fullName'], '')
+            ),
+            email: safeGet(
+              resumeContent,
+              ['person', 'contact', 'email'],
+              safeGet(resumeContent, ['contact', 'email'], '')
+            ),
+            phone: safeGet(
+              resumeContent,
+              ['person', 'contact', 'phone'],
+              safeGet(resumeContent, ['contact', 'phone'], '')
+            ),
             location: {
               street: safeGet(
                 resumeContent,
                 ['person', 'contact', 'location', 'street'],
-                ''
+                safeGet(resumeContent, ['contact', 'location', 'street'], '')
               ),
-              city: safeGet(resumeContent, ['person', 'contact', 'location', 'city'], ''),
+              city: safeGet(
+                resumeContent,
+                ['person', 'contact', 'location', 'city'],
+                safeGet(resumeContent, ['contact', 'location', 'city'], '')
+              ),
               state: safeGet(
                 resumeContent,
                 ['person', 'contact', 'location', 'state'],
-                ''
+                safeGet(resumeContent, ['contact', 'location', 'state'], '')
               ),
               country: safeGet(
                 resumeContent,
                 ['person', 'contact', 'location', 'country'],
-                ''
+                safeGet(resumeContent, ['contact', 'location', 'country'], '')
               ),
               postalCode: safeGet(
                 resumeContent,
                 ['person', 'contact', 'location', 'postalCode'],
-                ''
+                safeGet(resumeContent, ['contact', 'location', 'postalCode'], '')
               )
             },
             socialLinks: extractSocialLinks(
-              resumeContent.person?.contact?.socialLinks || {}
+              resumeContent.person?.contact?.socialLinks ??
+                resumeContent.contact?.socialLinks ??
+                {}
             )
           },
-          summary: safeGet(resumeContent, ['narrative', 'text'], ''),
+          summary: safeGet(
+            resumeContent,
+            ['narrative', 'text'],
+            safeGet(resumeContent, ['summary'], '')
+          ),
           experience: {
             items: [
-              ...(resumeContent.employmentHistory || []),
-              ...(resumeContent.experience || [])
+              ...(resumeContent.employmentHistory ?? []),
+              ...(resumeContent.experience?.items ?? [])
             ]
               .filter(
                 (exp, index, self) =>
                   self.findIndex(
                     t =>
-                      // Compare multiple fields to ensure uniqueness
                       t.id === exp.id ||
                       (t.title === exp.title &&
                         t.company === (exp.organization?.tradeName || exp.company) &&
@@ -145,165 +189,256 @@ const PreviewPageFromDrive: React.FC = () => {
                         t.endDate === exp.endDate)
                   ) === index
               )
-              .map(
-                (exp: Record<string, any>): WorkExperience => ({
-                  id: exp.id || '',
-                  title: exp.title || '',
-                  company: exp.organization?.tradeName || exp.company || '',
-                  position: exp.title || '',
-                  startDate: exp.startDate || '',
-                  endDate: exp.endDate || '',
-                  description: exp.description || '',
-                  achievements: [],
-                  currentlyEmployed: exp.stillEmployed || false,
-                  duration: '',
-                  showDuration: false,
-                  verificationStatus: 'unverified',
-                  credentialLink: ''
-                })
-              )
+              .map((exp: Record<string, any>): WorkExperience => {
+                const startDate = exp.startDate ?? ''
+                const endDate = exp.endDate ?? ''
+                const duration = exp.duration ?? ''
+                const isCurrentlyEmployed =
+                  exp.stillEmployed ?? exp.currentlyEmployed ?? false
+
+                return {
+                  id: exp.id ?? '',
+                  title: exp.title ?? exp.position ?? '',
+                  company: exp.organization?.tradeName ?? exp.company ?? '',
+                  position: exp.title ?? exp.position ?? '',
+                  startDate: startDate,
+                  endDate: endDate,
+                  description: exp.description ?? '',
+                  achievements: exp.achievements ?? [],
+                  currentlyEmployed: isCurrentlyEmployed,
+                  duration: duration,
+                  verificationStatus: exp.verificationStatus ?? 'unverified',
+                  credentialLink: exp.credentialLink ?? ''
+                }
+              })
           },
           education: {
-            items: (resumeContent.educationAndLearning || []).map(
-              (edu: Record<string, any>): Education => ({
-                id: edu.id || '',
-                type: edu.degree || '',
-                programName: edu.fieldOfStudy || '',
-                degree: edu.degree || '',
-                field: edu.fieldOfStudy || '',
-                institution: edu.institution || '',
-                startDate: edu.startDate || '',
-                endDate: edu.endDate || '',
-                currentlyEnrolled: false,
-                inProgress: false,
-                description: edu.description || '',
-                showDuration: false,
-                duration: edu.duration || '',
-                awardEarned: false,
-                verificationStatus: 'unverified',
-                credentialLink: ''
-              })
-            )
+            items: (
+              resumeContent.educationAndLearning ??
+              resumeContent.education?.items ??
+              []
+            ).map((edu: Record<string, any>): Education => {
+              const startDate = edu.startDate ?? ''
+              const endDate = edu.endDate ?? ''
+              const duration = edu.duration ?? ''
+              const isCurrentlyEnrolled = edu.currentlyEnrolled ?? false
+
+              const degree = edu.degree ?? edu.type ?? ''
+              const fieldOfStudy = edu.fieldOfStudy ?? edu.field ?? ''
+
+              return {
+                id: edu.id ?? '',
+                type: degree,
+                programName: fieldOfStudy,
+                degree: degree,
+                field: fieldOfStudy,
+                institution: edu.institution ?? '',
+                startDate: startDate,
+                endDate: endDate,
+                currentlyEnrolled: isCurrentlyEnrolled,
+                inProgress: edu.inProgress ?? false,
+                description: edu.description ?? '',
+                duration: duration,
+                awardEarned: edu.awardEarned ?? true,
+                verificationStatus: edu.verificationStatus ?? 'unverified',
+                credentialLink: edu.credentialLink ?? ''
+              }
+            })
           },
           skills: {
-            items: (resumeContent.skills || []).map(
+            items: (resumeContent.skills ?? resumeContent.skills?.items ?? []).map(
               (skill: Record<string, any>): Skill => ({
-                id: skill.id || '',
-                skills: skill.skills || skill.name || '',
-                verificationStatus: 'unverified',
-                credentialLink: ''
+                id: skill.id ?? '',
+                skills: skill.originalSkills ?? skill.skills ?? skill.name ?? '',
+                verificationStatus: skill.verificationStatus ?? 'unverified',
+                credentialLink: skill.credentialLink ?? ''
               })
             )
           },
           awards: {
-            items: (resumeContent.awards || []).map(
+            items: (resumeContent.awards ?? resumeContent.awards?.items ?? []).map(
               (award: Record<string, any>): Award => ({
-                id: award.id || '',
-                title: award.title || '',
-                description: award.description || '',
-                issuer: award.issuer || '',
-                date: award.date || '',
-                verificationStatus: 'unverified'
+                id: award.id ?? '',
+                title: award.title ?? '',
+                description: award.description ?? '',
+                issuer: award.issuer ?? '',
+                date: award.date ?? '',
+                verificationStatus: award.verificationStatus ?? 'unverified'
               })
             )
           },
           publications: {
-            items: (resumeContent.publications || []).map(
+            items: (
+              resumeContent.publications ??
+              resumeContent.publications?.items ??
+              []
+            ).map(
               (pub: Record<string, any>): Publication => ({
-                id: pub.id || '',
-                title: pub.title || '',
-                publisher: pub.publisher || '',
-                publishedDate: pub.publishedDate || '',
-                url: pub.url || '',
-                type: 'Other',
-                authors: [],
-                verificationStatus: 'unverified'
+                id: pub.id ?? '',
+                title: pub.title ?? '',
+                publisher: pub.publisher ?? '',
+                publishedDate: pub.publishedDate ?? pub.date ?? '',
+                url: pub.url ?? '',
+                type: pub.type ?? 'Other',
+                authors: pub.authors ?? [],
+                verificationStatus: pub.verificationStatus ?? 'unverified'
               })
             )
           },
           certifications: {
-            items: (resumeContent.certifications || []).map(
-              (cert: Record<string, any>): Certification => ({
-                id: cert.id || '',
-                name: cert.name || '',
-                issuer: cert.issuer || '',
-                issueDate: cert.issueDate || '',
-                expiryDate: cert.expiryDate || '',
-                credentialId: cert.credentialId || '',
-                verificationStatus: 'unverified',
-                noExpiration: !cert.expiryDate,
-                score: cert.score || ''
-              })
-            )
+            items: (
+              resumeContent.certifications ??
+              resumeContent.certifications?.items ??
+              []
+            ).map((cert: Record<string, any>): Certification => {
+              const rawDateValue = cert.issueDate || cert.date || ''
+              let processedDate = ''
+
+              if (rawDateValue) {
+                try {
+                  if (
+                    typeof rawDateValue === 'string' &&
+                    (rawDateValue.includes('-') || rawDateValue.includes('/'))
+                  ) {
+                    const dateObj = new Date(rawDateValue)
+                    if (!isNaN(dateObj.getTime())) {
+                      processedDate = dateObj.toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                      })
+                    } else {
+                      processedDate = rawDateValue
+                    }
+                  } else {
+                    processedDate = rawDateValue
+                  }
+                } catch (e) {
+                  processedDate = rawDateValue
+                }
+              }
+
+              return {
+                id: cert.id ?? '',
+                name: cert.name ?? '',
+                issuer: cert.issuer ?? '',
+                issueDate: processedDate,
+                expiryDate: cert.expiryDate ?? '',
+                credentialId: cert.credentialId ?? cert.id ?? '',
+                verificationStatus: cert.verificationStatus ?? 'unverified',
+                noExpiration:
+                  cert.noExpiration !== undefined ? cert.noExpiration : !cert.expiryDate,
+                score: cert.score ?? ''
+              }
+            })
           },
           professionalAffiliations: {
-            items: (resumeContent.professionalAffiliations || []).map(
-              (affiliation: Record<string, any>): ProfessionalAffiliation => ({
-                id: affiliation.id || '',
-                name: affiliation.name || '',
-                organization: affiliation.organization || '',
-                startDate: affiliation.startDate || '',
-                endDate: affiliation.endDate || '',
-                activeAffiliation: affiliation.activeAffiliation || false,
-                showDuration: false,
-                verificationStatus: 'unverified',
-                credentialLink: '',
-                role: affiliation.role || ''
-              })
-            )
+            items: (
+              resumeContent.professionalAffiliations ??
+              resumeContent.professionalAffiliations?.items ??
+              []
+            ).map((affiliation: Record<string, any>): ProfessionalAffiliation => {
+              const startDate = affiliation.startDate ?? ''
+              const endDate = affiliation.endDate ?? ''
+              const duration = affiliation.duration ?? ''
+              const isActive = affiliation.activeAffiliation ?? false
+
+              return {
+                id: affiliation.id ?? '',
+                name: affiliation.name ?? affiliation.role ?? '',
+                organization: affiliation.organization ?? '',
+                startDate: startDate,
+                endDate: endDate,
+                activeAffiliation: isActive,
+                duration: duration,
+                verificationStatus: affiliation.verificationStatus ?? 'unverified',
+                credentialLink: affiliation.credentialLink ?? '',
+                role: affiliation.role ?? affiliation.name ?? ''
+              }
+            })
           },
           volunteerWork: {
-            items: (resumeContent.volunteerWork || []).map(
-              (volunteer: Record<string, any>): VolunteerWork => ({
-                id: volunteer.id || '',
-                role: volunteer.role || '',
-                organization: volunteer.organization || '',
-                startDate: volunteer.startDate || '',
-                endDate: volunteer.endDate || '',
-                description: volunteer.description || '',
-                currentlyVolunteering: false,
-                duration: '',
-                showDuration: false,
-                verificationStatus: 'unverified',
-                location: volunteer.location || '',
-                cause: volunteer.cause || ''
-              })
-            )
+            items: (
+              resumeContent.volunteerWork ??
+              resumeContent.volunteerWork?.items ??
+              []
+            ).map((volunteer: Record<string, any>): VolunteerWork => {
+              const startDate = volunteer.startDate ?? ''
+              const endDate = volunteer.endDate ?? ''
+              const duration = volunteer.duration ?? ''
+              const isCurrentlyVolunteering = volunteer.currentlyVolunteering ?? false
+
+              return {
+                id: volunteer.id ?? '',
+                role: volunteer.role ?? '',
+                organization: volunteer.organization ?? '',
+                startDate: startDate,
+                endDate: endDate,
+                description: volunteer.description ?? '',
+                currentlyVolunteering: isCurrentlyVolunteering,
+                duration: duration,
+                verificationStatus: volunteer.verificationStatus ?? 'unverified',
+                location: volunteer.location ?? '',
+                cause: volunteer.cause ?? ''
+              }
+            })
           },
-          hobbiesAndInterests: resumeContent.hobbiesAndInterests || [],
+          hobbiesAndInterests: resumeContent.hobbiesAndInterests ?? [],
           languages: {
-            items: (resumeContent.languages || []).map(
+            items: (resumeContent.languages ?? resumeContent.languages?.items ?? []).map(
               (lang: Record<string, any>): Language => ({
-                id: '',
-                name: lang.language || '',
-                proficiency: (lang.proficiency as 'Basic') || 'Basic',
-                verificationStatus: 'unverified',
-                certification: lang.certification || '',
-                writingLevel: lang.writingLevel || '',
-                speakingLevel: lang.speakingLevel || '',
-                readingLevel: lang.readingLevel || ''
+                id: lang.id ?? '',
+                name: lang.language ?? lang.name ?? '',
+                proficiency: (lang.proficiency as 'Basic') ?? 'Basic',
+                verificationStatus: lang.verificationStatus ?? 'unverified',
+                certification: lang.certification ?? '',
+                writingLevel: lang.writingLevel ?? '',
+                speakingLevel: lang.speakingLevel ?? '',
+                readingLevel: lang.readingLevel ?? ''
               })
             )
           },
-          testimonials: { items: [] },
-          projects: {
-            items: (resumeContent.projects || []).map(
-              (project: Record<string, any>): Project => ({
-                id: project.id || '',
-                name: project.name || '',
-                description: project.description || '',
-                url: project.url || '',
-                verificationStatus: 'unverified',
-                technologies: project.technologies || [],
-                credentialLink: project.credentialLink || ''
+          testimonials: {
+            items: (
+              resumeContent.testimonials ??
+              resumeContent.testimonials?.items ??
+              []
+            ).map(
+              (test: Record<string, any>): Testimonial => ({
+                id: test.id ?? '',
+                author: test.author ?? '',
+                text: test.text ?? '',
+                verificationStatus: test.verificationStatus ?? 'unverified',
+                credentialLink: test.credentialLink ?? ''
               })
+            )
+          },
+          projects: {
+            items: (resumeContent.projects ?? resumeContent.projects?.items ?? []).map(
+              (project: Record<string, any>): Project => {
+                const name = project.name ?? ''
+                const description = project.description ?? ''
+                const url = project.url ?? ''
+                const technologies = project.technologies ?? []
+                const credentialLink = project.credentialLink ?? ''
+                const verificationStatus = project.verificationStatus ?? 'unverified'
+
+                return {
+                  id: project.id ?? '',
+                  name,
+                  description,
+                  url,
+                  verificationStatus,
+                  technologies,
+                  credentialLink
+                }
+              }
             )
           }
         }
 
         console.log('Transformed Resume Data:', transformedResumeData)
 
-        // Set the resume data
         setResumeData(transformedResumeData)
         setIsLoading(false)
       } catch (err) {
