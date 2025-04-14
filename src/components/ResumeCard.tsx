@@ -26,7 +26,7 @@ import { LinkIcon } from 'lucide-react'
 import { GoogleDriveStorage, Resume } from '@cooperation/vc-storage'
 import { getLocalStorage } from '../tools/cookie'
 import Logo from '../assets/blue-logo.png'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import DeleteConfirmationDialog from './DeleteConfirmDialog'
 import { useDispatch } from 'react-redux'
 import { AppDispatch } from '../redux/store'
@@ -61,6 +61,17 @@ const StyledCard = styled(Card)(() => ({
   boxShadow: 'none',
   borderRadius: '12px',
   '&:hover': { backgroundColor: '#f9f9f9' }
+}))
+
+// Add a styled component for the resume title
+const ResumeTitle = styled(Typography)(({ theme }) => ({
+  fontWeight: 500,
+  color: '#3c4599',
+  cursor: 'pointer',
+  textDecoration: 'underline',
+  '&:hover': {
+    textDecoration: 'underline'
+  }
 }))
 
 // Helper function to format date as "Month Day, Year"
@@ -286,14 +297,37 @@ const ResumeCard: React.FC<ResumeCardProps> = ({
   }
 
   const handlePreviewResume = () => {
-    if (isDraft) {
-      navigate('/resume/view')
-    } else {
+    if (isSigned()) {
+      // For signed resumes, navigate to the view page
       navigate(`/resume/view/${id}`)
+    } else {
+      // For drafts or completed but unsigned, navigate to preview
+      navigate(`/resume/new?id=${id}&preview=true`)
     }
   }
   const exportResumeToPDF = (data: any) => {
     setPreviewDialogOpen(true)
+  }
+
+  // Helper function to determine if the resume is signed
+  const isSigned = () => {
+    return !isDraft && resume?.content?.proof
+  }
+
+  // Helper function to determine if the resume is completed but unsigned
+  const isCompletedUnsigned = () => {
+    return !isDraft && !resume?.content?.proof && resume?.content?.isComplete === true
+  }
+
+  // Handle click on the resume title
+  const handleTitleClick = () => {
+    if (isSigned()) {
+      // For signed resumes, navigate to the view page
+      navigate(`/resume/view/${id}`)
+    } else {
+      // For drafts or completed but unsigned, navigate to the edit page
+      navigate(`/resume/new?id=${id}`)
+    }
   }
 
   return (
@@ -316,10 +350,41 @@ const ResumeCard: React.FC<ResumeCardProps> = ({
           <Box display='flex' justifyContent='space-between' alignItems='center'>
             {/* Left Side: Title and Metadata */}
             <Box display='flex' gap={1.5}>
-              {!isDraft ? (
-                <SVGBadge />
+              {isSigned() ? (
+                <Tooltip title='Signed Resume' placement='top'>
+                  <Box>
+                    <SVGBadge />
+                  </Box>
+                </Tooltip>
+              ) : isCompletedUnsigned() ? (
+                <Tooltip title='Completed but Unsigned Resume' placement='top'>
+                  <Box
+                    sx={{
+                      height: 25,
+                      width: 25,
+                      backgroundColor: '#3c4599',
+                      borderRadius: '50%',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center'
+                    }}
+                  >
+                    <Box
+                      sx={{
+                        height: 15,
+                        width: 15,
+                        backgroundColor: 'white',
+                        borderRadius: '50%'
+                      }}
+                    />
+                  </Box>
+                </Tooltip>
               ) : (
-                <img src={Logo} alt='Résumé Author' style={{ height: 25 }} />
+                <Tooltip title='Draft Resume' placement='top'>
+                  <Box>
+                    <img src={Logo} alt='Résumé Author' style={{ height: 25 }} />
+                  </Box>
+                </Tooltip>
               )}
               <Box>
                 {isEditing ? (
@@ -347,23 +412,20 @@ const ResumeCard: React.FC<ResumeCardProps> = ({
                     }}
                   />
                 ) : (
-                  <Box
-                    // to={`/resume/${id}`} // this will be after creating the review page and will replace box with link
-                    style={{
-                      fontWeight: 500,
-                      textDecoration: 'underline',
-                      color: '#3c4599'
-                    }}
-                  >
+                  <ResumeTitle onClick={handleTitleClick} variant='body1'>
                     {title} - {formattedDate}
-                  </Box>
+                  </ResumeTitle>
                 )}
                 <Typography
                   variant='body2'
                   color='text.secondary'
                   sx={{ mt: 0.5, fontSize: '0.875rem' }}
                 >
-                  {isDraft ? `DRAFT - ${timeAgo}` : `${timeAgo}`}
+                  {isDraft
+                    ? `DRAFT - ${timeAgo}`
+                    : isSigned()
+                      ? `SIGNED - ${timeAgo}`
+                      : `COMPLETED - ${timeAgo}`}
                 </Typography>
               </Box>
             </Box>
@@ -371,7 +433,7 @@ const ResumeCard: React.FC<ResumeCardProps> = ({
             {/* Right Side: Action Buttons */}
             <Box display='flex' alignItems='center' color={'#3c4599'} gap={0.5}>
               <Box className='resume-card-actions'>
-                {isDraft ? (
+                {isDraft || isCompletedUnsigned() ? (
                   <>
                     <ActionButton
                       size='small'

@@ -448,13 +448,30 @@ const ResumeEditor: React.FC = () => {
         throw new Error('Failed to sign resume')
       }
 
-      // Save resume
+      // Save the signed resume
       const file = await instances.resumeManager.saveResume({
         resume: signedResume,
         type: 'sign'
       })
       if (!file || !file.id) {
         throw new Error('Failed to save resume')
+      }
+
+      // Also save a completed unsigned version with isComplete flag
+      if (resume) {
+        // Add isComplete flag to the resume so we can identify it as a completed unsigned resume
+        const completedResume = {
+          ...resume,
+          isComplete: true
+        }
+
+        // Save the completed unsigned version
+        const unsignedFile = await instances.resumeManager.saveResume({
+          resume: completedResume,
+          type: 'unsigned'
+        })
+
+        console.log('Completed unsigned resume saved:', unsignedFile)
       }
 
       // Store tokens
