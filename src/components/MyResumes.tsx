@@ -27,6 +27,18 @@ const ResumeScreen: React.FC = () => {
     return Boolean(localDrafts[resumeId])
   }
 
+  // Helper function to determine if an unsigned resume is a completed template or a draft
+  const isCompletedUnsigned = (resume: any) => {
+    // Check if this resume has completed all required fields
+    // You'll need to determine what makes a resume "complete" based on your requirements
+    // This is a placeholder - implement the actual logic
+    return resume?.content?.isComplete === true
+  }
+
+  // Filter unsigned resumes into drafts (incomplete) and completed but unsigned
+  const completedUnsignedResumes = unsigned.filter(resume => isCompletedUnsigned(resume))
+  const draftResumes = unsigned.filter(resume => !isCompletedUnsigned(resume))
+
   return (
     <Box
       sx={{
@@ -70,34 +82,68 @@ const ResumeScreen: React.FC = () => {
       {status === 'failed' && <Typography color='error'>Error: {error}</Typography>}
 
       {/* Render Signed Resumes */}
-      {signed.map(resume => (
-        <ResumeCard
-          key={resume?.id}
-          id={resume?.id}
-          title={resume?.content?.credentialSubject?.person?.name?.formattedName}
-          date={new Date(resume?.content?.issuanceDate).toLocaleDateString()}
-          credentials={0}
-          isDraft={false}
-          resume={resume}
-        />
-      ))}
+      {signed.length > 0 && (
+        <>
+          <Typography variant='h6' sx={{ color: '#2E2E48', fontWeight: 600, mt: 2 }}>
+            Signed Resumes
+          </Typography>
+          {signed.map(resume => (
+            <ResumeCard
+              key={resume?.id}
+              id={resume?.id}
+              title={resume?.content?.credentialSubject?.person?.name?.formattedName}
+              date={new Date(resume?.content?.issuanceDate).toLocaleDateString()}
+              credentials={0}
+              isDraft={false}
+              resume={resume}
+            />
+          ))}
+        </>
+      )}
 
-      {/* Render Unsigned (Draft) Resumes */}
-      {unsigned.map(resume => (
-        <ResumeCard
-          key={resume.id}
-          id={resume.id}
-          title={resume?.content?.contact?.fullName?.split('.')[0]}
-          date={new Date().toLocaleDateString()}
-          credentials={0}
-          isDraft={true}
-          resume={resume}
-          // We'll pass these props, but since the ResumeCard component
-          // doesn't handle them yet, they won't change the UI
-          hasLocalChanges={hasLocalDraft(resume.id)}
-          localDraftTime={localDrafts[resume.id]?.localStorageLastUpdated || null}
-        />
-      ))}
+      {/* Render Completed but Unsigned Resumes */}
+      {completedUnsignedResumes.length > 0 && (
+        <>
+          <Typography variant='h6' sx={{ color: '#2E2E48', fontWeight: 600, mt: 2 }}>
+            Completed Resumes
+          </Typography>
+          {completedUnsignedResumes.map(resume => (
+            <ResumeCard
+              key={resume.id}
+              id={resume.id}
+              title={resume?.content?.contact?.fullName?.split('.')[0]}
+              date={new Date().toLocaleDateString()}
+              credentials={0}
+              isDraft={false} // Not a draft, but unsigned
+              resume={resume}
+              hasLocalChanges={hasLocalDraft(resume.id)}
+              localDraftTime={localDrafts[resume.id]?.localStorageLastUpdated || null}
+            />
+          ))}
+        </>
+      )}
+
+      {/* Render Draft Resumes */}
+      {draftResumes.length > 0 && (
+        <>
+          <Typography variant='h6' sx={{ color: '#2E2E48', fontWeight: 600, mt: 2 }}>
+            Draft Resumes
+          </Typography>
+          {draftResumes.map(resume => (
+            <ResumeCard
+              key={resume.id}
+              id={resume.id}
+              title={resume?.content?.contact?.fullName?.split('.')[0]}
+              date={new Date().toLocaleDateString()}
+              credentials={0}
+              isDraft={true}
+              resume={resume}
+              hasLocalChanges={hasLocalDraft(resume.id)}
+              localDraftTime={localDrafts[resume.id]?.localStorageLastUpdated || null}
+            />
+          ))}
+        </>
+      )}
 
       {/* Show Message if No Resumes Exist */}
       {signed.length + unsigned.length === 0 && status === 'succeeded' && (
