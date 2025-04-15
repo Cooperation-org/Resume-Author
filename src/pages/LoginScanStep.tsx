@@ -2,9 +2,65 @@ import { Box, Typography, Button, Link } from '@mui/material'
 import { SVGLogoDescreption, SVGALoginLogo, SVGQRCode } from '../assets/svgs'
 import { useNavigate } from 'react-router-dom'
 import { login } from '../tools/auth'
+import { useState, useEffect } from 'react'
+import QRCode from 'react-qr-code'
 
 export default function LoginScanStep() {
   const navigate = useNavigate()
+  const [qrData, setQrData] = useState('')
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState(null)
+
+  // Fetch QR code data from our API
+  useEffect(() => {
+    const fetchQrData = async () => {
+      try {
+        setIsLoading(true)
+        const response = await fetch('http://localhost:3000/api/qr-code')
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch QR code data')
+        }
+
+        const data = await response.json()
+
+        // Generate deep link with embedded data
+        const qrValue = `walletapp://import?payload=${encodeURIComponent(JSON.stringify(data.payload))}`
+        setQrData(qrValue)
+      } catch (err: any) {
+        console.error('Error fetching QR code data:', err)
+        setError(err.message)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchQrData()
+
+    // Set up polling to check if the user has completed the flow
+    const pollingInterval = setInterval(checkAuthStatus, 5000)
+
+    return () => clearInterval(pollingInterval)
+  }, [])
+
+  // This function would check if the user has completed the auth flow
+  const checkAuthStatus = async () => {
+    // In a real implementation, you would:
+    // 1. Extract the session ID from the QR code data
+    // 2. Check if this session has been authenticated by calling another API endpoint
+    // 3. If authenticated, navigate to the next page
+
+    // For now, this is a placeholder
+    try {
+      // Mock API call - would be replaced with a real endpoint
+      // const response = await fetch('/api/auth/check-status?sessionId=...')
+      // if (response.ok && response.json().authenticated) {
+      //   navigate('/resume/import')
+      // }
+    } catch (error) {
+      console.error('Error checking auth status:', error)
+    }
+  }
 
   const handleGoogleSignIn = () => {
     login('/resume/import')
@@ -164,19 +220,33 @@ export default function LoginScanStep() {
             phone's camera to scan this QR code to authorize Resume Author to store your
             credentials and resumes in Learner Credential Wallet.
           </Typography>
-
           <Box
             sx={{
               my: 3,
               transform: { xs: 'scale(0.9)', sm: 'scale(1)' },
               display: 'flex',
               justifyContent: { xs: 'center', md: 'flex-start' },
-              width: '100%'
+              width: '100%',
+              bgcolor: 'white',
+              p: 2,
+              borderRadius: 1,
+              border: '1px solid #eee'
             }}
           >
-            <SVGQRCode />
+            {isLoading ? (
+              <Typography>Loading QR code...</Typography>
+            ) : error ? (
+              <Typography color='error'>Error: {error}</Typography>
+            ) : (
+              <QRCode
+                value={qrData}
+                size={256}
+                level='H'
+                fgColor='#3A35A2'
+                bgColor='#FFFFFF'
+              />
+            )}
           </Box>
-
           {/* Regular text with Nunito Sans */}
           <Typography
             sx={{
