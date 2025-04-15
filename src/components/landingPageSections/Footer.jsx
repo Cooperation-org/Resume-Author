@@ -1,5 +1,5 @@
 import React from 'react'
-import { Box, Typography, Divider, Button } from '@mui/material'
+import { Box, Typography, Divider, Button, useTheme, useMediaQuery } from '@mui/material'
 import { SVGGitHub, SVGlisence, SVGCopyWriter } from '../../assets/svgs'
 
 const StyledButton = ({ href, startIcon, children }) => (
@@ -11,7 +11,7 @@ const StyledButton = ({ href, startIcon, children }) => (
     sx={{
       color: '#2563EB',
       fontFamily: 'Nunito Sans',
-      fontSize: '14px',
+      fontSize: { xs: '12px', sm: '14px' },
       fontWeight: 500,
       lineHeight: '40px',
       letterSpacing: '-0.26px',
@@ -32,19 +32,27 @@ const StyledButton = ({ href, startIcon, children }) => (
 )
 
 const Footer = () => {
+  const theme = useTheme()
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'))
+  const isTablet = useMediaQuery(theme.breakpoints.down('md'))
+
   return (
     <Box
       sx={{
         backgroundColor: '#E9E6F8',
-        padding: '30px 75px'
+        padding: { xs: '20px 15px', sm: '25px 30px', md: '30px 75px' }
       }}
     >
       <Box
-        sx={{}}
-        display='flex'
-        justifyContent='flex-start'
-        alignItems='space-between'
-        gap={2}
+        sx={{
+          display: 'flex',
+          flexDirection: { xs: 'column', sm: 'row' },
+          justifyContent: { xs: 'center', sm: 'flex-start' },
+          alignItems: { xs: 'flex-start', sm: 'center' },
+          gap: { xs: 2, sm: 3 },
+          flexWrap: 'wrap',
+          padding: { xs: '0 15px', sm: '0 30px' }
+        }}
       >
         <Box display='flex' alignItems='center' gap={1}>
           <SVGCopyWriter />
@@ -52,7 +60,7 @@ const Footer = () => {
             sx={{
               color: '#47516B',
               fontFamily: 'Nunito Sans',
-              fontSize: '14px',
+              fontSize: { xs: '12px', sm: '14px' },
               fontWeight: 500,
               lineHeight: '40px',
               letterSpacing: '-0.26px'
@@ -61,13 +69,15 @@ const Footer = () => {
             Copyright, Creative Commons License BY 4.0
           </Typography>
         </Box>
-        <Divider orientation='vertical' flexItem />
+
+        {!isMobile && <Divider orientation='vertical' flexItem />}
 
         <Box display='flex' justifyContent='center' alignItems='center' gap={1}>
           <SVGlisence />
           <StyledButton>Apache 2 License</StyledButton>
         </Box>
-        <Divider orientation='vertical' flexItem />
+
+        {!isMobile && <Divider orientation='vertical' flexItem />}
 
         <Box display='flex' alignItems='center' gap={1}>
           <SVGGitHub />
@@ -75,7 +85,7 @@ const Footer = () => {
             sx={{
               color: '#47516B',
               fontFamily: 'Nunito Sans',
-              fontSize: '14px',
+              fontSize: { xs: '12px', sm: '14px' },
               fontWeight: 500,
               lineHeight: '40px',
               letterSpacing: '-0.26px'
@@ -87,17 +97,19 @@ const Footer = () => {
             https://github.com/....
           </StyledButton>
         </Box>
-        <Divider orientation='vertical' flexItem />
+
+        {!isMobile && <Divider orientation='vertical' flexItem />}
 
         <StyledButton href='/privacy-policy'>Privacy Policy</StyledButton>
-        <Divider orientation='vertical' flexItem />
+
+        {!isMobile && <Divider orientation='vertical' flexItem />}
 
         <Box display='flex' alignItems='center'>
           <Typography
             sx={{
               color: '#47516B',
               fontFamily: 'Nunito Sans',
-              fontSize: '14px',
+              fontSize: { xs: '12px', sm: '14px' },
               fontWeight: 500,
               lineHeight: '40px',
               letterSpacing: '-0.26px'
@@ -108,7 +120,7 @@ const Footer = () => {
               style={{
                 color: 'var(--Primary-Link, #2563EB)',
                 fontFamily: 'Nunito Sans',
-                fontSize: '16px',
+                fontSize: { xs: '14px', sm: '16px' },
                 fontStyle: 'normal',
                 fontWeight: 500,
                 lineHeight: '40px',

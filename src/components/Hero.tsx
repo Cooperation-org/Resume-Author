@@ -1,4 +1,12 @@
-import { Container, Box, Typography, Stack, Button } from '@mui/material'
+import {
+  Container,
+  Box,
+  Typography,
+  Stack,
+  Button,
+  useMediaQuery,
+  useTheme
+} from '@mui/material'
 import React from 'react'
 import HeroImage from '../assets/image 1.png'
 import HeroImage2 from '../assets/Union.png'
@@ -17,6 +25,10 @@ import { useNavigate } from 'react-router-dom'
 const Hero = () => {
   const isAuthenticated = useSelector((state: RootState) => state.auth.isAuthenticated)
   const navigate = useNavigate()
+  const theme = useTheme()
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'))
+  const isTablet = useMediaQuery(theme.breakpoints.between('sm', 'md'))
+
   const handleLogin = () => {
     if (!isAuthenticated) {
       login('/resume/import')
@@ -26,25 +38,26 @@ const Hero = () => {
   }
   return (
     <div>
-      <Container maxWidth='lg' sx={{ mt: 8, pb: 8 }}>
+      <Container maxWidth='lg' sx={{ mt: 4, pb: 4, px: { xs: 2, sm: 3, md: 4 } }}>
         <Box
           sx={{
             display: 'flex',
+            flexDirection: { xs: 'column', md: 'row' },
             alignItems: 'center',
-            gap: '50px',
-            minHeight: '60vh'
+            gap: { xs: '30px', md: '50px' },
+            minHeight: { xs: 'auto', md: '60vh' }
           }}
         >
-          <Box sx={{ flex: 1 }}>
+          <Box sx={{ flex: 1, width: '100%' }}>
             <Typography
               variant='h1'
               sx={{
                 color: 'white',
-                fontSize: '40px',
+                fontSize: { xs: '28px', sm: '32px', md: '40px' },
                 fontWeight: 700,
                 mb: 2,
                 fontFamily: 'Poppins',
-                lineHeight: '50px' /* 141.667% */
+                lineHeight: { xs: '36px', sm: '40px', md: '50px' }
               }}
             >
               Prove your skills in a verifiable resume that employers trust.
@@ -53,7 +66,7 @@ const Hero = () => {
               sx={{
                 color: 'white',
                 mb: 4,
-                fontSize: '18px',
+                fontSize: { xs: '16px', md: '18px' },
                 fontWeight: '500',
                 fonstFamily: 'Nunito sans'
               }}
@@ -69,11 +82,13 @@ const Hero = () => {
                 sx={{
                   color: '#4527A0',
                   bgcolor: 'white',
-                  p: '10px 30px',
+                  p: { xs: '8px 20px', md: '10px 30px' },
                   borderRadius: '100px',
                   textTransform: 'capitalize',
                   fontWeight: 700,
-                  fonstFamily: 'Nunito Sans'
+                  fonstFamily: 'Nunito Sans',
+                  fontSize: { xs: '14px', md: '16px' },
+                  whiteSpace: 'nowrap'
                 }}
               >
                 {!isAuthenticated
@@ -86,7 +101,7 @@ const Hero = () => {
               sx={{
                 mt: 4,
                 color: 'rgba(255,255,255,0.7)',
-                fontSize: '14px',
+                fontSize: { xs: '12px', md: '14px' },
                 fontWeight: 700,
                 fontFamily: 'Nunito Sans',
                 cursor: 'pointer',
@@ -111,26 +126,64 @@ const Hero = () => {
             </Typography>
           </Box>
 
-          <Box sx={{ display: 'flex', gap: '27px' }}>
+          {!isMobile ? (
             <Box
-              component='img'
-              src={HeroImage}
-              alt='Construction worker'
-              sx={{ width: 200, height: 400, borderRadius: '10px' }}
-            />
+              sx={{
+                display: 'flex',
+                gap: { sm: '15px', md: '27px' }
+              }}
+            >
+              <Box
+                component='img'
+                src={HeroImage}
+                alt='Construction worker'
+                sx={{
+                  width: { sm: 120, md: 200 },
+                  height: { sm: 240, md: 400 },
+                  borderRadius: '10px'
+                }}
+              />
+              <Box
+                component='img'
+                src={HeroImage2}
+                alt='Construction worker'
+                sx={{
+                  width: { sm: 120, md: 200 },
+                  height: { sm: 240, md: 400 }
+                }}
+              />
+              {!isTablet && (
+                <Box
+                  component='img'
+                  src={HeroImage3}
+                  alt='Construction worker'
+                  sx={{ width: 200, height: 400 }}
+                />
+              )}
+            </Box>
+          ) : (
             <Box
-              component='img'
-              src={HeroImage2}
-              alt='Construction worker'
-              sx={{ width: 200, height: 400 }}
-            />
-            <Box
-              component='img'
-              src={HeroImage3}
-              alt='Construction worker'
-              sx={{ width: 200, height: 400 }}
-            />
-          </Box>
+              sx={{
+                display: 'flex',
+                gap: '15px',
+                justifyContent: 'center',
+                width: '100%'
+              }}
+            >
+              <Box
+                component='img'
+                src={HeroImage}
+                alt='Construction worker'
+                sx={{ width: 120, height: 240, borderRadius: '10px' }}
+              />
+              <Box
+                component='img'
+                src={HeroImage2}
+                alt='Construction worker'
+                sx={{ width: 120, height: 240 }}
+              />
+            </Box>
+          )}
         </Box>
       </Container>
       <HowItWorksSection />

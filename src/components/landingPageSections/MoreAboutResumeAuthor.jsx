@@ -12,19 +12,20 @@ const MoreAbout = () => {
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
-        padding: '130px',
+        padding: { xs: '60px 20px', sm: '80px 30px', md: '130px' },
         textAlign: 'center',
         backgroundColor: '#FFF',
-        gap: '30px'
+        gap: { xs: '20px', md: '30px' }
       }}
     >
       <Typography
         variant='h1'
         sx={{
           color: '#292489',
-          fontSize: '55px',
+          fontSize: { xs: '32px', sm: '42px', md: '55px' },
           fontWeight: '600',
-          marginBottom: '70px'
+          marginBottom: { xs: '40px', md: '70px' },
+          px: { xs: 2, sm: 3 }
         }}
       >
         Learn More About Resume Author
@@ -33,24 +34,44 @@ const MoreAbout = () => {
       <Box
         sx={{
           display: 'flex',
-          alignItems: 'flex-start',
+          flexDirection: { xs: 'column', sm: 'row' },
+          alignItems: { xs: 'center', md: 'flex-start' },
           justifyContent: 'center',
-          gap: '60px'
+          gap: { xs: '30px', md: '60px' },
+          width: '100%',
+          flexWrap: { sm: 'wrap' }
         }}
       >
         {sectionData.map((section, index) => (
-          <Card sx={{ maxWidth: 345, borderRadius: '20px 20px 0px 0px' }}>
-            <CardMedia sx={{ height: 140 }} image={section} title='green iguana' />
+          <Card
+            key={index}
+            sx={{
+              maxWidth: { xs: '100%', sm: '300px', md: '345px' },
+              width: { xs: '100%', sm: 'auto' },
+              borderRadius: '20px 20px 0px 0px',
+              mb: { xs: 3, sm: 0 }
+            }}
+          >
+            <CardMedia
+              sx={{ height: { xs: 120, md: 140 } }}
+              image={section}
+              title='green iguana'
+            />
             <CardContent
               sx={{
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'flex-start',
-                justifyContent: 'flex-start'
+                justifyContent: 'flex-start',
+                padding: { xs: '16px', md: '24px' }
               }}
             >
               <Typography
-                sx={{ fontFamily: 'Nunito Sans', fontWeight: 700, fontSize: '20px' }}
+                sx={{
+                  fontFamily: 'Nunito Sans',
+                  fontWeight: 700,
+                  fontSize: { xs: '18px', md: '20px' }
+                }}
                 gutterBottom
               >
                 Headline
@@ -60,7 +81,7 @@ const MoreAbout = () => {
                 sx={{
                   fontFamily: 'Nunito Sans',
                   fontWeight: 500,
-                  fontSize: '18px',
+                  fontSize: { xs: '16px', md: '18px' },
                   color: 'text.secondary',
                   textAlign: 'left'
                 }}
@@ -72,7 +93,7 @@ const MoreAbout = () => {
                 sx={{
                   color: '#2563EB',
                   fontFamily: 'Nunito Sans',
-                  fontSize: '18px',
+                  fontSize: { xs: '16px', md: '18px' },
                   fontWeight: 500,
                   letterSpacing: '-0.18px',
                   textDecoration: 'underline',
