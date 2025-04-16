@@ -1,31 +1,39 @@
-import { Box, Typography, Button, Link } from '@mui/material'
-import { SVGLogoDescreption, SVGALoginLogo, SVGQRCode } from '../assets/svgs'
+import { Box, Typography, Button, Link, CircularProgress } from '@mui/material'
+import { SVGLogoDescreption, SVGALoginLogo } from '../assets/svgs'
 import { useNavigate } from 'react-router-dom'
 import { login } from '../tools/auth'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import QRCode from 'react-qr-code'
+import CheckCircleIcon from '@mui/icons-material/CheckCircle'
+import ErrorIcon from '@mui/icons-material/Error'
 
 export default function LoginScanStep() {
   const navigate = useNavigate()
   const [qrData, setQrData] = useState('')
+  const [sessionId, setSessionId] = useState('')
   const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState(null)
+  const [error, setError] = useState('')
+  const [authStatus, setAuthStatus] = useState('pending') // 'pending', 'authenticated', 'failed'
+  const [connectionAttempts, setConnectionAttempts] = useState(0)
+  const [timeRemaining, setTimeRemaining] = useState(300) // 5 minutes
+  const pollingIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const timerIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
-  // Fetch QR code data from our API
   useEffect(() => {
     const fetchQrData = async () => {
       try {
         setIsLoading(true)
-        const response = await fetch('http://localhost:3000/api/qr-code')
+        const response = await fetch('http://localhost:3000/api/lcw/qr-code')
 
         if (!response.ok) {
           throw new Error('Failed to fetch QR code data')
         }
 
         const data = await response.json()
+        console.log('🚀 ~ fetchQrData ~ data:', data)
+        setSessionId(data.sessionId)
 
-        // Generate deep link with embedded data
-        const qrValue = `walletapp://import?payload=${encodeURIComponent(JSON.stringify(data.payload))}`
+        const qrValue = `walletapp://import?payload=${encodeURIComponent(JSON.stringify(data))}`
         setQrData(qrValue)
       } catch (err: any) {
         console.error('Error fetching QR code data:', err)
@@ -37,33 +45,42 @@ export default function LoginScanStep() {
 
     fetchQrData()
 
-    // Set up polling to check if the user has completed the flow
-    const pollingInterval = setInterval(checkAuthStatus, 5000)
-
-    return () => clearInterval(pollingInterval)
-  }, [])
-
-  // This function would check if the user has completed the auth flow
-  const checkAuthStatus = async () => {
-    // In a real implementation, you would:
-    // 1. Extract the session ID from the QR code data
-    // 2. Check if this session has been authenticated by calling another API endpoint
-    // 3. If authenticated, navigate to the next page
-
-    // For now, this is a placeholder
-    try {
-      // Mock API call - would be replaced with a real endpoint
-      // const response = await fetch('/api/auth/check-status?sessionId=...')
-      // if (response.ok && response.json().authenticated) {
-      //   navigate('/resume/import')
-      // }
-    } catch (error) {
-      console.error('Error checking auth status:', error)
+    return () => {
+      if (pollingIntervalRef.current) {
+        clearInterval(pollingIntervalRef.current as NodeJS.Timeout)
+      }
+      if (timerIntervalRef.current) {
+        clearInterval(timerIntervalRef.current)
+      }
     }
+  }, [connectionAttempts])
+
+  const formatTimeRemaining = () => {
+    const minutes = Math.floor(timeRemaining / 60)
+    const seconds = timeRemaining % 60
+    return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`
   }
 
   const handleGoogleSignIn = () => {
-    login('/resume/import')
+    login(`/resume/import`)
+  }
+
+  const handleRefresh = () => {
+    // Reset states
+    setQrData('')
+    setSessionId('')
+    setError('')
+    setAuthStatus('pending')
+    setTimeRemaining(300)
+    setConnectionAttempts(prev => prev + 1)
+  }
+
+  const handleButtonClick = () => {
+    if (error) {
+      handleRefresh()
+    } else {
+      handleGoogleSignIn()
+    }
   }
 
   return (
@@ -230,23 +247,132 @@ export default function LoginScanStep() {
               bgcolor: 'white',
               p: 2,
               borderRadius: 1,
-              border: '1px solid #eee'
+              border: '1px solid #eee',
+              position: 'relative'
             }}
           >
             {isLoading ? (
-              <Typography>Loading QR code...</Typography>
+              <Box
+                sx={{
+                  display: 'flex',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  height: 256,
+                  width: 256
+                }}
+              >
+                <CircularProgress />
+              </Box>
             ) : error ? (
-              <Typography color='error'>Error: {error}</Typography>
+              <Box
+                sx={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  height: 256,
+                  width: 256
+                }}
+              >
+                <ErrorIcon color='error' sx={{ fontSize: 48, mb: 2 }} />
+                <Typography color='error' textAlign='center' sx={{ px: 2 }}>
+                  {error}
+                </Typography>
+              </Box>
             ) : (
-              <QRCode
-                value={qrData}
-                size={256}
-                level='H'
-                fgColor='#3A35A2'
-                bgColor='#FFFFFF'
-              />
+              <>
+                <QRCode
+                  value={qrData}
+                  size={256}
+                  level='H'
+                  fgColor='#3A35A2'
+                  bgColor='#FFFFFF'
+                />
+                {authStatus === 'authenticated' && (
+                  <Box
+                    sx={{
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      width: '100%',
+                      height: '100%',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                      backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                      borderRadius: 1
+                    }}
+                  >
+                    <CheckCircleIcon sx={{ color: '#4CAF50', fontSize: 64, mb: 2 }} />
+                    <Typography
+                      sx={{
+                        color: '#4CAF50',
+                        fontWeight: 'bold',
+                        fontSize: '1.5rem',
+                        textAlign: 'center'
+                      }}
+                    >
+                      Authentication Successful
+                    </Typography>
+                    <Typography sx={{ mt: 1, textAlign: 'center' }}>
+                      Redirecting to Resume Author...
+                    </Typography>
+                  </Box>
+                )}
+
+                {/* QR Code Timer */}
+                {!error && authStatus !== 'authenticated' && (
+                  <Box
+                    sx={{
+                      position: 'absolute',
+                      bottom: 10,
+                      right: 10,
+                      backgroundColor: 'rgba(0,0,0,0.7)',
+                      color: 'white',
+                      borderRadius: 1,
+                      px: 1,
+                      py: 0.5,
+                      fontSize: '0.8rem'
+                    }}
+                  >
+                    {formatTimeRemaining()}
+                  </Box>
+                )}
+              </>
             )}
           </Box>
+
+          {/* Status message */}
+          <Box sx={{ width: '100%', mb: 2 }}>
+            {authStatus === 'pending' && !error && (
+              <Typography
+                sx={{
+                  color: '#2D2D47',
+                  fontSize: { xs: 14, sm: 16 },
+                  textAlign: { xs: 'center', md: 'left' },
+                  fontFamily: 'Nunito Sans'
+                }}
+              >
+                Waiting for wallet connection... The QR code will expire in{' '}
+                {formatTimeRemaining()}.
+              </Typography>
+            )}
+            {authStatus === 'authenticated' && (
+              <Typography
+                sx={{
+                  color: '#4CAF50',
+                  fontSize: { xs: 14, sm: 16 },
+                  fontWeight: 'bold',
+                  textAlign: { xs: 'center', md: 'left' },
+                  fontFamily: 'Nunito Sans'
+                }}
+              >
+                Connection successful! You will be redirected shortly.
+              </Typography>
+            )}
+          </Box>
+
           {/* Regular text with Nunito Sans */}
           <Typography
             sx={{
@@ -258,7 +384,7 @@ export default function LoginScanStep() {
               fontFamily: 'Nunito Sans'
             }}
           >
-            If your screen doesn't automatically refresh 30 seconds after you consent,
+            If your screen doesn't automatically refresh after you consent in the wallet,
             select the Launch Resume Author button to continue:
           </Typography>
 
@@ -290,7 +416,7 @@ export default function LoginScanStep() {
               Cancel
             </Button>
             <Button
-              onClick={handleGoogleSignIn}
+              onClick={handleButtonClick}
               variant='outlined'
               sx={{
                 border: '2px solid #3A35A2',
@@ -304,7 +430,7 @@ export default function LoginScanStep() {
                 fontFamily: 'Nunito Sans'
               }}
             >
-              Launch Resume Author
+              {error ? 'Refresh QR Code' : 'Launch Resume Author'}
             </Button>
           </Box>
         </Box>
