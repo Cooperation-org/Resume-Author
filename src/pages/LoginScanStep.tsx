@@ -2,7 +2,7 @@ import { Box, Typography, Button, Link, CircularProgress } from '@mui/material'
 import { SVGLogoDescreption, SVGALoginLogo } from '../assets/svgs'
 import { useNavigate } from 'react-router-dom'
 import { login } from '../tools/auth'
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import QRCode from 'react-qr-code'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import ErrorIcon from '@mui/icons-material/Error'
@@ -16,62 +16,110 @@ export default function LoginScanStep() {
   const [authStatus, setAuthStatus] = useState('pending') // 'pending', 'authenticated', 'failed'
   const [connectionAttempts, setConnectionAttempts] = useState(0)
   const [timeRemaining, setTimeRemaining] = useState(300) // 5 minutes
-  const pollingIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
-  const timerIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const pollingIntervalRef = useRef<ReturnType<typeof setInterval> | undefined>(undefined)
+  const timerIntervalRef = useRef<ReturnType<typeof setInterval> | undefined>(undefined)
+
+  // Function to check authentication status
+  const checkAuthStatus = useCallback(async () => {
+    if (!sessionId) return
+
+    try {
+      const response = await fetch(
+        `${process.env.REACT_APP_API_URL || 'http://localhost:3000'}/api/lcw/check-auth?sessionId=${sessionId}`,
+        {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        }
+      )
+      console.log('🚀 ~ checkAuthStatus ~ response:', response)
+
+      // Handle non-200 responses
+      if (!response.ok) {
+        if (response.status === 404) {
+          setError('Session not found. Please try again.')
+          clearInterval(pollingIntervalRef.current)
+          return
+        }
+
+        if (response.status === 410) {
+          setError('QR code has expired. Please refresh.')
+          clearInterval(pollingIntervalRef.current)
+          return
+        }
+
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Error checking authentication status')
+      }
+
+      const data = await response.json()
+
+      if (data.timeRemaining) {
+        // Update time remaining if provided by the server
+        setTimeRemaining(data.timeRemaining)
+      }
+
+      switch (data.status) {
+        case 'confirmed':
+          if (pollingIntervalRef.current) {
+            clearInterval(pollingIntervalRef.current)
+          }
+          if (timerIntervalRef.current) {
+            clearInterval(timerIntervalRef.current)
+          }
+          setAuthStatus('authenticated')
+
+          // Store the resumeData in context or localStorage if needed
+          if (data.resumeData) {
+            localStorage.setItem('resumeData', JSON.stringify(data))
+          }
+
+          setTimeout(() => {
+            navigate('/')
+          }, 2000)
+          break
+
+        case 'failed':
+          if (pollingIntervalRef.current) {
+            clearInterval(pollingIntervalRef.current)
+          }
+          setAuthStatus('failed')
+          setError(data.error || 'Authentication failed. Please try again.')
+          break
+
+        case 'pending':
+        default:
+          break
+      }
+    } catch (error: any) {
+      console.error('Error checking auth status:', error)
+    }
+  }, [navigate, sessionId])
 
   useEffect(() => {
     const fetchQrData = async () => {
       try {
         setIsLoading(true)
-        const response = await fetch('http://localhost:3000/api/lcw/start')
+        const response = await fetch(
+          `${process.env.REACT_APP_API_URL || 'http://localhost:3000'}/api/lcw/start`
+        )
 
         if (!response.ok) {
           throw new Error('Failed to fetch QR code data')
         }
 
         const data = await response.json()
-        console.log('🚀 ~ fetchQrData ~ data:', data)
+        console.log('QR data received:', data)
 
         setSessionId(data.sessionId)
-        // Start polling for auth status
-        pollingIntervalRef.current = setInterval(async () => {
-          try {
-            const pollRes = await fetch(
-              `http://localhost:3000/api/lcw/check-auth?sessionId=${data.sessionId}`
-            )
-            const pollData = await pollRes.json()
 
-            if (pollData.status === 'confirmed') {
-              clearInterval(pollingIntervalRef.current!)
-              clearInterval(timerIntervalRef.current!)
-              setAuthStatus('authenticated')
-
-              // Redirect after short delay
-              setTimeout(() => {
-                navigate('/resume/import')
-              }, 2000)
-            }
-          } catch (err) {
-            console.error('Polling error:', err)
-          }
-        }, 3000) // every 3 seconds
-        timerIntervalRef.current = setInterval(() => {
-          setTimeRemaining(prev => {
-            if (prev <= 1) {
-              clearInterval(timerIntervalRef.current!)
-              clearInterval(pollingIntervalRef.current!)
-              setError('QR Code expired. Please refresh.')
-              return 0
-            }
-            return prev - 1
-          })
-        }, 1000)
-
+        // Create QR code data with payload
         const qrValue = `walletapp://import?payload=${encodeURIComponent(JSON.stringify(data))}`
         setQrData(qrValue)
       } catch (err: any) {
         console.error('Error fetching QR code data:', err)
-        setError(err.message)
+        setError(err.message || 'Failed to generate QR code')
       } finally {
         setIsLoading(false)
       }
@@ -81,13 +129,47 @@ export default function LoginScanStep() {
 
     return () => {
       if (pollingIntervalRef.current) {
-        clearInterval(pollingIntervalRef.current as NodeJS.Timeout)
+        clearInterval(pollingIntervalRef.current)
       }
       if (timerIntervalRef.current) {
         clearInterval(timerIntervalRef.current)
       }
     }
   }, [connectionAttempts])
+
+  useEffect(() => {
+    if (sessionId) {
+      pollingIntervalRef.current = setInterval(checkAuthStatus, 3000)
+
+      timerIntervalRef.current = setInterval(() => {
+        setTimeRemaining(prev => {
+          if (prev <= 1) {
+            if (timerIntervalRef.current) {
+              clearInterval(timerIntervalRef.current)
+            }
+            if (pollingIntervalRef.current) {
+              clearInterval(pollingIntervalRef.current)
+            }
+            setError('QR Code expired. Please refresh.')
+            return 0
+          }
+          return prev - 1
+        })
+      }, 1000)
+
+      // Initial check
+      checkAuthStatus()
+    }
+
+    return () => {
+      if (pollingIntervalRef.current) {
+        clearInterval(pollingIntervalRef.current)
+      }
+      if (timerIntervalRef.current) {
+        clearInterval(timerIntervalRef.current)
+      }
+    }
+  }, [checkAuthStatus, sessionId])
 
   const formatTimeRemaining = () => {
     const minutes = Math.floor(timeRemaining / 60)
