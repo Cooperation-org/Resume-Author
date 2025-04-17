@@ -23,7 +23,7 @@ export default function LoginScanStep() {
     const fetchQrData = async () => {
       try {
         setIsLoading(true)
-        const response = await fetch('http://localhost:3000/api/lcw/qr-code')
+        const response = await fetch('http://localhost:3000/api/lcw/start')
 
         if (!response.ok) {
           throw new Error('Failed to fetch QR code data')
@@ -31,7 +31,41 @@ export default function LoginScanStep() {
 
         const data = await response.json()
         console.log('🚀 ~ fetchQrData ~ data:', data)
+
         setSessionId(data.sessionId)
+        // Start polling for auth status
+        pollingIntervalRef.current = setInterval(async () => {
+          try {
+            const pollRes = await fetch(
+              `http://localhost:3000/api/lcw/check-auth?sessionId=${data.sessionId}`
+            )
+            const pollData = await pollRes.json()
+
+            if (pollData.status === 'confirmed') {
+              clearInterval(pollingIntervalRef.current!)
+              clearInterval(timerIntervalRef.current!)
+              setAuthStatus('authenticated')
+
+              // Redirect after short delay
+              setTimeout(() => {
+                navigate('/resume/import')
+              }, 2000)
+            }
+          } catch (err) {
+            console.error('Polling error:', err)
+          }
+        }, 3000) // every 3 seconds
+        timerIntervalRef.current = setInterval(() => {
+          setTimeRemaining(prev => {
+            if (prev <= 1) {
+              clearInterval(timerIntervalRef.current!)
+              clearInterval(pollingIntervalRef.current!)
+              setError('QR Code expired. Please refresh.')
+              return 0
+            }
+            return prev - 1
+          })
+        }, 1000)
 
         const qrValue = `walletapp://import?payload=${encodeURIComponent(JSON.stringify(data))}`
         setQrData(qrValue)
