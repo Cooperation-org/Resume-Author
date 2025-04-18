@@ -650,8 +650,7 @@ const ResumeEditor: React.FC = () => {
                   letterSpacing: '0.16px'
                 }}
               >
-                Name your resume with your first and last name so recruiters can easily
-                locate your resume.
+                Enter the file name of this resume for My Resume's display.
               </Typography>
               <Box sx={{ display: 'flex', gap: 2 }}>
                 <Button

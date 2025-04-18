@@ -138,7 +138,9 @@ const LeftSidebar = () => {
           </Typography>
         </Box>
         <Box sx={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 1 }}>
-          <FormLabel sx={labelStyles}>Full Name (required)</FormLabel>
+          <FormLabel sx={labelStyles}>
+            Full Name (Required to title your resume in the rendered PDF)
+          </FormLabel>
           <TextField
             placeholder='Enter your full name'
             fullWidth

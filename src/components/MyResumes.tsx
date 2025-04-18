@@ -91,7 +91,10 @@ const ResumeScreen: React.FC = () => {
             <ResumeCard
               key={resume?.id}
               id={resume?.id}
-              title={resume?.content?.credentialSubject?.person?.name?.formattedName}
+              title={
+                resume?.content?.credentialSubject?.person?.name?.formattedName ||
+                'Untitled Resume'
+              }
               date={new Date(resume?.content?.issuanceDate).toLocaleDateString()}
               credentials={0}
               isDraft={false}
@@ -111,7 +114,7 @@ const ResumeScreen: React.FC = () => {
             <ResumeCard
               key={resume.id}
               id={resume.id}
-              title={resume?.content?.contact?.fullName?.split('.')[0]}
+              title={resume?.content?.name}
               date={new Date().toLocaleDateString()}
               credentials={0}
               isDraft={false} // Not a draft, but unsigned
@@ -133,7 +136,7 @@ const ResumeScreen: React.FC = () => {
             <ResumeCard
               key={resume.id}
               id={resume.id}
-              title={resume?.content?.contact?.fullName?.split('.')[0]}
+              title={resume?.content?.name}
               date={new Date().toLocaleDateString()}
               credentials={0}
               isDraft={true}

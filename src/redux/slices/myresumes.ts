@@ -60,6 +60,7 @@ interface Resume {
     credentialSubject: any
     contact: any
     resume: any
+    name: string
   }
 }
 
