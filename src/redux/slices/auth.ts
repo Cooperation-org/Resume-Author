@@ -6,7 +6,8 @@ interface AuthState {
   accessToken: string | null
 }
 
-const token = getLocalStorage('auth')
+const storedToken = getLocalStorage('auth')
+const token = storedToken && storedToken !== 'undefined' ? storedToken : null
 
 const initialState: AuthState = {
   isAuthenticated: !!token,
@@ -17,13 +18,13 @@ const authSlice = createSlice({
   name: 'auth',
   initialState,
   reducers: {
-    setAuth: (state, action: PayloadAction<{ accessToken: string }>) => {
-      state.isAuthenticated = true
+    setAuth: (state, action: PayloadAction<{ accessToken: string | null }>) => {
       state.accessToken = action.payload.accessToken
+      state.isAuthenticated = !!action.payload.accessToken
     },
     clearAuth: state => {
-      state.isAuthenticated = false
       state.accessToken = null
+      state.isAuthenticated = false
     }
   }
 })
