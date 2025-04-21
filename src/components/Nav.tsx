@@ -2,18 +2,19 @@ import Logo from '../assets/logo.png'
 import { AppBar, Toolbar, Box, Typography, Stack, Button } from '@mui/material'
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { getLocalStorage, removeLocalStorage } from '../tools/cookie'
+import { getLocalStorage } from '../tools/cookie'
 import { useSelector, useDispatch } from 'react-redux'
-import { setAuth, clearAuth } from '../redux/slices/auth'
+import { setAuth } from '../redux/slices/auth'
 import { RootState } from '../redux/store'
 import Notification from './common/Notification'
+import { logout } from '../tools/auth'
 
 const navStyles = {
   color: 'white',
   textTransform: 'capitalize',
   fontWeight: 600,
   fontSize: '16px',
-  fonstFamily: 'Nunito sans'
+  fontFamily: 'Nunito Sans'
 }
 
 const Nav = () => {
@@ -24,14 +25,11 @@ const Nav = () => {
 
   useEffect(() => {
     const token = getLocalStorage('auth')
-    if (token) {
-      dispatch(setAuth({ accessToken: token }))
-    }
+    if (token) dispatch(setAuth({ accessToken: token }))
   }, [dispatch])
 
   const handleLogout = () => {
-    removeLocalStorage('auth')
-    dispatch(clearAuth())
+    logout()
     setShowNotification(true)
     navigate('/')
   }
@@ -50,20 +48,16 @@ const Nav = () => {
               Resume Author
             </Typography>
           </Box>
+
           {!isLogged ? (
             <Stack direction='row' spacing={5}>
-              <Button color='inherit' sx={navStyles}>
-                Why Resume Author?
-              </Button>
-              <Button color='inherit' sx={navStyles}>
-                How it works
-              </Button>
-              <Button color='inherit' sx={navStyles}>
-                Benefits
-              </Button>
-              <Button color='inherit' sx={navStyles}>
-                Learn More
-              </Button>
+              {['Why Resume Author?', 'How it works', 'Benefits', 'Learn More'].map(
+                label => (
+                  <Button key={label} color='inherit' sx={navStyles}>
+                    {label}
+                  </Button>
+                )
+              )}
             </Stack>
           ) : (
             <Button onClick={handleLogout} color='inherit' sx={navStyles}>
@@ -72,6 +66,7 @@ const Nav = () => {
           )}
         </Toolbar>
       </AppBar>
+
       <Notification
         open={showNotification}
         message="You've been successfully logged out"
