@@ -14,16 +14,26 @@ export default function LoginScanStep() {
 
   useEffect(() => {
     const sessionId = uuidv4()
-    const requestUrl = `${process.env.REACT_APP_API_URL || 'http://localhost:3000'}/api/exchanges/${sessionId}`
-    const payload = { sessionId, requestUrl }
-    const qrValue = `walletapp://import?payload=${encodeURIComponent(JSON.stringify(payload))}`
-    setQrData(qrValue)
-    setIsLoading(false)
-  }, [])
+    // TODO: Replace with actual server URL
+    const SERVER_URL = 'http://192.168.1.17:3000'
+    const WALLET_DEEP_LINK = 'walletapp://import'
+    const exchangeUrl = `${SERVER_URL}/api/exchanges/${sessionId}`
 
-  const handleRefresh = () => {
-    window.location.reload()
-  }
+    const chapiRequest = {
+      credentialRequestOrigin: SERVER_URL,
+      protocols: {
+        vcapi: exchangeUrl
+      }
+    }
+
+    const encodedRequest = encodeURIComponent(JSON.stringify(chapiRequest))
+    const lcwRequestUrl = `${WALLET_DEEP_LINK}?request=${encodedRequest}`
+
+    setQrData(lcwRequestUrl)
+    setIsLoading(false)
+
+    //TODO: Implement Polling from the exchangeUrl
+  }, [])
 
   return (
     <Box sx={{ width: '100%', bgcolor: '#FFFFFF', minHeight: '100vh' }}>
@@ -182,24 +192,6 @@ export default function LoginScanStep() {
               <QRCode value={qrData} size={256} level='H' />
             )}
           </Box>
-
-          {/* <Button
-            onClick={handleRefresh}
-            variant='outlined'
-            sx={{
-              border: '2px solid #3A35A2',
-              bgcolor: '#FFF',
-              color: '#3A35A2',
-              borderRadius: '50px',
-              textTransform: 'none',
-              fontWeight: 700,
-              minWidth: 200,
-              p: '21px 31px',
-              fontFamily: 'Nunito Sans'
-            }}
-          >
-            {error ? 'Refresh QR Code' : 'Login with LCW'}
-          </Button> */}
         </Box>
       </Box>
     </Box>
