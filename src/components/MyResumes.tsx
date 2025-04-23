@@ -1,4 +1,4 @@
-import { Box, Typography } from '@mui/material'
+import { Box, Typography, Button } from '@mui/material'
 import ResumeCard from './ResumeCard'
 import { Link } from 'react-router-dom'
 import { useSelector, useDispatch } from 'react-redux'
@@ -6,9 +6,27 @@ import { RootState, AppDispatch } from '../redux/store'
 import { useEffect } from 'react'
 import { fetchUserResumes } from '../redux/slices/myresumes'
 import useDraftResume from '../hooks/useDraftResume'
+import { logout } from '../tools/auth'
+import { useNavigate } from 'react-router-dom'
+
+const buttonStyles = {
+  background: '#3A35A2',
+  padding: '10px 31px',
+  borderRadius: '100px',
+  color: '#FFF',
+  textAlign: 'center' as const,
+  fontFamily: 'Nunito Sans',
+  fontSize: '16px',
+  fontStyle: 'normal',
+  fontWeight: 700,
+  lineHeight: '24px',
+  border: '3px solid #3A35A2',
+  textDecoration: 'none'
+}
 
 const ResumeScreen: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>()
+  const navigate = useNavigate()
   const { signed, unsigned, status, error } = useSelector(
     (state: RootState) => state.myresumes
   )
@@ -21,6 +39,11 @@ const ResumeScreen: React.FC = () => {
   useEffect(() => {
     dispatch(fetchUserResumes())
   }, [dispatch])
+
+  const handleLogout = () => {
+    logout()
+    navigate('/')
+  }
 
   // Check if a resume has unsaved changes in localStorage (used internally)
   const hasLocalDraft = (resumeId: string) => {
@@ -62,19 +85,24 @@ const ResumeScreen: React.FC = () => {
         <Typography variant='h4' sx={{ color: '#2E2E48', fontWeight: 700 }}>
           My Resumes
         </Typography>
-        <Link
-          style={{
-            background: '#4F46E5',
-            padding: '0.7rem 1rem',
-            borderRadius: '40px',
-            color: 'white',
-            fontSize: '0.8rem',
-            fontWeight: 500
-          }}
-          to='/resume/new'
-        >
-          Create new resume
-        </Link>
+        <Box sx={{ display: 'flex', gap: 2 }}>
+          <Link style={buttonStyles} to='/resume/new'>
+            Create new resume
+          </Link>
+          <Button
+            onClick={handleLogout}
+            sx={{
+              ...buttonStyles,
+              textTransform: 'capitalize',
+              '&:hover': {
+                background: '#322e8e',
+                border: '3px solid #322e8e'
+              }
+            }}
+          >
+            Logout
+          </Button>
+        </Box>
       </Box>
 
       {/* Handle Loading & Error States */}
