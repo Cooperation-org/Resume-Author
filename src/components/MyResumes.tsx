@@ -59,7 +59,6 @@ const ResumeScreen: React.FC = () => {
   }
 
   // Filter unsigned resumes into drafts (incomplete) and completed but unsigned
-  const completedUnsignedResumes = unsigned.filter(resume => isCompletedUnsigned(resume))
   const draftResumes = unsigned.filter(resume => !isCompletedUnsigned(resume))
 
   return (
@@ -129,28 +128,6 @@ const ResumeScreen: React.FC = () => {
         </>
       )}
 
-      {/* Render Completed but Unsigned Resumes */}
-      {completedUnsignedResumes.length > 0 && (
-        <>
-          <Typography variant='h6' sx={{ color: '#2E2E48', fontWeight: 600, mt: 2 }}>
-            Completed Resumes
-          </Typography>
-          {completedUnsignedResumes.map(resume => (
-            <ResumeCard
-              key={resume.id}
-              id={resume.id}
-              title={resume?.content?.contact?.fullName?.split('.')[0]}
-              date={new Date().toLocaleDateString()}
-              credentials={0}
-              isDraft={false} // Not a draft, but unsigned
-              resume={resume}
-              hasLocalChanges={hasLocalDraft(resume.id)}
-              localDraftTime={localDrafts[resume.id]?.localStorageLastUpdated || null}
-            />
-          ))}
-        </>
-      )}
-
       {/* Render Draft Resumes */}
       {draftResumes.length > 0 && (
         <>
@@ -161,7 +138,10 @@ const ResumeScreen: React.FC = () => {
             <ResumeCard
               key={resume.id}
               id={resume.id}
-              title={resume?.content?.contact?.fullName?.split('.')[0]}
+              title={
+                resume?.content?.contact?.fullName?.split('.')[0] ||
+                resume?.name?.split('.')[0]
+              }
               date={new Date().toLocaleDateString()}
               credentials={0}
               isDraft={true}

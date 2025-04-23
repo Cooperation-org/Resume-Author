@@ -5,7 +5,7 @@ import { getLocalStorage } from '../../tools/cookie'
 import StorageService from '../../storage-singlton'
 
 // Define Resume Types
-interface IssuerInfo {
+export interface IssuerInfo {
   id: string
   name: string
   type: 'organization' | 'institution' | 'individual'
@@ -13,7 +13,7 @@ interface IssuerInfo {
   logo?: string
 }
 
-interface VerificationCredential {
+export interface VerificationCredential {
   vcId?: string
   vcDid?: string
   issuer: IssuerInfo
@@ -23,14 +23,14 @@ interface VerificationCredential {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-interface VerifiableItem {
+export interface VerifiableItem {
   id: string
   verificationStatus: 'unverified' | 'pending' | 'verified'
   verifiedCredentials?: VerificationCredential[]
   isVisible?: boolean
 }
 
-interface Contact {
+export interface Contact {
   fullName: string
   email: string
   phone?: string
@@ -47,7 +47,7 @@ interface Contact {
   }
 }
 
-interface Resume {
+export interface Resume {
   fullName: string
   id: string
   lastUpdated: string
@@ -154,25 +154,14 @@ const resumeSlice = createSlice({
     // ✅ Duplicate Resume (with new ID and updated title)
     duplicateResume: (
       state,
-      action: PayloadAction<{ id: string; type: 'signed' | 'unsigned' }>
+      action: PayloadAction<{
+        id: string
+        type: 'signed' | 'unsigned'
+        resume: Resume
+      }>
     ) => {
-      const { id, type } = action.payload
-      const resumeToDuplicate = state[type].find(resume => resume.id === id)
-
-      if (resumeToDuplicate) {
-        const newResume = {
-          ...JSON.parse(JSON.stringify(resumeToDuplicate)), // Deep clone
-          id: `${resumeToDuplicate.id}`,
-          content: {
-            ...resumeToDuplicate.content,
-            resume: {
-              ...resumeToDuplicate.content,
-              title: `${resumeToDuplicate?.content?.contact}`
-            }
-          }
-        }
-        state[type].push(newResume)
-      }
+      const { type, resume } = action.payload
+      state[type].push(resume)
     },
 
     // ✅ Delete Resume
