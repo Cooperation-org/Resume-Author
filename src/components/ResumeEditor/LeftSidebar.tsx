@@ -142,7 +142,7 @@ const LeftSidebar = () => {
           <TextField
             placeholder='Enter your full name'
             fullWidth
-            value={resume?.contact.fullName || ''}
+            value={resume?.contact?.fullName || ''}
             onChange={e => handleContactChange('fullName', e.target.value)}
             size='small'
             sx={placeholderStyle}
@@ -157,7 +157,7 @@ const LeftSidebar = () => {
             <TextField
               placeholder='Enter a valid email address'
               fullWidth
-              value={resume?.contact.email || ''}
+              value={resume?.contact?.email || ''}
               onChange={e => handleContactChange('email', e.target.value)}
               size='small'
               sx={placeholderStyle}
@@ -173,7 +173,7 @@ const LeftSidebar = () => {
             <TextField
               placeholder='###-###-####'
               fullWidth
-              value={resume?.contact.phone || ''}
+              value={resume?.contact?.phone || ''}
               onChange={e => handleContactChange('phone', e.target.value)}
               size='small'
               sx={placeholderStyle}
