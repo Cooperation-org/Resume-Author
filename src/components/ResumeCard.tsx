@@ -676,7 +676,7 @@ const ResumeCard: React.FC<ResumeCardProps> = ({
               <ListItemIcon>
                 <ContentCopyIcon fontSize='small' />
               </ListItemIcon>
-              <ListItemText primary='Duplicate' />
+              <ListItemText primary='Duplicate and Edit' />
             </MenuItem>
           </Menu>
         </Box>
