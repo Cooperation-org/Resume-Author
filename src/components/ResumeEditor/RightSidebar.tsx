@@ -110,6 +110,14 @@ const RightSidebar = () => {
       })
   }
 
+  const handleImport = () => {
+    if (accessToken && isAuthenticated) {
+      handleRefresh()
+    } else {
+      handleGoogleLogin()
+    }
+  }
+
   return (
     <Box
       sx={{
@@ -146,7 +154,6 @@ const RightSidebar = () => {
             button.
           </Typography>
           <Button
-            disabled={!!accessToken && isAuthenticated}
             fullWidth
             variant='outlined'
             sx={{
@@ -158,7 +165,7 @@ const RightSidebar = () => {
               backgroundColor: 'transparent',
               fontFamily: 'Nunito Sans'
             }}
-            onClick={handleAuth}
+            onClick={handleImport}
           >
             Import Credentials from Google Drive
           </Button>
@@ -170,7 +177,7 @@ const RightSidebar = () => {
             To check for new credentials in your wallet, select the refresh button below:
           </Typography>
           <Button
-            onClick={handleRefresh}
+            disabled={true}
             variant='outlined'
             fullWidth
             sx={{
