@@ -15,20 +15,21 @@ import {
 } from '@mui/material'
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { getLocalStorage, removeLocalStorage } from '../tools/cookie'
+import { getLocalStorage } from '../tools/cookie'
 import { useSelector, useDispatch } from 'react-redux'
-import { setAuth, clearAuth } from '../redux/slices/auth'
+import { setAuth } from '../redux/slices/auth'
 import { RootState } from '../redux/store'
 import Notification from './common/Notification'
 import MenuIcon from '@mui/icons-material/Menu'
 import CloseIcon from '@mui/icons-material/Close'
+import { logout } from '../tools/auth'
 
 const navStyles = {
   color: 'white',
   textTransform: 'capitalize',
   fontWeight: 600,
   fontSize: '16px',
-  fonstFamily: 'Nunito sans'
+  fontFamily: 'Nunito Sans'
 }
 
 const mobileNavStyles = {
@@ -51,14 +52,11 @@ const Nav = () => {
 
   useEffect(() => {
     const token = getLocalStorage('auth')
-    if (token) {
-      dispatch(setAuth({ accessToken: token }))
-    }
+    if (token) dispatch(setAuth({ accessToken: token }))
   }, [dispatch])
 
   const handleLogout = () => {
-    removeLocalStorage('auth')
-    dispatch(clearAuth())
+    logout()
     setShowNotification(true)
     navigate('/')
     setMobileMenuOpen(false)
@@ -156,6 +154,7 @@ const Nav = () => {
                   {item.label}
                 </Button>
               ))}
+
             </Stack>
           ) : (
             <Button onClick={handleLogout} color='inherit' sx={navStyles}>
@@ -164,6 +163,7 @@ const Nav = () => {
           )}
         </Toolbar>
       </AppBar>
+
       <Notification
         open={showNotification}
         message="You've been successfully logged out"

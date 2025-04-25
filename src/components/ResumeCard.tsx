@@ -155,7 +155,6 @@ const ResumeCard: React.FC<ResumeCardProps> = ({
   const [menuAnchor, setMenuAnchor] = useState<null | HTMLElement>(null)
   const [isEditing, setIsEditing] = useState(false)
   const [editedTitle, setEditedTitle] = useState(title)
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [isLoading, setIsLoading] = useState(false)
   const [showCopiedTooltip, setShowCopiedTooltip] = useState(false)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
@@ -271,13 +270,190 @@ const ResumeCard: React.FC<ResumeCardProps> = ({
   }
 
   const handleDuplicateResume = async () => {
-    dispatch(duplicateResume({ id, type: 'unsigned' }))
-    // resume.content.resume.title = `${title} - Copy`
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const file = await resumeManager.saveResume({
-      resume: resume.content,
-      type: 'unsigned'
-    })
+    try {
+      setIsLoading(true)
+      // Create a deep copy of the resume content
+      const duplicatedContent = JSON.parse(
+        JSON.stringify(resume?.content?.credentialSubject)
+      )
+      // Remove any proof/signature data if it's a signed resume
+      if (duplicatedContent.proof) {
+        delete duplicatedContent.proof
+      }
+
+      // Ensure contact object exists
+      if (!duplicatedContent.contact) {
+        duplicatedContent.contact = {}
+      }
+      const currentDate = new Date().toISOString()
+
+      const newResume = {
+        id: '',
+        lastUpdated: currentDate,
+        name: duplicatedContent.person.name.formattedName,
+        version: 1,
+        contact: {
+          fullName: duplicatedContent.person.contact.fullName,
+          email: duplicatedContent.person.contact.email,
+          phone: duplicatedContent.person.contact.phone,
+          location: {
+            street: duplicatedContent.person.contact.location.street,
+            city: duplicatedContent.person.contact.location.city,
+            state: duplicatedContent.person.contact.location.state,
+            country: duplicatedContent.person.contact.location.country,
+            postalCode: duplicatedContent.person.contact.location.postalCode
+          },
+          socialLinks: {
+            linkedin: duplicatedContent.person.contact.socialLinks.linkedin,
+            github: duplicatedContent.person.contact.socialLinks.github,
+            portfolio: duplicatedContent.person.contact.socialLinks.portfolio,
+            instagram: duplicatedContent.person.contact.socialLinks.twitter || '' // Map twitter to instagram
+          }
+        },
+        summary: duplicatedContent.narrative.text,
+        experience: {
+          items: duplicatedContent.employmentHistory.map((job: any) => ({
+            title: job.title,
+            company: job.organization.tradeName,
+            duration: job.duration,
+            currentlyEmployed: job.stillEmployed,
+            description: job.description,
+            position: '',
+            startDate: job.startDate,
+            endDate: job.endDate,
+            id: job.id || '',
+            verificationStatus: job.verificationStatus,
+            credentialLink: job.credentialLink || '',
+            selectedCredentials: job.verifiedCredentials || []
+          }))
+        },
+        education: {
+          items: duplicatedContent.educationAndLearning.map((edu: any) => ({
+            type: 'Bachelors', // Default type
+            programName: edu.fieldOfStudy,
+            institution: edu.institution,
+            duration: edu.duration,
+            currentlyEnrolled: false,
+            inProgress: false,
+            awardEarned: false,
+            description: '<p></p>',
+            id: edu.id || '',
+            verificationStatus: edu.verificationStatus,
+            credentialLink: edu.credentialLink || '',
+            selectedCredentials: edu.verifiedCredentials || [],
+            degree: edu.degree,
+            field: edu.fieldOfStudy,
+            startDate: edu.startDate,
+            endDate: edu.endDate
+          }))
+        },
+        skills: {
+          items: duplicatedContent.skills.map((skill: any) => ({
+            skills: `<p>${skill.name}</p>`,
+            id: skill.id || '',
+            verificationStatus: skill.verificationStatus,
+            credentialLink: skill.credentialLink || '',
+            selectedCredentials: skill.verifiedCredentials || []
+          }))
+        },
+        awards: {
+          items: []
+        },
+        publications: {
+          items: []
+        },
+        certifications: {
+          items: duplicatedContent.certifications.map((cert: any) => ({
+            name: cert.name,
+            issuer: cert.issuer,
+            issueDate: cert.date,
+            expiryDate: '',
+            credentialId: cert.url,
+            noExpiration: false,
+            id: cert.id || '',
+            verificationStatus: cert.verificationStatus,
+            credentialLink: cert.credentialLink || '',
+            selectedCredentials: cert.verifiedCredentials || []
+          }))
+        },
+        professionalAffiliations: {
+          items: duplicatedContent.professionalAffiliations.map((aff: any) => ({
+            name: aff.name,
+            organization: aff.organization,
+            startDate: aff.startDate,
+            endDate: aff.endDate,
+            activeAffiliation: aff.activeAffiliation,
+            id: aff.id || '',
+            verificationStatus: aff.verificationStatus,
+            credentialLink: aff.credentialLink,
+            duration: aff.duration,
+            selectedCredentials: aff.selectedCredentials || []
+          }))
+        },
+        volunteerWork: {
+          items: duplicatedContent.volunteerWork.map((vol: any) => ({
+            role: vol.role,
+            organization: vol.organization,
+            location: vol.location,
+            startDate: vol.startDate,
+            endDate: vol.endDate,
+            currentlyVolunteering: vol.currentlyVolunteering,
+            description: vol.description,
+            duration: vol.duration,
+            id: vol.id || '',
+            verificationStatus: vol.verificationStatus,
+            credentialLink: vol.credentialLink,
+            selectedCredentials: vol.selectedCredentials || []
+          }))
+        },
+        hobbiesAndInterests: duplicatedContent.hobbiesAndInterests || [],
+        languages: {
+          items: duplicatedContent.languages.map((lang: any) => ({
+            name: lang.name
+          }))
+        },
+        testimonials: {
+          items: []
+        },
+        projects: {
+          items: duplicatedContent.projects.map((proj: any) => ({
+            name: proj.name,
+            description: proj.description,
+            url: proj.url,
+            id: proj.id || '',
+            verificationStatus: proj.verificationStatus,
+            credentialLink: proj.credentialLink || '',
+            technologies: [],
+            selectedCredentials: proj.verifiedCredentials || []
+          }))
+        }
+      }
+
+      // Save the duplicated resume to Google Drive
+      const file = await resumeManager.saveResume({
+        resume: newResume,
+        type: 'unsigned'
+      })
+
+      if (file) {
+        // Update Redux state with the new resume
+        dispatch(
+          duplicateResume({
+            id: file.id,
+            type: 'unsigned',
+            resume: {
+              ...duplicatedContent,
+              id: file.id
+            }
+          })
+        )
+      }
+    } catch (error) {
+      console.error('Error duplicating resume:', error)
+    } finally {
+      setIsLoading(false)
+      handleMenuClose()
+    }
   }
 
   const handleCopyLink = () => {
@@ -500,7 +676,7 @@ const ResumeCard: React.FC<ResumeCardProps> = ({
               <ListItemIcon>
                 <ContentCopyIcon fontSize='small' />
               </ListItemIcon>
-              <ListItemText primary='Duplicate' />
+              <ListItemText primary='Duplicate and Edit' />
             </MenuItem>
           </Menu>
         </Box>

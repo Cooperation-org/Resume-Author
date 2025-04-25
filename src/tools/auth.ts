@@ -1,26 +1,38 @@
 import { NavigateFunction } from 'react-router-dom'
-import { setLocalStorage } from './cookie'
-import { setAuth } from '../redux/slices/auth'
+import { setAuth, clearAuth } from '../redux/slices/auth'
 import { store } from '../redux/store'
+
+import { setLocalStorage, removeLocalStorage } from './cookie'
+
+const ACCESS_TOKEN_KEY = 'auth'
+const REFRESH_TOKEN_KEY = 'refresh_token'
+const USER_INFO_KEY = 'user_info'
+
+const saveItem = (key: string, value: string | null | undefined) => {
+  if (value && value !== 'undefined') {
+    setLocalStorage(key, value)
+  } else {
+    removeLocalStorage(key)
+  }
+}
 
 export const login = async (from?: string) => {
   const clientId = process.env.REACT_APP_GOOGLE_CLIENT_ID
   const redirectUri = process.env.REACT_APP_GOOGLE_REDIRECT_URI
   const scope =
     'openid profile email https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/drive.appdata'
-  console.log(':  login  scope', scope)
-  console.log(':  login  from path', from)
 
   if (!clientId || !redirectUri) {
     throw new Error('Missing environment variables for Google login')
   }
 
-  // Encode the return path in the state parameter
   const state = from ? encodeURIComponent(from) : ''
-
-  const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?response_type=code&client_id=${clientId}&redirect_uri=${encodeURIComponent(
-    redirectUri
-  )}&scope=${encodeURIComponent(scope)}&prompt=consent&access_type=offline&state=${state}`
+  const authUrl =
+    `https://accounts.google.com/o/oauth2/v2/auth?response_type=code` +
+    `&client_id=${clientId}` +
+    `&redirect_uri=${encodeURIComponent(redirectUri)}` +
+    `&scope=${encodeURIComponent(scope)}` +
+    `&prompt=consent&access_type=offline&state=${state}`
 
   window.location.href = authUrl
 }
@@ -38,29 +50,22 @@ export const handleRedirect = async ({ navigate }: { navigate: NavigateFunction 
   }
 
   try {
-    const tokenResponse = await exchangeCodeForTokens(code)
-    const { access_token, refresh_token } = tokenResponse
+    const { access_token, refresh_token } = await exchangeCodeForTokens(code)
 
     if (!access_token || !refresh_token) {
       throw new Error('Failed to retrieve access token or refresh token')
     }
 
-    // First dispatch the auth state
     store.dispatch(setAuth({ accessToken: access_token }))
 
-    // Then set localStorage
-    setLocalStorage('auth', access_token)
-    setLocalStorage('refresh_token', refresh_token)
+    saveItem(ACCESS_TOKEN_KEY, access_token)
+    saveItem(REFRESH_TOKEN_KEY, refresh_token)
 
-    // Fetch user info
     await fetchUserInfo(access_token)
 
-    // Add a small delay before navigation to ensure state is updated
-    setTimeout(() => {
-      navigate(returnPath, { replace: true })
-    }, 100)
-  } catch (error) {
-    console.error('Error during token exchange or user info fetch:', error)
+    setTimeout(() => navigate(returnPath, { replace: true }), 100)
+  } catch (err) {
+    console.error('Error during token exchange or user‑info fetch:', err)
     navigate('/')
   }
 }
@@ -74,11 +79,9 @@ const exchangeCodeForTokens = async (code: string) => {
     throw new Error('Missing environment variables for token exchange')
   }
 
-  const response = await fetch('https://oauth2.googleapis.com/token', {
+  const res = await fetch('https://oauth2.googleapis.com/token', {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded'
-    },
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: new URLSearchParams({
       code,
       client_id: clientId,
@@ -88,67 +91,50 @@ const exchangeCodeForTokens = async (code: string) => {
     })
   })
 
-  if (!response.ok) {
-    throw new Error('Failed to exchange code for tokens')
-  }
+  if (!res.ok) throw new Error('Failed to exchange code for tokens')
+  return res.json() as Promise<{ access_token?: string; refresh_token?: string }>
+}
 
-  return response.json()
+export const refreshAccessToken = async (refreshToken: string) => {
+  const clientId = process.env.REACT_APP_GOOGLE_CLIENT_ID ?? ''
+  const clientSecret = process.env.REACT_APP_GOOGLE_CLIENT_SECRET ?? ''
+
+  const res = await fetch('https://oauth2.googleapis.com/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({
+      client_id: clientId,
+      client_secret: clientSecret,
+      refresh_token: refreshToken,
+      grant_type: 'refresh_token'
+    })
+  })
+
+  if (!res.ok) throw new Error('Error refreshing access token')
+
+  const { access_token } = await res.json()
+  if (!access_token) throw new Error('No new access token returned')
+
+  saveItem(ACCESS_TOKEN_KEY, access_token)
+  store.dispatch(setAuth({ accessToken: access_token }))
+  return access_token
 }
 
 const fetchUserInfo = async (token: string) => {
-  try {
-    const response = await fetch(
-      'https://www.googleapis.com/oauth2/v1/userinfo?alt=json',
-      {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      }
-    )
+  const res = await fetch('https://www.googleapis.com/oauth2/v1/userinfo?alt=json', {
+    headers: { Authorization: `Bearer ${token}` }
+  })
 
-    if (!response.ok) {
-      throw new Error('Failed to fetch user info')
-    }
+  if (!res.ok) throw new Error('Failed to fetch user info')
+  const profile = await res.json()
 
-    const userInfo = await response.json()
-
-    // Save user info in localStorage
-    setLocalStorage('user_info', JSON.stringify(userInfo))
-    console.log('User info saved in localStorage:', userInfo)
-  } catch (error) {
-    console.error('Error fetching user info:', error)
-    throw error // Re-throw the error to handle it in the calling function
-  }
+  saveItem(USER_INFO_KEY, JSON.stringify(profile))
+  console.log('User info saved:', profile)
 }
 
-const client_id = process.env.REACT_APP_GOOGLE_CLIENT_ID || ''
-const client_secret = process.env.REACT_APP_GOOGLE_CLIENT_SECRET || ''
-
-export const refreshAccessToken = async (refreshToken: string) => {
-  try {
-    const response = await fetch('https://oauth2.googleapis.com/token', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded'
-      },
-      body: new URLSearchParams({
-        client_id,
-        client_secret,
-        refresh_token: refreshToken,
-        grant_type: 'refresh_token'
-      })
-    })
-
-    const data = await response.json()
-    const newAccessToken = data.access_token
-    console.log('🚀 ~ refreshAccessToken ~ newAccessToken:', newAccessToken)
-
-    // Update the access token in Firestore
-    localStorage.setItem('auth', newAccessToken)
-
-    return newAccessToken
-  } catch (error) {
-    console.error('Error refreshing access token:', error)
-    throw error
-  }
+export const logout = () => {
+  removeLocalStorage(ACCESS_TOKEN_KEY)
+  removeLocalStorage(REFRESH_TOKEN_KEY)
+  removeLocalStorage(USER_INFO_KEY)
+  store.dispatch(clearAuth())
 }
