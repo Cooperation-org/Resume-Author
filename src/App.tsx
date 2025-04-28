@@ -21,6 +21,7 @@ import LoginScanStep from './pages/LoginScanStep'
 import Faq from './pages/FAQ'
 import SignUpStep2 from './pages/signUpStep2'
 import PreviewPageFromDrive from './pages/PreviewPageFromDrive'
+import RawPreview from './pages/credential-raw'
 
 const App = () => {
   const dispatch: AppDispatch = useDispatch()
@@ -51,6 +52,7 @@ const App = () => {
         <Route path='/login-scan' element={<LoginScanStep />} />
         <Route path='/faq' element={<Faq />} />
         <Route path='/SignUp2' element={<SignUpStep2 />} />
+        <Route path='/credential-raw/*' element={<RawPreview />} />
       </Routes>
     </Router>
   )
