@@ -117,7 +117,7 @@ const ResumeEditor: React.FC = () => {
 
           if (fileData) {
             const resumeData = fileData.data || fileData
-
+            console.log('RESUME DATA', resumeData)
             // Dispatch to Redux
             dispatch(setSelectedResume(resumeData))
 
@@ -127,7 +127,7 @@ const ResumeEditor: React.FC = () => {
             // Try to set resume name if we can find it
             try {
               const name =
-                resumeData.contact?.fullName || resumeData.name || 'Untitled Resume'
+                resumeData.name || resumeData.contact?.fullName || 'Untitled Resume'
               setResumeName(name)
             } catch (e) {
               setResumeName('Untitled Resume')
@@ -190,13 +190,16 @@ const ResumeEditor: React.FC = () => {
 
   useEffect(() => {
     if (!resumeId) {
+      // Clear the resume state when creating a new resume
+      dispatch(setSelectedResume(null))
+      setResumeName('Untitled')
       const storedResumeId = sessionStorage.getItem('lastEditedResumeId')
       if (storedResumeId) {
         navigate(`/resume/new?id=${storedResumeId}`)
         sessionStorage.removeItem('lastEditedResumeId')
       }
     }
-  }, [resumeId, navigate])
+  }, [resumeId, navigate, dispatch])
 
   // Handle navigation with exit confirmation
   const handleNavigate = (path: string) => {
@@ -631,8 +634,7 @@ const ResumeEditor: React.FC = () => {
                   letterSpacing: '0.16px'
                 }}
               >
-                Name your resume with your first and last name so recruiters can easily
-                locate your resume.
+                Enter the file name of this resume for My Resume's display.
               </Typography>
               <Box sx={{ display: 'flex', gap: 2 }}>
                 <Button
