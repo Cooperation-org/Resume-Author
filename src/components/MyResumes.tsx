@@ -30,6 +30,7 @@ const ResumeScreen: React.FC = () => {
   const { signed, unsigned, status, error } = useSelector(
     (state: RootState) => state.myresumes
   )
+  console.log(': signed', unsigned)
 
   // Get all drafts from localStorage but don't change the UI
   const { getAllDrafts } = useDraftResume(null)
@@ -139,8 +140,8 @@ const ResumeScreen: React.FC = () => {
               key={resume.id}
               id={resume.id}
               title={
-                resume?.content?.contact?.fullName?.split('.')[0] ||
-                resume?.name?.split('.')[0]
+                (resume?.content as { name?: string })?.name?.split('.')[0] ||
+                resume?.content?.contact?.fullName?.split('.')[0]
               }
               date={new Date().toLocaleDateString()}
               credentials={0}
