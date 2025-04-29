@@ -8,6 +8,7 @@ const RawPreview = () => {
   const [error, setError] = useState<string | null>(null)
   const { fileId } = useParams<{ fileId: string }>()
   const location = useLocation()
+  const [viewType, setViewType] = useState<'formatted' | 'raw'>('formatted')
 
   const getFullFileId = useCallback((): string => {
     const path = location.pathname
@@ -58,6 +59,32 @@ const RawPreview = () => {
     extractRawCredential()
   }, [fileId, getFullFileId, location.pathname])
 
+  // Function to download JSON file
+  const downloadJson = () => {
+    if (!rawCredential) return
+
+    // Create a Blob with the JSON data
+    const blob = new Blob([JSON.stringify(rawCredential, null, 2)], {
+      type: 'application/json'
+    })
+
+    // Create a URL for the blob
+    const url = URL.createObjectURL(blob)
+
+    // Create a temporary anchor element
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `credential-${getFullFileId()}.json`
+
+    // Trigger the download
+    document.body.appendChild(a)
+    a.click()
+
+    // Clean up
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
+  }
+
   if (loading) {
     return <div>Loading credential...</div>
   }
@@ -69,7 +96,32 @@ const RawPreview = () => {
   return (
     <div>
       <h2>Raw Credential</h2>
-      <pre>{JSON.stringify(rawCredential, null, 2)}</pre>
+      <div style={{ marginBottom: '15px' }}>
+        <button onClick={() => setViewType('formatted')} style={{ marginRight: '10px' }}>
+          Formatted View
+        </button>
+        <button onClick={() => setViewType('raw')}>Raw View</button>
+        <button onClick={downloadJson} style={{ marginLeft: '10px' }}>
+          Download JSON
+        </button>
+      </div>
+
+      {viewType === 'formatted' ? (
+        <pre
+          style={{
+            background: '#f5f5f5',
+            padding: '15px',
+            borderRadius: '5px',
+            overflow: 'auto'
+          }}
+        >
+          {JSON.stringify(rawCredential, null, 2)}
+        </pre>
+      ) : (
+        <div style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>
+          {JSON.stringify(rawCredential)}
+        </div>
+      )}
     </div>
   )
 }
