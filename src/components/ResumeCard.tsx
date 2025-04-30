@@ -474,11 +474,9 @@ const ResumeCard: React.FC<ResumeCardProps> = ({
 
   const handlePreviewResume = () => {
     if (isSigned()) {
-      // For signed resumes, navigate to the view page
       navigate(`/resume/view/${id}`)
     } else {
-      // For drafts or completed but unsigned, navigate to preview
-      navigate(`/resume/new?id=${id}&preview=true`)
+      navigate(`/resume/view?id=${id}`)
     }
   }
   const exportResumeToPDF = (data: any) => {
