@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
-import { GoogleDriveStorage, Resume, ResumeVC } from '@cooperation/vc-storage'
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
+import { GoogleDriveStorage, Resume, ResumeVC } from '@cooperation/vc-storage' //NOSONAR
 import { getLocalStorage } from '../tools/cookie'
 import StorageService from '../storage-singlton'
 

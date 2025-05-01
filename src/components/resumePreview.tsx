@@ -32,6 +32,7 @@ const SectionTitle: React.FC<{ children: ReactNode }> = ({ children }) => (
   </Typography>
 )
 
+// Component for rendering links with favicons
 const LinkWithFavicon: React.FC<{ url: string; platform?: string }> = ({
   url,
   platform
@@ -837,7 +838,7 @@ function usePagination(content: ReactNode[]) {
 
       const contentElements = Array.from(measureRef.current.children)
       if (contentElements.length === 0) {
-        setTimeout(measureAndPaginate, 200)
+        setPages([[]])
         return
       }
 
@@ -875,9 +876,11 @@ function usePagination(content: ReactNode[]) {
       if (currentPage.length > 0) {
         paginated.push(currentPage)
       }
-      if (paginated.length > 0) {
-        setPages(paginated)
+      if (paginated.length === 0) {
+        paginated.push([])
       }
+
+      setPages(paginated)
     }
 
     window.addEventListener('resize', measureAndPaginate)
@@ -993,9 +996,9 @@ const ResumePreview: React.FC<{ data?: Resume; forcedId?: string }> = ({
       </Box>
 
       {/* Render pages */}
-      {initialRenderComplete && pages.length > 0 && (
+      {initialRenderComplete && (
         <>
-          {pages.map((pageContent, pageIndex) => (
+          {(pages.length > 0 ? pages : [[]]).map((pageContent, pageIndex) => (
             <Box
               key={`page-${pageIndex}`}
               sx={{
@@ -1047,7 +1050,7 @@ const ResumePreview: React.FC<{ data?: Resume; forcedId?: string }> = ({
                   email={resume.contact?.email || 'email@example.com'}
                   phone={resume.contact?.phone}
                   pageNumber={pageIndex + 1}
-                  totalPages={pages.length}
+                  totalPages={Math.max(pages.length, 1)}
                   forcedId={forcedId}
                 />
               </Box>

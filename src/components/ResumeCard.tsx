@@ -26,7 +26,7 @@ import { LinkIcon } from 'lucide-react'
 import { GoogleDriveStorage, Resume } from '@cooperation/vc-storage'
 import { getLocalStorage } from '../tools/cookie'
 import Logo from '../assets/blue-logo.png'
-import { Link, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import DeleteConfirmationDialog from './DeleteConfirmDialog'
 import { useDispatch } from 'react-redux'
 import { AppDispatch } from '../redux/store'
@@ -282,9 +282,7 @@ const ResumeCard: React.FC<ResumeCardProps> = ({
       }
 
       // Ensure contact object exists
-      if (!duplicatedContent.contact) {
-        duplicatedContent.contact = {}
-      }
+      duplicatedContent.contact ??= {}
       const currentDate = new Date().toISOString()
 
       const newResume = {
@@ -474,8 +472,10 @@ const ResumeCard: React.FC<ResumeCardProps> = ({
 
   const handlePreviewResume = () => {
     if (isSigned()) {
+      // For signed resumes, navigate to the view page
       navigate(`/resume/view/${id}`)
     } else {
+      // For drafts or completed but unsigned, navigate to preview
       navigate(`/resume/view?id=${id}`)
     }
   }

@@ -26,7 +26,7 @@ export default function HobbiesAndInterests({
   onAddFiles,
   onDelete,
   onAddCredential
-}: HobbiesAndInterestsProps) {
+}: Readonly<HobbiesAndInterestsProps>) {
   const dispatch = useDispatch()
   const resume = useSelector((state: RootState) => state.resume.resume)
   const [hobbies, setHobbies] = useState<string[]>([])

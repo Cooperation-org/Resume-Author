@@ -1,6 +1,6 @@
 import { Box, Typography, Button, Divider, Stack, CircularProgress } from '@mui/material'
 import { login } from '../../tools/auth'
-import { useSelector } from 'react-redux'
+import { useSelector, useDispatch } from 'react-redux'
 import { useState, useEffect } from 'react'
 import {
   fileIconSVG,
@@ -10,7 +10,6 @@ import {
 } from '../../assets/svgs'
 import { useLocation } from 'react-router-dom'
 import { fetchVCs } from '../../redux/slices/vc'
-import { useDispatch } from 'react-redux'
 import { AppDispatch, RootState } from '../../redux/store'
 
 const RightSidebar = () => {

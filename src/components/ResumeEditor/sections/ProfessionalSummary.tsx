@@ -15,7 +15,7 @@ export default function ProfessionalSummary({
   onAddFiles,
   onDelete,
   onAddCredential
-}: ProfessionalSummaryProps) {
+}: Readonly<ProfessionalSummaryProps>) {
   const dispatch = useDispatch()
   const resume = useSelector((state: RootState) => state.resume.resume)
 
