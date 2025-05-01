@@ -1,13 +1,12 @@
 import { Box, Typography, Button } from '@mui/material'
 import ResumeCard from './ResumeCard'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useSelector, useDispatch } from 'react-redux'
 import { RootState, AppDispatch } from '../redux/store'
 import { useEffect } from 'react'
 import { fetchUserResumes } from '../redux/slices/myresumes'
 import useDraftResume from '../hooks/useDraftResume'
 import { logout } from '../tools/auth'
-import { useNavigate } from 'react-router-dom'
 
 const buttonStyles = {
   background: '#3A35A2',

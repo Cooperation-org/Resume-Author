@@ -1,7 +1,6 @@
-import { Box, Typography, Button } from '@mui/material'
+import { Box, Typography, Button, Link } from '@mui/material'
 import { SVGLogoDescreption, SVGALoginLogo, SVGQRCode } from '../assets/svgs'
 import { useState } from 'react'
-import { Link } from '@mui/material'
 
 const stepText = ['Step 1', 'Scan the QR Code']
 

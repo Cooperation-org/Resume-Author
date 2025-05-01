@@ -65,7 +65,7 @@ const PreviewPageFromDrive: React.FC = () => {
 
     const metadata = {
       title: `${resumeData.contact.fullName}'s Resume`,
-      creator: 'Reactive Resume',
+      creator: 'T3 Resume Author',
       subject: 'Resume',
       keywords: ['Resume', 'CV', resumeData.contact.fullName],
       custom: { resumeData: JSON.stringify(resumeData) }

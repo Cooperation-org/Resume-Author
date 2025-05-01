@@ -75,7 +75,7 @@ const ResumePreviewDialog: React.FC<ResumePreviewDialogProps> = ({
 
     const metadata = {
       title: `${data.contact.fullName}'s Resume`,
-      creator: 'Reactive Resume',
+      creator: 'T3 Resume Author',
       subject: 'Resume',
       keywords: ['Resume', 'CV', data.contact.fullName],
       custom: { resumeData: JSON.stringify(data) }
