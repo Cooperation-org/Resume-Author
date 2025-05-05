@@ -427,9 +427,9 @@ const ResumePreviewTopbar: React.FC<ResumePreviewTopbarProps> = ({
                 sm: 'row'
               }}
               spacing={{
-                xs: 2,
-                sm: 2,
-                md: 3
+                xs: 1,
+                sm: 1,
+                md: 2
               }}
               sx={{
                 width: {
@@ -479,6 +479,19 @@ const ResumePreviewTopbar: React.FC<ResumePreviewTopbarProps> = ({
                 }}
               >
                 {isSigningSaving ? 'Saving...' : 'Sign and Save'}
+              </Button>
+              <Button
+                variant='contained'
+                onClick={() => {
+                  navigate('/credential-raw/' + resumeId)
+                }}
+                sx={{
+                  ...getButtonSx('181px'),
+                  backgroundColor: '#3a35a2',
+                  color: '#ffffff'
+                }}
+              >
+                Export to JSON
               </Button>
             </Stack>
           </Box>
