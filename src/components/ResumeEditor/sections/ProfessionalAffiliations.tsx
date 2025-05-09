@@ -24,6 +24,7 @@ import { RootState } from '../../../redux/store'
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline'
 import CloseIcon from '@mui/icons-material/Close'
 import CredentialOverlay from '../../CredentialsOverlay'
+import TextEditor from '../../TextEditor/Texteditor'
 
 const PinkSwitch = styled(Switch)(({ theme }) => ({
   '& .MuiSwitch-switchBase.Mui-checked': {
@@ -43,6 +44,12 @@ interface ProfessionalAffiliationsProps {
   onAddCredential?: (text: string) => void
 }
 
+interface SelectedCredential {
+  id: string
+  url: string
+  name: string
+}
+
 interface AffiliationItem {
   name: string
   organization: string
@@ -53,13 +60,8 @@ interface AffiliationItem {
   verificationStatus: string
   credentialLink: string
   duration: string
+  description: string
   selectedCredentials: SelectedCredential[]
-}
-
-interface SelectedCredential {
-  id: string
-  url: string
-  name: string
 }
 
 export default function ProfessionalAffiliations({
@@ -86,6 +88,7 @@ export default function ProfessionalAffiliations({
       verificationStatus: 'unverified',
       credentialLink: '',
       duration: '',
+      description: '',
       selectedCredentials: []
     }
   ])
@@ -152,6 +155,7 @@ export default function ProfessionalAffiliations({
         verificationStatus: item.verificationStatus || 'unverified',
         credentialLink: item.credentialLink || '',
         duration: item.duration || '',
+        description: item.description || '',
         selectedCredentials: item.selectedCredentials || []
       })) as AffiliationItem[]
 
@@ -224,7 +228,7 @@ export default function ProfessionalAffiliations({
   }, [])
 
   const handleAffiliationChange = useCallback(
-    (index: number, field: string, value: any) => {
+    (index: number, field: keyof AffiliationItem, value: any) => {
       setAffiliations(prev => {
         const updated = [...prev]
         const aff = { ...updated[index], [field]: value }
@@ -243,6 +247,29 @@ export default function ProfessionalAffiliations({
     [debouncedReduxUpdate, useDuration]
   )
 
+  const handleDescriptionChange = useCallback(
+    (index: number, value: string) => {
+      setAffiliations(prev => {
+        const updated = [...prev]
+        updated[index] = { ...updated[index], description: value }
+
+        if (reduxUpdateTimeoutRef.current) {
+          clearTimeout(reduxUpdateTimeoutRef.current)
+        }
+        reduxUpdateTimeoutRef.current = setTimeout(() => {
+          dispatch(
+            updateSection({
+              sectionId: 'professionalAffiliations',
+              content: { items: updated }
+            })
+          )
+        }, 1000)
+        return updated
+      })
+    },
+    [dispatch]
+  )
+
   const handleAddAnotherItem = useCallback(() => {
     const emptyItem: AffiliationItem = {
       name: '',
@@ -254,6 +281,7 @@ export default function ProfessionalAffiliations({
       verificationStatus: 'unverified',
       credentialLink: '',
       duration: '',
+      description: '',
       selectedCredentials: []
     }
     setAffiliations(prev => {
@@ -561,6 +589,16 @@ export default function ProfessionalAffiliations({
                   />
                 }
                 label='Active affiliation'
+              />
+
+              <Typography variant='body1'>
+                Describe how this item relates to the job you want to get:
+              </Typography>
+              <TextEditor
+                key={`editor-${index}`}
+                value={affiliation.description || ''}
+                onChange={val => handleDescriptionChange(index, val)}
+                onAddCredential={onAddCredential}
               />
 
               {affiliation.selectedCredentials &&
