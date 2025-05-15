@@ -1,0 +1,13 @@
+name: Deploy to Vercel (prod)
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: npm i -g vercel
+      - run: vercel pull --yes --environment=production
+      - run: vercel --prod --token F7q3Xk2tCwxU41f9alRQdQ34
