@@ -1,3 +1,4 @@
+# .github/workflows/vercel-prod.yml
 name: Deploy to Vercel (prod)
 on:
   push:
@@ -10,4 +11,4 @@ jobs:
       - uses: actions/checkout@v4
       - run: npm i -g vercel
       - run: vercel pull --yes --environment=production
-      - run: vercel --prod --token F7q3Xk2tCwxU41f9alRQdQ34
+      - run: vercel --prod --token ${{ secrets.VERCEL_TOKEN }}
