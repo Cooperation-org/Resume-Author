@@ -25,13 +25,9 @@ const PreviewPage = () => {
       try {
         const accessToken = getLocalStorage('auth')
 
-        if (!accessToken) {
-          throw new Error('No authentication token found')
-        }
+        if (!accessToken) throw new Error('No authentication token found')
 
-        if (!resumeId) {
-          throw new Error('No resume ID found')
-        }
+        if (!resumeId) throw new Error('No resume ID found')
 
         const storage = new GoogleDriveStorage(accessToken as string)
         const fileData = await storage.retrieve(resumeId)
@@ -55,6 +51,8 @@ const PreviewPage = () => {
 
     if (resumeId) {
       fetchResumeFromDrive()
+    } else {
+      setIsLoading(false)
     }
   }, [resumeId])
 
@@ -114,24 +112,6 @@ const PreviewPage = () => {
       >
         <Typography color='error' variant='body1'>
           {error}
-        </Typography>
-      </Box>
-    )
-  }
-
-  if (!resumeData) {
-    return (
-      <Box
-        sx={{
-          p: 4,
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          gap: 2
-        }}
-      >
-        <Typography variant='body1' color='text.secondary'>
-          No resume data found.
         </Typography>
       </Box>
     )
