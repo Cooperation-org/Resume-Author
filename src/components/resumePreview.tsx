@@ -146,9 +146,7 @@ const PageHeader: React.FC<{ fullName: string; forcedId?: string }> = ({
               cursor: 'pointer'
             }}
           >
-            View a verifiable <br />
-            presentation of this <br />
-            resume
+            View Source
           </Link>
         </Box>
         <Box

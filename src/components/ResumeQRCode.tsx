@@ -26,7 +26,7 @@ const ResumeQRCode: React.FC<QRCodeComponentProps> = ({
   useEffect(() => {
     // If forcedId is provided, use it directly and ignore URL params
     if (forcedId) {
-      const link = `https://resume.allskillscount.org/resume/view/${forcedId}`
+      const link = `${process.env.REACT_APP_SERVER_URL}/api/credential-raw/${forcedId}`
       setQrLink(link)
       setHasValidId(true)
 
@@ -48,7 +48,7 @@ const ResumeQRCode: React.FC<QRCodeComponentProps> = ({
     if (isViewRoute && hasId) {
       // If we have an ID, use it in the QR link
       const resumeId = id || pathParts[pathParts.length - 1]
-      const link = `https://resume.allskillscount.org/resume/view/${resumeId}`
+      const link = `https://devlinked-claims-author.vercel.app/api/credential-raw/${resumeId}`
       setQrLink(link)
 
       // Notify parent component about the generated link and validity
