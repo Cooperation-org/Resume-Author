@@ -52,12 +52,19 @@ const Nav = () => {
 
   useEffect(() => {
     const token = getLocalStorage('auth')
-    if (token) dispatch(setAuth({ accessToken: token }))
+    if (token) {
+      dispatch(setAuth({ accessToken: token }))
+    }
   }, [dispatch])
 
   const handleLogout = () => {
     logout()
     setShowNotification(true)
+    navigate('/')
+    setMobileMenuOpen(false)
+  }
+
+  const handleLogin = () => {
     navigate('/')
     setMobileMenuOpen(false)
   }
@@ -130,13 +137,20 @@ const Nav = () => {
                 </Box>
                 <List>
                   {!isLogged ? (
-                    navItems.map((item, index) => (
-                      <ListItem key={index} disablePadding>
-                        <Button fullWidth onClick={item.action} sx={mobileNavStyles}>
-                          {item.label}
+                    <>
+                      {navItems.map((item, index) => (
+                        <ListItem key={index} disablePadding>
+                          <Button fullWidth onClick={item.action} sx={mobileNavStyles}>
+                            {item.label}
+                          </Button>
+                        </ListItem>
+                      ))}
+                      <ListItem disablePadding>
+                        <Button fullWidth onClick={handleLogin} sx={mobileNavStyles}>
+                          Login
                         </Button>
                       </ListItem>
-                    ))
+                    </>
                   ) : (
                     <ListItem disablePadding>
                       <Button fullWidth onClick={handleLogout} sx={mobileNavStyles}>
@@ -154,7 +168,9 @@ const Nav = () => {
                   {item.label}
                 </Button>
               ))}
-
+              <Button onClick={handleLogin} color='inherit' sx={navStyles}>
+                Login
+              </Button>
             </Stack>
           ) : (
             <Button onClick={handleLogout} color='inherit' sx={navStyles}>
