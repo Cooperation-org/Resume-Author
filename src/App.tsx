@@ -28,10 +28,7 @@ const App = () => {
 
   useEffect(() => {
     dispatch(fetchVCs())
-    dispatch(fetchUserResumes())
   }, [dispatch])
-
-  // test
 
   return (
     <Router>

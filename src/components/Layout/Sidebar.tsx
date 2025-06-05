@@ -9,9 +9,10 @@ import {
   SVGLogOut
 } from '../../assets/svgs'
 import logo from '../../assets/logo.png'
-import { useDispatch } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
 import Notification from '../common/Notification'
 import { logout } from '../../tools/auth'
+import { RootState } from '../../redux/store'
 
 interface SidebarProps {
   onToggle: () => void
@@ -32,6 +33,7 @@ const Sidebar = ({ onToggle, isExpanded }: SidebarProps) => {
   const [showNotification, setShowNotification] = useState(false)
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const dispatch = useDispatch() //NOSONAR
+  const isAuthenticated = useSelector((state: RootState) => state.auth.isAuthenticated)
 
   // Add useEffect to check the current route path and set the selected item
   useEffect(() => {
@@ -70,6 +72,11 @@ const Sidebar = ({ onToggle, isExpanded }: SidebarProps) => {
     setShowNotification(true)
 
     setTimeout(() => window.location.reload(), 1500)
+  }
+
+  const handleLoginClick = () => {
+    setSelectedItem('login')
+    navigate('/')
   }
 
   const getIconStyles = (key: string) => ({
@@ -119,12 +126,21 @@ const Sidebar = ({ onToggle, isExpanded }: SidebarProps) => {
       </Box>
     </IconButton>,
 
-    <IconButton key='logOut' onClick={handleLogoutClick} sx={getButtonStyles('logOut')}>
-      <Box sx={boxStyles}>
-        <SVGLogOut />
-        {isExpanded && <Typography sx={getTextStyles('logOut')}>Logout</Typography>}
-      </Box>
-    </IconButton>,
+    isAuthenticated ? (
+      <IconButton key='logOut' onClick={handleLogoutClick} sx={getButtonStyles('logOut')}>
+        <Box sx={boxStyles}>
+          <SVGLogOut />
+          {isExpanded && <Typography sx={getTextStyles('logOut')}>Logout</Typography>}
+        </Box>
+      </IconButton>
+    ) : (
+      <IconButton key='login' onClick={handleLoginClick} sx={getButtonStyles('login')}>
+        <Box sx={boxStyles}>
+          <SVGLogOut />
+          {isExpanded && <Typography sx={getTextStyles('login')}>Login</Typography>}
+        </Box>
+      </IconButton>
+    ),
 
     <IconButton key='faq' onClick={handleFAQClick} sx={getButtonStyles('faq')}>
       <Box sx={boxStyles}>
