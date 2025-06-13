@@ -8,6 +8,7 @@ interface SectionProps {
   onAddFiles?: () => void
   onAddCredential?: (text: string) => void
   isRemovable?: boolean
+  onFocus?: () => void
 }
 
 const Section: React.FC<SectionProps> = ({
@@ -15,7 +16,8 @@ const Section: React.FC<SectionProps> = ({
   onDelete,
   onAddFiles,
   onAddCredential,
-  isRemovable = false
+  isRemovable = false,
+  onFocus
 }) => {
   return (
     <Paper
@@ -68,6 +70,7 @@ const Section: React.FC<SectionProps> = ({
         onDelete={onDelete}
         onAddFiles={onAddFiles}
         onAddCredential={onAddCredential}
+        onFocus={onFocus}
       />
     </Paper>
   )

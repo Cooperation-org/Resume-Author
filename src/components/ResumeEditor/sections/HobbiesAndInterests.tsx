@@ -15,17 +15,20 @@ import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline'
 import { useDispatch, useSelector } from 'react-redux'
 import { RootState } from '../../../redux/store'
 import { updateSection } from '../../../redux/slices/resume'
+import TextEditor from '../../TextEditor/Texteditor'
 
 interface HobbiesAndInterestsProps {
   onAddFiles?: () => void
   onDelete?: () => void
   onAddCredential?: (text: string) => void
+  onFocus?: () => void
 }
 
 export default function HobbiesAndInterests({
   onAddFiles,
   onDelete,
-  onAddCredential
+  onAddCredential,
+  onFocus
 }: Readonly<HobbiesAndInterestsProps>) {
   const dispatch = useDispatch()
   const resume = useSelector((state: RootState) => state.resume.resume)
@@ -90,6 +93,14 @@ export default function HobbiesAndInterests({
       e.preventDefault()
       handleAddHobby()
     }
+  }
+
+  const handleDescriptionChange = (index: number, val: string) => {
+    const updatedHobbies = hobbies.map((hobby, i) =>
+      i === index ? hobby.split(': ').join(': ' + val) : hobby
+    )
+    setHobbies(updatedHobbies)
+    updateRedux(updatedHobbies)
   }
 
   return (
@@ -161,6 +172,13 @@ export default function HobbiesAndInterests({
                     <ListItemText primary={hobby} />
                   </ListItem>
                   {index < hobbies.length - 1 && <Divider />}
+                  <TextEditor
+                    key={`editor-${index}`}
+                    value={hobby.split(': ').slice(1).join(': ') || ''}
+                    onChange={val => handleDescriptionChange(index, val)}
+                    onAddCredential={onAddCredential}
+                    onFocus={onFocus}
+                  />
                 </React.Fragment>
               ))}
             </List>

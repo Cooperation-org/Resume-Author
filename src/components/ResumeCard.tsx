@@ -596,7 +596,7 @@ const ResumeCard: React.FC<ResumeCardProps> = ({
                   sx={{ mt: 0.5, fontSize: '0.875rem' }}
                 >
                   {isDraft
-                    ? `DRAFT - ${timeAgo}`
+                    ? `DRAFT`
                     : isSigned()
                       ? `SIGNED - ${timeAgo}`
                       : `COMPLETED - ${timeAgo}`}

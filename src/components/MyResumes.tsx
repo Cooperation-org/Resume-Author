@@ -189,10 +189,7 @@ const ResumeScreen: React.FC = () => {
               <ResumeCard
                 key={resume.id}
                 id={resume.id}
-                title={
-                  resume?.content?.contact?.fullName?.split('.')[0] ||
-                  resume?.name?.split('.')[0]
-                }
+                title={resume?.name?.split('.')[0]}
                 date={new Date().toLocaleDateString()}
                 credentials={0}
                 isDraft={true}

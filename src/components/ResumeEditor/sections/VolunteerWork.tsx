@@ -42,12 +42,14 @@ interface VolunteerWorkProps {
   onAddFiles?: () => void
   onDelete?: () => void
   onAddCredential?: (text: string) => void
+  onFocus?: () => void
 }
 
 interface SelectedCredential {
   id: string
   url: string
   name: string
+  vc: any
 }
 
 interface VolunteerWorkItem {
@@ -68,7 +70,8 @@ interface VolunteerWorkItem {
 export default function VolunteerWork({
   onAddFiles,
   onDelete,
-  onAddCredential
+  onAddCredential,
+  onFocus
 }: Readonly<VolunteerWorkProps>) {
   const dispatch = useDispatch()
   const resume = useSelector((state: RootState) => state.resume.resume)
@@ -353,25 +356,27 @@ export default function VolunteerWork({
   }, [])
 
   const handleCredentialSelect = useCallback(
-    (ids: string[]) => {
-      if (activeSectionIndex !== null && ids.length > 0) {
-        const selected = ids.map(id => {
-          const c = vcs.find((r: any) => (r?.originalItem?.id || r.id) === id)
+    (selectedCredentialIDs: string[]) => {
+      if (activeSectionIndex !== null && selectedCredentialIDs.length > 0) {
+        const selectedCredentials = selectedCredentialIDs.map(id => {
+          const credential = vcs.find((c: any) => (c?.originalItem?.id || c.id) === id)
           return {
             id,
             url: `https://linkedcreds.allskillscount.org/view/${id}`,
             name:
-              c?.credentialSubject?.achievement?.[0]?.name ||
-              `Credential ${id.substring(0, 5)}...`
+              credential?.credentialSubject?.achievement?.[0]?.name ||
+              `Credential ${id.substring(0, 5)}...`,
+            vc: credential
           }
         })
+
         setVolunteerWorks(prev => {
           const updated = [...prev]
           updated[activeSectionIndex] = {
             ...updated[activeSectionIndex],
             verificationStatus: 'verified',
-            credentialLink: selected[0].url,
-            selectedCredentials: selected
+            credentialLink: selectedCredentials[0].url,
+            selectedCredentials
           }
           dispatch(
             updateSection({
@@ -413,6 +418,29 @@ export default function VolunteerWork({
     },
     [dispatch]
   )
+
+  useEffect(() => {
+    // Add event listener for opening credentials overlay
+    const handleOpenCredentialsEvent = (event: CustomEvent) => {
+      const { sectionId, itemIndex, selectedText } = event.detail
+      if (sectionId === 'volunteerWork') {
+        setActiveSectionIndex(itemIndex)
+        setShowCredentialsOverlay(true)
+      }
+    }
+
+    window.addEventListener(
+      'openCredentialsOverlay',
+      handleOpenCredentialsEvent as EventListener
+    )
+
+    return () => {
+      window.removeEventListener(
+        'openCredentialsOverlay',
+        handleOpenCredentialsEvent as EventListener
+      )
+    }
+  }, [])
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
@@ -621,6 +649,7 @@ export default function VolunteerWork({
                 value={volunteer.description || ''}
                 onChange={val => handleDescriptionChange(index, val)}
                 onAddCredential={onAddCredential}
+                onFocus={onFocus}
               />
 
               {volunteer.selectedCredentials.length > 0 && (
@@ -661,9 +690,7 @@ export default function VolunteerWork({
                         sx={{
                           p: 0.5,
                           color: 'grey.500',
-                          '&:hover': {
-                            color: 'error.main'
-                          }
+                          '&:hover': { color: 'error.main' }
                         }}
                       >
                         <CloseIcon fontSize='small' />

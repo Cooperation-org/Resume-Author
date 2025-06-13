@@ -42,6 +42,7 @@ interface WorkExperienceProps {
   onAddFiles?: () => void
   onDelete?: () => void
   onAddCredential?: (text: string) => void
+  onFocus?: () => void
 }
 
 interface SelectedCredential {
@@ -68,7 +69,8 @@ interface WorkExperienceItem {
 export default function WorkExperience({
   onAddFiles,
   onDelete,
-  onAddCredential
+  onAddCredential,
+  onFocus
 }: Readonly<WorkExperienceProps>) {
   const dispatch = useDispatch()
   const resume = useSelector((state: RootState) => state.resume.resume)
@@ -351,13 +353,14 @@ export default function WorkExperience({
     (selectedIDs: string[]) => {
       if (activeSectionIndex !== null && selectedIDs.length > 0) {
         const selected = selectedIDs.map(id => {
-          const c = vcs.find((r: any) => (r?.originalItem?.id || r.id) === id)
+          const credential = vcs.find((c: any) => (c?.originalItem?.id || c.id) === id)
           return {
             id,
             url: `https://linkedcreds.allskillscount.org/view/${id}`,
             name:
-              c?.credentialSubject?.achievement?.[0]?.name ||
-              `Credential ${id.substring(0, 5)}...`
+              credential?.credentialSubject?.achievement?.[0]?.name ||
+              `Credential ${id.substring(0, 5)}...`,
+            vc: credential
           }
         })
         setWorkExperiences(prev => {
@@ -410,8 +413,38 @@ export default function WorkExperience({
     [dispatch]
   )
 
+  useEffect(() => {
+    // Add event listener for opening credentials overlay
+    const handleOpenCredentialsEvent = (event: CustomEvent) => {
+      const { sectionId, itemIndex, selectedText } = event.detail
+      if (sectionId === 'experience') {
+        setActiveSectionIndex(itemIndex)
+        setShowCredentialsOverlay(true)
+      }
+    }
+
+    window.addEventListener(
+      'openCredentialsOverlay',
+      handleOpenCredentialsEvent as EventListener
+    )
+
+    return () => {
+      window.removeEventListener(
+        'openCredentialsOverlay',
+        handleOpenCredentialsEvent as EventListener
+      )
+    }
+  }, [])
+
+  useEffect(() => {
+    // Call onFocus when the component mounts
+    if (onFocus) {
+      onFocus()
+    }
+  }, [onFocus])
+
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: '20px' }} onFocus={onFocus}>
       {workExperiences.map((experience, index) => (
         <Box
           key={`experience-${index}`}
@@ -610,6 +643,7 @@ export default function WorkExperience({
                 value={experience.description || ''}
                 onChange={val => handleDescriptionChange(index, val)}
                 onAddCredential={onAddCredential}
+                onFocus={onFocus}
               />
 
               {experience.selectedCredentials.length > 0 && (

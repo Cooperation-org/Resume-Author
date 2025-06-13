@@ -22,7 +22,7 @@ import { RootState } from '../redux/store'
 import Notification from './common/Notification'
 import MenuIcon from '@mui/icons-material/Menu'
 import CloseIcon from '@mui/icons-material/Close'
-import { logout } from '../tools/auth'
+import { login, logout } from '../tools/auth'
 
 const navStyles = {
   color: 'white',
@@ -65,8 +65,12 @@ const Nav = () => {
   }
 
   const handleLogin = () => {
-    navigate('/')
-    setMobileMenuOpen(false)
+    console.log('isLogged', isLogged)
+    if (!isLogged) {
+      login('/resume/import')
+    } else {
+      navigate('/resume/import')
+    }
   }
 
   const navItems = [

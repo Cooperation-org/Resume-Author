@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef, useCallback } from 'react'
 import {
   Box,
   Button,
@@ -23,7 +23,11 @@ import { RootState } from '../redux/store'
 import { SVGEditName } from '../assets/svgs'
 import useGoogleDrive from '../hooks/useGoogleDrive'
 import { useNavigate, useLocation } from 'react-router-dom'
-import { updateSection, setSelectedResume } from '../redux/slices/resume'
+import {
+  updateSection,
+  setSelectedResume,
+  setActiveSection
+} from '../redux/slices/resume'
 import OptionalSectionsManager from './ResumeEditor/OptionalSectionCard'
 import { storeFileTokens } from '../firebase/storage'
 import { getLocalStorage } from '../tools/cookie'
@@ -101,7 +105,8 @@ const ResumeEditor: React.FC = () => {
   const queryParams = new URLSearchParams(location.search)
   const resumeId = queryParams.get('id')
 
-  const resume = useSelector((state: RootState) => state?.resume.resume)
+  const activeSection = useSelector((state: RootState) => state.resume.activeSection)
+  const resume = useSelector((state: RootState) => state.resume.resume)
   const { instances, isInitialized } = useGoogleDrive()
   const accessToken = getLocalStorage('auth')
   const refreshToken = getLocalStorage('refresh_token')
@@ -361,9 +366,68 @@ const ResumeEditor: React.FC = () => {
     console.log('Add files clicked')
   }
 
-  const handleAddCredential = (text: string) => {
-    console.log('Add credential clicked', text)
-  }
+  const handleAddCredential = useCallback(
+    (text: string) => {
+      if (!activeSection) {
+        console.error('No active section found')
+        return
+      }
+
+      // Find the section component that's currently active
+      const sectionComponents = {
+        'Work Experience': 'experience',
+        Education: 'education',
+        'Skills and Abilities': 'skills',
+        'Professional Affiliations': 'professionalAffiliations',
+        'Volunteer Work': 'volunteerWork',
+        Projects: 'projects',
+        'Certifications and Licenses': 'certifications'
+      } as const
+
+      const sectionId = sectionComponents[activeSection as keyof typeof sectionComponents]
+      if (!sectionId) {
+        console.error('Invalid section:', activeSection)
+        return
+      }
+
+      // Get the current section items
+      const section = resume?.[sectionId as keyof typeof resume]
+      if (!section || typeof section !== 'object' || !('items' in section)) {
+        console.error('Invalid section structure')
+        return
+      }
+
+      const sectionItems = section.items
+      if (!Array.isArray(sectionItems)) {
+        console.error('Invalid section items')
+        return
+      }
+
+      // Find the item that contains the selected text
+      const itemIndex = sectionItems.findIndex(
+        item =>
+          item.description?.includes(text) ||
+          item.name?.includes(text) ||
+          item.title?.includes(text)
+      )
+
+      if (itemIndex === -1) {
+        console.error('Could not find item containing selected text')
+        return
+      }
+
+      // Open the credentials overlay for the found item
+      const event = new CustomEvent('openCredentialsOverlay', {
+        detail: {
+          sectionId,
+          itemIndex,
+          selectedText: text
+        }
+      })
+      window.dispatchEvent(event)
+    },
+    [activeSection, resume]
+  )
 
   const handlePreview = () => {
     console.log(resume)
@@ -514,6 +578,14 @@ const ResumeEditor: React.FC = () => {
       }
     }
   }
+
+  const handleSectionFocus = useCallback(
+    (sectionId: string) => {
+      console.log('Setting active section:', sectionId)
+      dispatch(setActiveSection(sectionId))
+    },
+    [dispatch]
+  )
 
   return (
     <Box
@@ -712,6 +784,7 @@ const ResumeEditor: React.FC = () => {
                   onAddFiles={handleAddFiles}
                   onAddCredential={handleAddCredential}
                   isRemovable={!requiredSections.includes(sectionId)}
+                  onFocus={() => handleSectionFocus(sectionId)}
                 />
               ))}
 

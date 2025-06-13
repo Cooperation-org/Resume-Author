@@ -14,6 +14,7 @@ interface SkillsAndAbilitiesProps {
   onAddFiles?: () => void
   onDelete?: () => void
   onAddCredential?: (text: string) => void
+  onFocus?: () => void
 }
 
 interface SkillItem {
@@ -28,12 +29,14 @@ interface SelectedCredential {
   id: string
   url: string
   name: string
+  vc: any
 }
 
 export default function SkillsAndAbilities({
   onAddFiles,
   onDelete,
-  onAddCredential
+  onAddCredential,
+  onFocus
 }: Readonly<SkillsAndAbilitiesProps>) {
   const dispatch = useDispatch()
   const resume = useSelector((state: RootState) => state.resume.resume)
@@ -216,13 +219,13 @@ export default function SkillsAndAbilities({
       if (activeSectionIndex !== null && selectedCredentialIDs.length > 0) {
         const selectedCredentials = selectedCredentialIDs.map(id => {
           const credential = vcs.find((c: any) => (c?.originalItem?.id || c.id) === id)
-
           return {
-            id: id,
+            id,
             url: `https://linkedcreds.allskillscount.org/view/${id}`,
             name:
               credential?.credentialSubject?.achievement[0]?.name ||
-              `Credential ${id.substring(0, 5)}...`
+              `Credential ${id.substring(0, 5)}...`,
+            vc: credential
           }
         })
 
@@ -232,7 +235,7 @@ export default function SkillsAndAbilities({
             ...updatedSkills[activeSectionIndex],
             verificationStatus: 'verified',
             credentialLink: selectedCredentials[0].url,
-            selectedCredentials: selectedCredentials
+            selectedCredentials
           }
 
           dispatch(
@@ -289,6 +292,29 @@ export default function SkillsAndAbilities({
     },
     [dispatch]
   )
+
+  useEffect(() => {
+    // Add event listener for opening credentials overlay
+    const handleOpenCredentialsEvent = (event: CustomEvent) => {
+      const { sectionId, itemIndex, selectedText } = event.detail
+      if (sectionId === 'skills') {
+        setActiveSectionIndex(itemIndex)
+        setShowCredentialsOverlay(true)
+      }
+    }
+
+    window.addEventListener(
+      'openCredentialsOverlay',
+      handleOpenCredentialsEvent as EventListener
+    )
+
+    return () => {
+      window.removeEventListener(
+        'openCredentialsOverlay',
+        handleOpenCredentialsEvent as EventListener
+      )
+    }
+  }, [])
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
@@ -356,6 +382,7 @@ export default function SkillsAndAbilities({
                 value={skill.skills || ''}
                 onChange={val => handleSkillChange(index, 'skills', val)}
                 onAddCredential={onAddCredential}
+                onFocus={onFocus}
               />
 
               {skill.selectedCredentials && skill.selectedCredentials.length > 0 && (

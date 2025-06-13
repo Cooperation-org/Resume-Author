@@ -9,12 +9,14 @@ interface ProfessionalSummaryProps {
   onAddFiles?: () => void
   onDelete?: () => void
   onAddCredential?: (text: string) => void
+  onFocus?: () => void
 }
 
 export default function ProfessionalSummary({
   onAddFiles,
   onDelete,
-  onAddCredential
+  onAddCredential,
+  onFocus
 }: Readonly<ProfessionalSummaryProps>) {
   const dispatch = useDispatch()
   const resume = useSelector((state: RootState) => state.resume.resume)
@@ -57,6 +59,7 @@ export default function ProfessionalSummary({
         value={description}
         onChange={handleDescriptionChange}
         onAddCredential={onAddCredential}
+        onFocus={onFocus}
       />
     </Box>
   )

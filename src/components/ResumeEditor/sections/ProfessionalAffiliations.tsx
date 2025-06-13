@@ -39,15 +39,17 @@ const PinkSwitch = styled(Switch)(({ theme }) => ({
 }))
 
 interface ProfessionalAffiliationsProps {
-  onAddFiles?: () => void
-  onDelete?: () => void
-  onAddCredential?: (text: string) => void
+  readonly onAddFiles?: () => void
+  readonly onDelete?: () => void
+  readonly onAddCredential?: (text: string) => void
+  readonly onFocus?: () => void
 }
 
 interface SelectedCredential {
   id: string
   url: string
   name: string
+  vc: any
 }
 
 interface AffiliationItem {
@@ -67,7 +69,8 @@ interface AffiliationItem {
 export default function ProfessionalAffiliations({
   onAddFiles,
   onDelete,
-  onAddCredential
+  onAddCredential,
+  onFocus
 }: Readonly<ProfessionalAffiliationsProps>) {
   const dispatch = useDispatch()
   const resume = useSelector((state: RootState) => state.resume.resume)
@@ -350,15 +353,17 @@ export default function ProfessionalAffiliations({
     (selectedCredentialIDs: string[]) => {
       if (activeSectionIndex !== null && selectedCredentialIDs.length > 0) {
         const selectedCredentials = selectedCredentialIDs.map(id => {
-          const c = vcs.find((r: any) => (r?.originalItem?.id || r.id) === id)
+          const credential = vcs.find((c: any) => (c?.originalItem?.id || c.id) === id)
           return {
-            id: id,
+            id,
             url: `https://linkedcreds.allskillscount.org/view/${id}`,
             name:
-              c?.credentialSubject?.achievement?.[0]?.name ||
-              `Credential ${id.substring(0, 5)}...`
+              credential?.credentialSubject?.achievement?.[0]?.name ||
+              `Credential ${id.substring(0, 5)}...`,
+            vc: credential
           }
         })
+
         setAffiliations(prev => {
           const updated = [...prev]
           updated[activeSectionIndex] = {
@@ -409,6 +414,29 @@ export default function ProfessionalAffiliations({
     },
     [dispatch]
   )
+
+  useEffect(() => {
+    // Add event listener for opening credentials overlay
+    const handleOpenCredentialsEvent = (event: CustomEvent) => {
+      const { sectionId, itemIndex, selectedText } = event.detail
+      if (sectionId === 'professionalAffiliations') {
+        setActiveSectionIndex(itemIndex)
+        setShowCredentialsOverlay(true)
+      }
+    }
+
+    window.addEventListener(
+      'openCredentialsOverlay',
+      handleOpenCredentialsEvent as EventListener
+    )
+
+    return () => {
+      window.removeEventListener(
+        'openCredentialsOverlay',
+        handleOpenCredentialsEvent as EventListener
+      )
+    }
+  }, [])
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
@@ -599,6 +627,7 @@ export default function ProfessionalAffiliations({
                 value={affiliation.description || ''}
                 onChange={val => handleDescriptionChange(index, val)}
                 onAddCredential={onAddCredential}
+                onFocus={onFocus}
               />
 
               {affiliation.selectedCredentials &&
@@ -640,9 +669,7 @@ export default function ProfessionalAffiliations({
                           sx={{
                             p: 0.5,
                             color: 'grey.500',
-                            '&:hover': {
-                              color: 'error.main'
-                            }
+                            '&:hover': { color: 'error.main' }
                           }}
                         >
                           <CloseIcon fontSize='small' />

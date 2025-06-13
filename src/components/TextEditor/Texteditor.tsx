@@ -75,9 +75,15 @@ interface TextEditorProps {
   value: string
   onChange: (value: string) => void
   onAddCredential?: (text: string) => void
+  onFocus?: () => void
 }
 
-function TextEditor({ value, onChange, onAddCredential }: Readonly<TextEditorProps>) {
+function TextEditor({
+  value,
+  onChange,
+  onAddCredential,
+  onFocus
+}: Readonly<TextEditorProps>) {
   const [showCredentialsOverlay, setShowCredentialsOverlay] = useState(false)
   const [selectedTextRange, setSelectedTextRange] = useState<any>(null)
   const quillRef = React.useRef<any>(null)
@@ -156,8 +162,13 @@ function TextEditor({ value, onChange, onAddCredential }: Readonly<TextEditorPro
   return (
     <Box
       sx={{ width: '100%', borderRadius: '8px', height: 'auto', position: 'relative' }}
+      onFocus={onFocus}
     >
-      <Box className='text-editor-container' sx={{ borderRadius: '8px', height: 'auto' }}>
+      <Box
+        className='text-editor-container'
+        sx={{ borderRadius: '8px', height: 'auto' }}
+        onFocus={onFocus}
+      >
         <ReactQuill
           ref={quillRef}
           theme='snow'
@@ -169,6 +180,7 @@ function TextEditor({ value, onChange, onAddCredential }: Readonly<TextEditorPro
             'Add and edit text here \n\nUse the toolbar to markup your text as follows:\n• Bold\n• Italic\n• Add links\n• Unordered lists\n• Undo / redo\n• Add credentials'
           }
           style={{ marginTop: '4px', borderRadius: '8px', height: 'auto' }}
+          onFocus={onFocus}
         />
       </Box>
       {showCredentialsOverlay && (

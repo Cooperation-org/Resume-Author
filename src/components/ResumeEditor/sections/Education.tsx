@@ -43,6 +43,7 @@ interface EducationProps {
   readonly onAddFiles?: () => void
   readonly onDelete?: () => void
   readonly onAddCredential?: (text: string) => void
+  readonly onFocus?: () => void
 }
 
 interface EducationItem {
@@ -73,7 +74,8 @@ interface SelectedCredential {
 export default function Education({
   onAddFiles,
   onDelete,
-  onAddCredential
+  onAddCredential,
+  onFocus
 }: EducationProps) {
   const dispatch = useDispatch()
   const resume = useSelector((state: RootState) => state.resume.resume)
@@ -346,7 +348,8 @@ export default function Education({
             url: `https://linkedcreds.allskillscount.org/view/${id}`,
             name:
               credential?.credentialSubject?.achievement?.[0]?.name ||
-              `Credential ${id.substring(0, 5)}...`
+              `Credential ${id.substring(0, 5)}...`,
+            vc: credential
           }
         })
 
@@ -403,8 +406,38 @@ export default function Education({
     [dispatch]
   )
 
+  useEffect(() => {
+    // Add event listener for opening credentials overlay
+    const handleOpenCredentialsEvent = (event: CustomEvent) => {
+      const { sectionId, itemIndex, selectedText } = event.detail
+      if (sectionId === 'education') {
+        setActiveSectionIndex(itemIndex)
+        setShowCredentialsOverlay(true)
+      }
+    }
+
+    window.addEventListener(
+      'openCredentialsOverlay',
+      handleOpenCredentialsEvent as EventListener
+    )
+
+    return () => {
+      window.removeEventListener(
+        'openCredentialsOverlay',
+        handleOpenCredentialsEvent as EventListener
+      )
+    }
+  }, [])
+
+  useEffect(() => {
+    // Call onFocus when the component mounts
+    if (onFocus) {
+      onFocus()
+    }
+  }, [onFocus])
+
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: '20px' }} onFocus={onFocus}>
       {educations.map((education, index) => (
         <Box
           key={`education-${index}`}
@@ -621,6 +654,7 @@ export default function Education({
                 value={education.description || ''}
                 onChange={val => handleDescriptionChange(index, val)}
                 onAddCredential={onAddCredential}
+                onFocus={onFocus}
               />
 
               {!!education.selectedCredentials.length && (

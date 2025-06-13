@@ -70,6 +70,7 @@ const Sidebar = ({ onToggle, isExpanded }: SidebarProps) => {
     setSelectedItem('logOut')
     logout()
     setShowNotification(true)
+    navigate('/')
 
     setTimeout(() => window.location.reload(), 1500)
   }

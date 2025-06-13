@@ -19,6 +19,7 @@ interface ProjectsProps {
   onAddFiles?: () => void
   onDelete?: () => void
   onAddCredential?: (text: string) => void
+  onFocus?: () => void
 }
 
 interface ProjectItem {
@@ -36,12 +37,14 @@ interface SelectedCredential {
   id: string
   url: string
   name: string
+  vc: any
 }
 
 export default function Projects({
   onAddFiles,
   onDelete,
-  onAddCredential
+  onAddCredential,
+  onFocus
 }: Readonly<ProjectsProps>) {
   const dispatch = useDispatch()
   const resume = useSelector((state: RootState) => state.resume.resume)
@@ -266,38 +269,33 @@ export default function Projects({
       if (activeSectionIndex !== null && selectedCredentialIDs.length > 0) {
         const selectedCredentials = selectedCredentialIDs.map(id => {
           const credential = vcs.find((c: any) => (c?.originalItem?.id || c.id) === id)
-
           return {
-            id: id,
+            id,
             url: `https://linkedcreds.allskillscount.org/view/${id}`,
             name:
-              credential?.credentialSubject?.achievement[0]?.name ||
-              `Credential ${id.substring(0, 5)}...`
+              credential?.credentialSubject?.achievement?.[0]?.name ||
+              `Credential ${id.substring(0, 5)}...`,
+            vc: credential
           }
         })
 
-        setProjects(prevProjects => {
-          const updatedProjects = [...prevProjects]
-          updatedProjects[activeSectionIndex] = {
-            ...updatedProjects[activeSectionIndex],
+        setProjects(prev => {
+          const updated = [...prev]
+          updated[activeSectionIndex] = {
+            ...updated[activeSectionIndex],
             verificationStatus: 'verified',
             credentialLink: selectedCredentials[0].url,
-            selectedCredentials: selectedCredentials
+            selectedCredentials
           }
-
           dispatch(
             updateSection({
               sectionId: 'projects',
-              content: {
-                items: updatedProjects
-              }
+              content: { items: updated }
             })
           )
-
-          return updatedProjects
+          return updated
         })
       }
-
       setShowCredentialsOverlay(false)
       setActiveSectionIndex(null)
     },
@@ -338,6 +336,29 @@ export default function Projects({
     },
     [dispatch]
   )
+
+  useEffect(() => {
+    // Add event listener for opening credentials overlay
+    const handleOpenCredentialsEvent = (event: CustomEvent) => {
+      const { sectionId, itemIndex, selectedText } = event.detail
+      if (sectionId === 'projects') {
+        setActiveSectionIndex(itemIndex)
+        setShowCredentialsOverlay(true)
+      }
+    }
+
+    window.addEventListener(
+      'openCredentialsOverlay',
+      handleOpenCredentialsEvent as EventListener
+    )
+
+    return () => {
+      window.removeEventListener(
+        'openCredentialsOverlay',
+        handleOpenCredentialsEvent as EventListener
+      )
+    }
+  }, [])
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
@@ -419,9 +440,10 @@ export default function Projects({
                 value={project.description || ''}
                 onChange={val => handleDescriptionChange(index, val)}
                 onAddCredential={onAddCredential}
+                onFocus={onFocus}
               />
 
-              {project.selectedCredentials && project.selectedCredentials.length > 0 && (
+              {project.selectedCredentials.length > 0 && (
                 <Box sx={{ mt: 2 }}>
                   <Typography variant='body2' sx={{ fontWeight: 'bold', mb: 1 }}>
                     Verified Credentials:
@@ -459,9 +481,7 @@ export default function Projects({
                         sx={{
                           p: 0.5,
                           color: 'grey.500',
-                          '&:hover': {
-                            color: 'error.main'
-                          }
+                          '&:hover': { color: 'error.main' }
                         }}
                       >
                         <CloseIcon fontSize='small' />
