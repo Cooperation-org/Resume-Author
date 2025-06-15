@@ -2,28 +2,33 @@ import { Box, Typography, Button, Divider, Stack, CircularProgress } from '@mui/
 import { login } from '../../tools/auth'
 import { useSelector, useDispatch } from 'react-redux'
 import { useState, useEffect } from 'react'
-import {
-  fileIconSVG,
-  checkmarkBlueSVG,
-  checkmarkgraySVG,
-  uploadArrowUpSVG
-} from '../../assets/svgs'
+import { checkmarkBlueSVG, checkmarkgraySVG } from '../../assets/svgs'
 import { useLocation } from 'react-router-dom'
 import { fetchVCs } from '../../redux/slices/vc'
 import { AppDispatch, RootState } from '../../redux/store'
+import MediaUploadSection from '../../components/NewFileUpload/MediaUploadSection'
 
+export interface FileItem {
+  id: string
+  file: File
+  name: string
+  url: string
+  isFeatured: boolean
+  uploaded: boolean
+  fileExtension: string
+  googleId?: string
+}
 const RightSidebar = () => {
   const location = useLocation()
   const [selectedClaims, setSelectedClaims] = useState<string[]>([])
-  const [uploadedFiles, setUploadedFiles] = useState<string[]>([])
   const { accessToken, isAuthenticated } = useSelector((state: RootState) => state.auth)
   const dispatch: AppDispatch = useDispatch()
   const { vcs, loading } = useSelector((state: any) => state.vcReducer)
   const [isLoading, setIsLoading] = useState<boolean>(true)
+  const [uploadedFiles, setUploadedFiles] = useState<FileItem[]>([])
 
   // Redux state connection kept for future use
   useEffect(() => {
-    // Dispatch the thunk to fetch VCs and set our local loading state
     setIsLoading(true)
     dispatch(fetchVCs())
       .then(() => {
@@ -42,18 +47,12 @@ const RightSidebar = () => {
     }
   }, [loading])
 
-  useEffect(() => {
-    const savedFiles = JSON.parse(localStorage.getItem('uploadedFiles') ?? '[]')
-    setUploadedFiles(savedFiles)
-  }, [])
-
   const handleAuth = () => {
     handleGoogleLogin()
   }
 
   const handleGoogleLogin = async () => {
     await login(location.pathname)
-    // Redirects to Google OAuth login
   }
 
   const handleClaimToggle = (claimId: string) => {
@@ -67,33 +66,27 @@ const RightSidebar = () => {
     })
   }
 
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = event.target.files
-    if (files) {
-      const fileNames = Array.from(files).map(file => file.name)
-      setUploadedFiles(prevFiles => {
-        const newFiles = [...prevFiles, ...fileNames]
-        localStorage.setItem('uploadedFiles', JSON.stringify(newFiles))
-        return newFiles
-      })
-    }
+  const handleFilesSelected = (newFiles: FileItem[]) => {
+    setUploadedFiles(newFiles)
   }
 
-  const handleDragOver = (event: React.DragEvent<HTMLDivElement>) => {
-    event.preventDefault()
+  const handleDelete = (event: React.MouseEvent, id: string) => {
+    setUploadedFiles(prev => prev.filter(file => file.id !== id))
   }
 
-  const handleDrop = (event: React.DragEvent<HTMLDivElement>) => {
-    event.preventDefault()
-    const files = event.dataTransfer.files
-    if (files.length > 0) {
-      const fileNames = Array.from(files).map(file => file.name)
-      setUploadedFiles(prevFiles => {
-        const newFiles = [...prevFiles, ...fileNames]
-        localStorage.setItem('uploadedFiles', JSON.stringify(newFiles))
-        return newFiles
-      })
-    }
+  const handleNameChange = (id: string, newName: string) => {
+    setUploadedFiles(prev =>
+      prev.map(file => (file.id === id ? { ...file, name: newName } : file))
+    )
+  }
+
+  const setAsFeatured = (id: string) => {
+    setUploadedFiles(prev => {
+      return prev.map(file => ({
+        ...file,
+        isFeatured: file.id === id
+      }))
+    })
   }
 
   const handleRefresh = () => {
@@ -318,129 +311,16 @@ const RightSidebar = () => {
           boxShadow: '0px 2px 20px rgba(0,0,0,0.10)'
         }}
       >
-        <Box
-          sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
-        >
-          <Typography
-            sx={{
-              fontSize: 16,
-              color: '#47516B',
-              fontWeight: 700,
-              fontFamily: 'Poppins'
-            }}
-          >
-            Your Files
-          </Typography>
-          <Box
-            sx={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}
-            onClick={() => document.getElementById('file-upload')?.click()}
-          >
-            <Box sx={{ width: 24, height: 24 }}>{uploadArrowUpSVG()}</Box>
-          </Box>
-        </Box>
-
-        <Box sx={{ display: 'flex', alignItems: 'center' }}>
-          <Box sx={{ width: 24, height: 24, mr: '12px', display: 'flex' }}>
-            {checkmarkBlueSVG()}
-          </Box>
-          <Typography
-            sx={{
-              fontSize: 14,
-              color: '#2D2D47',
-              fontWeight: 500,
-              fontFamily: 'Nunito Sans'
-            }}
-          >
-            Items with a filled-in checkmark are included in your resume.
-          </Typography>
-        </Box>
-
-        <Divider sx={{ borderColor: '#47516B' }} />
-
-        {/* File Drop Area */}
-        <Box
-          sx={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            mt: '15px',
-            mb: '10px',
-            gap: '12px',
-            cursor: 'pointer'
-          }}
-          onDrop={handleDrop}
-          onDragOver={handleDragOver}
-          onClick={() => document.getElementById('file-upload')?.click()}
-        >
-          <Typography
-            sx={{
-              fontSize: 24,
-              color: '#9CA3AF',
-              fontFamily: 'Poppins',
-              fontWeight: 600
-            }}
-          >
-            {uploadedFiles.length === 0 ? 'No files yet...' : 'Your Uploaded Files'}
-          </Typography>
-          <Box sx={{ width: 'auto', height: 54, display: 'flex' }}>{fileIconSVG()}</Box>
-          <Typography
-            sx={{ fontSize: 16, textAlign: 'center', fontFamily: 'Nunito Sans' }}
-          >
-            Drop your file here or browse
-          </Typography>
-          <Typography
-            sx={{
-              fontSize: 14,
-              color: '#9CA3AF',
-              textAlign: 'center',
-              fontFamily: 'Nunito Sans'
-            }}
-          >
-            Maximum size: 50MB
-          </Typography>
-
-          <input
-            type='file'
-            id='file-upload'
-            multiple
-            style={{ display: 'none' }}
-            onChange={handleFileUpload}
-            accept='application/pdf, image/*'
-          />
-        </Box>
-
-        {/* Uploaded Files List */}
-        <Box
-          sx={{
-            maxHeight: uploadedFiles.length > 10 ? 531 : 'auto',
-            overflowY: uploadedFiles.length > 10 ? 'auto' : 'visible',
-            textWrap: 'wrap',
-            wordBreak: 'break-word',
-            paddingRight: 1
-          }}
-        >
-          <Stack spacing={2}>
-            {uploadedFiles.map((file, index) => (
-              <Box sx={{ display: 'flex', alignItems: 'center' }} key={file}>
-                <Box sx={{ width: 24, height: 24, mr: '10px', display: 'flex' }}>
-                  {checkmarkBlueSVG()}
-                </Box>
-                <Typography
-                  sx={{
-                    fontSize: 16,
-                    fontWeight: 500,
-                    color: '#2563EB',
-                    textDecoration: 'underline',
-                    fontFamily: 'Nunito Sans',
-                    cursor: 'pointer'
-                  }}
-                >
-                  {file}
-                </Typography>
-              </Box>
-            ))}
-          </Stack>
-        </Box>
+        <MediaUploadSection
+          files={uploadedFiles}
+          onFilesSelected={handleFilesSelected}
+          onDelete={handleDelete}
+          onNameChange={handleNameChange}
+          onSetAsFeatured={setAsFeatured}
+          onReorder={() => {}}
+          maxFiles={10}
+          maxSizeMB={50}
+        />
       </Box>
     </Box>
   )
