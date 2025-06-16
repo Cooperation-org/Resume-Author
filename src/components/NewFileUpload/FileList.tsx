@@ -8,32 +8,29 @@ import {
   CardContent,
   IconButton,
   TextField,
-  Tooltip
+  Typography
 } from '@mui/material'
 import { GlobalWorkerOptions, getDocument } from 'pdfjs-dist'
 import DeleteIcon from '@mui/icons-material/Delete'
-import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp'
-import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown'
-import StarIcon from '@mui/icons-material/Star'
 import EditIcon from '@mui/icons-material/Edit'
 import CheckIcon from '@mui/icons-material/Check'
+
 GlobalWorkerOptions.workerSrc = '/pdf.worker.min.js'
+
 export interface FileItem {
   id: string
   file: File
   name: string
   url: string
-  isFeatured: boolean
   uploaded: boolean
   fileExtension: string
   googleId?: string
 }
+
 interface FileListProps {
   files: FileItem[]
   onDelete: (event: React.MouseEvent, id: string) => void
   onNameChange: (id: string, newName: string) => void
-  onSetAsFeatured: (id: string) => void
-  onReorder: (files: FileItem[]) => void
 }
 
 const FileListContainer = styled(Box)({
@@ -45,26 +42,50 @@ const FileListContainer = styled(Box)({
   width: '100%'
 })
 
-const isImage = (f: string) => /\.(jpg|jpeg|png|gif|bmp|webp)$/i.test(f)
-const isPDF = (f: string) => f.toLowerCase().endsWith('.pdf')
-const isMP4 = (f: string) => f.toLowerCase().endsWith('.mp4')
+const isImage = (filename: string) => /\.(jpg|jpeg|png|gif|bmp|webp)$/i.test(filename)
+const isPDF = (filename: string) => filename.toLowerCase().endsWith('.pdf')
+const isMP4 = (filename: string) => filename.toLowerCase().endsWith('.mp4')
 
-const renderPDFThumbnail = async (file: FileItem) => {
-  const pdf = await (await getDocument(file.url)).promise
-  const page = await pdf.getPage(1)
-  const vp = page.getViewport({ scale: 0.1 })
-  const c = document.createElement('canvas')
-  c.width = vp.width
-  c.height = vp.height
-  await page.render({ canvasContext: c.getContext('2d')!, viewport: vp }).promise
-  return c.toDataURL()
+const renderPDFThumbnail = async (file: FileItem): Promise<string> => {
+  try {
+    const loadingTask = file.url.startsWith('data:')
+      ? (() => {
+          const base64 = file.url.split(',')[1]
+          const binary = atob(base64)
+          const len = binary.length
+          const bytes = new Uint8Array(len)
+          for (let i = 0; i < len; i++) {
+            bytes[i] = binary.charCodeAt(i)
+          }
+          return getDocument({ data: bytes })
+        })()
+      : getDocument(file.url)
+
+    const pdf = await loadingTask.promise
+    const page = await pdf.getPage(1)
+    const viewport = page.getViewport({ scale: 0.1 })
+    const canvas = document.createElement('canvas')
+    canvas.width = viewport.width
+    canvas.height = viewport.height
+    await page.render({
+      canvasContext: canvas.getContext('2d')!,
+      viewport
+    }).promise
+
+    return canvas.toDataURL()
+  } catch (err) {
+    console.error('PDF thumbnail error:', err)
+    return '/fallback-pdf-thumbnail.svg'
+  }
 }
 
 const generateVideoThumbnail = (file: FileItem): Promise<string> =>
   new Promise((resolve, reject) => {
     const video = document.createElement('video')
     video.src = file.url
-    video.addEventListener('loadeddata', () => (video.currentTime = 1), { once: true })
+    video.addEventListener('loadeddata', () => (video.currentTime = 1), {
+      once: true
+    })
     video.addEventListener(
       'seeked',
       () => {
@@ -72,26 +93,20 @@ const generateVideoThumbnail = (file: FileItem): Promise<string> =>
         canvas.width = video.videoWidth
         canvas.height = video.videoHeight
         const ctx = canvas.getContext('2d')
-        if (!ctx) return reject(new Error())
+        if (!ctx) return reject(new Error('Video canvas context error'))
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
         resolve(canvas.toDataURL('image/png'))
       },
       { once: true }
     )
-    video.addEventListener('error', () => reject(new Error()))
+    video.addEventListener('error', () => reject(new Error('Video load error')))
   })
 
-const FileListDisplay: React.FC<FileListProps> = ({
-  files,
-  onDelete,
-  onNameChange,
-  onSetAsFeatured,
-  onReorder
-}) => {
+const FileListDisplay: React.FC<FileListProps> = ({ files, onDelete, onNameChange }) => {
   const [pdfThumbs, setPdfThumbs] = useState<Record<string, string>>({})
   const [vidThumbs, setVidThumbs] = useState<Record<string, string>>({})
   const [editingId, setEditingId] = useState<string | null>(null)
-  const [editingValue, setEditingValue] = useState('')
+  const [editingValue, setEditingValue] = useState<string>('')
 
   useEffect(() => {
     const generateThumbs = async () => {
@@ -105,7 +120,10 @@ const FileListDisplay: React.FC<FileListProps> = ({
             const thumb = await generateVideoThumbnail(f)
             setVidThumbs(prev => ({ ...prev, [f.id]: thumb }))
           } catch {
-            setVidThumbs(prev => ({ ...prev, [f.id]: '/fallback-video.png' }))
+            setVidThumbs(prev => ({
+              ...prev,
+              [f.id]: '/fallback-video.png'
+            }))
           }
         }
       }
@@ -113,44 +131,33 @@ const FileListDisplay: React.FC<FileListProps> = ({
     generateThumbs()
   }, [files, pdfThumbs, vidThumbs])
 
-  const moveItem = (e: React.MouseEvent, idx: number, dir: 'up' | 'down') => {
-    e.stopPropagation()
-
-    const next = dir === 'up' ? idx - 1 : idx + 1
-    if (next < 0 || next >= files.length) return
-
-    const reordered = [...files]
-    ;[reordered[idx], reordered[next]] = [reordered[next], reordered[idx]]
-
-    reordered.forEach(f => (f.isFeatured = false))
-    reordered[0].isFeatured = true
-    onSetAsFeatured(reordered[0].id)
-
-    onReorder(reordered)
+  const startEdit = (file: FileItem) => {
+    setEditingId(file.id)
+    setEditingValue(file.name.replace(/(\.[^/.]+)$/, ''))
   }
 
-  const startEdit = (f: FileItem) => {
-    setEditingId(f.id)
-    setEditingValue(f.name.replace(/(\.[^/.]+)$/, ''))
-  }
-
-  const saveEdit = (f: FileItem) => {
-    if (!editingValue.trim()) return setEditingId(null)
-    const ext = f.name.split('.').pop() ?? ''
-    onNameChange(f.id, `${editingValue.trim()}.${ext}`)
+  const saveEdit = (file: FileItem) => {
+    if (!editingValue.trim()) {
+      setEditingId(null)
+      return
+    }
+    const ext = file.name.split('.').pop() ?? ''
+    onNameChange(file.id, `${editingValue.trim()}.${ext}`)
     setEditingId(null)
   }
 
   return (
     <FileListContainer>
-      {files.map((f, idx) => {
+      {files.map(f => {
         const ext = f.name.split('.').pop()
         const isEditing = editingId === f.id
+
         return (
           <Box key={f.id} sx={{ width: '100%' }}>
             <Card sx={{ width: '100%', bgcolor: 'white', borderRadius: 2 }}>
               <CardContent sx={{ p: 4, width: '100%' }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                  {/* Thumbnail */}
                   {isImage(f.name) && (
                     <img
                       src={f.url}
@@ -195,6 +202,8 @@ const FileListDisplay: React.FC<FileListProps> = ({
                       FILE
                     </Box>
                   )}
+
+                  {/* Name / Edit Field */}
                   <Box sx={{ flexGrow: 1 }}>
                     {isEditing ? (
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -204,10 +213,10 @@ const FileListDisplay: React.FC<FileListProps> = ({
                           onChange={e => setEditingValue(e.target.value)}
                           sx={{ width: '100%' }}
                         />
-                        <Box>.{ext}</Box>
+                        <Typography>.{ext}</Typography>
                       </Box>
                     ) : (
-                      <Box
+                      <Typography
                         sx={{
                           fontSize: '0.95rem',
                           fontWeight: 500,
@@ -215,11 +224,13 @@ const FileListDisplay: React.FC<FileListProps> = ({
                         }}
                       >
                         {f.name}
-                      </Box>
+                      </Typography>
                     )}
                   </Box>
                 </Box>
               </CardContent>
+
+              {/* Action Row */}
               <Box
                 sx={{
                   display: 'flex',
@@ -230,58 +241,53 @@ const FileListDisplay: React.FC<FileListProps> = ({
                   borderBottomLeftRadius: 2,
                   borderBottomRightRadius: 2
                 }}
-                onClick={e => e.stopPropagation()}
               >
-                {idx === 0 && (
-                  <Tooltip title='Featured media' arrow>
-                    <IconButton sx={{ color: '#ffce31', cursor: 'default' }}>
-                      <StarIcon />
-                    </IconButton>
-                  </Tooltip>
-                )}
                 {isEditing ? (
-                  <Tooltip title='Save file name' arrow>
-                    <IconButton sx={{ color: 'white' }} onClick={() => saveEdit(f)}>
+                  <Box
+                    onClick={() => saveEdit(f)}
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 1,
+                      cursor: 'pointer'
+                    }}
+                  >
+                    <IconButton sx={{ color: 'white' }}>
                       <CheckIcon />
                     </IconButton>
-                  </Tooltip>
+                    <Typography sx={{ color: 'white' }}>Save</Typography>
+                  </Box>
                 ) : (
-                  <Tooltip title='Edit file name' arrow>
-                    <IconButton sx={{ color: 'white' }} onClick={() => startEdit(f)}>
+                  <Box
+                    onClick={() => startEdit(f)}
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 1,
+                      cursor: 'pointer'
+                    }}
+                  >
+                    <IconButton sx={{ color: 'white' }}>
                       <EditIcon />
                     </IconButton>
-                  </Tooltip>
+                    <Typography sx={{ color: 'white' }}>Edit</Typography>
+                  </Box>
                 )}
-                <Tooltip title='Delete media' arrow>
-                  <IconButton
-                    sx={{ color: 'white' }}
-                    onClick={e => onDelete(e, f.googleId ?? f.id)}
-                  >
+
+                <Box
+                  onClick={e => onDelete(e, f.googleId ?? f.id)}
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 1,
+                    cursor: 'pointer'
+                  }}
+                >
+                  <IconButton sx={{ color: 'white' }}>
                     <DeleteIcon />
                   </IconButton>
-                </Tooltip>
-                <Tooltip title='Move up' arrow>
-                  <span>
-                    <IconButton
-                      sx={{ color: 'white' }}
-                      onClick={e => moveItem(e, idx, 'up')}
-                      disabled={idx === 0}
-                    >
-                      <KeyboardArrowUpIcon />
-                    </IconButton>
-                  </span>
-                </Tooltip>
-                <Tooltip title='Move down' arrow>
-                  <span>
-                    <IconButton
-                      sx={{ color: 'white' }}
-                      onClick={e => moveItem(e, idx, 'down')}
-                      disabled={idx === files.length - 1}
-                    >
-                      <KeyboardArrowDownIcon />
-                    </IconButton>
-                  </span>
-                </Tooltip>
+                  <Typography sx={{ color: 'white' }}>Delete</Typography>
+                </Box>
               </Box>
             </Card>
           </Box>

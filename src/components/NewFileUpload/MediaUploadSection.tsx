@@ -10,13 +10,13 @@ export interface FileItem {
   file: File
   name: string
   url: string
-  isFeatured: boolean
   uploaded: boolean
   fileExtension: string
   googleId?: string
 }
+
 const CardStyle = styled(Card)({
-  padding: '40px 20px',
+  padding: '40px 0',
   cursor: 'default',
   width: '100%',
   transition: 'all 0.3s ease',
@@ -50,8 +50,6 @@ type Props = {
   onFilesSelected: (files: FileItem[]) => void
   onDelete: (e: React.MouseEvent, id: string) => void
   onNameChange: (id: string, name: string) => void
-  onSetAsFeatured: (id: string) => void
-  onReorder: (files: FileItem[]) => void
   hideUpload?: boolean
 }
 
@@ -62,8 +60,6 @@ const MediaUploadSection: React.FC<Props> = ({
   onFilesSelected,
   onDelete,
   onNameChange,
-  onSetAsFeatured,
-  onReorder,
   hideUpload = false
 }) => {
   const fileInputRef = useRef<HTMLInputElement | null>(null)
@@ -71,6 +67,27 @@ const MediaUploadSection: React.FC<Props> = ({
 
   const openPicker = () => fileInputRef.current?.click()
   const handleCloseError = () => setError(null)
+
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault()
+  }
+
+  const handleDrop = async (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault()
+    const dropped = Array.from(e.dataTransfer.files)
+    if (!dropped.length) return
+
+    const processed = await Promise.all(dropped.map(validateAndConvert))
+    const validItems = processed.filter(Boolean) as FileItem[]
+    if (!validItems.length) return
+
+    const merged = [...files]
+    validItems.forEach(item => {
+      const idx = merged.findIndex(f => f.name === item.name)
+      idx !== -1 ? (merged[idx] = item) : merged.push(item)
+    })
+    onFilesSelected(merged)
+  }
 
   const validateAndConvert = useCallback(
     (file: File): Promise<FileItem | null> =>
@@ -90,7 +107,6 @@ const MediaUploadSection: React.FC<Props> = ({
             file,
             name: file.name,
             url: e.target?.result as string,
-            isFeatured: false,
             uploaded: false,
             fileExtension: file.name.split('.').pop() ?? ''
           })
@@ -117,9 +133,7 @@ const MediaUploadSection: React.FC<Props> = ({
     }
 
     const merged = [...files]
-    const hasFeatured = merged.some(f => f.isFeatured)
     validItems.forEach(item => {
-      if (!hasFeatured && merged.length === 0) item.isFeatured = true
       const i = merged.findIndex(f => f.name === item.name)
       i !== -1 ? (merged[i] = item) : merged.push(item)
     })
@@ -131,25 +145,56 @@ const MediaUploadSection: React.FC<Props> = ({
   return (
     <Box width='100%'>
       <CardStyle variant='outlined'>
-        <FileListDisplay
-          files={files}
-          onDelete={onDelete}
-          onNameChange={onNameChange}
-          onSetAsFeatured={onSetAsFeatured}
-          onReorder={onReorder}
-        />
+        <FileListDisplay files={files} onDelete={onDelete} onNameChange={onNameChange} />
 
-        {/* Only show upload area if not hidden */}
         {!hideUpload && (
-          <>
-            <Box onClick={openPicker} sx={{ textAlign: 'center', cursor: 'pointer' }}>
+          <Box
+            sx={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              mt: 2,
+              mb: 1,
+              gap: 1.5,
+              cursor: 'pointer',
+              width: '100%'
+            }}
+            onDrop={handleDrop}
+            onDragOver={handleDragOver}
+            onClick={openPicker}
+          >
+            <Typography
+              sx={{
+                fontSize: 24,
+                color: '#9CA3AF',
+                fontFamily: 'Poppins',
+                fontWeight: 600
+              }}
+            >
+              {files.length === 0 ? 'No files yet...' : '+ Add more media'}
+            </Typography>
+            <Box sx={{ width: 'auto', height: 54, display: 'flex' }}>
               <SVGUploadMedia />
-              <Typography variant='body1' color='primary'>
-                + Add media
-                <br />
-                (images, documents, video)
-              </Typography>
             </Box>
+            <Typography
+              sx={{
+                fontSize: 16,
+                textAlign: 'center',
+                fontFamily: 'Nunito Sans'
+              }}
+            >
+              Drop your files here or browse
+            </Typography>
+            <Typography
+              sx={{
+                fontSize: 14,
+                color: '#9CA3AF',
+                textAlign: 'center',
+                fontFamily: 'Nunito Sans'
+              }}
+            >
+              Maximum size: {maxSizeMB}MB
+            </Typography>
             <input
               type='file'
               ref={fileInputRef}
@@ -158,7 +203,7 @@ const MediaUploadSection: React.FC<Props> = ({
               multiple
               hidden
             />
-          </>
+          </Box>
         )}
       </CardStyle>
 
