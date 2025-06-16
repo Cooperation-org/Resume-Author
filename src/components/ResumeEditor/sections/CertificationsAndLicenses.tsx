@@ -27,9 +27,10 @@ import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider'
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns'
 
 interface CertificationsAndLicensesProps {
-  onAddFiles?: () => void
+  onAddFiles?: (itemIndex?: number) => void
   onDelete?: () => void
   onAddCredential?: (text: string) => void
+  evidence?: string[][]
 }
 
 interface CertificationItem {
@@ -55,7 +56,8 @@ interface SelectedCredential {
 export default function CertificationsAndLicenses({
   onAddFiles,
   onDelete,
-  onAddCredential
+  onAddCredential,
+  evidence = []
 }: Readonly<CertificationsAndLicensesProps>) {
   const dispatch = useDispatch()
   const resume = useSelector((state: RootState) => state.resume.resume)
@@ -582,7 +584,10 @@ export default function CertificationsAndLicenses({
                   gap: '15px'
                 }}
               >
-                <StyledButton startIcon={<SVGAddFiles />} onClick={onAddFiles}>
+                <StyledButton
+                  startIcon={<SVGAddFiles />}
+                  onClick={() => onAddFiles && onAddFiles(index)}
+                >
                   Add file(s)
                 </StyledButton>
                 <StyledButton

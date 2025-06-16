@@ -39,9 +39,10 @@ const PinkSwitch = styled(Switch)(({ theme }) => ({
 }))
 
 interface VolunteerWorkProps {
-  onAddFiles?: () => void
+  onAddFiles?: (itemIndex?: number) => void
   onDelete?: () => void
   onAddCredential?: (text: string) => void
+  evidence?: string[][]
 }
 
 interface SelectedCredential {
@@ -68,7 +69,8 @@ interface VolunteerWorkItem {
 export default function VolunteerWork({
   onAddFiles,
   onDelete,
-  onAddCredential
+  onAddCredential,
+  evidence = []
 }: Readonly<VolunteerWorkProps>) {
   const dispatch = useDispatch()
   const resume = useSelector((state: RootState) => state.resume.resume)
@@ -682,7 +684,10 @@ export default function VolunteerWork({
                   gap: '15px'
                 }}
               >
-                <StyledButton startIcon={<SVGAddFiles />} onClick={onAddFiles}>
+                <StyledButton
+                  startIcon={<SVGAddFiles />}
+                  onClick={() => onAddFiles && onAddFiles(index)}
+                >
                   Add file(s)
                 </StyledButton>
                 <StyledButton

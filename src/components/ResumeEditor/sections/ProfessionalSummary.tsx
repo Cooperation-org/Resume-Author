@@ -9,12 +9,14 @@ interface ProfessionalSummaryProps {
   onAddFiles?: () => void
   onDelete?: () => void
   onAddCredential?: (text: string) => void
+  evidence?: string[][]
 }
 
 export default function ProfessionalSummary({
   onAddFiles,
   onDelete,
-  onAddCredential
+  onAddCredential,
+  evidence = []
 }: Readonly<ProfessionalSummaryProps>) {
   const dispatch = useDispatch()
   const resume = useSelector((state: RootState) => state.resume.resume)

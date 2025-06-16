@@ -58,6 +58,7 @@ interface WorkExperience extends VerifiableItem {
   id?: string
   verificationStatus?: 'unverified' | 'verified'
   credentialLink?: string
+  evidence?: string[]
   [key: string]: any
 }
 
@@ -82,6 +83,7 @@ interface Education extends VerifiableItem {
   id: string
   verificationStatus: string
   credentialLink: string
+  evidence?: string[]
   [key: string]: any
 }
 
@@ -94,6 +96,7 @@ interface Skill extends VerifiableItem {
   id: string
   verificationStatus: string
   credentialLink: string
+  evidence?: string[]
   [key: string]: any
 }
 
@@ -105,13 +108,16 @@ interface Conference extends VerifiableItem {
   description?: string
   presentationTitle?: string
   url?: string
+  evidence?: string[]
 }
+
 interface Project extends VerifiableItem {
   name: string
   description: string
   url?: string
   technologies: string[]
   credentialLink?: string
+  evidence?: string[]
 }
 
 interface Award extends VerifiableItem {
@@ -120,6 +126,7 @@ interface Award extends VerifiableItem {
   date: string
   description?: string
   recognition?: string
+  evidence?: string[]
 }
 
 interface Publication extends VerifiableItem {
@@ -133,6 +140,7 @@ interface Publication extends VerifiableItem {
   citation?: string
   abstract?: string
   impact?: string
+  evidence?: string[]
 }
 
 interface Certification extends VerifiableItem {
@@ -144,6 +152,7 @@ interface Certification extends VerifiableItem {
   credentialLink?: string
   noExpiration: boolean
   score?: string
+  evidence?: string[]
 }
 
 interface ProfessionalAffiliation extends VerifiableItem {
@@ -160,6 +169,7 @@ interface ProfessionalAffiliation extends VerifiableItem {
   id: string
   verificationStatus: string
   credentialLink: string
+  evidence?: string[]
   [key: string]: any
 }
 
@@ -174,6 +184,7 @@ interface VolunteerWork extends VerifiableItem {
   duration: string
   credentialLink?: string
   cause?: string
+  evidence?: string[]
 }
 
 interface Language extends VerifiableItem {
@@ -183,6 +194,7 @@ interface Language extends VerifiableItem {
   writingLevel?: string
   speakingLevel?: string
   readingLevel?: string
+  evidence?: string[]
 }
 
 // Main Resume Interface

@@ -39,7 +39,8 @@ const PinkSwitch = styled(Switch)(({ theme }) => ({
 }))
 
 interface WorkExperienceProps {
-  onAddFiles?: () => void
+  onAddFiles?: (itemIndex: number) => void
+  evidence?: string[][]
   onDelete?: () => void
   onAddCredential?: (text: string) => void
 }
@@ -68,7 +69,8 @@ interface WorkExperienceItem {
 export default function WorkExperience({
   onAddFiles,
   onDelete,
-  onAddCredential
+  onAddCredential,
+  evidence = []
 }: Readonly<WorkExperienceProps>) {
   const dispatch = useDispatch()
   const resume = useSelector((state: RootState) => state.resume.resume)
@@ -662,6 +664,29 @@ export default function WorkExperience({
                 </Box>
               )}
 
+              <Box sx={{ display: 'flex', flexDirection: 'row', gap: 2, mt: 1 }}>
+                {evidence[index] &&
+                  evidence[index].length > 0 &&
+                  evidence[index].map((fileId, i) => (
+                    <Box
+                      key={fileId}
+                      sx={{ width: 56, height: 56, position: 'relative' }}
+                    >
+                      {/* Replace with actual file thumbnail logic */}
+                      <img
+                        src={/* get file URL by fileId */ ''}
+                        alt={fileId}
+                        style={{
+                          width: '100%',
+                          height: '100%',
+                          objectFit: 'cover',
+                          borderRadius: 4
+                        }}
+                      />
+                    </Box>
+                  ))}
+              </Box>
+
               <Box
                 sx={{
                   display: 'flex',
@@ -671,7 +696,10 @@ export default function WorkExperience({
                   gap: '15px'
                 }}
               >
-                <StyledButton startIcon={<SVGAddFiles />} onClick={onAddFiles}>
+                <StyledButton
+                  startIcon={<SVGAddFiles />}
+                  onClick={() => onAddFiles && onAddFiles(index)}
+                >
                   Add file(s)
                 </StyledButton>
                 <StyledButton

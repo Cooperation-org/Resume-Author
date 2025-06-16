@@ -53,6 +53,7 @@ type Props = {
   onDelete: (e: React.MouseEvent, id: string) => void
   onNameChange: (id: string, name: string) => void
   hideUpload?: boolean
+  accessToken?: string
 }
 
 const MediaUploadSection: React.FC<Props> = ({
@@ -62,7 +63,8 @@ const MediaUploadSection: React.FC<Props> = ({
   onFilesSelected,
   onDelete,
   onNameChange,
-  hideUpload = false
+  hideUpload = false,
+  accessToken
 }) => {
   const fileInputRef = useRef<HTMLInputElement | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -194,6 +196,7 @@ const MediaUploadSection: React.FC<Props> = ({
           onNameChange={onNameChange}
           onUploadFile={handleUploadFile}
           uploadingId={uploadingId}
+          accessToken={accessToken}
         />
 
         {!hideUpload && (

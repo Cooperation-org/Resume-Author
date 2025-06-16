@@ -17,15 +17,17 @@ import { RootState } from '../../../redux/store'
 import { updateSection } from '../../../redux/slices/resume'
 
 interface HobbiesAndInterestsProps {
-  onAddFiles?: () => void
+  onAddFiles?: (itemIndex?: number) => void
   onDelete?: () => void
   onAddCredential?: (text: string) => void
+  evidence?: string[][]
 }
 
 export default function HobbiesAndInterests({
   onAddFiles,
   onDelete,
-  onAddCredential
+  onAddCredential,
+  evidence = []
 }: Readonly<HobbiesAndInterestsProps>) {
   const dispatch = useDispatch()
   const resume = useSelector((state: RootState) => state.resume.resume)

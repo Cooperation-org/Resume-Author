@@ -16,9 +16,10 @@ import CloseIcon from '@mui/icons-material/Close'
 import CredentialOverlay from '../../CredentialsOverlay'
 
 interface ProjectsProps {
-  onAddFiles?: () => void
+  onAddFiles?: (itemIndex?: number) => void
   onDelete?: () => void
   onAddCredential?: (text: string) => void
+  evidence?: string[][]
 }
 
 interface ProjectItem {
@@ -41,7 +42,8 @@ interface SelectedCredential {
 export default function Projects({
   onAddFiles,
   onDelete,
-  onAddCredential
+  onAddCredential,
+  evidence = []
 }: Readonly<ProjectsProps>) {
   const dispatch = useDispatch()
   const resume = useSelector((state: RootState) => state.resume.resume)
@@ -480,7 +482,10 @@ export default function Projects({
                   gap: '15px'
                 }}
               >
-                <StyledButton startIcon={<SVGAddFiles />} onClick={onAddFiles}>
+                <StyledButton
+                  startIcon={<SVGAddFiles />}
+                  onClick={() => onAddFiles && onAddFiles(index)}
+                >
                   Add file(s)
                 </StyledButton>
                 <StyledButton

@@ -58,60 +58,62 @@ const isImage = (n: string) => /\.(jpe?g|png|gif|bmp|webp)$/i.test(n)
 const isPDF = (n: string) => n.toLowerCase().endsWith('.pdf')
 const isMP4 = (n: string) => n.toLowerCase().endsWith('.mp4')
 
-const renderPDFThumbnail = async (file: FileItem): Promise<string> => {
+async function renderPDFThumbnail(file: FileItem): Promise<string> {
   try {
     const loadingTask = file.url.startsWith('data:')
       ? (() => {
-          const base64 = file.url.split(',')[1]
-          const bin = atob(base64)
+          const b64 = file.url.split(',')[1]
+          const bin = atob(b64)
           const arr = new Uint8Array(bin.length)
           for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i)
           return getDocument({ data: arr })
         })()
       : getDocument(file.url)
+
     const pdf = await loadingTask.promise
     const page = await pdf.getPage(1)
-    const viewport = page.getViewport({ scale: 0.1 })
-    const canvas = document.createElement('canvas')
-    canvas.width = viewport.width
-    canvas.height = viewport.height
-    await page.render({ canvasContext: canvas.getContext('2d')!, viewport }).promise
-    return canvas.toDataURL()
+    const vp = page.getViewport({ scale: 0.1 })
+    const c = document.createElement('canvas')
+    c.width = vp.width
+    c.height = vp.height
+    await page.render({ canvasContext: c.getContext('2d')!, viewport: vp }).promise
+    return c.toDataURL()
   } catch {
     return '/fallback-pdf-thumbnail.svg'
   }
 }
 
-const generateVideoThumbnail = (file: FileItem): Promise<string> =>
-  new Promise((resolve, reject) => {
-    const video = document.createElement('video')
-    video.src = file.url
-    video.addEventListener('loadeddata', () => (video.currentTime = 1), {
-      once: true
-    })
-    video.addEventListener(
+function generateVideoThumbnail(file: FileItem): Promise<string> {
+  return new Promise((res, rej) => {
+    const v = document.createElement('video')
+    v.src = file.url
+    v.addEventListener('loadeddata', () => (v.currentTime = 1), { once: true })
+    v.addEventListener(
       'seeked',
       () => {
         const c = document.createElement('canvas')
-        c.width = video.videoWidth
-        c.height = video.videoHeight
+        c.width = v.videoWidth
+        c.height = v.videoHeight
         const ctx = c.getContext('2d')
-        if (!ctx) return reject(new Error('Canvas error'))
-        ctx.drawImage(video, 0, 0, c.width, c.height)
-        resolve(c.toDataURL('image/png'))
+        if (!ctx) return rej(new Error('Canvas error'))
+        ctx.drawImage(v, 0, 0, c.width, c.height)
+        res(c.toDataURL('image/png'))
       },
       { once: true }
     )
-    video.addEventListener('error', () => reject(new Error('Video load failed')))
+    v.addEventListener('error', () => rej(new Error('Video load failed')))
   })
+}
+
+const getDriveThumbnailUrl = (id: string) =>
+  `https://drive.google.com/thumbnail?authuser=0&sz=w200&id=${id}`
 
 const FileListDisplay: React.FC<FileListProps> = ({
   files,
   onDelete,
   onNameChange,
   onUploadFile,
-  uploadingId,
-  accessToken
+  uploadingId
 }) => {
   const { instances, isInitialized, listFilesMetadata } = useGoogleDrive()
   const [remoteFiles, setRemoteFiles] = useState<DriveFileMeta[]>([])
@@ -135,6 +137,7 @@ const FileListDisplay: React.FC<FileListProps> = ({
 
   const [pdfThumbs, setPdfThumbs] = useState<Record<string, string>>({})
   const [vidThumbs, setVidThumbs] = useState<Record<string, string>>({})
+
   useEffect(() => {
     files.forEach(f => {
       if (isPDF(f.name) && !pdfThumbs[f.id]) {
@@ -155,13 +158,9 @@ const FileListDisplay: React.FC<FileListProps> = ({
     setEditingId(f.id)
     setEditingValue(f.name.replace(/(\.[^/.]+)$/, ''))
   }
-
   const saveEdit = (f: FileItem) => {
-    if (!editingValue.trim()) {
-      setEditingId(null)
-      return
-    }
-    const ext = f.name.split('.').pop()!
+    if (!editingValue.trim()) return setEditingId(null)
+    const ext = f.name.split('.').pop() || ''
     onNameChange(f.id, `${editingValue.trim()}.${ext}`)
     setEditingId(null)
   }
@@ -173,23 +172,17 @@ const FileListDisplay: React.FC<FileListProps> = ({
     reloadRemote()
   }
 
-  const getDriveUrl = (id: string) =>
-    accessToken
-      ? `https://www.googleapis.com/drive/v3/files/${id}?alt=media&access_token=${accessToken}`
-      : `https://drive.google.com/uc?export=view&id=${id}`
-
   const [preview, setPreview] = useState<{ url: string; mime: string } | null>(null)
   const openPreview = (url: string, mime: string) => setPreview({ url, mime })
   const closePreview = () => setPreview(null)
 
-  // only files not yet uploaded remain here
   const pending = files.filter(f => !f.uploaded)
 
   return (
     <>
       <FileListContainer>
         {pending.map(f => {
-          const ext = f.name.split('.').pop()!
+          const ext = f.name.split('.').pop() || ''
           const isEd = editingId === f.id
           const isUp = uploadingId === f.id
 
@@ -201,29 +194,34 @@ const FileListDisplay: React.FC<FileListProps> = ({
                     {isImage(f.name) ? (
                       <img
                         src={f.url}
+                        alt={f.name}
                         width={80}
                         height={80}
-                        style={{ borderRadius: 8 }}
+                        style={{ borderRadius: 8, cursor: 'pointer' }}
                         onClick={() => openPreview(f.url, `image/${ext}`)}
                       />
                     ) : isPDF(f.name) ? (
                       <img
                         src={pdfThumbs[f.id] ?? '/fallback-pdf-thumbnail.svg'}
+                        alt='PDF thumbnail'
                         width={80}
                         height={80}
-                        style={{ borderRadius: 8 }}
+                        style={{ borderRadius: 8, cursor: 'pointer' }}
                         onClick={() => openPreview(f.url, 'application/pdf')}
                       />
                     ) : isMP4(f.name) ? (
                       <img
                         src={vidThumbs[f.id] ?? '/fallback-video.png'}
+                        alt='video thumbnail'
                         width={80}
                         height={80}
-                        style={{ borderRadius: 8 }}
+                        style={{ borderRadius: 8, cursor: 'pointer' }}
                         onClick={() => openPreview(f.url, 'video/mp4')}
                       />
                     ) : (
                       <Box
+                        role='img'
+                        aria-label='file icon'
                         sx={{
                           width: 80,
                           height: 80,
@@ -278,7 +276,6 @@ const FileListDisplay: React.FC<FileListProps> = ({
                     </Box>
                   </Box>
                 </CardContent>
-
                 <Box
                   sx={{
                     display: 'flex',
@@ -290,8 +287,10 @@ const FileListDisplay: React.FC<FileListProps> = ({
                     borderBottomRightRadius: 2
                   }}
                 >
-                  {!f.uploaded && !isUp && (
+                  {!isUp && (
                     <Box
+                      role='button'
+                      tabIndex={0}
                       onClick={() => handleUpload(f)}
                       sx={{
                         display: 'flex',
@@ -309,6 +308,8 @@ const FileListDisplay: React.FC<FileListProps> = ({
                   {isUp && <Typography sx={{ color: 'white' }}>Uploading…</Typography>}
                   {isEd ? (
                     <Box
+                      role='button'
+                      tabIndex={0}
                       onClick={() => saveEdit(f)}
                       sx={{
                         display: 'flex',
@@ -324,6 +325,8 @@ const FileListDisplay: React.FC<FileListProps> = ({
                     </Box>
                   ) : (
                     <Box
+                      role='button'
+                      tabIndex={0}
                       onClick={() => startEdit(f)}
                       sx={{
                         display: 'flex',
@@ -339,6 +342,8 @@ const FileListDisplay: React.FC<FileListProps> = ({
                     </Box>
                   )}
                   <Box
+                    role='button'
+                    tabIndex={0}
                     onClick={e => onDelete(e, f.googleId ?? f.id)}
                     sx={{
                       display: 'flex',
@@ -361,45 +366,40 @@ const FileListDisplay: React.FC<FileListProps> = ({
 
       <Box>
         {loadingRemote ? (
-          <Box sx={{ textAlign: 'center' }}>
+          <Box sx={{ textAlign: 'center', p: 2 }}>
             <Typography>Loading uploaded files…</Typography>
           </Box>
         ) : remoteFiles.length ? (
           <List dense>
-            {remoteFiles.map(rf => {
-              const thumb =
-                rf.thumbnailLink ||
-                (rf.mimeType.startsWith('image/')
-                  ? getDriveUrl(rf.id)
-                  : rf.mimeType === 'application/pdf'
-                    ? '/fallback-pdf-thumbnail.svg'
-                    : '/fallback-video.png')
-              return (
-                <ListItem
-                  key={rf.id}
-                  disablePadding
-                  sx={{ pr: 8 }}
-                  secondaryAction={
-                    <Typography variant='caption' sx={{ pr: 2 }}>
-                      Uploaded
-                    </Typography>
-                  }
+            {remoteFiles.map(rf => (
+              <ListItem
+                key={rf.id}
+                disablePadding
+                sx={{ pr: 8 }}
+                secondaryAction={
+                  <Typography variant='caption' sx={{ pr: 2 }}>
+                    Uploaded
+                  </Typography>
+                }
+              >
+                <ListItemButton
+                  onClick={() => openPreview(getDriveThumbnailUrl(rf.id), rf.mimeType)}
                 >
-                  <ListItemButton
-                    onClick={() => openPreview(getDriveUrl(rf.id), rf.mimeType)}
-                  >
-                    <ListItemAvatar>
-                      <Avatar src={thumb} />
-                    </ListItemAvatar>
-                    <ListItemText
-                      primary={rf.name}
-                      sx={{ textOverflow: 'ellipsis', overflow: 'hidden' }}
-                      primaryTypographyProps={{ noWrap: true }}
+                  <ListItemAvatar>
+                    <Avatar
+                      src={getDriveThumbnailUrl(rf.id)}
+                      alt={rf.name}
+                      variant='rounded'
                     />
-                  </ListItemButton>
-                </ListItem>
-              )
-            })}
+                  </ListItemAvatar>
+                  <ListItemText
+                    primary={rf.name}
+                    primaryTypographyProps={{ noWrap: true }}
+                    sx={{ textOverflow: 'ellipsis', overflow: 'hidden' }}
+                  />
+                </ListItemButton>
+              </ListItem>
+            ))}
           </List>
         ) : (
           <Typography>No uploaded files yet.</Typography>
