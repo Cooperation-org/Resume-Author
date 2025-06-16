@@ -58,7 +58,6 @@ const isImage = (n: string) => /\.(jpe?g|png|gif|bmp|webp)$/i.test(n)
 const isPDF = (n: string) => n.toLowerCase().endsWith('.pdf')
 const isMP4 = (n: string) => n.toLowerCase().endsWith('.mp4')
 
-// PDF thumbnail generator
 const renderPDFThumbnail = async (file: FileItem): Promise<string> => {
   try {
     const loadingTask = file.url.startsWith('data:')
@@ -70,7 +69,6 @@ const renderPDFThumbnail = async (file: FileItem): Promise<string> => {
           return getDocument({ data: arr })
         })()
       : getDocument(file.url)
-
     const pdf = await loadingTask.promise
     const page = await pdf.getPage(1)
     const viewport = page.getViewport({ scale: 0.1 })
@@ -84,7 +82,6 @@ const renderPDFThumbnail = async (file: FileItem): Promise<string> => {
   }
 }
 
-// Video thumbnail generator
 const generateVideoThumbnail = (file: FileItem): Promise<string> =>
   new Promise((resolve, reject) => {
     const video = document.createElement('video')
@@ -117,7 +114,6 @@ const FileListDisplay: React.FC<FileListProps> = ({
   accessToken
 }) => {
   const { instances, isInitialized, listFilesMetadata } = useGoogleDrive()
-
   const [remoteFiles, setRemoteFiles] = useState<DriveFileMeta[]>([])
   const [loadingRemote, setLoadingRemote] = useState(false)
 
@@ -128,8 +124,6 @@ const FileListDisplay: React.FC<FileListProps> = ({
       const folderId = await instances.storage.getMediaFolderId()
       const list = await listFilesMetadata(folderId)
       setRemoteFiles(list)
-    } catch (err) {
-      console.error(err)
     } finally {
       setLoadingRemote(false)
     }
@@ -154,7 +148,6 @@ const FileListDisplay: React.FC<FileListProps> = ({
     })
   }, [files, pdfThumbs, vidThumbs])
 
-  // Edit state
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editingValue, setEditingValue] = useState('')
 
@@ -162,15 +155,20 @@ const FileListDisplay: React.FC<FileListProps> = ({
     setEditingId(f.id)
     setEditingValue(f.name.replace(/(\.[^/.]+)$/, ''))
   }
+
   const saveEdit = (f: FileItem) => {
-    if (!editingValue.trim()) return setEditingId(null)
-    const ext = f.name.split('.').pop()
+    if (!editingValue.trim()) {
+      setEditingId(null)
+      return
+    }
+    const ext = f.name.split('.').pop()!
     onNameChange(f.id, `${editingValue.trim()}.${ext}`)
     setEditingId(null)
   }
 
   const handleUpload = async (f: FileItem) => {
     await onUploadFile(f)
+    setEditingId(null)
     await new Promise(r => setTimeout(r, 500))
     reloadRemote()
   }
@@ -184,11 +182,13 @@ const FileListDisplay: React.FC<FileListProps> = ({
   const openPreview = (url: string, mime: string) => setPreview({ url, mime })
   const closePreview = () => setPreview(null)
 
+  // only files not yet uploaded remain here
+  const pending = files.filter(f => !f.uploaded)
+
   return (
     <>
-      {/* Local uploads (original cards) */}
       <FileListContainer>
-        {files.map(f => {
+        {pending.map(f => {
           const ext = f.name.split('.').pop()!
           const isEd = editingId === f.id
           const isUp = uploadingId === f.id
@@ -198,7 +198,6 @@ const FileListDisplay: React.FC<FileListProps> = ({
               <Card sx={{ width: '100%', bgcolor: 'white', borderRadius: 2 }}>
                 <CardContent sx={{ p: 4 }}>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                    {/* Thumbnail */}
                     {isImage(f.name) ? (
                       <img
                         src={f.url}
@@ -240,7 +239,6 @@ const FileListDisplay: React.FC<FileListProps> = ({
                         FILE
                       </Box>
                     )}
-                    {/* Name or Edit */}
                     <Box sx={{ flexGrow: 1 }}>
                       {isEd ? (
                         <Box sx={{ display: 'flex', gap: 1 }}>
@@ -280,6 +278,7 @@ const FileListDisplay: React.FC<FileListProps> = ({
                     </Box>
                   </Box>
                 </CardContent>
+
                 <Box
                   sx={{
                     display: 'flex',
@@ -360,7 +359,6 @@ const FileListDisplay: React.FC<FileListProps> = ({
         })}
       </FileListContainer>
 
-      {/* Compact remote list */}
       <Box>
         {loadingRemote ? (
           <Box sx={{ textAlign: 'center' }}>
@@ -380,9 +378,7 @@ const FileListDisplay: React.FC<FileListProps> = ({
                 <ListItem
                   key={rf.id}
                   disablePadding
-                  sx={{
-                    pr: 8
-                  }}
+                  sx={{ pr: 8 }}
                   secondaryAction={
                     <Typography variant='caption' sx={{ pr: 2 }}>
                       Uploaded
@@ -397,11 +393,8 @@ const FileListDisplay: React.FC<FileListProps> = ({
                     </ListItemAvatar>
                     <ListItemText
                       primary={rf.name}
-                      sx={{
-                        wordBreak: 'break-all',
-                        textOverflow: 'ellipsis',
-                        overflow: 'hidden'
-                      }}
+                      sx={{ textOverflow: 'ellipsis', overflow: 'hidden' }}
+                      primaryTypographyProps={{ noWrap: true }}
                     />
                   </ListItemButton>
                 </ListItem>
@@ -413,7 +406,6 @@ const FileListDisplay: React.FC<FileListProps> = ({
         )}
       </Box>
 
-      {/* Preview dialog */}
       <Dialog open={!!preview} onClose={closePreview} maxWidth='md' fullWidth>
         <DialogContent sx={{ textAlign: 'center' }}>
           {preview?.mime.startsWith('image/') && (
