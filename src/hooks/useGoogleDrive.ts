@@ -25,6 +25,14 @@ interface ClaimDetail {
     }
   }
 }
+
+export interface DriveFileMeta {
+  id: string
+  name: string
+  mimeType: string
+  thumbnailLink?: string
+}
+
 const useGoogleDrive = () => {
   const accessToken = getLocalStorage('auth')
   const [isInitialized, setIsInitialized] = useState(false)
@@ -84,10 +92,27 @@ const useGoogleDrive = () => {
     }
   }, [isInitialized])
 
+  const listFilesMetadata = useCallback(
+    async (folderId: string): Promise<DriveFileMeta[]> => {
+      const url = new URL('https://www.googleapis.com/drive/v3/files')
+      url.searchParams.set('q', `'${folderId}' in parents and trashed=false`)
+      url.searchParams.set('fields', 'files(id,name,mimeType,thumbnailLink)')
+      const res = await fetch(url.toString(), {
+        headers: {
+          Authorization: `Bearer ${accessToken}`
+        }
+      })
+      const json = await res.json()
+      return json.files ?? []
+    },
+    [accessToken]
+  )
+
   return {
     getContent,
     instances: getInstances(),
-    isInitialized
+    isInitialized,
+    listFilesMetadata
   }
 }
 
