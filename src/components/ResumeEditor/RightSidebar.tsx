@@ -1,12 +1,13 @@
 import { Box, Typography, Button, Divider, Stack, CircularProgress } from '@mui/material'
 import { login } from '../../tools/auth'
 import { useSelector, useDispatch } from 'react-redux'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { checkmarkBlueSVG, checkmarkgraySVG } from '../../assets/svgs'
 import { useLocation } from 'react-router-dom'
 import { fetchVCs } from '../../redux/slices/vc'
 import { AppDispatch, RootState } from '../../redux/store'
 import MediaUploadSection from '../../components/NewFileUpload/MediaUploadSection'
+import useGoogleDrive, { DriveFileMeta } from '../../hooks/useGoogleDrive'
 
 export interface FileItem {
   id: string
@@ -18,14 +19,99 @@ export interface FileItem {
   googleId?: string
 }
 
-const RightSidebar = () => {
+interface RightSidebarProps {
+  files: FileItem[]
+  onFilesSelected: (files: FileItem[]) => void
+  onFileDelete: (event: React.MouseEvent, id: string) => void
+  onFileNameChange: (id: string, newName: string) => void
+  onAllFilesUpdate: (allFiles: FileItem[]) => void
+}
+
+const RightSidebar = ({
+  files,
+  onFilesSelected,
+  onFileDelete,
+  onFileNameChange,
+  onAllFilesUpdate
+}: RightSidebarProps) => {
   const location = useLocation()
   const [selectedClaims, setSelectedClaims] = useState<string[]>([])
   const { accessToken, isAuthenticated } = useSelector((state: RootState) => state.auth)
   const dispatch: AppDispatch = useDispatch()
-  const { vcs, loading } = useSelector((state: any) => state.vcReducer)
+  const { vcs } = useSelector((state: any) => state.vcReducer)
   const [isLoading, setIsLoading] = useState<boolean>(true)
-  const [uploadedFiles, setUploadedFiles] = useState<FileItem[]>([])
+
+  const { instances, isInitialized, listFilesMetadata } = useGoogleDrive()
+  const [remoteFiles, setRemoteFiles] = useState<DriveFileMeta[]>([])
+
+  const reloadRemoteFiles = useCallback(async () => {
+    if (!isInitialized || !instances.storage) return
+    try {
+      const folderId = await instances.storage.getMediaFolderId()
+      const list = await listFilesMetadata(folderId)
+      setRemoteFiles(list)
+    } catch (error) {
+      console.error('Error fetching remote files:', error)
+    }
+  }, [isInitialized, instances.storage, listFilesMetadata])
+
+  useEffect(() => {
+    if (isInitialized) {
+      reloadRemoteFiles()
+    }
+  }, [isInitialized, reloadRemoteFiles])
+
+  useEffect(() => {
+    if (remoteFiles.length > 0) {
+      console.log('Access token debug:', {
+        hasAccessToken: !!accessToken,
+        accessTokenLength: accessToken?.length,
+        accessTokenPreview: accessToken ? accessToken.substring(0, 20) + '...' : 'null',
+        remoteFilesCount: remoteFiles.length,
+        sampleFile: remoteFiles[0]
+          ? {
+              id: remoteFiles[0].id,
+              name: remoteFiles[0].name,
+              mimeType: remoteFiles[0].mimeType,
+              hasThumbnailLink: !!remoteFiles[0].thumbnailLink
+            }
+          : null
+      })
+    }
+  }, [remoteFiles, accessToken])
+
+  const getDriveUrl = (id: string) => {
+    const url = `https://drive.google.com/uc?export=view&id=${id}`
+
+    console.log('getDriveUrl called:', {
+      id,
+      generatedUrl: url
+    })
+
+    return url
+  }
+
+  const getAllFiles = useCallback((): FileItem[] => {
+    const localFiles = files
+    const convertedRemoteFiles: FileItem[] = remoteFiles.map(rf => ({
+      id: rf.id,
+      file: new File([], rf.name),
+      name: rf.name,
+
+      url: getDriveUrl(rf.id),
+      uploaded: true,
+      fileExtension: rf.name.split('.').pop() ?? '',
+      googleId: rf.id
+    }))
+
+    const allFiles = [...localFiles, ...convertedRemoteFiles]
+    return allFiles
+  }, [files, remoteFiles, accessToken])
+
+  useEffect(() => {
+    const combinedFiles = getAllFiles()
+    onAllFilesUpdate(combinedFiles)
+  }, [getAllFiles, onAllFilesUpdate])
 
   useEffect(() => {
     setIsLoading(true)
@@ -33,10 +119,6 @@ const RightSidebar = () => {
       .then(() => setIsLoading(false))
       .catch(() => setIsLoading(false))
   }, [dispatch])
-
-  const handleAuth = () => {
-    handleGoogleLogin()
-  }
 
   const handleGoogleLogin = async () => {
     await login(location.pathname)
@@ -54,17 +136,17 @@ const RightSidebar = () => {
   }
 
   const handleFilesSelected = (newFiles: FileItem[]) => {
-    setUploadedFiles(newFiles)
+    onFilesSelected(newFiles)
+
+    setTimeout(() => reloadRemoteFiles(), 500)
   }
 
   const handleDelete = (event: React.MouseEvent, id: string) => {
-    setUploadedFiles(prev => prev.filter(file => file.id !== id))
+    onFileDelete(event, id)
   }
 
   const handleNameChange = (id: string, newName: string) => {
-    setUploadedFiles(prev =>
-      prev.map(file => (file.id === id ? { ...file, name: newName } : file))
-    )
+    onFileNameChange(id, newName)
   }
 
   const handleRefresh = () => {
@@ -80,6 +162,88 @@ const RightSidebar = () => {
     } else {
       handleGoogleLogin()
     }
+  }
+
+  const renderCredentialContent = (vc: any) => {
+    if (!vc?.credentialSubject?.achievement?.[0]?.name) {
+      return (
+        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+          <CircularProgress size={16} sx={{ color: '#3A35A2', mr: 1 }} />
+          <Typography
+            sx={{
+              fontSize: 16,
+              fontWeight: 500,
+              color: '#9CA3AF',
+              fontFamily: 'Nunito Sans'
+            }}
+          >
+            Loading credential...
+          </Typography>
+        </Box>
+      )
+    }
+
+    return (
+      <Typography
+        sx={{
+          fontSize: 16,
+          fontWeight: 500,
+          color: '#2563EB',
+          textDecoration: 'underline',
+          fontFamily: 'Nunito Sans',
+          cursor: 'pointer'
+        }}
+        onClick={() => handleClaimToggle(vc.id)}
+      >
+        {vc.credentialSubject.achievement[0].name}
+      </Typography>
+    )
+  }
+
+  const renderCredentialsContent = () => {
+    if (isLoading) {
+      return (
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            height: '100px'
+          }}
+        >
+          <CircularProgress size={36} sx={{ color: '#3A35A2' }} />
+        </Box>
+      )
+    }
+
+    if (vcs && vcs.length > 0) {
+      return (
+        <Stack spacing={2}>
+          {vcs.map((vc: any) => (
+            <Box sx={{ display: 'flex', alignItems: 'center' }} key={vc.id}>
+              <Box sx={{ width: 24, height: 24, mr: '10px', display: 'flex' }}>
+                {selectedClaims.includes(vc.id) ? checkmarkBlueSVG() : checkmarkgraySVG()}
+              </Box>
+              {renderCredentialContent(vc)}
+            </Box>
+          ))}
+        </Stack>
+      )
+    }
+
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', py: 2 }}>
+        <Typography
+          sx={{
+            fontSize: 16,
+            color: '#9CA3AF',
+            fontFamily: 'Nunito Sans'
+          }}
+        >
+          No credentials found.
+        </Typography>
+      </Box>
+    )
   }
 
   return (
@@ -202,71 +366,7 @@ const RightSidebar = () => {
             minHeight: '100px'
           }}
         >
-          {isLoading ? (
-            <Box
-              sx={{
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center',
-                height: '100px'
-              }}
-            >
-              <CircularProgress size={36} sx={{ color: '#3A35A2' }} />
-            </Box>
-          ) : vcs && vcs.length > 0 ? (
-            <Stack spacing={2}>
-              {vcs.map((vc: any) => (
-                <Box sx={{ display: 'flex', alignItems: 'center' }} key={vc.id}>
-                  <Box sx={{ width: 24, height: 24, mr: '10px', display: 'flex' }}>
-                    {selectedClaims.includes(vc.id)
-                      ? checkmarkBlueSVG()
-                      : checkmarkgraySVG()}
-                  </Box>
-                  {!vc?.credentialSubject?.achievement?.[0]?.name ? (
-                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                      <CircularProgress size={16} sx={{ color: '#3A35A2', mr: 1 }} />
-                      <Typography
-                        sx={{
-                          fontSize: 16,
-                          fontWeight: 500,
-                          color: '#9CA3AF',
-                          fontFamily: 'Nunito Sans'
-                        }}
-                      >
-                        Loading credential...
-                      </Typography>
-                    </Box>
-                  ) : (
-                    <Typography
-                      sx={{
-                        fontSize: 16,
-                        fontWeight: 500,
-                        color: '#2563EB',
-                        textDecoration: 'underline',
-                        fontFamily: 'Nunito Sans',
-                        cursor: 'pointer'
-                      }}
-                      onClick={() => handleClaimToggle(vc.id)}
-                    >
-                      {vc.credentialSubject.achievement[0].name}
-                    </Typography>
-                  )}
-                </Box>
-              ))}
-            </Stack>
-          ) : (
-            <Box sx={{ display: 'flex', justifyContent: 'center', py: 2 }}>
-              <Typography
-                sx={{
-                  fontSize: 16,
-                  color: '#9CA3AF',
-                  fontFamily: 'Nunito Sans'
-                }}
-              >
-                No credentials found.
-              </Typography>
-            </Box>
-          )}
+          {renderCredentialsContent()}
         </Box>
       </Box>
 
@@ -295,12 +395,13 @@ const RightSidebar = () => {
         </Typography>
         <Divider sx={{ borderColor: '#47516B' }} />
         <MediaUploadSection
-          files={uploadedFiles}
+          files={files}
           onFilesSelected={handleFilesSelected}
           onDelete={handleDelete}
           onNameChange={handleNameChange}
           maxFiles={10}
           maxSizeMB={50}
+          accessToken={accessToken ?? undefined}
         />
       </Box>
     </Box>

@@ -39,9 +39,10 @@ const PinkSwitch = styled(Switch)(({ theme }) => ({
 }))
 
 interface ProfessionalAffiliationsProps {
-  onAddFiles?: () => void
+  onAddFiles?: (itemIndex?: number) => void
   onDelete?: () => void
   onAddCredential?: (text: string) => void
+  evidence?: string[][]
 }
 
 interface SelectedCredential {
@@ -67,7 +68,8 @@ interface AffiliationItem {
 export default function ProfessionalAffiliations({
   onAddFiles,
   onDelete,
-  onAddCredential
+  onAddCredential,
+  evidence = []
 }: Readonly<ProfessionalAffiliationsProps>) {
   const dispatch = useDispatch()
   const resume = useSelector((state: RootState) => state.resume.resume)
@@ -661,7 +663,10 @@ export default function ProfessionalAffiliations({
                   gap: '15px'
                 }}
               >
-                <StyledButton startIcon={<SVGAddFiles />} onClick={onAddFiles}>
+                <StyledButton
+                  startIcon={<SVGAddFiles />}
+                  onClick={() => onAddFiles && onAddFiles(index)}
+                >
                   Add file(s)
                 </StyledButton>
                 <StyledButton

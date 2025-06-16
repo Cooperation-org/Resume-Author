@@ -40,9 +40,10 @@ const PinkSwitch = styled(Switch)(({ theme }) => ({
 }))
 
 interface EducationProps {
-  readonly onAddFiles?: () => void
+  readonly onAddFiles?: (itemIndex?: number) => void
   readonly onDelete?: () => void
   readonly onAddCredential?: (text: string) => void
+  readonly evidence?: string[][]
 }
 
 interface EducationItem {
@@ -73,8 +74,9 @@ interface SelectedCredential {
 export default function Education({
   onAddFiles,
   onDelete,
-  onAddCredential
-}: EducationProps) {
+  onAddCredential,
+  evidence = []
+}: Readonly<EducationProps>) {
   const dispatch = useDispatch()
   const resume = useSelector((state: RootState) => state.resume.resume)
   const vcs = useSelector((state: any) => state.vcReducer.vcs)
@@ -680,7 +682,10 @@ export default function Education({
                   gap: 2
                 }}
               >
-                <StyledButton startIcon={<SVGAddFiles />} onClick={onAddFiles}>
+                <StyledButton
+                  startIcon={<SVGAddFiles />}
+                  onClick={() => onAddFiles && onAddFiles(index)}
+                >
                   Add file(s)
                 </StyledButton>
                 <StyledButton

@@ -5,9 +5,10 @@ import SectionDetails from './SectionDetails'
 interface SectionProps {
   sectionId: string
   onDelete?: () => void
-  onAddFiles?: () => void
+  onAddFiles?: (itemIndex?: number) => void
   onAddCredential?: (text: string) => void
   isRemovable?: boolean
+  evidence?: string[][]
 }
 
 const Section: React.FC<SectionProps> = ({
@@ -15,7 +16,8 @@ const Section: React.FC<SectionProps> = ({
   onDelete,
   onAddFiles,
   onAddCredential,
-  isRemovable = false
+  isRemovable = false,
+  evidence = []
 }) => {
   return (
     <Paper
@@ -68,6 +70,7 @@ const Section: React.FC<SectionProps> = ({
         onDelete={onDelete}
         onAddFiles={onAddFiles}
         onAddCredential={onAddCredential}
+        evidence={evidence}
       />
     </Paper>
   )
