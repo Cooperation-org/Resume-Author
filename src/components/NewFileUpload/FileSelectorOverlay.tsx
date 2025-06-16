@@ -112,6 +112,8 @@ const FileSelectorOverlay: React.FC<FileSelectorOverlayProps> = ({
   const [selected, setSelected] = useState<string[]>([])
   const [thumbs, setThumbs] = useState<Record<string, string>>({})
 
+  console.log('FileSelectorOverlay render:', { open, filesCount: files.length, files })
+
   useEffect(() => {
     setSelected(initialSelectedFiles.map(f => f.id))
   }, [initialSelectedFiles])
@@ -152,9 +154,27 @@ const FileSelectorOverlay: React.FC<FileSelectorOverlayProps> = ({
   }
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth='sm' fullWidth>
+    <Dialog
+      open={open}
+      onClose={onClose}
+      maxWidth='sm'
+      fullWidth
+      disableEscapeKeyDown={false}
+      disableEnforceFocus={false}
+      disableAutoFocus={false}
+      disableRestoreFocus={false}
+      aria-labelledby='file-selector-title'
+      sx={{
+        '& .MuiDialog-container': {
+          '& .MuiPaper-root': {
+            backgroundColor: 'white',
+            borderRadius: 2
+          }
+        }
+      }}
+    >
       <DialogContent>
-        <Typography variant='h6' gutterBottom>
+        <Typography id='file-selector-title' variant='h6' gutterBottom>
           Select Files as Evidence
         </Typography>
 
@@ -163,44 +183,53 @@ const FileSelectorOverlay: React.FC<FileSelectorOverlayProps> = ({
         </Button>
 
         <StyledScrollbar sx={{ maxHeight: 350, overflowY: 'auto' }}>
-          <List>
-            {files.map(f => {
-              const thumbSrc = thumbs[f.id] || ''
-              const checked = selected.includes(f.id)
-              const labelId = `file-item-${f.id}`
+          {files.length === 0 ? (
+            <Box sx={{ textAlign: 'center', py: 4 }}>
+              <Typography variant='body1' color='text.secondary'>
+                No files available. Please upload files in the "Your Files" section on the
+                right sidebar first.
+              </Typography>
+            </Box>
+          ) : (
+            <List>
+              {files.map(f => {
+                const thumbSrc = thumbs[f.id] || ''
+                const checked = selected.includes(f.id)
+                const labelId = `file-item-${f.id}`
 
-              return (
-                <ListItem
-                  key={f.id}
-                  disablePadding
-                  onClick={() => toggleOne(f.id)}
-                  secondaryAction={
-                    <Checkbox
-                      edge='end'
-                      checked={checked}
-                      inputProps={{ 'aria-labelledby': labelId }}
+                return (
+                  <ListItem
+                    key={f.id}
+                    disablePadding
+                    onClick={() => toggleOne(f.id)}
+                    secondaryAction={
+                      <Checkbox
+                        edge='end'
+                        checked={checked}
+                        inputProps={{ 'aria-labelledby': labelId }}
+                      />
+                    }
+                  >
+                    <ListItemAvatar>
+                      <Avatar
+                        src={thumbSrc}
+                        alt={f.name}
+                        variant='rounded'
+                        sx={{ width: 56, height: 56 }}
+                      >
+                        {f.fileExtension?.toUpperCase() || 'FILE'}
+                      </Avatar>
+                    </ListItemAvatar>
+                    <ListItemText
+                      id={labelId}
+                      primary={f.name}
+                      secondary={f.fileExtension?.toUpperCase()}
                     />
-                  }
-                >
-                  <ListItemAvatar>
-                    <Avatar
-                      src={thumbSrc}
-                      alt={f.name}
-                      variant='rounded'
-                      sx={{ width: 56, height: 56 }}
-                    >
-                      {f.fileExtension?.toUpperCase() || 'FILE'}
-                    </Avatar>
-                  </ListItemAvatar>
-                  <ListItemText
-                    id={labelId}
-                    primary={f.name}
-                    secondary={f.fileExtension?.toUpperCase()}
-                  />
-                </ListItem>
-              )
-            })}
-          </List>
+                  </ListItem>
+                )
+              })}
+            </List>
+          )}
         </StyledScrollbar>
 
         <Box display='flex' justifyContent='flex-end' mt={2} gap={2}>

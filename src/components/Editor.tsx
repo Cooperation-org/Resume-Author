@@ -100,7 +100,7 @@ const ResumeEditor: React.FC = () => {
   const [sectionEvidence, setSectionEvidence] = useState<Record<string, string[][]>>({})
   const [files, setFiles] = useState<FileItem[]>([])
   const [allFiles, setAllFiles] = useState<FileItem[]>([])
-  const [activeItemIndex, setActiveItemIndex] = useState<number | undefined>()
+  const [activeItemIndex, setActiveItemIndex] = useState<number | undefined>(undefined)
 
   // Reference to store the original resume state for comparison
   const originalResumeRef = useRef<string | null>(null)
@@ -366,7 +366,14 @@ const ResumeEditor: React.FC = () => {
   }
 
   const handleAddFiles = (sectionId: string, itemIndex?: number) => {
+    console.log('handleAddFiles called:', {
+      sectionId,
+      itemIndex,
+      currentFiles: files,
+      allFiles
+    })
     setActiveSectionId(sectionId)
+    setActiveItemIndex(itemIndex)
     setFileSelectorOpen(true)
   }
 
@@ -385,21 +392,56 @@ const ResumeEditor: React.FC = () => {
   }
 
   const handleEvidenceSelected = (selectedFileIds: string[], itemIndex?: number) => {
-    if (activeSectionId !== null && typeof itemIndex === 'number') {
+    const targetItemIndex = itemIndex ?? activeItemIndex
+    console.log('handleEvidenceSelected called:', {
+      selectedFileIds,
+      itemIndex: targetItemIndex,
+      activeSectionId
+    })
+
+    if (activeSectionId !== null && typeof targetItemIndex === 'number') {
       setSectionEvidence(prev => {
         const prevArr: string[][] =
           Array.isArray(prev[activeSectionId]) && Array.isArray(prev[activeSectionId][0])
             ? [...(prev[activeSectionId] as string[][])]
-            : Array.from({ length: itemIndex + 1 }, () => [])
-        prevArr[itemIndex] = [...selectedFileIds]
-        return {
+            : Array.from({ length: targetItemIndex + 1 }, () => [])
+        prevArr[targetItemIndex] = [...selectedFileIds]
+
+        const newEvidence = {
           ...prev,
           [activeSectionId]: prevArr
         }
+
+        console.log('Updated sectionEvidence:', newEvidence)
+        return newEvidence
       })
     }
     setFileSelectorOpen(false)
     setActiveSectionId(null)
+    setActiveItemIndex(undefined)
+  }
+
+  const handleRemoveFile = (sectionId: string, itemIndex: number, fileIndex: number) => {
+    console.log('handleRemoveFile called:', { sectionId, itemIndex, fileIndex })
+
+    setSectionEvidence(prev => {
+      const section = prev[sectionId] || []
+      const newSection = [...section]
+
+      if (newSection[itemIndex]) {
+        const newItem = [...newSection[itemIndex]]
+        newItem.splice(fileIndex, 1)
+        newSection[itemIndex] = newItem
+      }
+
+      const newEvidence = {
+        ...prev,
+        [sectionId]: newSection
+      }
+
+      console.log('Updated sectionEvidence after removal:', newEvidence)
+      return newEvidence
+    })
   }
 
   const handlePreview = () => {
@@ -472,8 +514,11 @@ const ResumeEditor: React.FC = () => {
         console.error('Resume is null, cannot prepare for VC')
         return
       }
-      const preparedResume = prepareResumeForVC(resume)
+
+      console.log('Current sectionEvidence before preparing for VC:', sectionEvidence)
+      const preparedResume = prepareResumeForVC(resume, sectionEvidence)
       console.log('PREPARED FORM DATA', preparedResume)
+      console.log('FORM DATA - Evidence section:', preparedResume.evidence)
 
       // Sign resume
       const signedResume = await instances.resumeVC.sign({
@@ -780,6 +825,8 @@ const ResumeEditor: React.FC = () => {
                     onAddCredential={handleAddCredential}
                     isRemovable={!requiredSections.includes(sectionId)}
                     evidence={getSectionEvidence(sectionId, itemCount)}
+                    allFiles={allFiles}
+                    onRemoveFile={handleRemoveFile}
                   />
                 )
               })}
@@ -899,12 +946,21 @@ const ResumeEditor: React.FC = () => {
       </Dialog>
       <FileSelectorOverlay
         open={fileSelectorOpen}
-        onClose={() => setFileSelectorOpen(false)}
-        onSelect={handleEvidenceSelected}
+        onClose={() => {
+          console.log('FileSelectorOverlay closing')
+          setFileSelectorOpen(false)
+          setActiveSectionId(null)
+          setActiveItemIndex(undefined)
+        }}
+        onSelect={selectedFileIds =>
+          handleEvidenceSelected(selectedFileIds, activeItemIndex)
+        }
         files={allFiles}
         initialSelectedFiles={
-          activeSectionId
-            ? (sectionEvidence[activeSectionId]?.flat() || []).map(id => ({ id }))
+          activeSectionId && typeof activeItemIndex === 'number'
+            ? (sectionEvidence[activeSectionId]?.[activeItemIndex] || []).map(id => ({
+                id
+              }))
             : []
         }
       />

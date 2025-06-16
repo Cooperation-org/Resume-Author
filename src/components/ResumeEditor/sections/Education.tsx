@@ -26,6 +26,7 @@ import { RootState } from '../../../redux/store'
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline'
 import CloseIcon from '@mui/icons-material/Close'
 import CredentialOverlay from '../../CredentialsOverlay'
+import AttachFileIcon from '@mui/icons-material/AttachFile'
 
 const PinkSwitch = styled(Switch)(({ theme }) => ({
   '& .MuiSwitch-switchBase.Mui-checked': {
@@ -44,6 +45,12 @@ interface EducationProps {
   readonly onDelete?: () => void
   readonly onAddCredential?: (text: string) => void
   readonly evidence?: string[][]
+  readonly allFiles?: FileItem[]
+  readonly onRemoveFile?: (
+    sectionId: string,
+    itemIndex: number,
+    fileIndex: number
+  ) => void
 }
 
 interface EducationItem {
@@ -71,11 +78,23 @@ interface SelectedCredential {
   name: string
 }
 
+interface FileItem {
+  id: string
+  file: File
+  name: string
+  url: string
+  uploaded: boolean
+  fileExtension: string
+  googleId?: string
+}
+
 export default function Education({
   onAddFiles,
   onDelete,
   onAddCredential,
-  evidence = []
+  evidence = [],
+  allFiles = [],
+  onRemoveFile
 }: Readonly<EducationProps>) {
   const dispatch = useDispatch()
   const resume = useSelector((state: RootState) => state.resume.resume)
@@ -376,23 +395,19 @@ export default function Education({
   )
 
   const handleRemoveCredential = useCallback(
-    (educationIndex: number, credentialIndex: number) => {
+    (eduIndex: number, credIndex: number) => {
       setEducations(prev => {
         const updated = [...prev]
-        const education = { ...updated[educationIndex] }
-        const newCreds = education.selectedCredentials.filter(
-          (_, i) => i !== credentialIndex
-        )
-
-        education.selectedCredentials = newCreds
+        const edu = { ...updated[eduIndex] }
+        const newCreds = edu.selectedCredentials.filter((_, i) => i !== credIndex)
+        edu.selectedCredentials = newCreds
         if (!newCreds.length) {
-          education.verificationStatus = 'unverified'
-          education.credentialLink = ''
+          edu.verificationStatus = 'unverified'
+          edu.credentialLink = ''
         } else {
-          education.credentialLink = newCreds[0].url
+          edu.credentialLink = newCreds[0].url
         }
-
-        updated[educationIndex] = education
+        updated[eduIndex] = edu
         dispatch(
           updateSection({
             sectionId: 'education',
@@ -403,6 +418,15 @@ export default function Education({
       })
     },
     [dispatch]
+  )
+
+  const handleRemoveFile = useCallback(
+    (educationIndex: number, fileIndex: number) => {
+      if (onRemoveFile) {
+        onRemoveFile('education', educationIndex, fileIndex)
+      }
+    },
+    [onRemoveFile]
   )
 
   return (
@@ -670,6 +694,65 @@ export default function Education({
                       </IconButton>
                     </Box>
                   ))}
+                </Box>
+              )}
+
+              {evidence[index] && evidence[index].length > 0 && (
+                <Box sx={{ mt: 2 }}>
+                  <Typography variant='body2' sx={{ fontWeight: 'bold', mb: 1 }}>
+                    Attached Files:
+                  </Typography>
+                  {evidence[index].map((fileId, fileIndex) => {
+                    const file = allFiles.find(f => f.id === fileId)
+                    return (
+                      <Box
+                        key={`file-${fileId}-${fileIndex}`}
+                        sx={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          mb: 0.5,
+                          backgroundColor: '#e8f4f8',
+                          p: 0.5,
+                          borderRadius: 1
+                        }}
+                      >
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                          <AttachFileIcon fontSize='small' color='primary' />
+                          <Typography
+                            variant='body2'
+                            sx={{
+                              color: 'primary.main',
+                              cursor: 'pointer'
+                            }}
+                            onClick={() => {
+                              if (file?.url) {
+                                window.open(file.url, '_blank')
+                              }
+                            }}
+                          >
+                            {file?.name || `File ${fileIndex + 1}`}
+                          </Typography>
+                        </Box>
+                        <IconButton
+                          size='small'
+                          onClick={e => {
+                            e.stopPropagation()
+                            handleRemoveFile(index, fileIndex)
+                          }}
+                          sx={{
+                            p: 0.5,
+                            color: 'grey.500',
+                            '&:hover': {
+                              color: 'error.main'
+                            }
+                          }}
+                        >
+                          <CloseIcon fontSize='small' />
+                        </IconButton>
+                      </Box>
+                    )
+                  })}
                 </Box>
               )}
 
