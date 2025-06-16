@@ -13,11 +13,11 @@ export interface FileItem {
   file: File
   name: string
   url: string
-  isFeatured: boolean
   uploaded: boolean
   fileExtension: string
   googleId?: string
 }
+
 const RightSidebar = () => {
   const location = useLocation()
   const [selectedClaims, setSelectedClaims] = useState<string[]>([])
@@ -27,25 +27,12 @@ const RightSidebar = () => {
   const [isLoading, setIsLoading] = useState<boolean>(true)
   const [uploadedFiles, setUploadedFiles] = useState<FileItem[]>([])
 
-  // Redux state connection kept for future use
   useEffect(() => {
     setIsLoading(true)
     dispatch(fetchVCs())
-      .then(() => {
-        setTimeout(() => {
-          setIsLoading(false)
-        }, 500)
-      })
-      .catch(() => {
-        setIsLoading(false)
-      })
+      .then(() => setIsLoading(false))
+      .catch(() => setIsLoading(false))
   }, [dispatch])
-
-  useEffect(() => {
-    if (loading) {
-      setIsLoading(true)
-    }
-  }, [loading])
 
   const handleAuth = () => {
     handleGoogleLogin()
@@ -80,26 +67,11 @@ const RightSidebar = () => {
     )
   }
 
-  const setAsFeatured = (id: string) => {
-    setUploadedFiles(prev => {
-      return prev.map(file => ({
-        ...file,
-        isFeatured: file.id === id
-      }))
-    })
-  }
-
   const handleRefresh = () => {
     setIsLoading(true)
     dispatch(fetchVCs())
-      .then(() => {
-        setTimeout(() => {
-          setIsLoading(false)
-        }, 500)
-      })
-      .catch(() => {
-        setIsLoading(false)
-      })
+      .then(() => setIsLoading(false))
+      .catch(() => setIsLoading(false))
   }
 
   const handleImport = () => {
@@ -186,7 +158,7 @@ const RightSidebar = () => {
         </Box>
       </Box>
 
-      {/* Credentials Section */}
+      {/* Section 2: Credentials */}
       <Box sx={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '15px' }}>
         <Typography
           sx={{
@@ -311,13 +283,22 @@ const RightSidebar = () => {
           boxShadow: '0px 2px 20px rgba(0,0,0,0.10)'
         }}
       >
+        <Typography
+          sx={{
+            fontSize: 16,
+            color: '#47516B',
+            fontWeight: 700,
+            fontFamily: 'Poppins'
+          }}
+        >
+          Your Files
+        </Typography>
+        <Divider sx={{ borderColor: '#47516B' }} />
         <MediaUploadSection
           files={uploadedFiles}
           onFilesSelected={handleFilesSelected}
           onDelete={handleDelete}
           onNameChange={handleNameChange}
-          onSetAsFeatured={setAsFeatured}
-          onReorder={() => {}}
           maxFiles={10}
           maxSizeMB={50}
         />
