@@ -1,9 +1,11 @@
 'use client'
 
-import React, { useRef, useState, useCallback } from 'react'
+import React, { useRef, useState, useCallback, useEffect } from 'react'
 import { Box, Typography, styled, Card, Snackbar, Alert } from '@mui/material'
 import FileListDisplay from './FileList'
 import { SVGUploadMedia } from '../../assets/svgs'
+import useGoogleDrive from '../../hooks/useGoogleDrive'
+import LoadingOverlay from './LoadingOverlay'
 
 export interface FileItem {
   id: string
@@ -16,7 +18,7 @@ export interface FileItem {
 }
 
 const CardStyle = styled(Card)({
-  padding: '40px 0',
+  padding: '0 0 40px 0',
   cursor: 'default',
   width: '100%',
   transition: 'all 0.3s ease',
@@ -64,6 +66,9 @@ const MediaUploadSection: React.FC<Props> = ({
 }) => {
   const fileInputRef = useRef<HTMLInputElement | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const { instances, isInitialized } = useGoogleDrive()
+  const [uploadingId, setUploadingId] = useState<string | undefined>(undefined)
+  const [uploadError, setUploadError] = useState<string | null>(null)
 
   const openPicker = () => fileInputRef.current?.click()
   const handleCloseError = () => setError(null)
@@ -142,10 +147,54 @@ const MediaUploadSection: React.FC<Props> = ({
     e.target.value = ''
   }
 
+  const handleUploadFile = async (fileItem: FileItem) => {
+    if (!isInitialized || !instances.storage) {
+      setUploadError('Google Drive is not initialized.')
+      return
+    }
+    setUploadingId(fileItem.id)
+    try {
+      const ext = fileItem.file.name.split('.').pop() ?? ''
+      const newName = fileItem.name
+      const renamedFile = new File([fileItem.file], newName, { type: fileItem.file.type })
+      const result = await instances.storage.uploadBinaryFile({ file: renamedFile })
+      const updatedFiles = files.map(f =>
+        f.id === fileItem.id
+          ? { ...f, uploaded: true, googleId: result.id, file: renamedFile }
+          : f
+      )
+      onFilesSelected(updatedFiles)
+    } catch (err: any) {
+      setUploadError(err?.message || 'Upload failed')
+    } finally {
+      setUploadingId(undefined)
+    }
+  }
+
+  const getDriveViewUrl = (fileId: string) =>
+    `https://drive.google.com/uc?export=view&id=${fileId}`
+
   return (
     <Box width='100%'>
       <CardStyle variant='outlined'>
-        <FileListDisplay files={files} onDelete={onDelete} onNameChange={onNameChange} />
+        <FileListDisplay
+          files={files.map(f => {
+            if (f.googleId) {
+              const ext = f.name.split('.').pop()?.toLowerCase() || ''
+              if (
+                ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'mp4', 'mov'].includes(ext)
+              ) {
+                return { ...f, url: getDriveViewUrl(f.googleId) }
+              }
+              return f
+            }
+            return f
+          })}
+          onDelete={onDelete}
+          onNameChange={onNameChange}
+          onUploadFile={handleUploadFile}
+          uploadingId={uploadingId}
+        />
 
         {!hideUpload && (
           <Box
@@ -207,11 +256,17 @@ const MediaUploadSection: React.FC<Props> = ({
         )}
       </CardStyle>
 
-      <Snackbar open={!!error} onClose={handleCloseError} autoHideDuration={6000}>
+      <Snackbar
+        open={!!error || !!uploadError}
+        onClose={handleCloseError}
+        autoHideDuration={6000}
+      >
         <Alert severity='error' onClose={handleCloseError} variant='filled'>
-          {error}
+          {error || uploadError}
         </Alert>
       </Snackbar>
+
+      <LoadingOverlay open={!!uploadingId} text='Uploading file...' />
     </Box>
   )
 }
