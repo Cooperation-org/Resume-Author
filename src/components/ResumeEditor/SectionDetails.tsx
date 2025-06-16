@@ -10,12 +10,24 @@ import Projects from './sections/Projects'
 import VolunteerWork from './sections/VolunteerWork'
 import CertificationsAndLicenses from './sections/CertificationsAndLicenses'
 
+interface FileItem {
+  id: string
+  file: File
+  name: string
+  url: string
+  uploaded: boolean
+  fileExtension: string
+  googleId?: string
+}
+
 interface SectionDetailsProps {
   sectionId: string
   onDelete?: () => void
   onAddFiles?: (itemIndex?: number) => void
   onAddCredential?: (text: string) => void
   evidence?: string[][]
+  allFiles?: FileItem[]
+  onRemoveFile?: (sectionId: string, itemIndex: number, fileIndex: number) => void
 }
 
 export default function SectionDetails({
@@ -23,7 +35,9 @@ export default function SectionDetails({
   onDelete,
   onAddFiles,
   onAddCredential,
-  evidence = []
+  evidence = [],
+  allFiles = [],
+  onRemoveFile
 }: Readonly<SectionDetailsProps>) {
   const renderSection = () => {
     switch (sectionId) {
@@ -43,6 +57,8 @@ export default function SectionDetails({
             onDelete={onDelete}
             onAddCredential={onAddCredential}
             evidence={evidence}
+            allFiles={allFiles}
+            onRemoveFile={onRemoveFile}
           />
         )
       case 'Education':
@@ -52,6 +68,8 @@ export default function SectionDetails({
             onDelete={onDelete}
             onAddCredential={onAddCredential}
             evidence={evidence}
+            allFiles={allFiles}
+            onRemoveFile={onRemoveFile}
           />
         )
       case 'Professional Affiliations':
@@ -61,6 +79,8 @@ export default function SectionDetails({
             onDelete={onDelete}
             onAddCredential={onAddCredential}
             evidence={evidence}
+            allFiles={allFiles}
+            onRemoveFile={onRemoveFile}
           />
         )
       case 'Skills and Abilities':
@@ -88,6 +108,8 @@ export default function SectionDetails({
             onDelete={onDelete}
             onAddCredential={onAddCredential}
             evidence={evidence}
+            allFiles={allFiles}
+            onRemoveFile={onRemoveFile}
           />
         )
       case 'Volunteer Work':

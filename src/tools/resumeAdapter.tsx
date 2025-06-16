@@ -2,13 +2,21 @@
  * Adapter to transform resume data to make it compatible with the resumeVC.sign function
  * This ensures all data is properly preserved during the signing process
  */
-export const prepareResumeForVC = (resume: Resume | null): any => {
+export const prepareResumeForVC = (
+  resume: Resume | null,
+  sectionEvidence?: Record<string, string[][]>
+): any => {
   if (!resume) {
     console.error('Cannot prepare null resume for VC')
     return null
   }
 
   const preparedResume = JSON.parse(JSON.stringify(resume))
+
+  // Add evidence/files data if provided
+  if (sectionEvidence) {
+    preparedResume.evidence = sectionEvidence
+  }
 
   if (preparedResume.languages?.items) {
     preparedResume.languages.items = preparedResume.languages.items.map((lang: any) => ({

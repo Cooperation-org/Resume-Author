@@ -2,6 +2,16 @@ import React from 'react'
 import { Paper, Box, Typography, Button } from '@mui/material'
 import SectionDetails from './SectionDetails'
 
+interface FileItem {
+  id: string
+  file: File
+  name: string
+  url: string
+  uploaded: boolean
+  fileExtension: string
+  googleId?: string
+}
+
 interface SectionProps {
   sectionId: string
   onDelete?: () => void
@@ -9,6 +19,8 @@ interface SectionProps {
   onAddCredential?: (text: string) => void
   isRemovable?: boolean
   evidence?: string[][]
+  allFiles?: FileItem[]
+  onRemoveFile?: (sectionId: string, itemIndex: number, fileIndex: number) => void
 }
 
 const Section: React.FC<SectionProps> = ({
@@ -17,7 +29,9 @@ const Section: React.FC<SectionProps> = ({
   onAddFiles,
   onAddCredential,
   isRemovable = false,
-  evidence = []
+  evidence = [],
+  allFiles = [],
+  onRemoveFile
 }) => {
   return (
     <Paper
@@ -71,6 +85,8 @@ const Section: React.FC<SectionProps> = ({
         onAddFiles={onAddFiles}
         onAddCredential={onAddCredential}
         evidence={evidence}
+        allFiles={allFiles}
+        onRemoveFile={onRemoveFile}
       />
     </Paper>
   )
