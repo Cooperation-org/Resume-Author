@@ -106,7 +106,7 @@ function generateVideoThumbnail(file: FileItem): Promise<string> {
 }
 
 const getDriveThumbnailUrl = (id: string) =>
-  `https://drive.google.com/thumbnail?authuser=0&sz=w200&id=${id}`
+  `https://drive.google.com/thumbnail?authuser=0&sz=w320&id=${id}`
 
 const FileListDisplay: React.FC<FileListProps> = ({
   files,

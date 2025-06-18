@@ -423,7 +423,7 @@ export default function Education({
   const handleRemoveFile = useCallback(
     (educationIndex: number, fileIndex: number) => {
       if (onRemoveFile) {
-        onRemoveFile('education', educationIndex, fileIndex)
+          onRemoveFile('Education', educationIndex, fileIndex)
       }
     },
     [onRemoveFile]

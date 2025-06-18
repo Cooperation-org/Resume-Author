@@ -359,7 +359,7 @@ export default function Projects({
   const handleRemoveFile = useCallback(
     (projectIndex: number, fileIndex: number) => {
       if (onRemoveFile) {
-        onRemoveFile('projects', projectIndex, fileIndex)
+        onRemoveFile('Projects', projectIndex, fileIndex)
       }
     },
     [onRemoveFile]

@@ -430,7 +430,7 @@ export default function ProfessionalAffiliations({
   const handleRemoveFile = useCallback(
     (affiliationIndex: number, fileIndex: number) => {
       if (onRemoveFile) {
-        onRemoveFile('professionalAffiliations', affiliationIndex, fileIndex)
+        onRemoveFile('Professional Affiliations', affiliationIndex, fileIndex)
       }
     },
     [onRemoveFile]
