@@ -7,6 +7,7 @@ import { useEffect, useCallback, useState, useRef } from 'react'
 import { fetchUserResumes } from '../redux/slices/myresumes'
 import useDraftResume from '../hooks/useDraftResume'
 import { logout } from '../tools/auth'
+import AuthErrorDisplay from './common/AuthErrorDisplay'
 
 const buttonStyles = {
   background: '#3A35A2',
@@ -59,7 +60,8 @@ const ResumeScreen: React.FC = () => {
 
   const handleLogout = useCallback(() => {
     logout()
-  }, [])
+    navigate('/')
+  }, [navigate])
 
   useEffect(() => {
     if (status === 'loading') {
@@ -91,9 +93,6 @@ const ResumeScreen: React.FC = () => {
 
   // Helper function to determine if an unsigned resume is a completed template or a draft
   const isCompletedUnsigned = (resume: any) => {
-    // Check if this resume has completed all required fields
-    // You'll need to determine what makes a resume "complete" based on your requirements
-    // This is a placeholder - implement the actual logic
     return resume?.content?.isComplete === true
   }
 
@@ -152,9 +151,7 @@ const ResumeScreen: React.FC = () => {
         <Typography>Loading resumes...</Typography>
       )}
       {friendlyError && (
-        <Typography color='error' sx={{ mt: 2, mb: 2 }}>
-          {friendlyError}
-        </Typography>
+        <AuthErrorDisplay error={friendlyError} buttonStyles={buttonStyles} />
       )}
 
       {!friendlyError &&
