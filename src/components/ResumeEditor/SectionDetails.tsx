@@ -36,7 +36,7 @@ export default function SectionDetails({
   onDelete,
   onAddFiles,
   onAddCredential,
-  onFocus
+  onFocus,
   evidence = [],
   allFiles = [],
   onRemoveFile
