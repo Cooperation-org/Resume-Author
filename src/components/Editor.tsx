@@ -692,8 +692,6 @@ const ResumeEditor: React.FC = () => {
     return Array.from({ length: itemCount }, () => [])
   }
 
-  const handleAddCredential = () => {}
-
   const handleAllFilesUpdate = useCallback((combinedFiles: FileItem[]) => {
     setAllFiles(combinedFiles)
   }, [])
@@ -887,7 +885,6 @@ const ResumeEditor: React.FC = () => {
                 flex: 1
               }}
             >
-
               {sectionOrder.map(sectionId => {
                 let itemCount = 1
                 if (resume && typeof resume === 'object' && sectionId in resume) {
