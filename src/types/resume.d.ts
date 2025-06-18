@@ -205,6 +205,9 @@ interface Resume {
   version?: number
   contact: Contact
   summary: string
+  summaryCredentials?: SelectedCredential[]
+  summaryVerificationStatus?: 'unverified' | 'verified'
+  summaryCredentialLink?: string
   experience: {
     items: WorkExperience[]
   }
