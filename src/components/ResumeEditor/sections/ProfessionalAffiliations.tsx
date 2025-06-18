@@ -40,13 +40,10 @@ const PinkSwitch = styled(Switch)(({ theme }) => ({
 }))
 
 interface ProfessionalAffiliationsProps {
-  readonly onAddFiles?: () => void
-  readonly onDelete?: () => void
-  readonly onAddCredential?: (text: string) => void
-  readonly onFocus?: () => void
   onAddFiles?: (itemIndex?: number) => void
   onDelete?: () => void
   onAddCredential?: (text: string) => void
+  onFocus?: () => void
   evidence?: string[][]
   allFiles?: FileItem[]
   onRemoveFile?: (sectionId: string, itemIndex: number, fileIndex: number) => void
@@ -87,11 +84,11 @@ export default function ProfessionalAffiliations({
   onAddFiles,
   onDelete,
   onAddCredential,
-  onFocus
+  onFocus,
   evidence = [],
   allFiles = [],
   onRemoveFile
-}: Readonly<ProfessionalAffiliationsProps>) {
+}: ProfessionalAffiliationsProps) {
   const dispatch = useDispatch()
   const resume = useSelector((state: RootState) => state.resume.resume)
   const reduxUpdateTimeoutRef = useRef<NodeJS.Timeout | null>(null)

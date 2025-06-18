@@ -29,7 +29,7 @@ export default function HobbiesAndInterests({
   onAddFiles,
   onDelete,
   onAddCredential,
-  onFocus
+  onFocus,
   evidence = []
 }: Readonly<HobbiesAndInterestsProps>) {
   const dispatch = useDispatch()

@@ -30,7 +30,7 @@ const Section: React.FC<SectionProps> = ({
   onAddFiles,
   onAddCredential,
   isRemovable = false,
-  onFocus
+  onFocus,
   evidence = [],
   allFiles = [],
   onRemoveFile

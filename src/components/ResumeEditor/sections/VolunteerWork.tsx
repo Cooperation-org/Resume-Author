@@ -85,7 +85,7 @@ export default function VolunteerWork({
   onAddFiles,
   onDelete,
   onAddCredential,
-  onFocus
+  onFocus,
   evidence = [],
   allFiles = [],
   onRemoveFile

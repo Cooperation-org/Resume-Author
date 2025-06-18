@@ -93,12 +93,11 @@ export default function Education({
   onAddFiles,
   onDelete,
   onAddCredential,
-  onFocus
-}: EducationProps) {
+  onFocus,
   evidence = [],
   allFiles = [],
   onRemoveFile
-}: Readonly<EducationProps>) {
+}: EducationProps) {
   const dispatch = useDispatch()
   const resume = useSelector((state: RootState) => state.resume.resume)
   const vcs = useSelector((state: any) => state.vcReducer.vcs)
@@ -148,34 +147,37 @@ export default function Education({
     [dispatch]
   )
 
-  function calculateDuration(
-    startDate: string,
-    endDate: string | undefined,
-    currentlyEnrolled: boolean
-  ): string {
-    if (!startDate) return '1 year'
+  const calculateDuration = useCallback(
+    (
+      startDate: string,
+      endDate: string | undefined,
+      currentlyEnrolled: boolean
+    ): string => {
+      if (!startDate) return '1 year'
 
-    const endObj = currentlyEnrolled || !endDate ? new Date() : new Date(endDate)
-    const startObj = new Date(startDate)
-    if (isNaN(startObj.getTime()) || isNaN(endObj.getTime())) {
-      return '1 year'
-    }
+      const endObj = currentlyEnrolled || !endDate ? new Date() : new Date(endDate)
+      const startObj = new Date(startDate)
+      if (isNaN(startObj.getTime()) || isNaN(endObj.getTime())) {
+        return '1 year'
+      }
 
-    let years = endObj.getFullYear() - startObj.getFullYear()
-    let months = endObj.getMonth() - startObj.getMonth()
-    if (months < 0) {
-      years--
-      months += 12
-    }
+      let years = endObj.getFullYear() - startObj.getFullYear()
+      let months = endObj.getMonth() - startObj.getMonth()
+      if (months < 0) {
+        years--
+        months += 12
+      }
 
-    let str = ''
-    if (years > 0) str += `${years} year${years !== 1 ? 's' : ''}`
-    if (months > 0 || (years === 0 && months >= 0)) {
-      if (str) str += ' '
-      str += `${months} month${months !== 1 ? 's' : ''}`
-    }
-    return str || 'Less than a month'
-  }
+      let str = ''
+      if (years > 0) str += `${years} year${years !== 1 ? 's' : ''}`
+      if (months > 0 || (years === 0 && months >= 0)) {
+        if (str) str += ' '
+        str += `${months} month${months !== 1 ? 's' : ''}`
+      }
+      return str || 'Less than a month'
+    },
+    []
+  )
 
   useEffect(() => {
     if (resume?.education?.items && resume.education.items.length > 0) {
@@ -456,7 +458,7 @@ export default function Education({
   const handleRemoveFile = useCallback(
     (educationIndex: number, fileIndex: number) => {
       if (onRemoveFile) {
-          onRemoveFile('Education', educationIndex, fileIndex)
+        onRemoveFile('Education', educationIndex, fileIndex)
       }
     },
     [onRemoveFile]

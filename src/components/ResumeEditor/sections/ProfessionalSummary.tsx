@@ -17,7 +17,7 @@ export default function ProfessionalSummary({
   onAddFiles,
   onDelete,
   onAddCredential,
-  onFocus
+  onFocus,
   evidence = []
 }: Readonly<ProfessionalSummaryProps>) {
   const dispatch = useDispatch()

@@ -58,7 +58,7 @@ export default function Projects({
   onAddFiles,
   onDelete,
   onAddCredential,
-  onFocus
+  onFocus,
   evidence = [],
   allFiles = [],
   onRemoveFile

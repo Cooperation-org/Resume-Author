@@ -86,7 +86,7 @@ export default function WorkExperience({
   onAddFiles,
   onDelete,
   onAddCredential,
-  onFocus
+  onFocus,
   evidence = [],
   allFiles = [],
   onRemoveFile
