@@ -1,8 +1,5 @@
 import { NavigateFunction } from 'react-router-dom'
-import { setAuth, clearAuth } from '../redux/slices/auth'
-import { store } from '../redux/store'
-
-import { setLocalStorage, removeLocalStorage } from './cookie'
+import { setLocalStorage, removeLocalStorage, getLocalStorage } from './cookie'
 
 const ACCESS_TOKEN_KEY = 'auth'
 const REFRESH_TOKEN_KEY = 'refresh_token'
@@ -15,6 +12,10 @@ const saveItem = (key: string, value: string | null | undefined) => {
     removeLocalStorage(key)
   }
 }
+
+// Track if we're currently refreshing to avoid multiple simultaneous refresh attempts
+let isRefreshing = false
+let refreshPromise: Promise<string> | null = null
 
 export const login = async (from?: string) => {
   const clientId = process.env.REACT_APP_GOOGLE_CLIENT_ID
@@ -37,7 +38,13 @@ export const login = async (from?: string) => {
   window.location.href = authUrl
 }
 
-export const handleRedirect = async ({ navigate }: { navigate: NavigateFunction }) => {
+export const handleRedirect = async ({
+  navigate,
+  onAuthSuccess
+}: {
+  navigate: NavigateFunction
+  onAuthSuccess?: (accessToken: string) => void
+}) => {
   const params = new URLSearchParams(window.location.search)
   const code = params.get('code')
   const state = params.get('state')
@@ -56,10 +63,9 @@ export const handleRedirect = async ({ navigate }: { navigate: NavigateFunction 
       throw new Error('Failed to retrieve access token or refresh token')
     }
 
-    store.dispatch(setAuth({ accessToken: access_token }))
-
     saveItem(ACCESS_TOKEN_KEY, access_token)
     saveItem(REFRESH_TOKEN_KEY, refresh_token)
+    onAuthSuccess?.(access_token)
 
     await fetchUserInfo(access_token)
 
@@ -95,29 +101,110 @@ const exchangeCodeForTokens = async (code: string) => {
   return res.json() as Promise<{ access_token?: string; refresh_token?: string }>
 }
 
-export const refreshAccessToken = async (refreshToken: string) => {
-  const clientId = process.env.REACT_APP_GOOGLE_CLIENT_ID ?? ''
-  const clientSecret = process.env.REACT_APP_GOOGLE_CLIENT_SECRET ?? ''
+export const refreshAccessToken = async (
+  refreshToken?: string,
+  onTokenUpdate?: (token: string) => void
+) => {
+  if (isRefreshing && refreshPromise) {
+    return refreshPromise
+  }
 
-  const res = await fetch('https://oauth2.googleapis.com/token', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({
-      client_id: clientId,
-      client_secret: clientSecret,
-      refresh_token: refreshToken,
-      grant_type: 'refresh_token'
-    })
-  })
+  const tokenToUse = refreshToken || getLocalStorage(REFRESH_TOKEN_KEY)
+  if (!tokenToUse) {
+    throw new Error('No refresh token available')
+  }
 
-  if (!res.ok) throw new Error('Error refreshing access token')
+  isRefreshing = true
 
-  const { access_token } = await res.json()
-  if (!access_token) throw new Error('No new access token returned')
+  refreshPromise = (async () => {
+    try {
+      const clientId = process.env.REACT_APP_GOOGLE_CLIENT_ID ?? ''
+      const clientSecret = process.env.REACT_APP_GOOGLE_CLIENT_SECRET ?? ''
 
-  saveItem(ACCESS_TOKEN_KEY, access_token)
-  store.dispatch(setAuth({ accessToken: access_token }))
-  return access_token
+      console.log('Attempting to refresh access token...')
+
+      const res = await fetch('https://oauth2.googleapis.com/token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+          client_id: clientId,
+          client_secret: clientSecret,
+          refresh_token: tokenToUse,
+          grant_type: 'refresh_token'
+        })
+      })
+
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}))
+        console.error('Token refresh failed:', errorData)
+        throw new Error('Error refreshing access token')
+      }
+
+      const { access_token } = await res.json()
+      if (!access_token) throw new Error('No new access token returned')
+
+      console.log('Access token refreshed successfully')
+
+      saveItem(ACCESS_TOKEN_KEY, access_token)
+
+      onTokenUpdate?.(access_token)
+
+      return access_token
+    } finally {
+      isRefreshing = false
+      refreshPromise = null
+    }
+  })()
+
+  return refreshPromise
+}
+
+export const authenticatedFetch = async (
+  url: string,
+  options: RequestInit = {},
+  onTokenUpdate?: (token: string) => void
+) => {
+  const accessToken = getLocalStorage(ACCESS_TOKEN_KEY)
+
+  if (!accessToken) {
+    throw new Error('No access token available')
+  }
+
+  const headers = {
+    ...options.headers,
+    Authorization: `Bearer ${accessToken}`
+  }
+
+  let response = await fetch(url, { ...options, headers })
+
+  if (response.status === 401) {
+    console.log('Received 401, attempting to refresh token...')
+
+    try {
+      const newAccessToken = await refreshAccessToken(undefined, onTokenUpdate)
+
+      const newHeaders = {
+        ...options.headers,
+        Authorization: `Bearer ${newAccessToken}`
+      }
+
+      response = await fetch(url, { ...options, headers: newHeaders })
+
+      if (response.status === 401) {
+        console.error(
+          'Still receiving 401 after token refresh. Refresh token might be invalid.'
+        )
+        logout()
+        throw new Error('Authentication failed. Please log in again.')
+      }
+    } catch (error) {
+      console.error('Token refresh failed:', error)
+      logout()
+      throw new Error('Authentication failed. Please log in again.')
+    }
+  }
+
+  return response
 }
 
 const fetchUserInfo = async (token: string) => {
@@ -136,5 +223,4 @@ export const logout = () => {
   removeLocalStorage(ACCESS_TOKEN_KEY)
   removeLocalStorage(REFRESH_TOKEN_KEY)
   removeLocalStorage(USER_INFO_KEY)
-  store.dispatch(clearAuth())
 }

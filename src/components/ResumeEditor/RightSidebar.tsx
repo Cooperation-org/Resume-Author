@@ -8,6 +8,7 @@ import { fetchVCs } from '../../redux/slices/vc'
 import { AppDispatch, RootState } from '../../redux/store'
 import MediaUploadSection from '../../components/NewFileUpload/MediaUploadSection'
 import useGoogleDrive, { DriveFileMeta } from '../../hooks/useGoogleDrive'
+import StorageService from '../../storage-singlton'
 
 export interface FileItem {
   id: string
@@ -45,21 +46,30 @@ const RightSidebar = ({
   const [remoteFiles, setRemoteFiles] = useState<DriveFileMeta[]>([])
 
   const reloadRemoteFiles = useCallback(async () => {
-    if (!isInitialized || !instances.storage) return
+    if (!accessToken) return
+
     try {
-      const folderId = await instances.storage.getMediaFolderId()
-      const list = await listFilesMetadata(folderId)
-      setRemoteFiles(list)
+      const storageService = StorageService.getInstance()
+      storageService.initialize(accessToken)
+
+      const files = await storageService.handleApiCall(async () => {
+        const storage = storageService.getStorage()
+        const folderId = await storage.getMediaFolderId()
+        return await listFilesMetadata(folderId)
+      })
+
+      setRemoteFiles(files)
     } catch (error) {
       console.error('Error fetching remote files:', error)
+      setRemoteFiles([])
     }
-  }, [isInitialized, instances.storage, listFilesMetadata])
+  }, [accessToken, listFilesMetadata])
 
   useEffect(() => {
-    if (isInitialized) {
+    if (accessToken) {
       reloadRemoteFiles()
     }
-  }, [isInitialized, reloadRemoteFiles])
+  }, [accessToken, reloadRemoteFiles])
 
   useEffect(() => {
     if (remoteFiles.length > 0) {
@@ -81,7 +91,9 @@ const RightSidebar = ({
   }, [remoteFiles, accessToken])
 
   const getDriveUrl = (id: string) => {
-    const url = `https://drive.google.com/thumbnail?authuser=0&sz=w320&id=${id}`
+    const url =
+      `https://drive.google.com/uc?export=view&id=${id}` ||
+      `https://drive.google.com/thumbnail?authuser=0&sz=w320&id=${id}`
 
     console.log('getDriveUrl called:', {
       id,

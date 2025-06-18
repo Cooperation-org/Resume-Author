@@ -24,6 +24,9 @@ import EditIcon from '@mui/icons-material/Edit'
 import CheckIcon from '@mui/icons-material/Check'
 import CloudUploadIcon from '@mui/icons-material/CloudUpload'
 import useGoogleDrive, { DriveFileMeta } from '../../hooks/useGoogleDrive'
+import { useSelector } from 'react-redux'
+import { RootState } from '../../redux/store'
+import StorageService from '../../storage-singlton'
 
 GlobalWorkerOptions.workerSrc = '/pdf.worker.min.js'
 
@@ -116,24 +119,39 @@ const FileListDisplay: React.FC<FileListProps> = ({
   uploadingId
 }) => {
   const { instances, isInitialized, listFilesMetadata } = useGoogleDrive()
+  const { accessToken } = useSelector((state: RootState) => state.auth)
   const [remoteFiles, setRemoteFiles] = useState<DriveFileMeta[]>([])
   const [loadingRemote, setLoadingRemote] = useState(false)
 
   const reloadRemote = useCallback(async () => {
-    if (!isInitialized || !instances.storage) return
+    if (!accessToken) return
+
     setLoadingRemote(true)
     try {
-      const folderId = await instances.storage.getMediaFolderId()
-      const list = await listFilesMetadata(folderId)
-      setRemoteFiles(list)
+      const storageService = StorageService.getInstance()
+      storageService.initialize(accessToken)
+
+      // Use enhanced API call handling with automatic token refresh
+      const files = await storageService.handleApiCall(async () => {
+        const storage = storageService.getStorage()
+        const folderId = await storage.getMediaFolderId()
+        return await listFilesMetadata(folderId)
+      })
+
+      setRemoteFiles(files)
+    } catch (error) {
+      console.error('Error fetching remote files:', error)
+      setRemoteFiles([])
     } finally {
       setLoadingRemote(false)
     }
-  }, [isInitialized, instances.storage, listFilesMetadata])
+  }, [accessToken, listFilesMetadata])
 
   useEffect(() => {
-    reloadRemote()
-  }, [reloadRemote])
+    if (accessToken) {
+      reloadRemote()
+    }
+  }, [accessToken, reloadRemote])
 
   const [pdfThumbs, setPdfThumbs] = useState<Record<string, string>>({})
   const [vidThumbs, setVidThumbs] = useState<Record<string, string>>({})

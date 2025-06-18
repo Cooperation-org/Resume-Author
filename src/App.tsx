@@ -3,6 +3,10 @@ import { useEffect } from 'react'
 import { useDispatch } from 'react-redux'
 import { AppDispatch } from './redux/store'
 import { fetchVCs } from './redux/slices/vc'
+import { setAuth } from './redux/slices/auth'
+import { refreshAccessToken } from './tools/auth'
+import { getLocalStorage } from './tools/cookie'
+import StorageService from './storage-singlton'
 import Layout from './components/Layout'
 import Login from './pages/login'
 import Home from './pages/home'
@@ -27,6 +31,29 @@ const App = () => {
   const dispatch: AppDispatch = useDispatch()
 
   useEffect(() => {
+    const storageService = StorageService.getInstance()
+    storageService.setTokenUpdateCallback((accessToken: string) => {
+      dispatch(setAuth({ accessToken }))
+    })
+    const initializeAuth = async () => {
+      const accessToken = getLocalStorage('auth')
+      const refreshToken = getLocalStorage('refresh_token')
+      if (refreshToken && !accessToken) {
+        try {
+          console.log(
+            'Access token missing but refresh token found. Attempting to refresh...'
+          )
+          await refreshAccessToken(refreshToken, (token: string) => {
+            dispatch(setAuth({ accessToken: token }))
+          })
+          console.log('Token refreshed successfully on app startup')
+        } catch (error) {
+          console.error('Failed to refresh token on app startup:', error)
+        }
+      }
+    }
+
+    initializeAuth()
     dispatch(fetchVCs())
   }, [dispatch])
 
