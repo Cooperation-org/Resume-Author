@@ -81,7 +81,7 @@ const RightSidebar = ({
   }, [remoteFiles, accessToken])
 
   const getDriveUrl = (id: string) => {
-    const url = `https://drive.google.com/uc?export=view&id=${id}`
+    const url = `https://drive.google.com/thumbnail?authuser=0&sz=w320&id=${id}`
 
     console.log('getDriveUrl called:', {
       id,

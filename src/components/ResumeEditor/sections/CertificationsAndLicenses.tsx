@@ -23,14 +23,27 @@ import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline'
 import VerifiedIcon from '@mui/icons-material/Verified'
 import CloseIcon from '@mui/icons-material/Close'
 import CredentialOverlay from '../../CredentialsOverlay'
+import AttachFileIcon from '@mui/icons-material/AttachFile'
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider'
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns'
+
+interface FileItem {
+  id: string
+  file: File
+  name: string
+  url: string
+  uploaded: boolean
+  fileExtension: string
+  googleId?: string
+}
 
 interface CertificationsAndLicensesProps {
   onAddFiles?: (itemIndex?: number) => void
   onDelete?: () => void
   onAddCredential?: (text: string) => void
   evidence?: string[][]
+  allFiles?: FileItem[]
+  onRemoveFile?: (sectionId: string, itemIndex: number, fileIndex: number) => void
 }
 
 interface CertificationItem {
@@ -57,7 +70,9 @@ export default function CertificationsAndLicenses({
   onAddFiles,
   onDelete,
   onAddCredential,
-  evidence = []
+  evidence = [],
+  allFiles = [],
+  onRemoveFile
 }: Readonly<CertificationsAndLicensesProps>) {
   const dispatch = useDispatch()
   const resume = useSelector((state: RootState) => state.resume.resume)
@@ -352,6 +367,12 @@ export default function CertificationsAndLicenses({
     [dispatch]
   )
 
+  const handleRemoveFile = (itemIndex: number, fileIndex: number) => {
+    if (onRemoveFile) {
+      onRemoveFile('certifications', itemIndex, fileIndex)
+    }
+  }
+
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       <Typography sx={{ fontSize: '14px', fontWeight: '500' }}>
@@ -574,6 +595,65 @@ export default function CertificationsAndLicenses({
                     ))}
                   </Box>
                 )}
+
+              {evidence[index] && evidence[index].length > 0 && (
+                <Box sx={{ mt: 2 }}>
+                  <Typography variant='body2' sx={{ fontWeight: 'bold', mb: 1 }}>
+                    Attached Files:
+                  </Typography>
+                  {evidence[index].map((fileId, fileIndex) => {
+                    const file = allFiles.find(f => f.id === fileId)
+                    return (
+                      <Box
+                        key={`file-${fileId}-${fileIndex}`}
+                        sx={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          mb: 0.5,
+                          backgroundColor: '#e8f4f8',
+                          p: 0.5,
+                          borderRadius: 1
+                        }}
+                      >
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                          <AttachFileIcon fontSize='small' color='primary' />
+                          <Typography
+                            variant='body2'
+                            sx={{
+                              color: 'primary.main',
+                              cursor: 'pointer'
+                            }}
+                            onClick={() => {
+                              if (file?.url) {
+                                window.open(file.url, '_blank')
+                              }
+                            }}
+                          >
+                            {file?.name || `File ${fileIndex + 1}`}
+                          </Typography>
+                        </Box>
+                        <IconButton
+                          size='small'
+                          onClick={e => {
+                            e.stopPropagation()
+                            handleRemoveFile(index, fileIndex)
+                          }}
+                          sx={{
+                            p: 0.5,
+                            color: 'grey.500',
+                            '&:hover': {
+                              color: 'error.main'
+                            }
+                          }}
+                        >
+                          <CloseIcon fontSize='small' />
+                        </IconButton>
+                      </Box>
+                    )
+                  })}
+                </Box>
+              )}
 
               <Box
                 sx={{

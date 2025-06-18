@@ -90,6 +90,8 @@ export default function SectionDetails({
             onDelete={onDelete}
             onAddCredential={onAddCredential}
             evidence={evidence}
+            allFiles={allFiles}
+            onRemoveFile={onRemoveFile}
           />
         )
       case 'Hobbies and Interests':
@@ -119,6 +121,8 @@ export default function SectionDetails({
             onDelete={onDelete}
             onAddCredential={onAddCredential}
             evidence={evidence}
+            allFiles={allFiles}
+            onRemoveFile={onRemoveFile}
           />
         )
       case 'Certifications and Licenses':
@@ -128,6 +132,8 @@ export default function SectionDetails({
             onDelete={onDelete}
             onAddCredential={onAddCredential}
             evidence={evidence}
+            allFiles={allFiles}
+            onRemoveFile={onRemoveFile}
           />
         )
       default:

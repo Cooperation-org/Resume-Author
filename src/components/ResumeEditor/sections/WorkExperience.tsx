@@ -437,7 +437,7 @@ export default function WorkExperience({
   const handleRemoveFile = useCallback(
     (experienceIndex: number, fileIndex: number) => {
       if (onRemoveFile) {
-        onRemoveFile('experience', experienceIndex, fileIndex)
+        onRemoveFile('Work Experience', experienceIndex, fileIndex)
       }
     },
     [onRemoveFile]

@@ -34,7 +34,7 @@ const isPDF = (n: string) => n.toLowerCase().endsWith('.pdf')
 const isMP4 = (n: string) => n.toLowerCase().endsWith('.mp4')
 
 const getDriveThumbnailUrl = (googleId: string) =>
-  `https://drive.google.com/thumbnail?authuser=0&sz=w200&id=${googleId}`
+  `https://drive.google.com/thumbnail?authuser=0&sz=w320&id=${googleId}`
 
 async function renderPDFThumbnail(file: FileItem): Promise<string> {
   try {
