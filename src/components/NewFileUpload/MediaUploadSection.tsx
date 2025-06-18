@@ -174,7 +174,7 @@ const MediaUploadSection: React.FC<Props> = ({
   }
 
   const getDriveViewUrl = (fileId: string) =>
-    `https://drive.google.com/thumbnail?authuser=0&sz=w320&id=${fileId}`
+    `https://drive.google.com/uc?export=view&id=${fileId}`
 
   return (
     <Box width='100%'>

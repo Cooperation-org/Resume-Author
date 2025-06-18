@@ -1,7 +1,10 @@
 import { useState, useEffect, useCallback } from 'react'
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { GoogleDriveStorage, Resume, ResumeVC } from '@cooperation/vc-storage' //NOSONAR
+import { useDispatch } from 'react-redux'
+import { setAuth } from '../redux/slices/auth'
 import { getLocalStorage } from '../tools/cookie'
+import { authenticatedFetch } from '../tools/auth'
 import StorageService from '../storage-singlton'
 
 interface ClaimDetail {
@@ -35,6 +38,7 @@ export interface DriveFileMeta {
 
 const useGoogleDrive = () => {
   const accessToken = getLocalStorage('auth')
+  const dispatch = useDispatch()
   const [isInitialized, setIsInitialized] = useState(false)
 
   useEffect(() => {
@@ -43,6 +47,9 @@ const useGoogleDrive = () => {
         // Initialize the singleton with current token
         const storageService = StorageService.getInstance()
         storageService.initialize(accessToken)
+        storageService.setTokenUpdateCallback((token: string) => {
+          dispatch(setAuth({ accessToken: token }))
+        })
         setIsInitialized(true)
       } catch (error) {
         console.error('Error initializing GoogleDriveStorage:', error)
@@ -52,7 +59,7 @@ const useGoogleDrive = () => {
       console.warn('No access token available.')
       setIsInitialized(false)
     }
-  }, [accessToken])
+  }, [accessToken, dispatch])
 
   const getContent = useCallback(
     async (fileID: string): Promise<ClaimDetail | null> => {
@@ -94,18 +101,29 @@ const useGoogleDrive = () => {
 
   const listFilesMetadata = useCallback(
     async (folderId: string): Promise<DriveFileMeta[]> => {
-      const url = new URL('https://www.googleapis.com/drive/v3/files')
-      url.searchParams.set('q', `'${folderId}' in parents and trashed=false`)
-      url.searchParams.set('fields', 'files(id,name,mimeType,thumbnailLink)')
-      const res = await fetch(url.toString(), {
-        headers: {
-          Authorization: `Bearer ${accessToken}`
+      try {
+        const url = new URL('https://www.googleapis.com/drive/v3/files')
+        url.searchParams.set('q', `'${folderId}' in parents and trashed=false`)
+        url.searchParams.set('fields', 'files(id,name,mimeType,thumbnailLink)')
+
+        const response = await authenticatedFetch(url.toString(), {}, (token: string) => {
+          dispatch(setAuth({ accessToken: token }))
+        })
+
+        if (!response.ok) {
+          throw new Error(
+            `Failed to fetch files: ${response.status} ${response.statusText}`
+          )
         }
-      })
-      const json = await res.json()
-      return json.files ?? []
+
+        const json = await response.json()
+        return json.files ?? []
+      } catch (error) {
+        console.error('Error listing files metadata:', error)
+        return []
+      }
     },
-    [accessToken]
+    [dispatch]
   )
 
   return {

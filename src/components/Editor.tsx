@@ -457,10 +457,15 @@ const ResumeEditor: React.FC = () => {
   const handleSaveDraft = async () => {
     try {
       setIsDraftSaving(true)
+      const preparedResume = prepareResumeForVC(resume, sectionEvidence, allFiles)
+      console.log('Saving draft with evidence:', {
+        sectionEvidence,
+        evidenceInPreparedResume: preparedResume?.evidence
+      })
 
       // Save to Google Drive
       const savedResume = await instances?.resumeManager?.saveResume({
-        resume: resume,
+        resume: preparedResume || resume,
         type: 'unsigned'
       })
 
@@ -516,7 +521,7 @@ const ResumeEditor: React.FC = () => {
       }
 
       console.log('Current sectionEvidence before preparing for VC:', sectionEvidence)
-      const preparedResume = prepareResumeForVC(resume, sectionEvidence)
+      const preparedResume = prepareResumeForVC(resume, sectionEvidence, allFiles)
       console.log('PREPARED FORM DATA', preparedResume)
       console.log('FORM DATA - Evidence section:', preparedResume.evidence)
 

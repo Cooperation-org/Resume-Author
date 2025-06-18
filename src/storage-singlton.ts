@@ -1,5 +1,7 @@
 // storage-singleton.ts
 import { GoogleDriveStorage, Resume, ResumeVC } from '@cooperation/vc-storage'
+import { refreshAccessToken, logout } from './tools/auth'
+import { getLocalStorage } from './tools/cookie'
 
 // Singleton class to maintain storage instances
 class StorageService {
@@ -8,6 +10,7 @@ class StorageService {
   private resumeManager: Resume | null = null
   private resumeVC: ResumeVC | null = null
   private token: string | null = null
+  private onTokenUpdate?: (token: string) => void
 
   private constructor() {}
 
@@ -17,6 +20,11 @@ class StorageService {
       StorageService.instance = new StorageService()
     }
     return StorageService.instance
+  }
+
+  // Set the token update callback
+  public setTokenUpdateCallback(callback: (token: string) => void): void {
+    this.onTokenUpdate = callback
   }
 
   // Initialize or update with token
@@ -31,24 +39,66 @@ class StorageService {
     }
   }
 
-  // Getters
+  public async refreshAndReinitialize(): Promise<void> {
+    try {
+      console.log('Refreshing token and re-initializing storage...')
+      const newToken = await refreshAccessToken(undefined, this.onTokenUpdate)
+      this.initialize(newToken)
+      console.log('Storage re-initialized with fresh token')
+    } catch (error) {
+      console.error('Failed to refresh token and re-initialize storage:', error)
+      logout()
+      throw error
+    }
+  }
+
+  public async handleApiCall<T>(apiCall: () => Promise<T>): Promise<T> {
+    try {
+      return await apiCall()
+    } catch (error: any) {
+      if (
+        error?.message?.includes('401') ||
+        error?.message?.includes('Invalid Credentials') ||
+        error?.message?.includes('authentication')
+      ) {
+        console.log('Detected authentication error, attempting to refresh...')
+        await this.refreshAndReinitialize()
+
+        return await apiCall()
+      }
+
+      throw error
+    }
+  }
+
+  // Getters with automatic token refresh on auth errors
   public getStorage(): GoogleDriveStorage {
     if (!this.storage) {
-      throw new Error('Storage not initialized. Call initialize() first.')
+      const token = getLocalStorage('auth')
+      if (token) {
+        this.initialize(token)
+      } else {
+        throw new Error('No access token available. Please log in.')
+      }
     }
-    return this.storage
+    return this.storage!
   }
 
   public getResumeManager(): Resume {
     if (!this.resumeManager) {
-      throw new Error('Resume manager not initialized. Call initialize() first.')
+      const token = getLocalStorage('auth')
+      if (token) {
+        this.initialize(token)
+      } else {
+        throw new Error('No access token available. Please log in.')
+      }
     }
-    return this.resumeManager
+    return this.resumeManager!
   }
 
   public getResumeVC(): ResumeVC {
     if (!this.resumeVC) {
-      throw new Error('ResumeVC not initialized. Call initialize() first.')
+      this.resumeVC = new ResumeVC()
     }
     return this.resumeVC
   }
