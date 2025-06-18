@@ -25,6 +25,7 @@ import { RootState } from '../../../redux/store'
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline'
 import CloseIcon from '@mui/icons-material/Close'
 import CredentialOverlay from '../../CredentialsOverlay'
+import AttachFileIcon from '@mui/icons-material/AttachFile'
 
 const PinkSwitch = styled(Switch)(({ theme }) => ({
   '& .MuiSwitch-switchBase.Mui-checked': {
@@ -39,10 +40,13 @@ const PinkSwitch = styled(Switch)(({ theme }) => ({
 }))
 
 interface WorkExperienceProps {
-  onAddFiles?: () => void
+  onAddFiles?: (itemIndex?: number) => void
   onDelete?: () => void
   onAddCredential?: (text: string) => void
   onFocus?: () => void
+  evidence?: string[][]
+  allFiles?: FileItem[]
+  onRemoveFile?: (sectionId: string, itemIndex: number, fileIndex: number) => void
 }
 
 interface SelectedCredential {
@@ -51,15 +55,27 @@ interface SelectedCredential {
   name: string
 }
 
+interface FileItem {
+  id: string
+  file: File
+  name: string
+  url: string
+  uploaded: boolean
+  fileExtension: string
+  googleId?: string
+}
+
 interface WorkExperienceItem {
   title: string
   company: string
-  duration: string
-  currentlyEmployed: boolean
-  description: string
   position: string
+  duration: string
+  showDuration: boolean
   startDate: string
   endDate: string
+  currentlyEmployed: boolean
+  description: string
+  achievements: string[]
   id: string
   verificationStatus: string
   credentialLink: string
@@ -71,6 +87,9 @@ export default function WorkExperience({
   onDelete,
   onAddCredential,
   onFocus
+  evidence = [],
+  allFiles = [],
+  onRemoveFile
 }: Readonly<WorkExperienceProps>) {
   const dispatch = useDispatch()
   const resume = useSelector((state: RootState) => state.resume.resume)
@@ -85,12 +104,14 @@ export default function WorkExperience({
     {
       title: '',
       company: '',
-      duration: '',
-      currentlyEmployed: false,
-      description: '',
       position: '',
+      duration: '',
+      showDuration: true,
       startDate: '',
       endDate: '',
+      currentlyEmployed: false,
+      description: '',
+      achievements: [],
       id: '',
       verificationStatus: 'unverified',
       credentialLink: '',
@@ -190,12 +211,14 @@ export default function WorkExperience({
       const typedItems = resume.experience.items.map((item: any) => ({
         title: item.title || '',
         company: item.company || '',
-        duration: item.duration || '',
-        currentlyEmployed: !!item.currentlyEmployed,
-        description: item.description || '',
         position: item.position || '',
+        duration: item.duration || '',
+        showDuration: !!item.currentlyEmployed,
         startDate: item.startDate || '',
         endDate: item.endDate || '',
+        currentlyEmployed: !!item.currentlyEmployed,
+        description: item.description || '',
+        achievements: item.achievements || [],
         id: item.id || '',
         verificationStatus: item.verificationStatus || 'unverified',
         credentialLink: item.credentialLink || '',
@@ -276,12 +299,14 @@ export default function WorkExperience({
     const emptyItem: WorkExperienceItem = {
       title: '',
       company: '',
-      duration: '',
-      currentlyEmployed: false,
-      description: '',
       position: '',
+      duration: '',
+      showDuration: true,
       startDate: '',
       endDate: '',
+      currentlyEmployed: false,
+      description: '',
+      achievements: [],
       id: '',
       verificationStatus: 'unverified',
       credentialLink: '',
@@ -392,7 +417,6 @@ export default function WorkExperience({
         const updated = [...prev]
         const exp = { ...updated[expIndex] }
         const newCreds = exp.selectedCredentials.filter((_, i) => i !== credIndex)
-
         exp.selectedCredentials = newCreds
         if (!newCreds.length) {
           exp.verificationStatus = 'unverified'
@@ -442,6 +466,14 @@ export default function WorkExperience({
       onFocus()
     }
   }, [onFocus])
+  const handleRemoveFile = useCallback(
+    (experienceIndex: number, fileIndex: number) => {
+      if (onRemoveFile) {
+        onRemoveFile('Work Experience', experienceIndex, fileIndex)
+      }
+    },
+    [onRemoveFile]
+  )
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: '20px' }} onFocus={onFocus}>
@@ -696,6 +728,65 @@ export default function WorkExperience({
                 </Box>
               )}
 
+              {evidence[index] && evidence[index].length > 0 && (
+                <Box sx={{ mt: 2 }}>
+                  <Typography variant='body2' sx={{ fontWeight: 'bold', mb: 1 }}>
+                    Attached Files:
+                  </Typography>
+                  {evidence[index].map((fileId, fileIndex) => {
+                    const file = allFiles.find(f => f.id === fileId)
+                    return (
+                      <Box
+                        key={`file-${fileId}-${fileIndex}`}
+                        sx={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          mb: 0.5,
+                          backgroundColor: '#e8f4f8',
+                          p: 0.5,
+                          borderRadius: 1
+                        }}
+                      >
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                          <AttachFileIcon fontSize='small' color='primary' />
+                          <Typography
+                            variant='body2'
+                            sx={{
+                              color: 'primary.main',
+                              cursor: 'pointer'
+                            }}
+                            onClick={() => {
+                              if (file?.url) {
+                                window.open(file.url, '_blank')
+                              }
+                            }}
+                          >
+                            {file?.name || `File ${fileIndex + 1}`}
+                          </Typography>
+                        </Box>
+                        <IconButton
+                          size='small'
+                          onClick={e => {
+                            e.stopPropagation()
+                            handleRemoveFile(index, fileIndex)
+                          }}
+                          sx={{
+                            p: 0.5,
+                            color: 'grey.500',
+                            '&:hover': {
+                              color: 'error.main'
+                            }
+                          }}
+                        >
+                          <CloseIcon fontSize='small' />
+                        </IconButton>
+                      </Box>
+                    )
+                  })}
+                </Box>
+              )}
+
               <Box
                 sx={{
                   display: 'flex',
@@ -705,7 +796,10 @@ export default function WorkExperience({
                   gap: '15px'
                 }}
               >
-                <StyledButton startIcon={<SVGAddFiles />} onClick={onAddFiles}>
+                <StyledButton
+                  startIcon={<SVGAddFiles />}
+                  onClick={() => onAddFiles && onAddFiles(index)}
+                >
                   Add file(s)
                 </StyledButton>
                 <StyledButton

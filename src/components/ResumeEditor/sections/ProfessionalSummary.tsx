@@ -10,6 +10,7 @@ interface ProfessionalSummaryProps {
   onDelete?: () => void
   onAddCredential?: (text: string) => void
   onFocus?: () => void
+  evidence?: string[][]
 }
 
 export default function ProfessionalSummary({
@@ -17,6 +18,7 @@ export default function ProfessionalSummary({
   onDelete,
   onAddCredential,
   onFocus
+  evidence = []
 }: Readonly<ProfessionalSummaryProps>) {
   const dispatch = useDispatch()
   const resume = useSelector((state: RootState) => state.resume.resume)

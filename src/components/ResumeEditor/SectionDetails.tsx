@@ -10,12 +10,25 @@ import Projects from './sections/Projects'
 import VolunteerWork from './sections/VolunteerWork'
 import CertificationsAndLicenses from './sections/CertificationsAndLicenses'
 
+interface FileItem {
+  id: string
+  file: File
+  name: string
+  url: string
+  uploaded: boolean
+  fileExtension: string
+  googleId?: string
+}
+
 interface SectionDetailsProps {
   sectionId: string
   onDelete?: () => void
-  onAddFiles?: () => void
+  onAddFiles?: (itemIndex?: number) => void
   onAddCredential?: (text: string) => void
   onFocus?: () => void
+  evidence?: string[][]
+  allFiles?: FileItem[]
+  onRemoveFile?: (sectionId: string, itemIndex: number, fileIndex: number) => void
 }
 
 export default function SectionDetails({
@@ -24,6 +37,9 @@ export default function SectionDetails({
   onAddFiles,
   onAddCredential,
   onFocus
+  evidence = [],
+  allFiles = [],
+  onRemoveFile
 }: Readonly<SectionDetailsProps>) {
   const renderSection = () => {
     switch (sectionId) {
@@ -34,6 +50,7 @@ export default function SectionDetails({
             onDelete={onDelete}
             onAddCredential={onAddCredential}
             onFocus={onFocus}
+            evidence={evidence}
           />
         )
       case 'Work Experience':
@@ -43,6 +60,9 @@ export default function SectionDetails({
             onDelete={onDelete}
             onAddCredential={onAddCredential}
             onFocus={onFocus}
+            evidence={evidence}
+            allFiles={allFiles}
+            onRemoveFile={onRemoveFile}
           />
         )
       case 'Education':
@@ -52,6 +72,9 @@ export default function SectionDetails({
             onDelete={onDelete}
             onAddCredential={onAddCredential}
             onFocus={onFocus}
+            evidence={evidence}
+            allFiles={allFiles}
+            onRemoveFile={onRemoveFile}
           />
         )
       case 'Professional Affiliations':
@@ -61,6 +84,9 @@ export default function SectionDetails({
             onDelete={onDelete}
             onAddCredential={onAddCredential}
             onFocus={onFocus}
+            evidence={evidence}
+            allFiles={allFiles}
+            onRemoveFile={onRemoveFile}
           />
         )
       case 'Skills and Abilities':
@@ -70,6 +96,9 @@ export default function SectionDetails({
             onDelete={onDelete}
             onAddCredential={onAddCredential}
             onFocus={onFocus}
+            evidence={evidence}
+            allFiles={allFiles}
+            onRemoveFile={onRemoveFile}
           />
         )
       case 'Hobbies and Interests':
@@ -79,6 +108,7 @@ export default function SectionDetails({
             onDelete={onDelete}
             onAddCredential={onAddCredential}
             onFocus={onFocus}
+            evidence={evidence}
           />
         )
       case 'Projects':
@@ -87,7 +117,9 @@ export default function SectionDetails({
             onAddFiles={onAddFiles}
             onDelete={onDelete}
             onAddCredential={onAddCredential}
-            onFocus={onFocus}
+            evidence={evidence}
+            allFiles={allFiles}
+            onRemoveFile={onRemoveFile}
           />
         )
       case 'Volunteer Work':
@@ -97,6 +129,9 @@ export default function SectionDetails({
             onDelete={onDelete}
             onAddCredential={onAddCredential}
             onFocus={onFocus}
+            evidence={evidence}
+            allFiles={allFiles}
+            onRemoveFile={onRemoveFile}
           />
         )
       case 'Certifications and Licenses':
@@ -105,6 +140,9 @@ export default function SectionDetails({
             onAddFiles={onAddFiles}
             onDelete={onDelete}
             onAddCredential={onAddCredential}
+            evidence={evidence}
+            allFiles={allFiles}
+            onRemoveFile={onRemoveFile}
           />
         )
       default:

@@ -9,12 +9,26 @@ import { RootState } from '../../../redux/store'
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline'
 import CloseIcon from '@mui/icons-material/Close'
 import CredentialOverlay from '../../CredentialsOverlay'
+import AttachFileIcon from '@mui/icons-material/AttachFile'
+
+interface FileItem {
+  id: string
+  file: File
+  name: string
+  url: string
+  uploaded: boolean
+  fileExtension: string
+  googleId?: string
+}
 
 interface SkillsAndAbilitiesProps {
-  onAddFiles?: () => void
+  onAddFiles?: (itemIndex?: number) => void
   onDelete?: () => void
   onAddCredential?: (text: string) => void
   onFocus?: () => void
+  evidence?: string[][]
+  allFiles?: FileItem[]
+  onRemoveFile?: (sectionId: string, itemIndex: number, fileIndex: number) => void
 }
 
 interface SkillItem {
@@ -37,6 +51,9 @@ export default function SkillsAndAbilities({
   onDelete,
   onAddCredential,
   onFocus
+  evidence = [],
+  allFiles,
+  onRemoveFile
 }: Readonly<SkillsAndAbilitiesProps>) {
   const dispatch = useDispatch()
   const resume = useSelector((state: RootState) => state.resume.resume)
@@ -258,25 +275,12 @@ export default function SkillsAndAbilities({
   )
 
   const handleRemoveCredential = useCallback(
-    (skillIndex: number, credentialIndex: number) => {
+    (itemIndex: number, credentialIndex: number) => {
       setSkills(prevSkills => {
         const updatedSkills = [...prevSkills]
-        const skill = { ...updatedSkills[skillIndex] }
-
-        const updatedCredentials = (skill.selectedCredentials || []).filter(
-          (_, i) => i !== credentialIndex
-        )
-
-        skill.selectedCredentials = updatedCredentials
-
-        if (updatedCredentials.length === 0) {
-          skill.verificationStatus = 'unverified'
-          skill.credentialLink = ''
-        } else {
-          skill.credentialLink = updatedCredentials[0]?.url || ''
-        }
-
-        updatedSkills[skillIndex] = skill
+        updatedSkills[itemIndex].selectedCredentials = updatedSkills[
+          itemIndex
+        ].selectedCredentials.filter((_, index) => index !== credentialIndex)
 
         dispatch(
           updateSection({
@@ -315,6 +319,11 @@ export default function SkillsAndAbilities({
       )
     }
   }, [])
+  const handleRemoveFile = (itemIndex: number, fileIndex: number) => {
+    if (onRemoveFile) {
+      onRemoveFile('skills', itemIndex, fileIndex)
+    }
+  }
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
@@ -435,6 +444,65 @@ export default function SkillsAndAbilities({
                 </Box>
               )}
 
+              {evidence[index] && evidence[index].length > 0 && (
+                <Box sx={{ mt: 2 }}>
+                  <Typography variant='body2' sx={{ fontWeight: 'bold', mb: 1 }}>
+                    Attached Files:
+                  </Typography>
+                  {evidence[index].map((fileId, fileIndex) => {
+                    const file = allFiles?.find(f => f.id === fileId)
+                    return (
+                      <Box
+                        key={`file-${fileId}-${fileIndex}`}
+                        sx={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          mb: 0.5,
+                          backgroundColor: '#e8f4f8',
+                          p: 0.5,
+                          borderRadius: 1
+                        }}
+                      >
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                          <AttachFileIcon fontSize='small' color='primary' />
+                          <Typography
+                            variant='body2'
+                            sx={{
+                              color: 'primary.main',
+                              cursor: 'pointer'
+                            }}
+                            onClick={() => {
+                              if (file?.url) {
+                                window.open(file.url, '_blank')
+                              }
+                            }}
+                          >
+                            {file?.name || `File ${fileIndex + 1}`}
+                          </Typography>
+                        </Box>
+                        <IconButton
+                          size='small'
+                          onClick={e => {
+                            e.stopPropagation()
+                            handleRemoveFile(index, fileIndex)
+                          }}
+                          sx={{
+                            p: 0.5,
+                            color: 'grey.500',
+                            '&:hover': {
+                              color: 'error.main'
+                            }
+                          }}
+                        >
+                          <CloseIcon fontSize='small' />
+                        </IconButton>
+                      </Box>
+                    )
+                  })}
+                </Box>
+              )}
+
               <Box
                 sx={{
                   display: 'flex',
@@ -444,7 +512,10 @@ export default function SkillsAndAbilities({
                   gap: '15px'
                 }}
               >
-                <StyledButton startIcon={<SVGAddFiles />} onClick={onAddFiles}>
+                <StyledButton
+                  startIcon={<SVGAddFiles />}
+                  onClick={() => onAddFiles && onAddFiles(index)}
+                >
                   Add file(s)
                 </StyledButton>
                 <StyledButton

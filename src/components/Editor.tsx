@@ -21,7 +21,7 @@ import Section from './ResumeEditor/Section'
 import { useSelector, useDispatch } from 'react-redux'
 import { RootState } from '../redux/store'
 import { SVGEditName } from '../assets/svgs'
-import useGoogleDrive from '../hooks/useGoogleDrive'
+import useGoogleDrive from '../hooks/useGoogleDrive' // , { DriveFileMeta }
 import { useNavigate, useLocation } from 'react-router-dom'
 import {
   updateSection,
@@ -32,6 +32,8 @@ import OptionalSectionsManager from './ResumeEditor/OptionalSectionCard'
 import { storeFileTokens } from '../firebase/storage'
 import { getLocalStorage } from '../tools/cookie'
 import { prepareResumeForVC } from '../tools/resumeAdapter'
+import FileSelectorOverlay from './NewFileUpload/FileSelectorOverlay'
+import { FileItem } from './NewFileUpload/FileList'
 
 const ButtonStyles = {
   border: '2px solid #3A35A2',
@@ -66,13 +68,13 @@ const computeResumeHash = (resume: any): string => {
 
   // Extract fields that we want to monitor for changes
   const fieldsToCheck = {
-    name: resume.name || '',
-    contact: resume.contact || {},
-    summary: resume.summary || '',
-    experience: resume.experience || {},
-    education: resume.education || {},
-    affiliations: resume.affiliations || {},
-    skills: resume.skills || {}
+    name: resume.name ?? '',
+    contact: resume.contact ?? {},
+    summary: resume.summary ?? '',
+    experience: resume.experience ?? {},
+    education: resume.education ?? {},
+    affiliations: resume.affiliations ?? {},
+    skills: resume.skills ?? {}
   }
 
   return JSON.stringify(fieldsToCheck)
@@ -97,6 +99,12 @@ const ResumeEditor: React.FC = () => {
   const [showExitDialog, setShowExitDialog] = useState(false)
   const [exitDestination, setExitDestination] = useState<string | null>(null)
   const [isDirty, setIsDirty] = useState(false)
+  const [fileSelectorOpen, setFileSelectorOpen] = useState(false)
+  const [activeSectionId, setActiveSectionId] = useState<string | null>(null)
+  const [sectionEvidence, setSectionEvidence] = useState<Record<string, string[][]>>({})
+  const [files, setFiles] = useState<FileItem[]>([])
+  const [allFiles, setAllFiles] = useState<FileItem[]>([])
+  const [activeItemIndex, setActiveItemIndex] = useState<number | undefined>(undefined)
 
   // Reference to store the original resume state for comparison
   const originalResumeRef = useRef<string | null>(null)
@@ -106,9 +114,9 @@ const ResumeEditor: React.FC = () => {
   const resumeId = queryParams.get('id')
 
   const activeSection = useSelector((state: RootState) => state.resume.activeSection)
-  const resume = useSelector((state: RootState) => state.resume.resume)
-  const { instances, isInitialized } = useGoogleDrive()
-  const accessToken = getLocalStorage('auth')
+  const resume = useSelector((state: RootState) => state?.resume.resume)
+  const { instances, isInitialized, listFilesMetadata } = useGoogleDrive()
+  const { accessToken } = useSelector((state: RootState) => state.auth)
   const refreshToken = getLocalStorage('refresh_token')
 
   // Load resume data from Google Drive
@@ -121,7 +129,7 @@ const ResumeEditor: React.FC = () => {
           const fileData = await instances.storage?.retrieve(resumeId)
 
           if (fileData) {
-            const resumeData = fileData.data || fileData
+            const resumeData = fileData.data ?? fileData
 
             // Dispatch to Redux
             dispatch(setSelectedResume(resumeData))
@@ -132,7 +140,7 @@ const ResumeEditor: React.FC = () => {
             // Try to set resume name if we can find it
             try {
               const name =
-                resumeData.contact?.fullName || resumeData.name || 'Untitled Resume'
+                resumeData.contact?.fullName ?? resumeData.name ?? 'Untitled Resume'
               setResumeName(name)
             } catch (e) {
               setResumeName('Untitled Resume')
@@ -151,7 +159,7 @@ const ResumeEditor: React.FC = () => {
 
       fetchResumeData()
     }
-  }, [resumeId, isInitialized, dispatch])
+  }, [resumeId, isInitialized, dispatch, instances.storage])
 
   // Check if resume has been modified using the optimized hash comparison
   useEffect(() => {
@@ -257,7 +265,7 @@ const ResumeEditor: React.FC = () => {
     // Intercept link clicks for custom dialog
     const handleLinkClick = (e: MouseEvent) => {
       const target = e.target as HTMLElement
-      let link = target.closest('a')
+      const link = target.closest('a')
 
       // If a link was clicked and it's an internal link
       if (
@@ -269,7 +277,7 @@ const ResumeEditor: React.FC = () => {
         // Check if we have unsaved changes
         if (isDirty) {
           e.preventDefault()
-          const destination = link.getAttribute('href') || '/'
+          const destination = link?.getAttribute('href') ?? '/'
           setExitDestination(destination)
           setShowExitDialog(true)
         }
@@ -362,8 +370,24 @@ const ResumeEditor: React.FC = () => {
     }
   }
 
-  const handleAddFiles = () => {
-    console.log('Add files clicked')
+  const handleAddFiles = (sectionId: string, itemIndex?: number) => {
+    console.log('handleAddFiles called:', {
+      sectionId,
+      itemIndex,
+      currentFiles: files,
+      allFiles
+    })
+    setActiveSectionId(sectionId)
+    setActiveItemIndex(itemIndex)
+    setFileSelectorOpen(true)
+  }
+
+  const handleFilesSelected = (newFiles: FileItem[]) => {
+    setFiles(newFiles)
+  }
+
+  const handleFileDelete = (event: React.MouseEvent, id: string) => {
+    setFiles(prev => prev.filter(file => file.id !== id))
   }
 
   const handleAddCredential = useCallback(
@@ -428,6 +452,64 @@ const ResumeEditor: React.FC = () => {
     },
     [activeSection, resume]
   )
+  const handleFileNameChange = (id: string, newName: string) => {
+    setFiles(prev =>
+      prev.map(file => (file.id === id ? { ...file, name: newName } : file))
+    )
+  }
+
+  const handleEvidenceSelected = (selectedFileIds: string[], itemIndex?: number) => {
+    const targetItemIndex = itemIndex ?? activeItemIndex
+    console.log('handleEvidenceSelected called:', {
+      selectedFileIds,
+      itemIndex: targetItemIndex,
+      activeSectionId
+    })
+
+    if (activeSectionId !== null && typeof targetItemIndex === 'number') {
+      setSectionEvidence(prev => {
+        const prevArr: string[][] =
+          Array.isArray(prev[activeSectionId]) && Array.isArray(prev[activeSectionId][0])
+            ? [...(prev[activeSectionId] as string[][])]
+            : Array.from({ length: targetItemIndex + 1 }, () => [])
+        prevArr[targetItemIndex] = [...selectedFileIds]
+
+        const newEvidence = {
+          ...prev,
+          [activeSectionId]: prevArr
+        }
+
+        console.log('Updated sectionEvidence:', newEvidence)
+        return newEvidence
+      })
+    }
+    setFileSelectorOpen(false)
+    setActiveSectionId(null)
+    setActiveItemIndex(undefined)
+  }
+
+  const handleRemoveFile = (sectionId: string, itemIndex: number, fileIndex: number) => {
+    console.log('handleRemoveFile called:', { sectionId, itemIndex, fileIndex })
+
+    setSectionEvidence(prev => {
+      const section = prev[sectionId] || []
+      const newSection = [...section]
+
+      if (newSection[itemIndex]) {
+        const newItem = [...newSection[itemIndex]]
+        newItem.splice(fileIndex, 1)
+        newSection[itemIndex] = newItem
+      }
+
+      const newEvidence = {
+        ...prev,
+        [sectionId]: newSection
+      }
+
+      console.log('Updated sectionEvidence after removal:', newEvidence)
+      return newEvidence
+    })
+  }
 
   const handlePreview = () => {
     console.log(resume)
@@ -442,10 +524,15 @@ const ResumeEditor: React.FC = () => {
   const handleSaveDraft = async () => {
     try {
       setIsDraftSaving(true)
+      const preparedResume = prepareResumeForVC(resume, sectionEvidence, allFiles)
+      console.log('Saving draft with evidence:', {
+        sectionEvidence,
+        evidenceInPreparedResume: preparedResume?.evidence
+      })
 
       // Save to Google Drive
       const savedResume = await instances?.resumeManager?.saveResume({
-        resume: resume,
+        resume: preparedResume || resume,
         type: 'unsigned'
       })
 
@@ -499,8 +586,11 @@ const ResumeEditor: React.FC = () => {
         console.error('Resume is null, cannot prepare for VC')
         return
       }
-      const preparedResume = prepareResumeForVC(resume)
+
+      console.log('Current sectionEvidence before preparing for VC:', sectionEvidence)
+      const preparedResume = prepareResumeForVC(resume, sectionEvidence, allFiles)
       console.log('PREPARED FORM DATA', preparedResume)
+      console.log('FORM DATA - Evidence section:', preparedResume.evidence)
 
       // Sign resume
       const signedResume = await instances.resumeVC.sign({
@@ -517,7 +607,7 @@ const ResumeEditor: React.FC = () => {
         resume: signedResume,
         type: 'sign'
       })
-      if (!file || !file.id) {
+      if (!file?.id) {
         throw new Error('Failed to save resume')
       }
 
@@ -525,8 +615,8 @@ const ResumeEditor: React.FC = () => {
       await storeFileTokens({
         googleFileId: file.id,
         tokens: {
-          accessToken: accessToken || '',
-          refreshToken: refreshToken || ''
+          accessToken: accessToken ?? '',
+          refreshToken: refreshToken ?? ''
         }
       })
 
@@ -562,6 +652,7 @@ const ResumeEditor: React.FC = () => {
     if (!resume) return
 
     dispatch(updateSection({ sectionId: 'name', content: resumeName }))
+    setResumeName(resumeName)
     setIsEditingName(false)
   }
 
@@ -586,6 +677,26 @@ const ResumeEditor: React.FC = () => {
     },
     [dispatch]
   )
+  const getSectionEvidence = (sectionId: string, itemCount: number): string[][] => {
+    const section = sectionEvidence[sectionId] || []
+    if (Array.isArray(section) && Array.isArray(section[0])) return section as string[][]
+    if (Array.isArray(section) && typeof section[0] === 'string') {
+      const arr: string[][] = []
+      for (let i = 0; i < itemCount; i++) {
+        if (Array.isArray(section[i])) arr.push(section[i] as string[])
+        else if (section[i]) arr.push([section[i] as unknown as string])
+        else arr.push([])
+      }
+      return arr
+    }
+    return Array.from({ length: itemCount }, () => [])
+  }
+
+  const handleAddCredential = () => {}
+
+  const handleAllFilesUpdate = useCallback((combinedFiles: FileItem[]) => {
+    setAllFiles(combinedFiles)
+  }, [])
 
   return (
     <Box
@@ -776,17 +887,29 @@ const ResumeEditor: React.FC = () => {
                 flex: 1
               }}
             >
-              {sectionOrder.map(sectionId => (
-                <Section
-                  key={sectionId}
-                  sectionId={sectionId}
-                  onDelete={() => handleRemoveSection(sectionId)}
-                  onAddFiles={handleAddFiles}
-                  onAddCredential={handleAddCredential}
-                  isRemovable={!requiredSections.includes(sectionId)}
-                  onFocus={() => handleSectionFocus(sectionId)}
-                />
-              ))}
+
+              {sectionOrder.map(sectionId => {
+                let itemCount = 1
+                if (resume && typeof resume === 'object' && sectionId in resume) {
+                  const section = (resume as any)[sectionId]
+                  if (sectionHasItems(section)) {
+                    itemCount = section.items.length
+                  }
+                }
+                return (
+                  <Section
+                    key={sectionId}
+                    sectionId={sectionId}
+                    onDelete={() => handleRemoveSection(sectionId)}
+                    onAddFiles={itemIndex => handleAddFiles(sectionId, itemIndex)}
+                    onAddCredential={handleAddCredential}
+                    isRemovable={!requiredSections.includes(sectionId)}
+                    evidence={getSectionEvidence(sectionId, itemCount)}
+                    allFiles={allFiles}
+                    onRemoveFile={handleRemoveFile}
+                  />
+                )
+              })}
 
               {/* Optional sections manager */}
               <OptionalSectionsManager
@@ -795,7 +918,13 @@ const ResumeEditor: React.FC = () => {
               />
             </Box>
 
-            <RightSidebar />
+            <RightSidebar
+              files={files}
+              onFilesSelected={handleFilesSelected}
+              onFileDelete={handleFileDelete}
+              onFileNameChange={handleFileNameChange}
+              onAllFilesUpdate={handleAllFilesUpdate}
+            />
           </Box>
         </>
       )}
@@ -895,8 +1024,32 @@ const ResumeEditor: React.FC = () => {
           </Button>
         </DialogActions>
       </Dialog>
+      <FileSelectorOverlay
+        open={fileSelectorOpen}
+        onClose={() => {
+          console.log('FileSelectorOverlay closing')
+          setFileSelectorOpen(false)
+          setActiveSectionId(null)
+          setActiveItemIndex(undefined)
+        }}
+        onSelect={selectedFileIds =>
+          handleEvidenceSelected(selectedFileIds, activeItemIndex)
+        }
+        files={allFiles}
+        initialSelectedFiles={
+          activeSectionId && typeof activeItemIndex === 'number'
+            ? (sectionEvidence[activeSectionId]?.[activeItemIndex] || []).map(id => ({
+                id
+              }))
+            : []
+        }
+      />
     </Box>
   )
 }
 
 export default ResumeEditor
+
+function sectionHasItems(section: any): section is { items: any[] } {
+  return section && Array.isArray(section.items)
+}

@@ -2,13 +2,45 @@
  * Adapter to transform resume data to make it compatible with the resumeVC.sign function
  * This ensures all data is properly preserved during the signing process
  */
-export const prepareResumeForVC = (resume: Resume | null): any => {
+export const prepareResumeForVC = (
+  resume: Resume | null,
+  sectionEvidence?: Record<string, string[][]>,
+  allFiles?: any[]
+): any => {
   if (!resume) {
     console.error('Cannot prepare null resume for VC')
     return null
   }
 
   const preparedResume = JSON.parse(JSON.stringify(resume))
+
+  // Add evidence/files data if provided
+  if (sectionEvidence && allFiles) {
+    // Convert file IDs to actual Google Drive URLs for saving
+    const evidenceWithUrls: Record<string, string[][]> = {}
+
+    Object.keys(sectionEvidence).forEach(sectionId => {
+      const sectionFiles = sectionEvidence[sectionId]
+      evidenceWithUrls[sectionId] = sectionFiles.map(itemFiles =>
+        itemFiles.map(fileId => {
+          const file = allFiles.find(f => f.id === fileId)
+          if (file?.googleId) {
+            return `https://drive.google.com/uc?export=view&id=${file.googleId}`
+          } else if (file?.url) {
+            return file.url
+          }
+          return fileId
+        })
+      )
+    })
+
+    preparedResume.evidence = evidenceWithUrls
+    console.log('Converting evidence IDs to URLs:', {
+      originalEvidence: sectionEvidence,
+      convertedEvidence: evidenceWithUrls,
+      availableFiles: allFiles.length
+    })
+  }
 
   if (preparedResume.languages?.items) {
     preparedResume.languages.items = preparedResume.languages.items.map((lang: any) => ({

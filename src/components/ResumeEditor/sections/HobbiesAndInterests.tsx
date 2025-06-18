@@ -18,10 +18,11 @@ import { updateSection } from '../../../redux/slices/resume'
 import TextEditor from '../../TextEditor/Texteditor'
 
 interface HobbiesAndInterestsProps {
-  onAddFiles?: () => void
+  onAddFiles?: (itemIndex?: number) => void
   onDelete?: () => void
   onAddCredential?: (text: string) => void
   onFocus?: () => void
+  evidence?: string[][]
 }
 
 export default function HobbiesAndInterests({
@@ -29,6 +30,7 @@ export default function HobbiesAndInterests({
   onDelete,
   onAddCredential,
   onFocus
+  evidence = []
 }: Readonly<HobbiesAndInterestsProps>) {
   const dispatch = useDispatch()
   const resume = useSelector((state: RootState) => state.resume.resume)

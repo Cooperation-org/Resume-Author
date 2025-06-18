@@ -1,6 +1,7 @@
 import { GoogleDriveStorage, Resume } from '@cooperation/vc-storage'
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
 import { getLocalStorage } from '../../tools/cookie'
+import StorageService from '../../storage-singlton'
 
 interface ResumeData {
   id: string
@@ -46,8 +47,14 @@ export const fetchVCs = createAsyncThunk('vc/fetchVCs', async () => {
     throw new Error('Access token not found')
   }
 
-  const storage = new GoogleDriveStorage(accessToken as string)
-  const claimsData: any[] = await storage.getAllFilesByType('VCs')
+  const storageService = StorageService.getInstance()
+  storageService.initialize(accessToken)
+
+  const claimsData: any[] = await storageService.handleApiCall(async () => {
+    const storage = storageService.getStorage()
+    return await storage.getAllFilesByType('VCs')
+  })
+
   console.log(': fetchVCs claimsData', claimsData)
 
   const vcs = claimsData
@@ -66,6 +73,7 @@ export const fetchVCs = createAsyncThunk('vc/fetchVCs', async () => {
 
   return vcs
 })
+
 // Async thunk to fetch resumes
 export const fetchUserResumes = createAsyncThunk('vc/fetchUserResumes', async () => {
   const accessToken = getLocalStorage('auth')
@@ -74,16 +82,21 @@ export const fetchUserResumes = createAsyncThunk('vc/fetchUserResumes', async ()
     throw new Error('Access token not found')
   }
 
-  const storage = new GoogleDriveStorage(accessToken)
-  const resumeManager = new Resume(storage)
+  const storageService = StorageService.getInstance()
+  storageService.initialize(accessToken)
 
-  const resumeVCs = await resumeManager.getSignedResumes()
-  const resumeSessions = await resumeManager.getNonSignedResumes()
+  const result = await storageService.handleApiCall(async () => {
+    const resumeManager = storageService.getResumeManager()
+    const resumeVCs = await resumeManager.getSignedResumes()
+    const resumeSessions = await resumeManager.getNonSignedResumes()
 
-  return {
-    signed: resumeVCs,
-    unsigned: resumeSessions
-  }
+    return {
+      signed: resumeVCs,
+      unsigned: resumeSessions
+    }
+  })
+
+  return result
 })
 
 const vcSlice = createSlice({

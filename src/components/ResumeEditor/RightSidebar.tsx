@@ -1,59 +1,139 @@
 import { Box, Typography, Button, Divider, Stack, CircularProgress } from '@mui/material'
 import { login } from '../../tools/auth'
 import { useSelector, useDispatch } from 'react-redux'
-import { useState, useEffect } from 'react'
-import {
-  fileIconSVG,
-  checkmarkBlueSVG,
-  checkmarkgraySVG,
-  uploadArrowUpSVG
-} from '../../assets/svgs'
+import { useState, useEffect, useCallback } from 'react'
+import { checkmarkBlueSVG, checkmarkgraySVG } from '../../assets/svgs'
 import { useLocation } from 'react-router-dom'
 import { fetchVCs } from '../../redux/slices/vc'
 import { AppDispatch, RootState } from '../../redux/store'
+import MediaUploadSection from '../../components/NewFileUpload/MediaUploadSection'
+import useGoogleDrive, { DriveFileMeta } from '../../hooks/useGoogleDrive'
+import StorageService from '../../storage-singlton'
 
-const RightSidebar = () => {
+export interface FileItem {
+  id: string
+  file: File
+  name: string
+  url: string
+  uploaded: boolean
+  fileExtension: string
+  googleId?: string
+}
+
+interface RightSidebarProps {
+  files: FileItem[]
+  onFilesSelected: (files: FileItem[]) => void
+  onFileDelete: (event: React.MouseEvent, id: string) => void
+  onFileNameChange: (id: string, newName: string) => void
+  onAllFilesUpdate: (allFiles: FileItem[]) => void
+}
+
+const RightSidebar = ({
+  files,
+  onFilesSelected,
+  onFileDelete,
+  onFileNameChange,
+  onAllFilesUpdate
+}: RightSidebarProps) => {
   const location = useLocation()
   const [selectedClaims, setSelectedClaims] = useState<string[]>([])
-  const [uploadedFiles, setUploadedFiles] = useState<string[]>([])
   const { accessToken, isAuthenticated } = useSelector((state: RootState) => state.auth)
   const dispatch: AppDispatch = useDispatch()
-  const { vcs, loading } = useSelector((state: any) => state.vcReducer)
+  const { vcs } = useSelector((state: any) => state.vcReducer)
   const [isLoading, setIsLoading] = useState<boolean>(true)
 
-  // Redux state connection kept for future use
+  const { instances, isInitialized, listFilesMetadata } = useGoogleDrive()
+  const [remoteFiles, setRemoteFiles] = useState<DriveFileMeta[]>([])
+
+  const reloadRemoteFiles = useCallback(async () => {
+    if (!accessToken) return
+
+    try {
+      const storageService = StorageService.getInstance()
+      storageService.initialize(accessToken)
+
+      const files = await storageService.handleApiCall(async () => {
+        const storage = storageService.getStorage()
+        const folderId = await storage.getMediaFolderId()
+        return await listFilesMetadata(folderId)
+      })
+
+      setRemoteFiles(files)
+    } catch (error) {
+      console.error('Error fetching remote files:', error)
+      setRemoteFiles([])
+    }
+  }, [accessToken, listFilesMetadata])
+
   useEffect(() => {
-    // Dispatch the thunk to fetch VCs and set our local loading state
+    if (accessToken) {
+      reloadRemoteFiles()
+    }
+  }, [accessToken, reloadRemoteFiles])
+
+  useEffect(() => {
+    if (remoteFiles.length > 0) {
+      console.log('Access token debug:', {
+        hasAccessToken: !!accessToken,
+        accessTokenLength: accessToken?.length,
+        accessTokenPreview: accessToken ? accessToken.substring(0, 20) + '...' : 'null',
+        remoteFilesCount: remoteFiles.length,
+        sampleFile: remoteFiles[0]
+          ? {
+              id: remoteFiles[0].id,
+              name: remoteFiles[0].name,
+              mimeType: remoteFiles[0].mimeType,
+              hasThumbnailLink: !!remoteFiles[0].thumbnailLink
+            }
+          : null
+      })
+    }
+  }, [remoteFiles, accessToken])
+
+  const getDriveUrl = (id: string) => {
+    const url =
+      `https://drive.google.com/uc?export=view&id=${id}` ||
+      `https://drive.google.com/thumbnail?authuser=0&sz=w320&id=${id}`
+
+    console.log('getDriveUrl called:', {
+      id,
+      generatedUrl: url
+    })
+
+    return url
+  }
+
+  const getAllFiles = useCallback((): FileItem[] => {
+    const localFiles = files
+    const convertedRemoteFiles: FileItem[] = remoteFiles.map(rf => ({
+      id: rf.id,
+      file: new File([], rf.name),
+      name: rf.name,
+
+      url: getDriveUrl(rf.id),
+      uploaded: true,
+      fileExtension: rf.name.split('.').pop() ?? '',
+      googleId: rf.id
+    }))
+
+    const allFiles = [...localFiles, ...convertedRemoteFiles]
+    return allFiles
+  }, [files, remoteFiles, accessToken])
+
+  useEffect(() => {
+    const combinedFiles = getAllFiles()
+    onAllFilesUpdate(combinedFiles)
+  }, [getAllFiles, onAllFilesUpdate])
+
+  useEffect(() => {
     setIsLoading(true)
     dispatch(fetchVCs())
-      .then(() => {
-        setTimeout(() => {
-          setIsLoading(false)
-        }, 500)
-      })
-      .catch(() => {
-        setIsLoading(false)
-      })
+      .then(() => setIsLoading(false))
+      .catch(() => setIsLoading(false))
   }, [dispatch])
-
-  useEffect(() => {
-    if (loading) {
-      setIsLoading(true)
-    }
-  }, [loading])
-
-  useEffect(() => {
-    const savedFiles = JSON.parse(localStorage.getItem('uploadedFiles') ?? '[]')
-    setUploadedFiles(savedFiles)
-  }, [])
-
-  const handleAuth = () => {
-    handleGoogleLogin()
-  }
 
   const handleGoogleLogin = async () => {
     await login(location.pathname)
-    // Redirects to Google OAuth login
   }
 
   const handleClaimToggle = (claimId: string) => {
@@ -67,46 +147,25 @@ const RightSidebar = () => {
     })
   }
 
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = event.target.files
-    if (files) {
-      const fileNames = Array.from(files).map(file => file.name)
-      setUploadedFiles(prevFiles => {
-        const newFiles = [...prevFiles, ...fileNames]
-        localStorage.setItem('uploadedFiles', JSON.stringify(newFiles))
-        return newFiles
-      })
-    }
+  const handleFilesSelected = (newFiles: FileItem[]) => {
+    onFilesSelected(newFiles)
+
+    setTimeout(() => reloadRemoteFiles(), 500)
   }
 
-  const handleDragOver = (event: React.DragEvent<HTMLDivElement>) => {
-    event.preventDefault()
+  const handleDelete = (event: React.MouseEvent, id: string) => {
+    onFileDelete(event, id)
   }
 
-  const handleDrop = (event: React.DragEvent<HTMLDivElement>) => {
-    event.preventDefault()
-    const files = event.dataTransfer.files
-    if (files.length > 0) {
-      const fileNames = Array.from(files).map(file => file.name)
-      setUploadedFiles(prevFiles => {
-        const newFiles = [...prevFiles, ...fileNames]
-        localStorage.setItem('uploadedFiles', JSON.stringify(newFiles))
-        return newFiles
-      })
-    }
+  const handleNameChange = (id: string, newName: string) => {
+    onFileNameChange(id, newName)
   }
 
   const handleRefresh = () => {
     setIsLoading(true)
     dispatch(fetchVCs())
-      .then(() => {
-        setTimeout(() => {
-          setIsLoading(false)
-        }, 500)
-      })
-      .catch(() => {
-        setIsLoading(false)
-      })
+      .then(() => setIsLoading(false))
+      .catch(() => setIsLoading(false))
   }
 
   const handleImport = () => {
@@ -115,6 +174,88 @@ const RightSidebar = () => {
     } else {
       handleGoogleLogin()
     }
+  }
+
+  const renderCredentialContent = (vc: any) => {
+    if (!vc?.credentialSubject?.achievement?.[0]?.name) {
+      return (
+        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+          <CircularProgress size={16} sx={{ color: '#3A35A2', mr: 1 }} />
+          <Typography
+            sx={{
+              fontSize: 16,
+              fontWeight: 500,
+              color: '#9CA3AF',
+              fontFamily: 'Nunito Sans'
+            }}
+          >
+            Loading credential...
+          </Typography>
+        </Box>
+      )
+    }
+
+    return (
+      <Typography
+        sx={{
+          fontSize: 16,
+          fontWeight: 500,
+          color: '#2563EB',
+          textDecoration: 'underline',
+          fontFamily: 'Nunito Sans',
+          cursor: 'pointer'
+        }}
+        onClick={() => handleClaimToggle(vc.id)}
+      >
+        {vc.credentialSubject.achievement[0].name}
+      </Typography>
+    )
+  }
+
+  const renderCredentialsContent = () => {
+    if (isLoading) {
+      return (
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            height: '100px'
+          }}
+        >
+          <CircularProgress size={36} sx={{ color: '#3A35A2' }} />
+        </Box>
+      )
+    }
+
+    if (vcs && vcs.length > 0) {
+      return (
+        <Stack spacing={2}>
+          {vcs.map((vc: any) => (
+            <Box sx={{ display: 'flex', alignItems: 'center' }} key={vc.id}>
+              <Box sx={{ width: 24, height: 24, mr: '10px', display: 'flex' }}>
+                {selectedClaims.includes(vc.id) ? checkmarkBlueSVG() : checkmarkgraySVG()}
+              </Box>
+              {renderCredentialContent(vc)}
+            </Box>
+          ))}
+        </Stack>
+      )
+    }
+
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', py: 2 }}>
+        <Typography
+          sx={{
+            fontSize: 16,
+            color: '#9CA3AF',
+            fontFamily: 'Nunito Sans'
+          }}
+        >
+          No credentials found.
+        </Typography>
+      </Box>
+    )
   }
 
   return (
@@ -193,7 +334,7 @@ const RightSidebar = () => {
         </Box>
       </Box>
 
-      {/* Credentials Section */}
+      {/* Section 2: Credentials */}
       <Box sx={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '15px' }}>
         <Typography
           sx={{
@@ -237,71 +378,7 @@ const RightSidebar = () => {
             minHeight: '100px'
           }}
         >
-          {isLoading ? (
-            <Box
-              sx={{
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center',
-                height: '100px'
-              }}
-            >
-              <CircularProgress size={36} sx={{ color: '#3A35A2' }} />
-            </Box>
-          ) : vcs && vcs.length > 0 ? (
-            <Stack spacing={2}>
-              {vcs.map((vc: any) => (
-                <Box sx={{ display: 'flex', alignItems: 'center' }} key={vc.id}>
-                  <Box sx={{ width: 24, height: 24, mr: '10px', display: 'flex' }}>
-                    {selectedClaims.includes(vc.id)
-                      ? checkmarkBlueSVG()
-                      : checkmarkgraySVG()}
-                  </Box>
-                  {!vc?.credentialSubject?.achievement?.[0]?.name ? (
-                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                      <CircularProgress size={16} sx={{ color: '#3A35A2', mr: 1 }} />
-                      <Typography
-                        sx={{
-                          fontSize: 16,
-                          fontWeight: 500,
-                          color: '#9CA3AF',
-                          fontFamily: 'Nunito Sans'
-                        }}
-                      >
-                        Loading credential...
-                      </Typography>
-                    </Box>
-                  ) : (
-                    <Typography
-                      sx={{
-                        fontSize: 16,
-                        fontWeight: 500,
-                        color: '#2563EB',
-                        textDecoration: 'underline',
-                        fontFamily: 'Nunito Sans',
-                        cursor: 'pointer'
-                      }}
-                      onClick={() => handleClaimToggle(vc.id)}
-                    >
-                      {vc.credentialSubject.achievement[0].name}
-                    </Typography>
-                  )}
-                </Box>
-              ))}
-            </Stack>
-          ) : (
-            <Box sx={{ display: 'flex', justifyContent: 'center', py: 2 }}>
-              <Typography
-                sx={{
-                  fontSize: 16,
-                  color: '#9CA3AF',
-                  fontFamily: 'Nunito Sans'
-                }}
-              >
-                No credentials found.
-              </Typography>
-            </Box>
-          )}
+          {renderCredentialsContent()}
         </Box>
       </Box>
 
@@ -318,129 +395,26 @@ const RightSidebar = () => {
           boxShadow: '0px 2px 20px rgba(0,0,0,0.10)'
         }}
       >
-        <Box
-          sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+        <Typography
+          sx={{
+            fontSize: 16,
+            color: '#47516B',
+            fontWeight: 700,
+            fontFamily: 'Poppins'
+          }}
         >
-          <Typography
-            sx={{
-              fontSize: 16,
-              color: '#47516B',
-              fontWeight: 700,
-              fontFamily: 'Poppins'
-            }}
-          >
-            Your Files
-          </Typography>
-          <Box
-            sx={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}
-            onClick={() => document.getElementById('file-upload')?.click()}
-          >
-            <Box sx={{ width: 24, height: 24 }}>{uploadArrowUpSVG()}</Box>
-          </Box>
-        </Box>
-
-        <Box sx={{ display: 'flex', alignItems: 'center' }}>
-          <Box sx={{ width: 24, height: 24, mr: '12px', display: 'flex' }}>
-            {checkmarkBlueSVG()}
-          </Box>
-          <Typography
-            sx={{
-              fontSize: 14,
-              color: '#2D2D47',
-              fontWeight: 500,
-              fontFamily: 'Nunito Sans'
-            }}
-          >
-            Items with a filled-in checkmark are included in your resume.
-          </Typography>
-        </Box>
-
+          Your Files
+        </Typography>
         <Divider sx={{ borderColor: '#47516B' }} />
-
-        {/* File Drop Area */}
-        <Box
-          sx={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            mt: '15px',
-            mb: '10px',
-            gap: '12px',
-            cursor: 'pointer'
-          }}
-          onDrop={handleDrop}
-          onDragOver={handleDragOver}
-          onClick={() => document.getElementById('file-upload')?.click()}
-        >
-          <Typography
-            sx={{
-              fontSize: 24,
-              color: '#9CA3AF',
-              fontFamily: 'Poppins',
-              fontWeight: 600
-            }}
-          >
-            {uploadedFiles.length === 0 ? 'No files yet...' : 'Your Uploaded Files'}
-          </Typography>
-          <Box sx={{ width: 'auto', height: 54, display: 'flex' }}>{fileIconSVG()}</Box>
-          <Typography
-            sx={{ fontSize: 16, textAlign: 'center', fontFamily: 'Nunito Sans' }}
-          >
-            Drop your file here or browse
-          </Typography>
-          <Typography
-            sx={{
-              fontSize: 14,
-              color: '#9CA3AF',
-              textAlign: 'center',
-              fontFamily: 'Nunito Sans'
-            }}
-          >
-            Maximum size: 50MB
-          </Typography>
-
-          <input
-            type='file'
-            id='file-upload'
-            multiple
-            style={{ display: 'none' }}
-            onChange={handleFileUpload}
-            accept='application/pdf, image/*'
-          />
-        </Box>
-
-        {/* Uploaded Files List */}
-        <Box
-          sx={{
-            maxHeight: uploadedFiles.length > 10 ? 531 : 'auto',
-            overflowY: uploadedFiles.length > 10 ? 'auto' : 'visible',
-            textWrap: 'wrap',
-            wordBreak: 'break-word',
-            paddingRight: 1
-          }}
-        >
-          <Stack spacing={2}>
-            {uploadedFiles.map((file, index) => (
-              <Box sx={{ display: 'flex', alignItems: 'center' }} key={file}>
-                <Box sx={{ width: 24, height: 24, mr: '10px', display: 'flex' }}>
-                  {checkmarkBlueSVG()}
-                </Box>
-                <Typography
-                  sx={{
-                    fontSize: 16,
-                    fontWeight: 500,
-                    color: '#2563EB',
-                    textDecoration: 'underline',
-                    fontFamily: 'Nunito Sans',
-                    cursor: 'pointer'
-                  }}
-                >
-                  {file}
-                </Typography>
-              </Box>
-            ))}
-          </Stack>
-        </Box>
+        <MediaUploadSection
+          files={files}
+          onFilesSelected={handleFilesSelected}
+          onDelete={handleDelete}
+          onNameChange={handleNameChange}
+          maxFiles={10}
+          maxSizeMB={50}
+          accessToken={accessToken ?? undefined}
+        />
       </Box>
     </Box>
   )

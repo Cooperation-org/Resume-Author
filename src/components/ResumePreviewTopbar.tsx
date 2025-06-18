@@ -168,7 +168,7 @@ const ResumePreviewTopbar: React.FC<ResumePreviewTopbarProps> = ({
         console.error('Resume is null, cannot prepare for VC')
         return
       }
-      const preparedResume = prepareResumeForVC(resume)
+      const preparedResume = prepareResumeForVC(resume, {})
       console.log('PREPARED FORM DATA', preparedResume)
 
       const signedResume = await instances.resumeVC.sign({
