@@ -13,7 +13,7 @@ import { useDispatch, useSelector } from 'react-redux'
 import Notification from '../common/Notification'
 import { logout } from '../../tools/auth'
 import { RootState } from '../../redux/store'
-
+import { clearAuth } from '../../redux/slices/auth'
 interface SidebarProps {
   onToggle: () => void
   isExpanded: boolean
@@ -69,6 +69,7 @@ const Sidebar = ({ onToggle, isExpanded }: SidebarProps) => {
   const handleLogoutClick = () => {
     setSelectedItem('logOut')
     logout()
+    dispatch(clearAuth())
     setShowNotification(true)
     navigate('/')
 
