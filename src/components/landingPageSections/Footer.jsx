@@ -116,7 +116,8 @@ const Footer = () => {
             }}
           >
             Contact Us:{' '}
-            <span
+            <a
+              href='mailto:support@resumeauthor.allskillscount.org'
               style={{
                 color: 'var(--Primary-Link, #2563EB)',
                 fontFamily: 'Nunito Sans',
@@ -133,8 +134,8 @@ const Footer = () => {
                 textUnderlinePosition: 'from-font'
               }}
             >
-              contact@email.com
-            </span>
+              support@resumeauthor.allskillscount.org
+            </a>
           </Typography>
         </Box>
       </Box>
