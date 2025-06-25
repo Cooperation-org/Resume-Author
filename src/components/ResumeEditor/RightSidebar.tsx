@@ -176,24 +176,90 @@ const RightSidebar = ({
     }
   }
 
-  const renderCredentialContent = (vc: any) => {
-    if (!vc?.credentialSubject?.achievement?.[0]?.name) {
-      return (
-        <Box sx={{ display: 'flex', alignItems: 'center' }}>
-          <CircularProgress size={16} sx={{ color: '#3A35A2', mr: 1 }} />
-          <Typography
-            sx={{
-              fontSize: 16,
-              fontWeight: 500,
-              color: '#9CA3AF',
-              fontFamily: 'Nunito Sans'
-            }}
-          >
-            Loading credential...
-          </Typography>
-        </Box>
-      )
+  const getCredentialName = (vc: any): string => {
+    try {
+      if (!vc || typeof vc !== 'object') {
+        return ''
+      }
+
+      const credentialSubject = vc.credentialSubject
+      if (!credentialSubject || typeof credentialSubject !== 'object') {
+        return ''
+      }
+
+      if (credentialSubject.employeeName) {
+        return `Performance Review: ${credentialSubject.employeeJobTitle || 'Unknown Position'}`
+      }
+      if (credentialSubject.volunteerWork) {
+        return `Volunteer: ${credentialSubject.volunteerWork}`
+      }
+      if (credentialSubject.role) {
+        return `Employment: ${credentialSubject.role}`
+      }
+      if (credentialSubject.credentialName) {
+        return credentialSubject.credentialName
+      }
+
+      if (
+        Array.isArray(credentialSubject.achievement) &&
+        credentialSubject.achievement.length > 0 &&
+        credentialSubject.achievement[0]?.name
+      ) {
+        return credentialSubject.achievement[0].name
+      }
+
+      return ''
+    } catch (error) {
+      console.error('Error getting credential name:', error)
+      return ''
     }
+  }
+
+  const getCredentialType = (vc: any): string => {
+    try {
+      if (!vc || typeof vc !== 'object') {
+        return 'Unknown'
+      }
+
+      const types = Array.isArray(vc.type) ? vc.type : []
+      if (types.includes('EmploymentCredential')) return 'Employment'
+      if (types.includes('VolunteeringCredential')) return 'Volunteer'
+      if (types.includes('PerformanceReviewCredential')) return 'Performance Review'
+      return 'Skill'
+    } catch (error) {
+      console.error('Error getting credential type:', error)
+      return 'Unknown'
+    }
+  }
+
+  const getValidVCs = (vcs: any[]): any[] => {
+    if (!Array.isArray(vcs)) return []
+
+    return vcs.filter(vc => {
+      try {
+        if (!vc || typeof vc !== 'object') {
+          return false
+        }
+
+        if (!vc.credentialSubject || typeof vc.credentialSubject !== 'object') {
+          return false
+        }
+
+        const credentialName = getCredentialName(vc)
+        if (!credentialName || credentialName.trim() === '') {
+          return false
+        }
+
+        return true
+      } catch (error) {
+        console.error('Error validating VC:', error)
+        return false
+      }
+    })
+  }
+
+  const renderCredentialContent = (vc: any) => {
+    const credentialName = getCredentialName(vc)
 
     return (
       <Typography
@@ -207,7 +273,7 @@ const RightSidebar = ({
         }}
         onClick={() => handleClaimToggle(vc.id)}
       >
-        {vc.credentialSubject.achievement[0].name}
+        {credentialName}
       </Typography>
     )
   }
@@ -228,10 +294,12 @@ const RightSidebar = ({
       )
     }
 
-    if (vcs && vcs.length > 0) {
+    const validVCs = getValidVCs(vcs)
+
+    if (validVCs && validVCs.length > 0) {
       return (
         <Stack spacing={2}>
-          {vcs.map((vc: any) => (
+          {validVCs.map((vc: any) => (
             <Box sx={{ display: 'flex', alignItems: 'center' }} key={vc.id}>
               <Box sx={{ width: 24, height: 24, mr: '10px', display: 'flex' }}>
                 {selectedClaims.includes(vc.id) ? checkmarkBlueSVG() : checkmarkgraySVG()}
