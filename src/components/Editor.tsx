@@ -26,7 +26,8 @@ import { useNavigate, useLocation } from 'react-router-dom'
 import {
   updateSection,
   setSelectedResume,
-  setActiveSection
+  setActiveSection,
+  resetToInitialState
 } from '../redux/slices/resume'
 import OptionalSectionsManager from './ResumeEditor/OptionalSectionCard'
 import { storeFileTokens } from '../firebase/storage'
@@ -109,15 +110,36 @@ const ResumeEditor: React.FC = () => {
   // Reference to store the original resume state for comparison
   const originalResumeRef = useRef<string | null>(null)
 
-  // Get resumeId from URL parameters
+  // Get resumeId and action from URL parameters
   const queryParams = new URLSearchParams(location.search)
   const resumeId = queryParams.get('id')
+  const action = queryParams.get('action')
 
   const activeSection = useSelector((state: RootState) => state.resume.activeSection)
   const resume = useSelector((state: RootState) => state?.resume.resume)
   const { instances, isInitialized, listFilesMetadata } = useGoogleDrive()
   const { accessToken } = useSelector((state: RootState) => state.auth)
   const refreshToken = getLocalStorage('refresh_token')
+
+  // Handle creating a new resume (clear form data)
+  useEffect(() => {
+    if (!resumeId && isInitialized) {
+      // Reset the entire Redux state to initial state
+      dispatch(resetToInitialState())
+      sessionStorage.removeItem('lastEditedResumeId')
+
+      // Clear any localStorage drafts that might interfere
+      const keys = Object.keys(localStorage)
+      const draftKeys = keys.filter(key => key.startsWith('resume_draft_'))
+      draftKeys.forEach(key => {
+        localStorage.removeItem(key)
+      })
+
+      originalResumeRef.current = null
+      setIsDirty(false)
+      setResumeName('Untitled')
+    }
+  }, [resumeId, isInitialized, dispatch])
 
   // Load resume data from Google Drive
   useEffect(() => {

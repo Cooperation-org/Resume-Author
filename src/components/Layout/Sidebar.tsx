@@ -59,7 +59,7 @@ const Sidebar = ({ onToggle, isExpanded }: SidebarProps) => {
   }
   const handleNewResumeClick = () => {
     setSelectedItem('add')
-    navigate('/resume/new')
+    window.location.href = '/resume/new'
   }
   const handleFAQClick = () => {
     setSelectedItem('faq')

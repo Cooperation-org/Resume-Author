@@ -1,6 +1,5 @@
 import { Box, Typography, Button, Paper } from '@mui/material'
 import ResumeCard from './ResumeCard'
-import { Link } from 'react-router-dom'
 import { useSelector, useDispatch } from 'react-redux'
 import { RootState, AppDispatch } from '../redux/store'
 import { useEffect } from 'react'
@@ -81,8 +80,7 @@ const ResumeScreen: React.FC = () => {
               borderRadius: '40px',
               '&:hover': { bgcolor: '#3f38b5' }
             }}
-            component={Link}
-            to='/'
+            onClick={() => (window.location.href = '/')}
           >
             Sign In
           </Button>
@@ -113,8 +111,9 @@ const ResumeScreen: React.FC = () => {
               borderRadius: '40px',
               '&:hover': { bgcolor: '#3f38b5' }
             }}
-            component={Link}
-            to='/resume/new'
+            onClick={() => {
+              window.location.href = '/resume/new'
+            }}
           >
             Create Your First Resume
           </Button>
@@ -168,8 +167,9 @@ const ResumeScreen: React.FC = () => {
             borderRadius: '40px',
             '&:hover': { bgcolor: '#3f38b5' }
           }}
-          component={Link}
-          to='/resume/new'
+          onClick={() => {
+            window.location.href = '/resume/new'
+          }}
         >
           Create Your First Resume
         </Button>
@@ -210,19 +210,24 @@ const ResumeScreen: React.FC = () => {
           My Resumes
         </Typography>
         {shouldShowCreateButton && (
-          <Link
+          <button
             style={{
               background: '#4F46E5',
               padding: '0.7rem 1rem',
               borderRadius: '40px',
               color: 'white',
               fontSize: '0.8rem',
-              fontWeight: 500
+              fontWeight: 500,
+              border: 'none',
+              cursor: 'pointer',
+              textDecoration: 'none'
             }}
-            to='/resume/new'
+            onClick={() => {
+              window.location.href = '/resume/new'
+            }}
           >
             Create new resume
-          </Link>
+          </button>
         )}
       </Box>
 
