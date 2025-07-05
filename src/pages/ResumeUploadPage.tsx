@@ -284,6 +284,16 @@ export default function ResumeUploadPage() {
       // Generate a temporary ID for the new resume
       const tempId = `temp-${Date.now()}`
 
+      // Save the data to localStorage so it persists on page reload
+      const draftKey = `resume_draft_${tempId}`
+      const draftWithTimestamp = {
+        ...transformedResume,
+        localStorageLastUpdated: new Date().toISOString(),
+        isTemporaryImport: true, // Flag to indicate this is from URL import
+        originalUrl: url // Store the original URL for reference
+      }
+      localStorage.setItem(draftKey, JSON.stringify(draftWithTimestamp))
+
       // Navigate to the resume editor with the loaded data
       navigate(`/resume/new?id=${tempId}`)
     } catch (err) {
