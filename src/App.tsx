@@ -12,6 +12,7 @@ import Login from './pages/login'
 import Home from './pages/home'
 import Resume from './pages/resume'
 import ImportPage from './pages/importPage'
+import ResumeUploadPage from './pages/ResumeUploadPage'
 import Error404 from './pages/error404'
 import LandingPage from './pages/allskillscoun-org'
 import './styles/App.css'
@@ -64,6 +65,7 @@ const App = () => {
           <Route path='/' element={<Home />} />
           <Route path='/resume/new' element={<Resume />} />
           <Route path='/resume/import' element={<ImportPage />} />
+          <Route path='/resume/upload' element={<ResumeUploadPage />} />
           <Route path='/resume/view' element={<PreviewPage />} />
           <Route path='/resume/view/:id' element={<PreviewPageFromDrive />} />
           <Route path='/auth/callback' element={<AuthCallback />} />
