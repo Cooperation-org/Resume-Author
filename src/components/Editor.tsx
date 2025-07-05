@@ -148,29 +148,64 @@ const ResumeEditor: React.FC = () => {
         setIsLoading(true)
 
         try {
-          const fileData = await instances.storage?.retrieve(resumeId)
+          // Check if this is a temporary import (starts with "temp-")
+          if (resumeId.startsWith('temp-')) {
+            // Load from localStorage instead of Google Drive
+            const draftKey = `resume_draft_${resumeId}`
+            const savedDraft = localStorage.getItem(draftKey)
 
-          if (fileData) {
-            const resumeData = fileData.data ?? fileData
+            if (savedDraft) {
+              const resumeData = JSON.parse(savedDraft)
 
-            // Dispatch to Redux
-            dispatch(setSelectedResume(resumeData))
+              // Dispatch to Redux
+              dispatch(setSelectedResume(resumeData))
 
-            // Store the original resume hash for dirty state comparison
-            originalResumeRef.current = computeResumeHash(resumeData)
+              // Store the original resume hash for dirty state comparison
+              originalResumeRef.current = computeResumeHash(resumeData)
 
-            // Try to set resume name if we can find it
-            try {
-              const name =
-                resumeData.contact?.fullName ?? resumeData.name ?? 'Untitled Resume'
-              setResumeName(name)
-            } catch (e) {
-              setResumeName('Untitled Resume')
+              // Try to set resume name if we can find it
+              try {
+                const name =
+                  resumeData.contact?.fullName ?? resumeData.name ?? 'Imported Resume'
+                setResumeName(name)
+              } catch (e) {
+                setResumeName('Imported Resume')
+              }
+
+              console.log(
+                'Resume loaded successfully from localStorage (temporary import)'
+              )
+            } else {
+              console.error('Temporary resume data not found in localStorage')
+              // Redirect back to upload page if data is missing
+              navigate('/resume/upload')
             }
-
-            console.log('Resume loaded successfully from Google Drive')
           } else {
-            console.error('Retrieved resume data is empty')
+            // Load from Google Drive as usual
+            const fileData = await instances.storage?.retrieve(resumeId)
+
+            if (fileData) {
+              const resumeData = fileData.data ?? fileData
+
+              // Dispatch to Redux
+              dispatch(setSelectedResume(resumeData))
+
+              // Store the original resume hash for dirty state comparison
+              originalResumeRef.current = computeResumeHash(resumeData)
+
+              // Try to set resume name if we can find it
+              try {
+                const name =
+                  resumeData.contact?.fullName ?? resumeData.name ?? 'Untitled Resume'
+                setResumeName(name)
+              } catch (e) {
+                setResumeName('Untitled Resume')
+              }
+
+              console.log('Resume loaded successfully from Google Drive')
+            } else {
+              console.error('Retrieved resume data is empty')
+            }
           }
         } catch (error) {
           console.error('Error retrieving resume data:', error)
@@ -181,7 +216,7 @@ const ResumeEditor: React.FC = () => {
 
       fetchResumeData()
     }
-  }, [resumeId, isInitialized, dispatch, instances.storage])
+  }, [resumeId, isInitialized, dispatch, instances.storage, navigate])
 
   // Check if resume has been modified using the optimized hash comparison
   useEffect(() => {
@@ -567,6 +602,23 @@ const ResumeEditor: React.FC = () => {
         })
         originalResumeRef.current = newHash
         setIsDirty(false)
+
+        // If this was a temporary import, clean up localStorage and update URL
+        if (resumeId && resumeId.startsWith('temp-')) {
+          // Clean up the temporary localStorage entry
+          const draftKey = `resume_draft_${resumeId}`
+          localStorage.removeItem(draftKey)
+
+          // Update the URL to use the real Google Drive ID
+          if (savedResume.id) {
+            const newUrl = `/resume/new?id=${savedResume.id}`
+            window.history.replaceState({}, '', newUrl)
+            console.log(
+              'Updated URL from temporary to real ID after signing:',
+              savedResume.id
+            )
+          }
+        }
       }
 
       console.log('Saved Resume:', savedResume)
@@ -645,6 +697,20 @@ const ResumeEditor: React.FC = () => {
       // Update our reference to mark as not dirty
       originalResumeRef.current = computeResumeHash(resume)
       setIsDirty(false)
+
+      // If this was a temporary import, clean up localStorage and update URL
+      if (resumeId && resumeId.startsWith('temp-')) {
+        // Clean up the temporary localStorage entry
+        const draftKey = `resume_draft_${resumeId}`
+        localStorage.removeItem(draftKey)
+
+        // Update the URL to use the real Google Drive ID
+        if (file.id) {
+          const newUrl = `/resume/new?id=${file.id}`
+          window.history.replaceState({}, '', newUrl)
+          console.log('Updated URL from temporary to real ID after signing:', file.id)
+        }
+      }
     } catch (error) {
       console.error('Error signing and saving:', error)
     } finally {
