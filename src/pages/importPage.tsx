@@ -1,6 +1,5 @@
 import { Box, Button, Typography } from '@mui/material'
 import { styled } from '@mui/system'
-import { useAuth0 } from '@auth0/auth0-react'
 import { SVGStartFromScratchicon, SVGUpload } from '../assets/svgs'
 
 const InnerContainer = styled(Box)(() => ({
@@ -25,16 +24,6 @@ const Section = styled(Box)(() => ({
   cursor: 'pointer'
 }))
 
-const DisabledSection = styled(Section)(() => ({
-  backgroundColor: '#F3F4F6',
-  border: '1px solid #D1D5DB',
-  cursor: 'not-allowed',
-  opacity: 0.7,
-  '& h6, & svg path, & p': {
-    color: '#6B7280'
-  }
-}))
-
 const StyledButton = styled(Button)({
   color: '#2563EB',
   textAlign: 'center',
@@ -50,11 +39,11 @@ const StyledButton = styled(Button)({
 })
 
 export default function ImportPage(props: any) {
-  const { user } = useAuth0()
-  console.log(':  LoginButton  user', user)
-
   const handleFromScratch = () => {
     window.location.href = '/resume/new'
+  }
+  const handleUpload = () => {
+    window.location.href = '/resume/upload'
   }
   return (
     <Box
@@ -103,41 +92,31 @@ export default function ImportPage(props: any) {
               Build a resume from a blank template
             </Typography>
           </Section>
-          <DisabledSection sx={{ width: { xs: '250px', md: '400px' } }}>
+          <Section onClick={handleUpload} sx={{ width: { xs: '250px', md: '400px' } }}>
             <Typography
               variant='h6'
               sx={{
-                color: '#6B7280',
-                fontWeight: 'bold',
-                opacity: 0.7
+                color: '#07142B',
+                fontWeight: 'bold'
               }}
             >
               Upload Resume
             </Typography>
-            <Box sx={{ opacity: 0.7 }}>
-              <SVGUpload />
-            </Box>
+            <SVGUpload />
             <Box
               sx={{
                 display: 'flex',
                 flexDirection: 'column',
-                alignItems: 'center',
-                opacity: 0.7
+                alignItems: 'center'
               }}
             >
               <Box sx={{ display: 'flex', gap: 1 }}>
-                <Typography variant='body2' sx={{ color: '#6B7280' }}>
-                  Supported file types
+                <Typography variant='body2' sx={{ color: '#1F2937' }}>
+                  Import from verifiable credential URL
                 </Typography>
               </Box>
-              <Typography
-                variant='caption'
-                sx={{ color: '#9CA3AF', textAlign: 'center', marginX: 12 }}
-              >
-                (Coming Soon)
-              </Typography>
             </Box>
-          </DisabledSection>
+          </Section>
         </Box>
         <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
           <StyledButton onClick={() => (window.location.href = '/myresumes')}>
