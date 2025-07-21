@@ -142,7 +142,9 @@ function TextEditor({
             }
           }
         },
-        clipboard: PlainClipboard,
+        clipboard: {
+          matchVisual: false
+        },
         history: {
           delay: 1000,
           maxStack: 100,
