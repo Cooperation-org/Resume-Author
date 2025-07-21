@@ -56,11 +56,9 @@ const ResumeScreen: React.FC = () => {
       setFriendlyError(null)
     } else if (status === 'failed') {
       // Handle specific error messages from fetchUserResumes
-      if (
-        error?.includes('No authentication token found') ||
-        error?.includes('Authentication expired') ||
-        error?.includes('Session expired')
-      ) {
+      if (error?.includes('No authentication token found') ||
+          error?.includes('Authentication expired') ||
+          error?.includes('Session expired')) {
         setFriendlyError(error)
         if (isAuthenticated) {
           handleLogout()
@@ -80,7 +78,9 @@ const ResumeScreen: React.FC = () => {
         setFriendlyError('Please log in to view your resumes.')
       } else {
         // For any other errors, show the error message if available
-        setFriendlyError(error || 'An error occurred while loading your resumes.')
+        setFriendlyError(
+          error || 'An error occurred while loading your resumes.'
+        )
       }
     } else if (status === 'succeeded') {
       setFriendlyError(null)

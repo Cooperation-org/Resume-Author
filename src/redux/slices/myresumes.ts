@@ -85,7 +85,7 @@ export const fetchUserResumes = createAsyncThunk('resume/fetchUserResumes', asyn
     const refreshToken = getLocalStorage('refresh_token')
 
     if (!accessToken || !refreshToken) {
-      throw new Error('Access token not found')
+      throw new Error('No authentication token found. Please sign in to view your resumes.')
     }
 
     // Get singleton instance and initialize it
@@ -105,15 +105,33 @@ export const fetchUserResumes = createAsyncThunk('resume/fetchUserResumes', asyn
     }
   } catch (error) {
     console.error('Error fetching resumes:', error)
-    if (
-      error instanceof Error &&
-      /auth|token|credential|OAuth|authentication/i.test(error.message)
-    ) {
-      // Refresh access token
-      console.log('Refreshing access token...')
-      await refreshAccessToken(getLocalStorage('refresh_token') as string)
+    
+    // Check for authentication errors
+    if (error instanceof Error) {
+      // Google Drive authentication errors
+      if (error.message.includes('401') || 
+          error.message.includes('authentication') || 
+          error.message.includes('OAuth') ||
+          error.message.includes('credential')) {
+        throw new Error('Authentication expired. Please sign in again to access your resumes.')
+      }
+      
+      // Check for refresh token errors
+      if (/auth|token|credential|OAuth|authentication/i.test(error.message)) {
+        try {
+          console.log('Attempting to refresh access token...')
+          await refreshAccessToken(getLocalStorage('refresh_token') as string)
+          // If refresh succeeds, throw a more user-friendly error
+          throw new Error('Please refresh the page to continue.')
+        } catch (refreshError) {
+          console.error('Failed to refresh token:', refreshError)
+          throw new Error('Session expired. Please sign in again.')
+        }
+      }
     }
-    throw error
+    
+    // For any other errors, throw a generic message
+    throw new Error('Unable to load resumes. Please try again later.')
   }
 })
 
