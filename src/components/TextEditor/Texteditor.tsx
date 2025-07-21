@@ -23,15 +23,16 @@ if (!Quill.imports['ui/icons']['link-to-credentials']) {
   </defs>
 </svg>`
 
-icons['undo'] = `<svg viewBox="0 0 18 18">
+  icons['undo'] = `<svg viewBox="0 0 18 18">
   <path d="M9 14c-2.8 0-5-2.2-5-5s2.2-5 5-5h4" stroke="currentColor" fill="none" stroke-width="2"/>
   <path d="M13 1l4 3-4 3" stroke="currentColor" fill="none" stroke-width="2"/>
 </svg>`
 
-icons['redo'] = `<svg viewBox="0 0 18 18">
+  icons['redo'] = `<svg viewBox="0 0 18 18">
   <path d="M9 14c2.8 0 5-2.2 5-5s-2.2-5-5-5H5" stroke="currentColor" fill="none" stroke-width="2"/>
   <path d="M5 1L1 4l4 3" stroke="currentColor" fill="none" stroke-width="2"/>
 </svg>`
+}
 
 // Only register BadgeBlot once globally
 if (!Quill.imports['blots/badge']) {
