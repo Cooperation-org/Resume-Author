@@ -298,13 +298,7 @@ const ExperienceSection: React.FC<{ items: WorkExperience[] }> = ({ items }) => 
           endDate: item.endDate
         })
 
-        // Truncate very long descriptions for preview
-        const MAX_DESC_LENGTH = 800 // characters
-        let description = item.description || ''
-        const isTruncated = description.length > MAX_DESC_LENGTH
-        if (isTruncated) {
-          description = description.substring(0, MAX_DESC_LENGTH) + '...'
-        }
+        const description = item.description || ''
 
         return (
           <Box key={item.id || `exp-${index}`} sx={{ mb: '20px' }}> {/* Reduced margin */}
@@ -361,17 +355,7 @@ const ExperienceSection: React.FC<{ items: WorkExperience[] }> = ({ items }) => 
                 >
                   <HTMLWithVerifiedLinks htmlContent={description} />
                 </Typography>
-                {isTruncated && (
-                  <Typography 
-                    variant='caption' 
-                    sx={{ 
-                      fontStyle: 'italic',
-                      color: '#666'
-                    }}
-                  >
-                    (Content truncated for preview)
-                  </Typography>
-                )}
+
               </>
             )}
           </Box>
@@ -869,15 +853,7 @@ function usePagination(content: ReactNode[]) {
       const contentMaxHeightPx =
         fullPageHeightPx - HEADER_HEIGHT_PX - FOOTER_HEIGHT_PX - CONTENT_PADDING_TOP - CONTENT_PADDING_BOTTOM
 
-      console.log('Page calculations:', {
-        fullPageHeightPx,
-        headerHeight: HEADER_HEIGHT_PX,
-        footerHeight: FOOTER_HEIGHT_PX,
-        paddingTop: CONTENT_PADDING_TOP,
-        paddingBottom: CONTENT_PADDING_BOTTOM,
-        contentMaxHeightPx,
-        contentMaxHeightMm: contentMaxHeightPx / 3.779527559
-      })
+      // Page calculations done silently
 
       // Wait for images and fonts to load
       measureRef.current.style.width = PAGE_SIZE.width
@@ -898,12 +874,7 @@ function usePagination(content: ReactNode[]) {
         const marginBottom = parseFloat(computedStyle.marginBottom)
         const height = (el as HTMLElement).offsetHeight + marginTop + marginBottom
         
-        console.log(`Section ${idx}:`, {
-          height,
-          marginTop,
-          marginBottom,
-          offsetHeight: (el as HTMLElement).offsetHeight
-        })
+        // Section measurements done silently
         return height
       })
 
@@ -912,25 +883,19 @@ function usePagination(content: ReactNode[]) {
       const paginated: ReactNode[][] = []
       
       // Add a buffer to prevent content from touching the footer
-      const SAFETY_MARGIN = 40 // Increased to prevent overlap
+      const SAFETY_MARGIN = 20 // Reduced from 40 to allow more content per page
       const effectiveMaxHeight = contentMaxHeightPx - SAFETY_MARGIN
 
       for (let i = 0; i < content.length; i++) {
         const section = content[i]
         const sectionHeight = contentHeights[i] || 0
         
-        console.log(`Processing section ${i}:`, {
-          currentHeight,
-          sectionHeight,
-          wouldBe: currentHeight + sectionHeight,
-          maxHeight: effectiveMaxHeight,
-          fits: currentHeight + sectionHeight <= effectiveMaxHeight
-        })
+        // Processing section silently
         
         // Check if adding this section would exceed the page height
         if (currentHeight > 0 && currentHeight + sectionHeight > effectiveMaxHeight) {
           // Start a new page
-          console.log(`Breaking to new page at section ${i}`)
+          // Breaking to new page
           paginated.push([...currentPage])
           currentPage = []
           currentHeight = 0
@@ -947,11 +912,7 @@ function usePagination(content: ReactNode[]) {
         paginated.push([])
       }
 
-      console.log('Final pagination:', {
-        totalSections: content.length,
-        totalPages: paginated.length,
-        sectionsPerPage: paginated.map(p => p.length)
-      })
+      // Pagination complete
 
       setPages(paginated)
     }
@@ -990,13 +951,7 @@ const ResumePreview: React.FC<{ data?: Resume; forcedId?: string }> = ({
   const contentSections: ReactNode[] = []
   
   if (resume) {
-    console.log('Building content sections:', {
-      hasSummary: !!resume.summary,
-      hasSocialLinks: !!resume.contact?.socialLinks,
-      experienceCount: resume.experience?.items?.length || 0,
-      educationCount: resume.education?.items?.length || 0,
-      skillsCount: resume.skills?.items?.length || 0
-    })
+    // Building content sections
 
     if (resume.summary) {
       contentSections.push(<SummarySection key='summary' summary={resume.summary} />)
@@ -1020,13 +975,7 @@ const ResumePreview: React.FC<{ data?: Resume; forcedId?: string }> = ({
           endDate: item.endDate
         })
 
-        // Truncate very long descriptions for preview
-        const MAX_DESC_LENGTH = 800 // characters
-        let description = item.description || ''
-        const isTruncated = description.length > MAX_DESC_LENGTH
-        if (isTruncated) {
-          description = description.substring(0, MAX_DESC_LENGTH) + '...'
-        }
+        const description = item.description || ''
 
         contentSections.push(
           <Box key={`experience-${item.id || index}`} sx={{ mb: '20px' }}>
@@ -1083,17 +1032,7 @@ const ResumePreview: React.FC<{ data?: Resume; forcedId?: string }> = ({
                 >
                   <HTMLWithVerifiedLinks htmlContent={description} />
                 </Typography>
-                {isTruncated && (
-                  <Typography 
-                    variant='caption' 
-                    sx={{ 
-                      fontStyle: 'italic',
-                      color: '#666'
-                    }}
-                  >
-                    (Content truncated for preview)
-                  </Typography>
-                )}
+
               </>
             )}
           </Box>
@@ -1149,7 +1088,7 @@ const ResumePreview: React.FC<{ data?: Resume; forcedId?: string }> = ({
   // Now use pagination with the built content sections
   const { pages, measureRef } = usePagination(contentSections)
 
-  console.log('Content sections built:', contentSections.length, 'Pages:', pages.length)
+  // Content sections built
 
   if (!resume) return null
 

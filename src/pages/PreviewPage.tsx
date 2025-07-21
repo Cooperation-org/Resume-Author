@@ -33,7 +33,61 @@ const PreviewPage = () => {
         const fileData = await storage.retrieve(resumeId)
 
         if (fileData?.data ?? fileData) {
-          setResumeData(fileData.data)
+          // If it's a VC format, transform it
+          const data = fileData.data || fileData
+          
+          console.log('[PreviewPage.tsx] Raw resume content:', data)
+          
+          // Check if this is a signed VC (has credentialSubject)
+          if (data.credentialSubject) {
+            // For signed VCs, we need to properly extract all the fields
+            // The summary is stored in credentialSubject.professionalSummary.credentialSubject.narrative
+            const credentialSubject = data.credentialSubject
+            
+            // Extract professional summary from the nested structure
+            // It's at the root level of data for signed resumes
+            const professionalSummaryText = data.professionalSummary?.credentialSubject?.narrative || 
+                                           credentialSubject?.professionalSummary?.credentialSubject?.narrative || 
+                                           '';
+            
+            // Extract the resume data from the VC format
+            const transformedData = {
+              ...data,
+              // Make sure summary is at the top level where the preview expects it
+              summary: professionalSummaryText || 
+                       credentialSubject?.narrative?.text || 
+                       credentialSubject?.summary || 
+                       data.summary || 
+                       '',
+              // Preserve other fields that might be nested
+              contact: credentialSubject?.person?.contact || data.contact,
+              experience: credentialSubject?.experience ? { items: credentialSubject.experience } : data.experience,
+              education: credentialSubject?.educationAndLearning ? { items: credentialSubject.educationAndLearning } : data.education,
+              skills: credentialSubject?.skills ? { items: credentialSubject.skills } : data.skills,
+              certifications: credentialSubject?.certifications ? { items: credentialSubject.certifications } : data.certifications,
+              professionalAffiliations: credentialSubject?.professionalAffiliations ? { items: credentialSubject.professionalAffiliations } : data.professionalAffiliations,
+              projects: credentialSubject?.projects ? { items: credentialSubject.projects } : data.projects,
+              volunteerWork: credentialSubject?.volunteerWork ? { items: credentialSubject.volunteerWork } : data.volunteerWork,
+              languages: credentialSubject?.languages ? { items: credentialSubject.languages } : data.languages,
+              hobbiesAndInterests: credentialSubject?.hobbiesAndInterests || data.hobbiesAndInterests,
+              publications: credentialSubject?.publications ? { items: credentialSubject.publications } : data.publications
+            }
+            
+            console.log('[PreviewPage.tsx] Transformed VC data:', {
+              originalSummary: credentialSubject?.narrative?.text,
+              transformedSummary: transformedData.summary,
+              hasSummary: !!transformedData.summary
+            })
+            
+            setResumeData(transformedData)
+          } else {
+            // It's already in resume format
+            console.log('[PreviewPage.tsx] Resume format data:', {
+              summary: data.summary,
+              hasSummary: !!data.summary
+            })
+            setResumeData(data)
+          }
         } else {
           setResumeData(fileData)
         }

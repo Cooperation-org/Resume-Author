@@ -19,7 +19,18 @@ type RawCredentialData = {
   content?: {
     credentialSubject?: Record<string, any>
   }
-  credentialSubject?: Record<string, any>
+  credentialSubject?: Record<string, any> & {
+    professionalSummary?: {
+      credentialSubject?: {
+        narrative?: string
+      }
+    }
+  }
+  professionalSummary?: {
+    credentialSubject?: {
+      narrative?: string
+    }
+  }
   issuanceDate?: string
   data?: Record<string, any>
 }
@@ -97,11 +108,27 @@ const ResumePreviewDialog: React.FC<ResumePreviewDialogProps> = ({
 
         const fileData = await storage.retrieve(id)
 
-        const parsedContent: RawCredentialData = fileData?.data || {}
+        // Check if this is an unsigned resume (has summary at top level of data)
+        if (fileData?.data && fileData.data.summary) {
+          // It's an unsigned resume, use it directly
+          setResumeData(fileData.data)
+          setIsLoading(false)
+          return
+        }
+
+        // For signed resumes, fileData.data contains the full credential
+        const parsedContent: RawCredentialData = fileData?.data || fileData || {}
 
         const resumeContent: Record<string, any> = parsedContent.content
           ? parsedContent.content.credentialSubject || {}
           : parsedContent.credentialSubject || {}
+
+        // Professional summary can be at different locations depending on the format
+        // For signed resumes, it's often at the root level of parsedContent
+        const professionalSummaryText = parsedContent.professionalSummary?.credentialSubject?.narrative || 
+                                       resumeContent.professionalSummary?.credentialSubject?.narrative || 
+                                       parsedContent.credentialSubject?.professionalSummary?.credentialSubject?.narrative || 
+                                       '';
 
         const transformedResumeData = {
           id: '',
@@ -139,7 +166,9 @@ const ResumePreviewDialog: React.FC<ResumePreviewDialogProps> = ({
               resumeContent.person?.contact?.socialLinks || {}
             )
           },
-          summary: safeGet(resumeContent, ['summary'], '') || safeGet(resumeContent, ['narrative', 'text'], ''),
+          summary: professionalSummaryText || 
+                   safeGet(resumeContent, ['summary'], '') || 
+                   safeGet(resumeContent, ['narrative', 'text'], ''),
           experience: {
             items: [
               ...(resumeContent.employmentHistory || []),
@@ -287,7 +316,7 @@ const ResumePreviewDialog: React.FC<ResumePreviewDialogProps> = ({
           }
         }
 
-        console.log('Transformed Resume Data:', transformedResumeData)
+        console.log('[ResumePreviewDialog.tsx] Transformed Resume Data:', transformedResumeData)
 
         setResumeData(transformedResumeData)
         setIsLoading(false)

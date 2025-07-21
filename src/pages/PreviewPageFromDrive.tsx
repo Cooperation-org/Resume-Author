@@ -52,6 +52,12 @@ const PreviewPageFromDrive: React.FC = () => {
   const exportResumeToPDF = () => {
     if (!resumeData) return
 
+    console.log('PDF Export - Resume data:', {
+      hasSummary: !!resumeData.summary,
+      summaryContent: resumeData.summary,
+      fullData: resumeData
+    })
+
     const element = document.getElementById('resume-preview')
     if (!element) return
 
@@ -109,6 +115,10 @@ const PreviewPageFromDrive: React.FC = () => {
         }
 
         console.log('Raw resume content:', resumeContent)
+        console.log('Summary extraction:', {
+          directSummary: resumeContent.summary,
+          professionalSummaryNarrative: resumeContent.professionalSummary?.credentialSubject?.narrative
+        })
 
         const transformedResumeData: Resume = {
           id: id ?? '',
@@ -168,11 +178,10 @@ const PreviewPageFromDrive: React.FC = () => {
                 {}
             )
           },
-          summary: safeGet(
-            resumeContent,
-            ['narrative', 'text'],
-            safeGet(resumeContent, ['summary'], '')
-          ),
+          summary: safeGet(resumeContent, ['summary'], '') || 
+                   safeGet(resumeContent, ['professionalSummary', 'credentialSubject', 'narrative'], '') ||
+                   safeGet(resumeContent, ['narrative', 'text'], '') ||
+                   safeGet(resumeContent, ['person', 'narrative', 'text'], ''),
           experience: {
             items: [
               ...(resumeContent.employmentHistory ?? []),
@@ -500,7 +509,7 @@ const PreviewPageFromDrive: React.FC = () => {
           position: 'fixed',
           bottom: '20px',
           right: '20px',
-          zIndex: 1000,
+          zIndex: 2000, // Increased from 1000 to ensure it's above footer
           display: { xs: 'none', sm: 'block' },
           '@media print': {
             display: 'none'

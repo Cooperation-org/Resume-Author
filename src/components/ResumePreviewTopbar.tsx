@@ -151,7 +151,7 @@ const ResumePreviewTopbar: React.FC<ResumePreviewTopbarProps> = ({
   const handleSignAndSave = async () => {
     if (!instances?.resumeVC || !instances?.resumeManager) {
       console.error('Required services not available')
-      return
+      return null
     }
 
     try {
@@ -169,7 +169,7 @@ const ResumePreviewTopbar: React.FC<ResumePreviewTopbarProps> = ({
 
       if (!resume) {
         console.error('Resume is null, cannot prepare for VC')
-        return
+        return null
       }
       const preparedResume = prepareResumeForVC(resume, {})
       console.log('PREPARED FORM DATA', preparedResume)
@@ -217,8 +217,12 @@ const ResumePreviewTopbar: React.FC<ResumePreviewTopbarProps> = ({
       })
 
       console.log('Resume successfully signed and saved:', signedResume)
+      
+      // Return the file ID for navigation
+      return file.id
     } catch (error) {
       console.error('Error signing and saving:', error)
+      return null
     }
   }
 
@@ -227,12 +231,16 @@ const ResumePreviewTopbar: React.FC<ResumePreviewTopbarProps> = ({
       setIsSigningSaving(true)
     }
 
-    await handleSignAndSave()
+    const fileId = await handleSignAndSave()
 
     if (typeof setIsSigningSaving === 'function') {
       setIsSigningSaving(false)
     }
-    navigate('/resume/import')
+    
+    // Navigate to the signed version if we have a file ID
+    if (fileId) {
+      navigate(`/resume/view/${fileId}`)
+    }
   }
 
   const getButtonSx = (baseWidth: string) => ({

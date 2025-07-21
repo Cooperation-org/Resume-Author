@@ -714,6 +714,9 @@ const ResumeEditor: React.FC = () => {
         }
       }
       dispatch(fetchUserResumes() as any)
+
+      // Navigate to the preview page to view the signed PDF
+      navigate(`/resume/view?id=${file.id}`)
     } catch (error) {
       console.error('Error signing and saving:', error)
     } finally {
