@@ -139,7 +139,7 @@ const ResumePreviewDialog: React.FC<ResumePreviewDialogProps> = ({
               resumeContent.person?.contact?.socialLinks || {}
             )
           },
-          summary: safeGet(resumeContent, ['narrative', 'text'], ''),
+          summary: safeGet(resumeContent, ['summary'], '') || safeGet(resumeContent, ['narrative', 'text'], ''),
           experience: {
             items: [
               ...(resumeContent.employmentHistory || []),

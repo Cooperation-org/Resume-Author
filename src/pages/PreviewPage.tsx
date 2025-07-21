@@ -131,6 +131,7 @@ const PreviewPage = () => {
         setIsDraftSaving={setIsDraftSaving}
         setIsSigningSaving={setIsSigningSaving}
         resumeId={resumeId}
+        resumeData={resumeData} // Pass resumeData
       />
 
       <Box

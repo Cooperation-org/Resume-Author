@@ -81,6 +81,7 @@ interface ResumePreviewTopbarProps {
   setIsDraftSaving?: React.Dispatch<React.SetStateAction<boolean>>
   setIsSigningSaving?: React.Dispatch<React.SetStateAction<boolean>>
   resumeId?: string | null
+  resumeData?: any // Add resumeData prop
 }
 
 const ResumePreviewTopbar: React.FC<ResumePreviewTopbarProps> = ({
@@ -88,10 +89,12 @@ const ResumePreviewTopbar: React.FC<ResumePreviewTopbarProps> = ({
   isSigningSaving = false,
   setIsDraftSaving,
   setIsSigningSaving,
-  resumeId
+  resumeId,
+  resumeData // Add resumeData to destructuring
 }) => {
   const navigate = useNavigate()
-  const resume = useSelector((state: RootState) => state?.resume.resume)
+  const reduxResume = useSelector((state: RootState) => state?.resume.resume)
+  const resume = resumeData || reduxResume // Use resumeData if provided, otherwise fall back to Redux
   const { instances } = useGoogleDrive()
   const accessToken = getLocalStorage('auth')
   const refreshToken = getLocalStorage('refresh_token')
