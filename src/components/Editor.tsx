@@ -100,6 +100,25 @@ function forceCredentialJsonString(sectionArr: any[]): any[] {
   })
 }
 
+function ensureAbsoluteIds(obj: any) {
+  if (typeof obj !== 'object' || obj === null) return
+  if (obj.id && typeof obj.id === 'string' && !obj.id.match(/^urn:|^https?:/)) {
+    obj.id = 'urn:uuid:' + obj.id
+  }
+  if (
+    obj['@id'] &&
+    typeof obj['@id'] === 'string' &&
+    !obj['@id'].match(/^urn:|^https?:/)
+  ) {
+    obj['@id'] = 'urn:uuid:' + obj['@id']
+  }
+  for (const key in obj) {
+    if (typeof obj[key] === 'object') {
+      ensureAbsoluteIds(obj[key])
+    }
+  }
+}
+
 const ResumeEditor: React.FC = () => {
   const navigate = useNavigate()
   const location = useLocation()
@@ -730,6 +749,9 @@ const ResumeEditor: React.FC = () => {
           preparedResume.credentialSubject.volunteerWork
         )
       }
+
+      // Ensure all id/@id fields are absolute URIs before signing
+      ensureAbsoluteIds(preparedResume)
 
       // Sign resume
       const signedResume = await instances.resumeVC.sign({
