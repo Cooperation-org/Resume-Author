@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { Box, Typography } from '@mui/material'
 import TextEditor from '../../TextEditor/Texteditor'
 import { useDispatch, useSelector } from 'react-redux'
@@ -22,31 +22,46 @@ export default function ProfessionalSummary({
 }: Readonly<ProfessionalSummaryProps>) {
   const dispatch = useDispatch()
   const resume = useSelector((state: RootState) => state.resume.resume)
+  const updateTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   const [description, setDescription] = useState('')
 
   // ✅ Load existing summary from Redux if available
   useEffect(() => {
-    if (resume?.summary) {
+    if (resume?.summary !== undefined) {
       // Prevent unnecessary state updates
       if (resume.summary !== description) {
-        setDescription(resume.summary)
+        setDescription(resume.summary || '')
       }
     }
-  }, [description, resume])
+  }, [resume?.summary]) // Only depend on resume.summary, not description
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (updateTimeoutRef.current) {
+        clearTimeout(updateTimeoutRef.current)
+      }
+    }
+  }, [])
 
   const handleDescriptionChange = (val: string) => {
-    // ✅ Prevent unnecessary Redux updates
-    if (val !== description) {
-      setDescription(val)
+    // Always update local state immediately for responsiveness
+    setDescription(val)
 
+    // Debounce Redux updates
+    if (updateTimeoutRef.current) {
+      clearTimeout(updateTimeoutRef.current)
+    }
+
+    updateTimeoutRef.current = setTimeout(() => {
       dispatch(
         updateSection({
           sectionId: 'summary',
           content: val
         })
       )
-    }
+    }, 500)
   }
 
   return (
@@ -58,6 +73,7 @@ export default function ProfessionalSummary({
       </Typography>
 
       <TextEditor
+        key="professional-summary-editor"
         value={description}
         onChange={handleDescriptionChange}
         onAddCredential={onAddCredential}
