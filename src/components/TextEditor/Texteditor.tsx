@@ -8,8 +8,11 @@ import CredentialOverlay from '../CredentialsOverlay'
 const Delta = Quill.import('delta')
 const BaseClipboard = Quill.import('modules/clipboard')
 
+// Track if we've already registered custom components
+let hasRegisteredCustomComponents = false;
+
 // Only register icons once globally
-if (!Quill.imports['ui/icons']['link-to-credentials']) {
+if (!hasRegisteredCustomComponents) {
   const icons = Quill.import('ui/icons')
   icons['link-to-credentials'] =
   `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="25" viewBox="0 0 24 25" fill="none">
@@ -32,10 +35,8 @@ if (!Quill.imports['ui/icons']['link-to-credentials']) {
   <path d="M9 14c2.8 0 5-2.2 5-5s-2.2-5-5-5H5" stroke="currentColor" fill="none" stroke-width="2"/>
   <path d="M5 1L1 4l4 3" stroke="currentColor" fill="none" stroke-width="2"/>
 </svg>`
-}
-
-// Only register BadgeBlot once globally
-if (!Quill.imports['blots/badge']) {
+  
+  // Register BadgeBlot
   const BlockEmbed = Quill.import('blots/block/embed')
   class BadgeBlot extends BlockEmbed {
     static blotName = 'badge'
@@ -51,6 +52,8 @@ if (!Quill.imports['blots/badge']) {
     }
   }
   Quill.register(BadgeBlot)
+  
+  hasRegisteredCustomComponents = true;
 }
 
 // Create a factory function for clipboard module
