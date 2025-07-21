@@ -252,13 +252,15 @@ const PageFooter: React.FC<{
 const SummarySection: React.FC<{ summary?: string }> = ({ summary }) => {
   if (!summary) return null
   return (
-    <Box sx={{ mb: '20px' }}> {/* Reduced margin */}
+    <Box sx={{ mb: '20px' }}>
+      {' '}
+      {/* Reduced margin */}
       <SectionTitle>Professional Summary</SectionTitle>
       <Typography
         variant='body2'
-        sx={{ 
-          color: '#000', 
-          fontWeight: 400, 
+        sx={{
+          color: '#000',
+          fontWeight: 400,
           fontSize: '14px', // Reduced from 16px
           fontFamily: 'Arial',
           lineHeight: 1.5
@@ -279,8 +281,12 @@ const SocialLinksSection: React.FC<{
   if (!hasLinks) return null
 
   return (
-    <Box sx={{ mb: '20px' }}> {/* Reduced margin */}
-      <Box sx={{ display: 'flex', gap: '15px', flexWrap: 'wrap', flexDirection: 'row' }}> {/* Reduced gap */}
+    <Box sx={{ mb: '20px' }}>
+      {' '}
+      {/* Reduced margin */}
+      <Box sx={{ display: 'flex', gap: '15px', flexWrap: 'wrap', flexDirection: 'row' }}>
+        {' '}
+        {/* Reduced gap */}
         {Object.entries(socialLinks).map(([platform, url]) =>
           url ? (
             <Box key={platform}>
@@ -380,7 +386,9 @@ function renderDateOrDuration({
 const ExperienceSection: React.FC<{ items: WorkExperience[] }> = ({ items }) => {
   if (!items?.length) return null
   return (
-    <Box sx={{ mb: '20px' }}> {/* Reduced margin */}
+    <Box sx={{ mb: '20px' }}>
+      {' '}
+      {/* Reduced margin */}
       <SectionTitle>Work Experience</SectionTitle>
       {items.map((item, index) => {
         const dateText = renderDateOrDuration({
@@ -405,9 +413,10 @@ const ExperienceSection: React.FC<{ items: WorkExperience[] }> = ({ items }) => 
           description = description.substring(0, MAX_DESC_LENGTH) + '...'
         }
 
-
         return (
-          <Box key={item.id || `exp-${index}`} sx={{ mb: '20px' }}> {/* Reduced margin */}
+          <Box key={item.id || `exp-${index}`} sx={{ mb: '20px' }}>
+            {' '}
+            {/* Reduced margin */}
             <Box sx={{ display: 'flex', alignItems: 'center' }}>
               {item.verificationStatus === 'verified' && <BlueVerifiedBadge />}
               <Typography
@@ -451,9 +460,9 @@ const ExperienceSection: React.FC<{ items: WorkExperience[] }> = ({ items }) => 
               <>
                 <Typography
                   variant='body2'
-                  sx={{ 
-                    mb: 1, 
-                    fontWeight: 400, 
+                  sx={{
+                    mb: 1,
+                    fontWeight: 400,
                     fontSize: '14px', // Reduced font size for descriptions
                     fontFamily: 'Arial',
                     lineHeight: 1.5 // Better line spacing
@@ -462,9 +471,9 @@ const ExperienceSection: React.FC<{ items: WorkExperience[] }> = ({ items }) => 
                   <HTMLWithVerifiedLinks htmlContent={description} />
                 </Typography>
                 {isTruncated && (
-                  <Typography 
-                    variant='caption' 
-                    sx={{ 
+                  <Typography
+                    variant='caption'
+                    sx={{
                       fontStyle: 'italic',
                       color: '#666'
                     }}
@@ -488,7 +497,9 @@ const ExperienceSection: React.FC<{ items: WorkExperience[] }> = ({ items }) => 
 const EducationSection: React.FC<{ items: Education[] }> = ({ items }) => {
   if (!items?.length) return null
   return (
-    <Box sx={{ mb: '20px' }}> {/* Reduced margin */}
+    <Box sx={{ mb: '20px' }}>
+      {' '}
+      {/* Reduced margin */}
       <SectionTitle>Education</SectionTitle>
       {items.map(item => {
         const dateText = renderDateOrDuration({
@@ -727,7 +738,9 @@ const ProfessionalAffiliationsSection: React.FC<{
 }> = ({ items }) => {
   if (!items?.length) return null
   return (
-    <Box sx={{ mb: '20px' }}> {/* Reduced margin */}
+    <Box sx={{ mb: '20px' }}>
+      {' '}
+      {/* Reduced margin */}
       <SectionTitle>Professional Affiliations</SectionTitle>
       {items.map(item => {
         const dateText = renderDateOrDuration({
@@ -865,7 +878,9 @@ const VolunteerWorkSection: React.FC<{ items: VolunteerWork[] }> = ({ items }) =
 const SkillsSection: React.FC<{ items: Skill[] }> = ({ items }) => {
   if (!items?.length) return null
   return (
-    <Box sx={{ mb: '20px' }}> {/* Reduced margin */}
+    <Box sx={{ mb: '20px' }}>
+      {' '}
+      {/* Reduced margin */}
       <SectionTitle>Skills</SectionTitle>
       <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
         {items.map(item => {
@@ -993,14 +1008,18 @@ function usePagination(content: ReactNode[]) {
   useLayoutEffect(() => {
     // Give the browser time to properly render and measure
     let timeoutId: NodeJS.Timeout
-    
+
     const measureAndPaginate = () => {
       if (!measureRef.current) return
 
       const fullPageHeightPx = mmToPx(parseFloat(PAGE_SIZE.height))
       // Calculate actual available content height
       const contentMaxHeightPx =
-        fullPageHeightPx - HEADER_HEIGHT_PX - FOOTER_HEIGHT_PX - CONTENT_PADDING_TOP - CONTENT_PADDING_BOTTOM
+        fullPageHeightPx -
+        HEADER_HEIGHT_PX -
+        FOOTER_HEIGHT_PX -
+        CONTENT_PADDING_TOP -
+        CONTENT_PADDING_BOTTOM
 
       console.log('Page calculations:', {
         fullPageHeightPx,
@@ -1015,7 +1034,7 @@ function usePagination(content: ReactNode[]) {
       // Wait for images and fonts to load
       measureRef.current.style.width = PAGE_SIZE.width
       measureRef.current.style.padding = `${CONTENT_PADDING_TOP}px 50px ${CONTENT_PADDING_BOTTOM}px`
-      
+
       const contentElements = Array.from(measureRef.current.children)
       if (contentElements.length === 0) {
         setPages([[]])
@@ -1030,7 +1049,7 @@ function usePagination(content: ReactNode[]) {
         const marginTop = parseFloat(computedStyle.marginTop)
         const marginBottom = parseFloat(computedStyle.marginBottom)
         const height = (el as HTMLElement).offsetHeight + marginTop + marginBottom
-        
+
         console.log(`Section ${idx}:`, {
           height,
           marginTop,
@@ -1043,7 +1062,7 @@ function usePagination(content: ReactNode[]) {
       let currentPage: ReactNode[] = []
       let currentHeight = 0
       const paginated: ReactNode[][] = []
-      
+
       // Add a buffer to prevent content from touching the footer
       const SAFETY_MARGIN = 40 // Increased to prevent overlap
       const effectiveMaxHeight = contentMaxHeightPx - SAFETY_MARGIN
@@ -1051,7 +1070,7 @@ function usePagination(content: ReactNode[]) {
       for (let i = 0; i < content.length; i++) {
         const section = content[i]
         const sectionHeight = contentHeights[i] || 0
-        
+
         console.log(`Processing section ${i}:`, {
           currentHeight,
           sectionHeight,
@@ -1059,7 +1078,7 @@ function usePagination(content: ReactNode[]) {
           maxHeight: effectiveMaxHeight,
           fits: currentHeight + sectionHeight <= effectiveMaxHeight
         })
-        
+
         // Check if adding this section would exceed the page height
         if (currentHeight > 0 && currentHeight + sectionHeight > effectiveMaxHeight) {
           // Start a new page
@@ -1068,7 +1087,7 @@ function usePagination(content: ReactNode[]) {
           currentPage = []
           currentHeight = 0
         }
-        
+
         // Add section to current page
         currentPage.push(section)
         currentHeight += sectionHeight
@@ -1091,10 +1110,10 @@ function usePagination(content: ReactNode[]) {
 
     // Initial measure after a short delay
     timeoutId = setTimeout(measureAndPaginate, 300)
-    
+
     // Re-measure on window resize
     window.addEventListener('resize', measureAndPaginate)
-    
+
     return () => {
       clearTimeout(timeoutId)
       window.removeEventListener('resize', measureAndPaginate)
@@ -1133,7 +1152,7 @@ const ResumePreview: React.FC<{ data?: Resume; forcedId?: string }> = ({
 
   // Build content sections array
   const contentSections: ReactNode[] = []
-  
+
   if (resume) {
     console.log('Building content sections:', {
       hasSummary: !!resume.summary,
@@ -1143,167 +1162,170 @@ const ResumePreview: React.FC<{ data?: Resume; forcedId?: string }> = ({
       skillsCount: resume.skills?.items?.length || 0
     })
 
-  // Always add summary as the first section, using getSummary
-  const summary = getSummary(resume)
-  if (summary) {
-    contentSections.push(<SummarySection key='summary' summary={summary} />)
-  }
-  if (resume.contact?.socialLinks) {
-    contentSections.push(
-      <SocialLinksSection key='social' socialLinks={resume.contact.socialLinks} />
-    )
-  }
-  if (resume.experience?.items?.length) {
-    contentSections.push(
-      <ExperienceSection key='experience' items={resume.experience.items} />
-    )
-  }
-  if (resume.certifications?.items?.length) {
-    contentSections.push(
-      <CertificationsSection key='certifications' items={resume.certifications.items} />
-    )
-  }
-  if (resume.education?.items?.length) {
-    contentSections.push(
-      <EducationSection key='education' items={resume.education.items} />
-    )
-  }
-  if (resume.skills?.items?.length) {
-    contentSections.push(<SkillsSection key='skills' items={resume.skills.items} />)
-  }
-  if (resume.professionalAffiliations?.items?.length) {
-    contentSections.push(
-      <ProfessionalAffiliationsSection
-        key='affiliations'
-        items={resume.professionalAffiliations.items}
-      />
-    )
-  }
-  if (resume.languages?.items?.length) {
-    contentSections.push(
-      <LanguagesSection key='languages' items={resume.languages.items} />
-    )
-  }
-  if (resume.hobbiesAndInterests?.length) {
-    contentSections.push(
-      <HobbiesSection key='hobbies' items={resume.hobbiesAndInterests} />
-    )
-  }
-  if (resume.projects?.items?.length) {
-    contentSections.push(<ProjectsSection key='projects' items={resume.projects.items} />)
-  }
-  if (resume.publications?.items?.length) {
-    contentSections.push(
-      <PublicationsSection key='publications' items={resume.publications.items} />
-    )
-  }
-  if (resume.volunteerWork?.items?.length) {
-    contentSections.push(
-      <VolunteerWorkSection key='volunteer' items={resume.volunteerWork.items} />
-    )
+    // Always add summary as the first section, using getSummary
+    const summary = getSummary(resume)
+    if (summary) {
+      contentSections.push(<SummarySection key='summary' summary={summary} />)
+    }
+    if (resume.contact?.socialLinks) {
+      contentSections.push(
+        <SocialLinksSection key='social' socialLinks={resume.contact.socialLinks} />
+      )
+    }
+    if (resume.experience?.items?.length) {
+      contentSections.push(
+        <ExperienceSection key='experience' items={resume.experience.items} />
+      )
+    }
+    if (resume.certifications?.items?.length) {
+      contentSections.push(
+        <CertificationsSection key='certifications' items={resume.certifications.items} />
+      )
+    }
+    if (resume.education?.items?.length) {
+      contentSections.push(
+        <EducationSection key='education' items={resume.education.items} />
+      )
+    }
+    if (resume.skills?.items?.length) {
+      contentSections.push(<SkillsSection key='skills' items={resume.skills.items} />)
+    }
+    if (resume.professionalAffiliations?.items?.length) {
+      contentSections.push(
+        <ProfessionalAffiliationsSection
+          key='affiliations'
+          items={resume.professionalAffiliations.items}
+        />
+      )
+    }
+    if (resume.languages?.items?.length) {
+      contentSections.push(
+        <LanguagesSection key='languages' items={resume.languages.items} />
+      )
+    }
+    if (resume.hobbiesAndInterests?.length) {
+      contentSections.push(
+        <HobbiesSection key='hobbies' items={resume.hobbiesAndInterests} />
+      )
+    }
+    if (resume.projects?.items?.length) {
+      contentSections.push(
+        <ProjectsSection key='projects' items={resume.projects.items} />
+      )
+    }
+    if (resume.publications?.items?.length) {
+      contentSections.push(
+        <PublicationsSection key='publications' items={resume.publications.items} />
+      )
+    }
+    if (resume.volunteerWork?.items?.length) {
+      contentSections.push(
+        <VolunteerWorkSection key='volunteer' items={resume.volunteerWork.items} />
+      )
+    }
 
-  }
+    // Now use pagination with the built content sections
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    const { pages, measureRef } = usePagination(contentSections)
 
-  // Now use pagination with the built content sections
-  const { pages, measureRef } = usePagination(contentSections)
+    console.log('Content sections built:', contentSections.length, 'Pages:', pages.length)
 
-  console.log('Content sections built:', contentSections.length, 'Pages:', pages.length)
+    if (!resume) return null
 
-  if (!resume) return null
-
-  return (
-    <Box
-      id='resume-preview'
-      sx={{
-        width: '100%',
-        display: 'flex',
-        flexDirection: 'column',
-        overflow: 'visible'
-      }}
-    >
-      {/* Hidden measure area */}
+    return (
       <Box
-        ref={measureRef}
+        id='resume-preview'
         sx={{
-          visibility: 'hidden',
-          position: 'absolute',
-          width: PAGE_SIZE.width,
-          pt: CONTENT_PADDING_TOP + 'px',
-          pb: CONTENT_PADDING_BOTTOM + 'px',
-          px: '50px',
-          left: '-9999px', // Move far off screen
-          top: 0
+          width: '100%',
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'visible'
         }}
       >
-        {contentSections}
-      </Box>
+        {/* Hidden measure area */}
+        <Box
+          ref={measureRef}
+          sx={{
+            visibility: 'hidden',
+            position: 'absolute',
+            width: PAGE_SIZE.width,
+            pt: CONTENT_PADDING_TOP + 'px',
+            pb: CONTENT_PADDING_BOTTOM + 'px',
+            px: '50px',
+            left: '-9999px', // Move far off screen
+            top: 0
+          }}
+        >
+          {contentSections}
+        </Box>
 
-      {/* Render pages */}
-      {initialRenderComplete && (
-        <>
-          {(pages.length > 0 ? pages : [[]]).map((pageContent, pageIndex) => (
-            <Box
-              key={`page-${pageIndex}`}
-              sx={{
-                width: PAGE_SIZE.width,
-                height: PAGE_SIZE.height,
-                position: 'relative',
-                bgcolor: '#fff',
-                border: '1px solid #78809A',
-                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-                mx: 'auto',
-                mb: '30px',
-                '@media print': {
-                  width: '100%',
-                  height: '100%',
-                  margin: 0,
-                  padding: 0,
-                  boxShadow: 'none'
-                }
-              }}
-            >
-              <PageHeader
-                fullName={resume.contact?.fullName || 'Your Name'}
-                city={resume.contact?.location?.city}
-                forcedId={forcedId}
-              />
+        {/* Render pages */}
+        {initialRenderComplete && (
+          <>
+            {(pages.length > 0 ? pages : [[]]).map((pageContent, pageIndex) => (
               <Box
+                key={`page-${pageIndex}`}
                 sx={{
-                  pt: CONTENT_PADDING_TOP + 'px',
-                  pb: CONTENT_PADDING_BOTTOM + 'px',
-                  px: '50px',
-                  overflow: 'hidden',
+                  width: PAGE_SIZE.width,
+                  height: PAGE_SIZE.height,
                   position: 'relative',
-                  minHeight: 0,
-                  height: `calc(100% - ${HEADER_HEIGHT_PX}px - ${FOOTER_HEIGHT_PX}px)`
+                  bgcolor: '#fff',
+                  border: '1px solid #78809A',
+                  boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+                  mx: 'auto',
+                  mb: '30px',
+                  '@media print': {
+                    width: '100%',
+                    height: '100%',
+                    margin: 0,
+                    padding: 0,
+                    boxShadow: 'none'
+                  }
                 }}
               >
-                {pageContent}
-              </Box>
-              <Box
-                sx={{
-                  position: 'absolute',
-                  bottom: 0,
-                  left: 0,
-                  right: 0,
-                  width: '100%'
-                }}
-              >
-                <PageFooter
+                <PageHeader
                   fullName={resume.contact?.fullName || 'Your Name'}
-                  email={resume.contact?.email || 'email@example.com'}
-                  phone={resume.contact?.phone}
-                  pageNumber={pageIndex + 1}
-                  totalPages={Math.max(pages.length, 1)}
+                  city={resume.contact?.location?.city}
                   forcedId={forcedId}
                 />
+                <Box
+                  sx={{
+                    pt: CONTENT_PADDING_TOP + 'px',
+                    pb: CONTENT_PADDING_BOTTOM + 'px',
+                    px: '50px',
+                    overflow: 'hidden',
+                    position: 'relative',
+                    minHeight: 0,
+                    height: `calc(100% - ${HEADER_HEIGHT_PX}px - ${FOOTER_HEIGHT_PX}px)`
+                  }}
+                >
+                  {pageContent}
+                </Box>
+                <Box
+                  sx={{
+                    position: 'absolute',
+                    bottom: 0,
+                    left: 0,
+                    right: 0,
+                    width: '100%'
+                  }}
+                >
+                  <PageFooter
+                    fullName={resume.contact?.fullName || 'Your Name'}
+                    email={resume.contact?.email || 'email@example.com'}
+                    phone={resume.contact?.phone}
+                    pageNumber={pageIndex + 1}
+                    totalPages={Math.max(pages.length, 1)}
+                    forcedId={forcedId}
+                  />
+                </Box>
               </Box>
-            </Box>
-          ))}
-        </>
-      )}
-    </Box>
-  )
+            ))}
+          </>
+        )}
+      </Box>
+    )
+  }
 }
 
 export default ResumePreview
