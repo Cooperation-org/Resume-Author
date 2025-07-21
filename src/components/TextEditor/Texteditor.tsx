@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react'
+import React, { useMemo, useState, useRef, useEffect } from 'react'
 import ReactQuill, { Quill } from 'react-quill'
 import 'react-quill/dist/quill.snow.css'
 import { Box } from '@mui/material'
@@ -78,6 +78,9 @@ interface TextEditorProps {
   onFocus?: () => void
 }
 
+// Generate unique ID for each editor instance
+let editorCounter = 0
+
 function TextEditor({
   value,
   onChange,
@@ -87,6 +90,8 @@ function TextEditor({
   const [showCredentialsOverlay, setShowCredentialsOverlay] = useState(false)
   const [selectedTextRange, setSelectedTextRange] = useState<any>(null)
   const quillRef = React.useRef<any>(null)
+  const editorIdRef = useRef(`editor-${++editorCounter}-${Date.now()}`)
+  const lastValueRef = useRef(value)
 
   const modules = useMemo(
     () => ({
@@ -131,6 +136,22 @@ function TextEditor({
 
   const formats = ['bold', 'italic', 'underline', 'strike', 'link', 'list', 'bullet']
 
+  // Ensure proper cleanup and value synchronization
+  useEffect(() => {
+    // Only update if value actually changed to prevent unnecessary re-renders
+    if (value !== lastValueRef.current && quillRef.current) {
+      const quill = quillRef.current.getEditor()
+      if (quill && quill.root.innerHTML !== value) {
+        const selection = quill.getSelection()
+        quill.root.innerHTML = value || ''
+        if (selection) {
+          quill.setSelection(selection)
+        }
+      }
+      lastValueRef.current = value
+    }
+  }, [value])
+
   const handleCredentialSelect = (selectedCredentials: string[]) => {
     if (selectedTextRange && selectedCredentials.length > 0) {
       const quill = quillRef.current?.getEditor()
@@ -159,10 +180,17 @@ function TextEditor({
     }
   }
 
+  // Handle change with proper isolation
+  const handleChange = (newValue: string) => {
+    lastValueRef.current = newValue
+    onChange(newValue)
+  }
+
   return (
     <Box
       sx={{ width: '100%', borderRadius: '8px', height: 'auto', position: 'relative' }}
       onFocus={onFocus}
+      data-editor-id={editorIdRef.current}
     >
       <Box
         className='text-editor-container'
@@ -173,7 +201,7 @@ function TextEditor({
           ref={quillRef}
           theme='snow'
           value={value}
-          onChange={onChange}
+          onChange={handleChange}
           modules={modules}
           formats={formats}
           placeholder={

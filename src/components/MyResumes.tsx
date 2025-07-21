@@ -32,31 +32,18 @@ const ResumeScreen: React.FC = () => {
   )
   const isAuthenticated = useSelector((state: RootState) => state.auth.isAuthenticated)
   const [friendlyError, setFriendlyError] = useState<string | null>(null)
-  const initialFetchPerformedRef = useRef(false)
-
+  const hasFetchedResumes = useRef(false)
   // Get all drafts from localStorage but don't change the UI
   const { getAllDrafts } = useDraftResume(null)
   // We'll keep track of which drafts have local changes
   const localDrafts = getAllDrafts()
 
   useEffect(() => {
-    if (isAuthenticated) {
-      if (!initialFetchPerformedRef.current) {
-        const timer = setTimeout(() => {
-          dispatch(fetchUserResumes())
-          initialFetchPerformedRef.current = true
-        }, 1000)
-        return () => {
-          clearTimeout(timer)
-        }
-      }
-    } else {
-      initialFetchPerformedRef.current = false
-      if (!localStorage.getItem('auth')) {
-        setFriendlyError('Please log in to view your resumes.')
-      }
+    if (isAuthenticated && !hasFetchedResumes.current && status === 'idle') {
+      dispatch(fetchUserResumes())
+      hasFetchedResumes.current = true
     }
-  }, [dispatch, isAuthenticated])
+  }, [isAuthenticated, status, dispatch])
 
   const handleLogout = useCallback(() => {
     logout()
@@ -68,7 +55,21 @@ const ResumeScreen: React.FC = () => {
     if (status === 'loading') {
       setFriendlyError(null)
     } else if (status === 'failed') {
-      if (error?.includes('Error refreshing access token')) {
+      // Handle specific error messages from fetchUserResumes
+      if (error?.includes('No authentication token found') ||
+          error?.includes('Authentication expired') ||
+          error?.includes('Session expired')) {
+        setFriendlyError(error)
+        if (isAuthenticated) {
+          handleLogout()
+        }
+      } else if (error?.includes('Please refresh the page')) {
+        // Auto-refresh after a short delay
+        setTimeout(() => window.location.reload(), 1500)
+        setFriendlyError('Refreshing authentication...')
+      } else if (error?.includes('Unable to load resumes')) {
+        setFriendlyError(error)
+      } else if (error?.includes('Error refreshing access token')) {
         setFriendlyError('You need to sign in to view your resumes.')
         if (isAuthenticated) {
           handleLogout()
@@ -76,10 +77,9 @@ const ResumeScreen: React.FC = () => {
       } else if (error?.includes('Access token not found') && !isAuthenticated) {
         setFriendlyError('Please log in to view your resumes.')
       } else {
+        // For any other errors, show the error message if available
         setFriendlyError(
-          error
-            ? 'An error occurred while loading your resumes.'
-            : 'Failed to load resumes.'
+          error || 'An error occurred while loading your resumes.'
         )
       }
     } else if (status === 'succeeded') {

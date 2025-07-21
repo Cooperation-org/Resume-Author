@@ -19,7 +19,7 @@ import LeftSidebar from './ResumeEditor/LeftSidebar'
 import RightSidebar from './ResumeEditor/RightSidebar'
 import Section from './ResumeEditor/Section'
 import { useSelector, useDispatch } from 'react-redux'
-import { RootState } from '../redux/store'
+import { RootState, AppDispatch } from '../redux/store'
 import { SVGEditName } from '../assets/svgs'
 import useGoogleDrive from '../hooks/useGoogleDrive' // , { DriveFileMeta }
 import { useNavigate, useLocation } from 'react-router-dom'
@@ -35,6 +35,7 @@ import { getLocalStorage } from '../tools/cookie'
 import { prepareResumeForVC } from '../tools/resumeAdapter'
 import FileSelectorOverlay from './NewFileUpload/FileSelectorOverlay'
 import { FileItem } from './NewFileUpload/FileList'
+import { fetchUserResumes } from '../redux/slices/myresumes'
 
 const ButtonStyles = {
   border: '2px solid #3A35A2',
@@ -122,7 +123,7 @@ function ensureAbsoluteIds(obj: any) {
 const ResumeEditor: React.FC = () => {
   const navigate = useNavigate()
   const location = useLocation()
-  const dispatch = useDispatch()
+  const dispatch = useDispatch<AppDispatch>()
   const [sectionOrder, setSectionOrder] = useState<string[]>([
     'Professional Summary',
     'Work Experience',
@@ -658,6 +659,7 @@ const ResumeEditor: React.FC = () => {
           }
         }
       }
+      dispatch(fetchUserResumes() as any)
 
       console.log('Saved Resume:', savedResume)
     } catch (error) {
@@ -848,6 +850,7 @@ const ResumeEditor: React.FC = () => {
           console.log('Updated URL from temporary to real ID after signing:', file.id)
         }
       }
+      dispatch(fetchUserResumes() as any)
     } catch (error) {
       console.error('Error signing and saving:', error)
     } finally {

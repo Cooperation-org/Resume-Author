@@ -12,9 +12,9 @@ const PAGE_SIZE = {
   height: '297mm'
 }
 const HEADER_HEIGHT_PX = 125
-const FOOTER_HEIGHT_PX = 15
-const CONTENT_BUFFER_PX = 130
-const MIN_BOTTOM_SPACE_PX = 70
+const FOOTER_HEIGHT_PX = 90 // Footer height including padding (60px + 30px py)
+const CONTENT_PADDING_TOP = 15
+const CONTENT_PADDING_BOTTOM = 15
 
 const mmToPx = (mm: number) => mm * 3.779527559
 
@@ -23,9 +23,9 @@ const SectionTitle: React.FC<{ children: ReactNode }> = ({ children }) => (
     variant='h6'
     sx={{
       fontWeight: 700,
-      mb: '11px',
+      mb: '8px', // Reduced from 11px
       lineHeight: '20px',
-      fontSize: '18px',
+      fontSize: '16px', // Reduced from 18px
       color: '#000'
     }}
   >
@@ -252,11 +252,17 @@ const PageFooter: React.FC<{
 const SummarySection: React.FC<{ summary?: string }> = ({ summary }) => {
   if (!summary) return null
   return (
-    <Box sx={{ mb: '30px' }}>
+    <Box sx={{ mb: '20px' }}> {/* Reduced margin */}
       <SectionTitle>Professional Summary</SectionTitle>
       <Typography
         variant='body2'
-        sx={{ color: '#000', fontWeight: 400, fontSize: '16px', fontFamily: 'Arial' }}
+        sx={{ 
+          color: '#000', 
+          fontWeight: 400, 
+          fontSize: '14px', // Reduced from 16px
+          fontFamily: 'Arial',
+          lineHeight: 1.5
+        }}
       >
         <HTMLWithVerifiedLinks htmlContent={summary} />
       </Typography>
@@ -273,8 +279,8 @@ const SocialLinksSection: React.FC<{
   if (!hasLinks) return null
 
   return (
-    <Box sx={{ mb: '30px' }}>
-      <Box sx={{ display: 'flex', gap: '20px', flexWrap: 'wrap', flexDirection: 'row' }}>
+    <Box sx={{ mb: '20px' }}> {/* Reduced margin */}
+      <Box sx={{ display: 'flex', gap: '15px', flexWrap: 'wrap', flexDirection: 'row' }}> {/* Reduced gap */}
         {Object.entries(socialLinks).map(([platform, url]) =>
           url ? (
             <Box key={platform}>
@@ -374,9 +380,9 @@ function renderDateOrDuration({
 const ExperienceSection: React.FC<{ items: WorkExperience[] }> = ({ items }) => {
   if (!items?.length) return null
   return (
-    <Box sx={{ mb: '30px' }}>
+    <Box sx={{ mb: '20px' }}> {/* Reduced margin */}
       <SectionTitle>Work Experience</SectionTitle>
-      {items.map(item => {
+      {items.map((item, index) => {
         const dateText = renderDateOrDuration({
           duration: item.duration,
           startDate: item.startDate,
@@ -390,15 +396,27 @@ const ExperienceSection: React.FC<{ items: WorkExperience[] }> = ({ items }) => 
           } catch (e) {}
         }
         let portfolio = credObj?.credentialSubject?.portfolio
+
+        // Truncate very long descriptions for preview
+        const MAX_DESC_LENGTH = 800 // characters
+        let description = item.description || ''
+        const isTruncated = description.length > MAX_DESC_LENGTH
+        if (isTruncated) {
+          description = description.substring(0, MAX_DESC_LENGTH) + '...'
+        }
+
+
         return (
-          <Box key={item.id} sx={{ mb: '30px' }}>
+          <Box key={item.id || `exp-${index}`} sx={{ mb: '20px' }}> {/* Reduced margin */}
             <Box sx={{ display: 'flex', alignItems: 'center' }}>
               {item.verificationStatus === 'verified' && <BlueVerifiedBadge />}
               <Typography
                 variant='subtitle1'
                 sx={{
                   fontWeight: 700,
-                  ml: item.verificationStatus === 'verified' ? 1 : 0
+                  ml: item.verificationStatus === 'verified' ? 1 : 0,
+                  fontSize: '16px', // Standardized font size
+                  fontFamily: 'Arial'
                 }}
               >
                 {item.position ?? item.title}
@@ -409,7 +427,7 @@ const ExperienceSection: React.FC<{ items: WorkExperience[] }> = ({ items }) => 
               sx={{
                 color: '#000',
                 fontWeight: 400,
-                fontSize: '16px',
+                fontSize: '14px', // Slightly smaller for company name
                 fontFamily: 'Arial'
               }}
             >
@@ -420,22 +438,41 @@ const ExperienceSection: React.FC<{ items: WorkExperience[] }> = ({ items }) => 
                 variant='body2'
                 sx={{
                   color: '#000',
-                  mb: 1,
+                  mb: 0.5,
                   fontWeight: 400,
-                  fontSize: '16px',
+                  fontSize: '14px',
                   fontFamily: 'Arial'
                 }}
               >
                 {dateText}
               </Typography>
             )}
-            {item.description && (
-              <Typography
-                variant='body2'
-                sx={{ mb: 1, fontWeight: 400, fontSize: '16px', fontFamily: 'Arial' }}
-              >
-                <HTMLWithVerifiedLinks htmlContent={item.description} />
-              </Typography>
+            {description && (
+              <>
+                <Typography
+                  variant='body2'
+                  sx={{ 
+                    mb: 1, 
+                    fontWeight: 400, 
+                    fontSize: '14px', // Reduced font size for descriptions
+                    fontFamily: 'Arial',
+                    lineHeight: 1.5 // Better line spacing
+                  }}
+                >
+                  <HTMLWithVerifiedLinks htmlContent={description} />
+                </Typography>
+                {isTruncated && (
+                  <Typography 
+                    variant='caption' 
+                    sx={{ 
+                      fontStyle: 'italic',
+                      color: '#666'
+                    }}
+                  >
+                    (Content truncated for preview)
+                  </Typography>
+                )}
+              </>
             )}
             {/* Credential Link */}
             {renderCredentialLink(item.credentialLink)}
@@ -451,7 +488,7 @@ const ExperienceSection: React.FC<{ items: WorkExperience[] }> = ({ items }) => 
 const EducationSection: React.FC<{ items: Education[] }> = ({ items }) => {
   if (!items?.length) return null
   return (
-    <Box sx={{ mb: '30px' }}>
+    <Box sx={{ mb: '20px' }}> {/* Reduced margin */}
       <SectionTitle>Education</SectionTitle>
       {items.map(item => {
         const dateText = renderDateOrDuration({
@@ -690,7 +727,7 @@ const ProfessionalAffiliationsSection: React.FC<{
 }> = ({ items }) => {
   if (!items?.length) return null
   return (
-    <Box sx={{ mb: '30px' }}>
+    <Box sx={{ mb: '20px' }}> {/* Reduced margin */}
       <SectionTitle>Professional Affiliations</SectionTitle>
       {items.map(item => {
         const dateText = renderDateOrDuration({
@@ -828,7 +865,7 @@ const VolunteerWorkSection: React.FC<{ items: VolunteerWork[] }> = ({ items }) =
 const SkillsSection: React.FC<{ items: Skill[] }> = ({ items }) => {
   if (!items?.length) return null
   return (
-    <Box sx={{ mb: '30px' }}>
+    <Box sx={{ mb: '20px' }}> {/* Reduced margin */}
       <SectionTitle>Skills</SectionTitle>
       <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
         {items.map(item => {
@@ -954,51 +991,85 @@ function usePagination(content: ReactNode[]) {
   const measureRef = useRef<HTMLDivElement>(null)
 
   useLayoutEffect(() => {
-    const timeoutId = setTimeout(() => {
-      measureAndPaginate()
-    }, 500)
-
+    // Give the browser time to properly render and measure
+    let timeoutId: NodeJS.Timeout
+    
     const measureAndPaginate = () => {
       if (!measureRef.current) return
 
       const fullPageHeightPx = mmToPx(parseFloat(PAGE_SIZE.height))
+      // Calculate actual available content height
       const contentMaxHeightPx =
-        fullPageHeightPx - HEADER_HEIGHT_PX - FOOTER_HEIGHT_PX - CONTENT_BUFFER_PX
+        fullPageHeightPx - HEADER_HEIGHT_PX - FOOTER_HEIGHT_PX - CONTENT_PADDING_TOP - CONTENT_PADDING_BOTTOM
 
+      console.log('Page calculations:', {
+        fullPageHeightPx,
+        headerHeight: HEADER_HEIGHT_PX,
+        footerHeight: FOOTER_HEIGHT_PX,
+        paddingTop: CONTENT_PADDING_TOP,
+        paddingBottom: CONTENT_PADDING_BOTTOM,
+        contentMaxHeightPx,
+        contentMaxHeightMm: contentMaxHeightPx / 3.779527559
+      })
+
+      // Wait for images and fonts to load
+      measureRef.current.style.width = PAGE_SIZE.width
+      measureRef.current.style.padding = `${CONTENT_PADDING_TOP}px 50px ${CONTENT_PADDING_BOTTOM}px`
+      
       const contentElements = Array.from(measureRef.current.children)
       if (contentElements.length === 0) {
         setPages([[]])
         return
       }
 
-      const contentHeights = contentElements.map(
-        el => el.getBoundingClientRect().height + 10
-      )
+      // Force layout and get accurate measurements
+      const contentHeights = contentElements.map((el, idx) => {
+        // Force reflow
+        el.getBoundingClientRect()
+        const computedStyle = window.getComputedStyle(el)
+        const marginTop = parseFloat(computedStyle.marginTop)
+        const marginBottom = parseFloat(computedStyle.marginBottom)
+        const height = (el as HTMLElement).offsetHeight + marginTop + marginBottom
+        
+        console.log(`Section ${idx}:`, {
+          height,
+          marginTop,
+          marginBottom,
+          offsetHeight: (el as HTMLElement).offsetHeight
+        })
+        return height
+      })
 
       let currentPage: ReactNode[] = []
       let currentHeight = 0
       const paginated: ReactNode[][] = []
+      
+      // Add a buffer to prevent content from touching the footer
+      const SAFETY_MARGIN = 40 // Increased to prevent overlap
+      const effectiveMaxHeight = contentMaxHeightPx - SAFETY_MARGIN
 
       for (let i = 0; i < content.length; i++) {
         const section = content[i]
-        const sectionHeight = contentHeights[i]
-        const remainingSpace = contentMaxHeightPx - currentHeight
-        const wouldUseMoreThan75Percent = sectionHeight > remainingSpace * 0.75
-
-        if (
-          wouldUseMoreThan75Percent ||
-          currentHeight + sectionHeight > contentMaxHeightPx - MIN_BOTTOM_SPACE_PX
-        ) {
-          if (currentPage.length > 0) {
-            paginated.push([...currentPage])
-            currentPage = []
-            currentHeight = 0
-          }
-          if (sectionHeight > contentMaxHeightPx) {
-            paginated.push([section])
-            continue
-          }
+        const sectionHeight = contentHeights[i] || 0
+        
+        console.log(`Processing section ${i}:`, {
+          currentHeight,
+          sectionHeight,
+          wouldBe: currentHeight + sectionHeight,
+          maxHeight: effectiveMaxHeight,
+          fits: currentHeight + sectionHeight <= effectiveMaxHeight
+        })
+        
+        // Check if adding this section would exceed the page height
+        if (currentHeight > 0 && currentHeight + sectionHeight > effectiveMaxHeight) {
+          // Start a new page
+          console.log(`Breaking to new page at section ${i}`)
+          paginated.push([...currentPage])
+          currentPage = []
+          currentHeight = 0
         }
+        
+        // Add section to current page
         currentPage.push(section)
         currentHeight += sectionHeight
       }
@@ -1009,10 +1080,21 @@ function usePagination(content: ReactNode[]) {
         paginated.push([])
       }
 
+      console.log('Final pagination:', {
+        totalSections: content.length,
+        totalPages: paginated.length,
+        sectionsPerPage: paginated.map(p => p.length)
+      })
+
       setPages(paginated)
     }
 
+    // Initial measure after a short delay
+    timeoutId = setTimeout(measureAndPaginate, 300)
+    
+    // Re-measure on window resize
     window.addEventListener('resize', measureAndPaginate)
+    
     return () => {
       clearTimeout(timeoutId)
       window.removeEventListener('resize', measureAndPaginate)
@@ -1042,9 +1124,6 @@ const ResumePreview: React.FC<{ data?: Resume; forcedId?: string }> = ({
   const resume = propData || storeResume
   const [initialRenderComplete, setInitialRenderComplete] = useState(false)
 
-  const contentSections: ReactNode[] = []
-  const { pages, measureRef } = usePagination(contentSections)
-
   useEffect(() => {
     const timeoutId = setTimeout(() => {
       setInitialRenderComplete(true)
@@ -1052,7 +1131,17 @@ const ResumePreview: React.FC<{ data?: Resume; forcedId?: string }> = ({
     return () => clearTimeout(timeoutId)
   }, [])
 
-  if (!resume) return null
+  // Build content sections array
+  const contentSections: ReactNode[] = []
+  
+  if (resume) {
+    console.log('Building content sections:', {
+      hasSummary: !!resume.summary,
+      hasSocialLinks: !!resume.contact?.socialLinks,
+      experienceCount: resume.experience?.items?.length || 0,
+      educationCount: resume.education?.items?.length || 0,
+      skillsCount: resume.skills?.items?.length || 0
+    })
 
   // Always add summary as the first section, using getSummary
   const summary = getSummary(resume)
@@ -1112,7 +1201,15 @@ const ResumePreview: React.FC<{ data?: Resume; forcedId?: string }> = ({
     contentSections.push(
       <VolunteerWorkSection key='volunteer' items={resume.volunteerWork.items} />
     )
+
   }
+
+  // Now use pagination with the built content sections
+  const { pages, measureRef } = usePagination(contentSections)
+
+  console.log('Content sections built:', contentSections.length, 'Pages:', pages.length)
+
+  if (!resume) return null
 
   return (
     <Box
@@ -1131,8 +1228,11 @@ const ResumePreview: React.FC<{ data?: Resume; forcedId?: string }> = ({
           visibility: 'hidden',
           position: 'absolute',
           width: PAGE_SIZE.width,
-          py: '20px',
-          px: '73px'
+          pt: CONTENT_PADDING_TOP + 'px',
+          pb: CONTENT_PADDING_BOTTOM + 'px',
+          px: '50px',
+          left: '-9999px', // Move far off screen
+          top: 0
         }}
       >
         {contentSections}
@@ -1169,13 +1269,13 @@ const ResumePreview: React.FC<{ data?: Resume; forcedId?: string }> = ({
               />
               <Box
                 sx={{
-                  py: '20px',
-                  px: '73px',
-                  overflow: 'visible',
+                  pt: CONTENT_PADDING_TOP + 'px',
+                  pb: CONTENT_PADDING_BOTTOM + 'px',
+                  px: '50px',
+                  overflow: 'hidden',
                   position: 'relative',
-                  height: `calc(${PAGE_SIZE.height} - ${HEADER_HEIGHT_PX}px - ${FOOTER_HEIGHT_PX}px - ${MIN_BOTTOM_SPACE_PX}px)`,
-                  maxHeight: `calc(${PAGE_SIZE.height} - ${HEADER_HEIGHT_PX}px - ${FOOTER_HEIGHT_PX}px - ${MIN_BOTTOM_SPACE_PX}px)`,
-                  mb: `${MIN_BOTTOM_SPACE_PX}px`
+                  minHeight: 0,
+                  height: `calc(100% - ${HEADER_HEIGHT_PX}px - ${FOOTER_HEIGHT_PX}px)`
                 }}
               >
                 {pageContent}

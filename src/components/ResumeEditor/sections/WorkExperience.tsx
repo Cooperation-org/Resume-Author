@@ -676,7 +676,7 @@ export default function WorkExperience({
                 Describe your role at this company:
               </Typography>
               <TextEditor
-                key={`editor-${index}`}
+                key={`work-experience-editor-${index}-${experience.id || index}`}
                 value={experience.description || ''}
                 onChange={val => handleDescriptionChange(index, val)}
                 onAddCredential={onAddCredential}

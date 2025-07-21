@@ -10,7 +10,10 @@ const AuthErrorDisplay: React.FC<AuthErrorDisplayProps> = ({ error, buttonStyles
   const isAuthError =
     error === 'Please log in to view your resumes.' ||
     error === 'You need to sign in to view your resumes.' ||
-    error.includes('No authentication token found')
+    error.includes('No authentication token found') ||
+    error.includes('Authentication expired') ||
+    error.includes('Session expired') ||
+    error.includes('Please sign in')
 
   const handleLogin = () => {
     login('/myresumes')
