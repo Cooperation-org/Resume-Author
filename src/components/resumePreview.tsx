@@ -1223,109 +1223,106 @@ const ResumePreview: React.FC<{ data?: Resume; forcedId?: string }> = ({
         <VolunteerWorkSection key='volunteer' items={resume.volunteerWork.items} />
       )
     }
+  }
 
-    // Now use pagination with the built content sections
-    // eslint-disable-next-line react-hooks/rules-of-hooks
-    const { pages, measureRef } = usePagination(contentSections)
+  // Now use pagination with the built content sections
+  const { pages, measureRef } = usePagination(contentSections)
 
-    console.log('Content sections built:', contentSections.length, 'Pages:', pages.length)
+  if (!resume) return null
 
-    if (!resume) return null
-
-    return (
+  return (
+    <Box
+      id='resume-preview'
+      sx={{
+        width: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'visible'
+      }}
+    >
+      {/* Hidden measure area */}
       <Box
-        id='resume-preview'
+        ref={measureRef}
         sx={{
-          width: '100%',
-          display: 'flex',
-          flexDirection: 'column',
-          overflow: 'visible'
+          visibility: 'hidden',
+          position: 'absolute',
+          width: PAGE_SIZE.width,
+          pt: CONTENT_PADDING_TOP + 'px',
+          pb: CONTENT_PADDING_BOTTOM + 'px',
+          px: '50px',
+          left: '-9999px', // Move far off screen
+          top: 0
         }}
       >
-        {/* Hidden measure area */}
-        <Box
-          ref={measureRef}
-          sx={{
-            visibility: 'hidden',
-            position: 'absolute',
-            width: PAGE_SIZE.width,
-            pt: CONTENT_PADDING_TOP + 'px',
-            pb: CONTENT_PADDING_BOTTOM + 'px',
-            px: '50px',
-            left: '-9999px', // Move far off screen
-            top: 0
-          }}
-        >
-          {contentSections}
-        </Box>
+        {contentSections}
+      </Box>
 
-        {/* Render pages */}
-        {initialRenderComplete && (
-          <>
-            {(pages.length > 0 ? pages : [[]]).map((pageContent, pageIndex) => (
+      {/* Render pages */}
+      {initialRenderComplete && (
+        <>
+          {(pages.length > 0 ? pages : [[]]).map((pageContent, pageIndex) => (
+            <Box
+              key={`page-${pageIndex}`}
+              sx={{
+                width: PAGE_SIZE.width,
+                height: PAGE_SIZE.height,
+                position: 'relative',
+                bgcolor: '#fff',
+                border: '1px solid #78809A',
+                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+                mx: 'auto',
+                mb: '30px',
+                '@media print': {
+                  width: '100%',
+                  height: '100%',
+                  margin: 0,
+                  padding: 0,
+                  boxShadow: 'none'
+                }
+              }}
+            >
+              <PageHeader
+                fullName={resume.contact?.fullName || 'Your Name'}
+                city={resume.contact?.location?.city}
+                forcedId={forcedId}
+              />
               <Box
-                key={`page-${pageIndex}`}
                 sx={{
-                  width: PAGE_SIZE.width,
-                  height: PAGE_SIZE.height,
+                  pt: CONTENT_PADDING_TOP + 'px',
+                  pb: CONTENT_PADDING_BOTTOM + 'px',
+                  px: '50px',
+                  overflow: 'hidden',
                   position: 'relative',
-                  bgcolor: '#fff',
-                  border: '1px solid #78809A',
-                  boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-                  mx: 'auto',
-                  mb: '30px',
-                  '@media print': {
-                    width: '100%',
-                    height: '100%',
-                    margin: 0,
-                    padding: 0,
-                    boxShadow: 'none'
-                  }
+                  minHeight: 0,
+                  height: `calc(100% - ${HEADER_HEIGHT_PX}px - ${FOOTER_HEIGHT_PX}px)`
                 }}
               >
-                <PageHeader
+                {pageContent}
+              </Box>
+              <Box
+                sx={{
+                  position: 'absolute',
+                  bottom: 0,
+                  left: 0,
+                  right: 0,
+                  width: '100%'
+                }}
+              >
+                <PageFooter
                   fullName={resume.contact?.fullName || 'Your Name'}
-                  city={resume.contact?.location?.city}
+                  email={resume.contact?.email || 'email@example.com'}
+                  phone={resume.contact?.phone}
+                  pageNumber={pageIndex + 1}
+                  totalPages={Math.max(pages.length, 1)}
                   forcedId={forcedId}
                 />
-                <Box
-                  sx={{
-                    pt: CONTENT_PADDING_TOP + 'px',
-                    pb: CONTENT_PADDING_BOTTOM + 'px',
-                    px: '50px',
-                    overflow: 'hidden',
-                    position: 'relative',
-                    minHeight: 0,
-                    height: `calc(100% - ${HEADER_HEIGHT_PX}px - ${FOOTER_HEIGHT_PX}px)`
-                  }}
-                >
-                  {pageContent}
-                </Box>
-                <Box
-                  sx={{
-                    position: 'absolute',
-                    bottom: 0,
-                    left: 0,
-                    right: 0,
-                    width: '100%'
-                  }}
-                >
-                  <PageFooter
-                    fullName={resume.contact?.fullName || 'Your Name'}
-                    email={resume.contact?.email || 'email@example.com'}
-                    phone={resume.contact?.phone}
-                    pageNumber={pageIndex + 1}
-                    totalPages={Math.max(pages.length, 1)}
-                    forcedId={forcedId}
-                  />
-                </Box>
               </Box>
-            ))}
-          </>
-        )}
-      </Box>
-    )
-  }
+            </Box>
+          ))}
+        </>
+      )}
+    </Box>
+  )
 }
 
 export default ResumePreview
