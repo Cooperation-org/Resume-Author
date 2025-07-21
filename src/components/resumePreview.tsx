@@ -6,6 +6,8 @@ import { useSelector } from 'react-redux'
 import { RootState } from '../redux/store'
 import { HTMLWithVerifiedLinks, isVerifiedLink } from '../tools/htmlUtils'
 import MinimalCredentialViewer from './MinimalCredentialViewer'
+import Dialog from '@mui/material/Dialog'
+import DialogContent from '@mui/material/DialogContent'
 
 const PAGE_SIZE = {
   width: '210mm',
@@ -297,6 +299,37 @@ const SocialLinksSection: React.FC<{
       </Box>
     </Box>
   )
+}
+
+// Helper to get credential name
+function getCredentialName(claim: any): string {
+  try {
+    if (!claim || typeof claim !== 'object') {
+      return 'Invalid Credential'
+    }
+    const credentialSubject = claim.credentialSubject
+    if (!credentialSubject || typeof credentialSubject !== 'object') {
+      return 'Unknown Credential'
+    }
+    if (credentialSubject.employeeName) {
+      return `Performance Review: ${credentialSubject.employeeJobTitle || 'Unknown Position'}`
+    }
+    if (credentialSubject.volunteerWork) {
+      return `Volunteer: ${credentialSubject.volunteerWork}`
+    }
+    if (credentialSubject.role) {
+      return `Employment: ${credentialSubject.role}`
+    }
+    if (credentialSubject.credentialName) {
+      return credentialSubject.credentialName
+    }
+    if (credentialSubject.achievement && credentialSubject.achievement[0]?.name) {
+      return credentialSubject.achievement[0].name
+    }
+    return 'Credential'
+  } catch {
+    return 'Credential'
+  }
 }
 
 // Helper to render credential link as blue link or MinimalCredentialViewer
@@ -1143,6 +1176,10 @@ const ResumePreview: React.FC<{ data?: Resume; forcedId?: string }> = ({
   const resume = propData || storeResume
   const [initialRenderComplete, setInitialRenderComplete] = useState(false)
 
+  const [openCredDialog, setOpenCredDialog] = useState(false)
+  const [dialogCredObj, setDialogCredObj] = useState<any>(null)
+  const [dialogImageUrl, setDialogImageUrl] = useState<string | null>(null)
+
   useEffect(() => {
     const timeoutId = setTimeout(() => {
       setInitialRenderComplete(true)
@@ -1240,6 +1277,26 @@ const ResumePreview: React.FC<{ data?: Resume; forcedId?: string }> = ({
         overflow: 'visible'
       }}
     >
+      {/* Dialog for credential or image viewing */}
+      <Dialog
+        open={openCredDialog}
+        onClose={() => setOpenCredDialog(false)}
+        maxWidth='md'
+        fullWidth
+      >
+        <DialogContent
+          sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}
+        >
+          {dialogCredObj && <MinimalCredentialViewer vcData={dialogCredObj} />}
+          {dialogImageUrl && (
+            <img
+              src={dialogImageUrl}
+              alt='Attachment'
+              style={{ maxWidth: '100%', maxHeight: '80vh', borderRadius: 8 }}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
       {/* Hidden measure area */}
       <Box
         ref={measureRef}
