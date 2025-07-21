@@ -53,6 +53,7 @@ interface SelectedCredential {
   id: string
   url: string
   name: string
+  credential?: any // full object
 }
 
 interface FileItem {
@@ -381,11 +382,11 @@ export default function WorkExperience({
           const credential = vcs.find((c: any) => (c?.originalItem?.id || c.id) === id)
           return {
             id,
-            url: `https://linkedcreds.allskillscount.org/view/${id}`,
+            url: '', // not used, but required by interface
             name:
               credential?.credentialSubject?.achievement?.[0]?.name ||
               `Credential ${id.substring(0, 5)}...`,
-            vc: credential
+            credential // full object
           }
         })
         setWorkExperiences(prev => {
@@ -393,7 +394,9 @@ export default function WorkExperience({
           updated[activeSectionIndex] = {
             ...updated[activeSectionIndex],
             verificationStatus: 'verified',
-            credentialLink: selected[0].url,
+            credentialLink: selected[0].credential
+              ? JSON.stringify(selected[0].credential)
+              : '',
             selectedCredentials: selected
           }
           dispatch(
@@ -422,7 +425,9 @@ export default function WorkExperience({
           exp.verificationStatus = 'unverified'
           exp.credentialLink = ''
         } else {
-          exp.credentialLink = newCreds[0].url
+          exp.credentialLink = newCreds[0]?.credential
+            ? JSON.stringify(newCreds[0].credential)
+            : ''
         }
         updated[expIndex] = exp
         dispatch(

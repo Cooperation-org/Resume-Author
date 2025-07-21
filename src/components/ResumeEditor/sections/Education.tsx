@@ -77,6 +77,7 @@ interface SelectedCredential {
   id: string
   url: string
   name: string
+  vc?: any // full object
 }
 
 interface FileItem {
@@ -366,14 +367,13 @@ export default function Education({
       if (activeSectionIndex !== null && selectedCredentialIDs.length > 0) {
         const selectedCredentials = selectedCredentialIDs.map(id => {
           const credential = vcs.find((c: any) => (c?.originalItem?.id || c.id) === id)
-
           return {
             id: id,
-            url: `https://linkedcreds.allskillscount.org/view/${id}`,
+            url: '', // not used, but required by interface
             name:
               credential?.credentialSubject?.achievement?.[0]?.name ||
               `Credential ${id.substring(0, 5)}...`,
-            vc: credential
+            vc: credential // full object
           }
         })
 
@@ -382,7 +382,12 @@ export default function Education({
           updated[activeSectionIndex] = {
             ...updated[activeSectionIndex],
             verificationStatus: 'verified',
-            credentialLink: selectedCredentials[0].url,
+            credentialLink:
+              selectedCredentials &&
+              selectedCredentials.length > 0 &&
+              selectedCredentials[0].vc
+                ? JSON.stringify(selectedCredentials[0].vc)
+                : '',
             selectedCredentials
           }
           dispatch(
@@ -411,7 +416,7 @@ export default function Education({
           edu.verificationStatus = 'unverified'
           edu.credentialLink = ''
         } else {
-          edu.credentialLink = newCreds[0].url
+          edu.credentialLink = newCreds[0]?.vc ? JSON.stringify(newCreds[0].vc) : ''
         }
         updated[eduIndex] = edu
         dispatch(
@@ -685,55 +690,56 @@ export default function Education({
                 onFocus={onFocus}
               />
 
-              {!!education.selectedCredentials.length && (
-                <Box sx={{ mt: 2 }}>
-                  <Typography variant='body2' sx={{ fontWeight: 'bold', mb: 1 }}>
-                    Verified Credentials:
-                  </Typography>
-                  {education.selectedCredentials.map((credential, credIndex) => (
-                    <Box
-                      key={`credential-${credential.id}-${credIndex}`}
-                      sx={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        mb: 0.5,
-                        backgroundColor: '#f5f5f5',
-                        p: 0.5,
-                        borderRadius: 1
-                      }}
-                    >
-                      <Typography
-                        variant='body2'
+              {education.selectedCredentials &&
+                education.selectedCredentials.length > 0 && (
+                  <Box sx={{ mt: 2 }}>
+                    <Typography variant='body2' sx={{ fontWeight: 'bold', mb: 1 }}>
+                      Verified Credentials:
+                    </Typography>
+                    {education.selectedCredentials.map((credential, credIndex) => (
+                      <Box
+                        key={`credential-${credential.id}-${credIndex}`}
                         sx={{
-                          color: 'primary.main',
-                          textDecoration: 'underline',
-                          cursor: 'pointer'
-                        }}
-                        onClick={() => window.open(credential.url, '_blank')}
-                      >
-                        {credential.name || `Credential ${credIndex + 1}`}
-                      </Typography>
-                      <IconButton
-                        size='small'
-                        onClick={e => {
-                          e.stopPropagation()
-                          handleRemoveCredential(index, credIndex)
-                        }}
-                        sx={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          mb: 0.5,
+                          backgroundColor: '#f5f5f5',
                           p: 0.5,
-                          color: 'grey.500',
-                          '&:hover': { color: 'error.main' }
+                          borderRadius: 1
                         }}
                       >
-                        <CloseIcon fontSize='small' />
-                      </IconButton>
-                    </Box>
-                  ))}
-                </Box>
-              )}
+                        <Typography
+                          variant='body2'
+                          sx={{
+                            color: 'primary.main',
+                            textDecoration: 'underline',
+                            cursor: 'pointer'
+                          }}
+                          onClick={() => window.open(credential.url, '_blank')}
+                        >
+                          {credential.name || `Credential ${credIndex + 1}`}
+                        </Typography>
+                        <IconButton
+                          size='small'
+                          onClick={e => {
+                            e.stopPropagation()
+                            handleRemoveCredential(index, credIndex)
+                          }}
+                          sx={{
+                            p: 0.5,
+                            color: 'grey.500',
+                            '&:hover': { color: 'error.main' }
+                          }}
+                        >
+                          <CloseIcon fontSize='small' />
+                        </IconButton>
+                      </Box>
+                    ))}
+                  </Box>
+                )}
 
-              {evidence[index] && evidence[index].length > 0 && (
+              {evidence && evidence[index] && evidence[index].length > 0 && (
                 <Box sx={{ mt: 2 }}>
                   <Typography variant='body2' sx={{ fontWeight: 'bold', mb: 1 }}>
                     Attached Files:

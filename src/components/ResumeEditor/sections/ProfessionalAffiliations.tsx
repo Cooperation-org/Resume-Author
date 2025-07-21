@@ -373,11 +373,11 @@ export default function ProfessionalAffiliations({
           const credential = vcs.find((c: any) => (c?.originalItem?.id || c.id) === id)
           return {
             id,
-            url: `https://linkedcreds.allskillscount.org/view/${id}`,
+            url: '', // not used, but required by interface
             name:
               credential?.credentialSubject?.achievement?.[0]?.name ||
               `Credential ${id.substring(0, 5)}...`,
-            vc: credential
+            vc: credential // full object
           }
         })
 
@@ -386,7 +386,12 @@ export default function ProfessionalAffiliations({
           updated[activeSectionIndex] = {
             ...updated[activeSectionIndex],
             verificationStatus: 'verified',
-            credentialLink: selectedCredentials[0].url,
+            credentialLink:
+              selectedCredentials &&
+              selectedCredentials.length > 0 &&
+              selectedCredentials[0].vc
+                ? JSON.stringify(selectedCredentials[0].vc)
+                : '',
             selectedCredentials
           }
           dispatch(
@@ -416,7 +421,7 @@ export default function ProfessionalAffiliations({
           aff.verificationStatus = 'unverified'
           aff.credentialLink = ''
         } else {
-          aff.credentialLink = newCreds[0].url
+          aff.credentialLink = newCreds[0]?.vc ? JSON.stringify(newCreds[0].vc) : ''
         }
 
         updated[affIndex] = aff
@@ -704,7 +709,7 @@ export default function ProfessionalAffiliations({
                   </Box>
                 )}
 
-              {evidence[index] && evidence[index].length > 0 && (
+              {evidence && evidence[index] && evidence[index].length > 0 && (
                 <Box sx={{ mt: 2 }}>
                   <Typography variant='body2' sx={{ fontWeight: 'bold', mb: 1 }}>
                     Attached Files:

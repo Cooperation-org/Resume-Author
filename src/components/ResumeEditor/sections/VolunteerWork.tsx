@@ -379,11 +379,11 @@ export default function VolunteerWork({
           const credential = vcs.find((c: any) => (c?.originalItem?.id || c.id) === id)
           return {
             id,
-            url: `https://linkedcreds.allskillscount.org/view/${id}`,
+            url: '', // not used, but required by interface
             name:
               credential?.credentialSubject?.achievement?.[0]?.name ||
               `Credential ${id.substring(0, 5)}...`,
-            vc: credential
+            vc: credential // full object
           }
         })
 
@@ -392,7 +392,12 @@ export default function VolunteerWork({
           updated[activeSectionIndex] = {
             ...updated[activeSectionIndex],
             verificationStatus: 'verified',
-            credentialLink: selectedCredentials[0].url,
+            credentialLink:
+              selectedCredentials &&
+              selectedCredentials.length > 0 &&
+              selectedCredentials[0].vc
+                ? JSON.stringify(selectedCredentials[0].vc)
+                : '',
             selectedCredentials
           }
           dispatch(
@@ -421,7 +426,7 @@ export default function VolunteerWork({
           vol.verificationStatus = 'unverified'
           vol.credentialLink = ''
         } else {
-          vol.credentialLink = newCreds[0].url
+          vol.credentialLink = newCreds[0]?.vc ? JSON.stringify(newCreds[0].vc) : ''
         }
         updated[volIndex] = vol
         dispatch(
@@ -674,55 +679,56 @@ export default function VolunteerWork({
                 onFocus={onFocus}
               />
 
-              {volunteer.selectedCredentials.length > 0 && (
-                <Box sx={{ mt: 2 }}>
-                  <Typography variant='body2' sx={{ fontWeight: 'bold', mb: 1 }}>
-                    Verified Credentials:
-                  </Typography>
-                  {volunteer.selectedCredentials.map((credential, credIndex) => (
-                    <Box
-                      key={`credential-${credential.id}-${credIndex}`}
-                      sx={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        mb: 0.5,
-                        backgroundColor: '#f5f5f5',
-                        p: 0.5,
-                        borderRadius: 1
-                      }}
-                    >
-                      <Typography
-                        variant='body2'
+              {volunteer.selectedCredentials &&
+                volunteer.selectedCredentials.length > 0 && (
+                  <Box sx={{ mt: 2 }}>
+                    <Typography variant='body2' sx={{ fontWeight: 'bold', mb: 1 }}>
+                      Verified Credentials:
+                    </Typography>
+                    {volunteer.selectedCredentials.map((credential, credIndex) => (
+                      <Box
+                        key={`credential-${credential.id}-${credIndex}`}
                         sx={{
-                          color: 'primary.main',
-                          textDecoration: 'underline',
-                          cursor: 'pointer'
-                        }}
-                        onClick={() => window.open(credential.url, '_blank')}
-                      >
-                        {credential.name || `Credential ${credIndex + 1}`}
-                      </Typography>
-                      <IconButton
-                        size='small'
-                        onClick={e => {
-                          e.stopPropagation()
-                          handleRemoveCredential(index, credIndex)
-                        }}
-                        sx={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          mb: 0.5,
+                          backgroundColor: '#f5f5f5',
                           p: 0.5,
-                          color: 'grey.500',
-                          '&:hover': { color: 'error.main' }
+                          borderRadius: 1
                         }}
                       >
-                        <CloseIcon fontSize='small' />
-                      </IconButton>
-                    </Box>
-                  ))}
-                </Box>
-              )}
+                        <Typography
+                          variant='body2'
+                          sx={{
+                            color: 'primary.main',
+                            textDecoration: 'underline',
+                            cursor: 'pointer'
+                          }}
+                          onClick={() => window.open(credential.url, '_blank')}
+                        >
+                          {credential.name || `Credential ${credIndex + 1}`}
+                        </Typography>
+                        <IconButton
+                          size='small'
+                          onClick={e => {
+                            e.stopPropagation()
+                            handleRemoveCredential(index, credIndex)
+                          }}
+                          sx={{
+                            p: 0.5,
+                            color: 'grey.500',
+                            '&:hover': { color: 'error.main' }
+                          }}
+                        >
+                          <CloseIcon fontSize='small' />
+                        </IconButton>
+                      </Box>
+                    ))}
+                  </Box>
+                )}
 
-              {evidence[index] && evidence[index].length > 0 && (
+              {evidence && evidence[index] && evidence[index].length > 0 && (
                 <Box sx={{ mt: 2 }}>
                   <Typography variant='body2' sx={{ fontWeight: 'bold', mb: 1 }}>
                     Attached Files:

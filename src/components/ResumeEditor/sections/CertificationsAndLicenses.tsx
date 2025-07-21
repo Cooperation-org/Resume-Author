@@ -64,6 +64,7 @@ interface SelectedCredential {
   url: string
   name: string
   isAttestation?: boolean
+  vc?: any // full object
 }
 
 export default function CertificationsAndLicenses({
@@ -277,14 +278,14 @@ export default function CertificationsAndLicenses({
       if (activeSectionIndex !== null && selectedCredentialIDs.length > 0) {
         const selectedCredentials = selectedCredentialIDs.map(id => {
           const credential = vcs.find((c: any) => (c?.originalItem?.id || c.id) === id)
-
           return {
             id: id,
-            url: `https://linkedcreds.allskillscount.org/view/${id}`,
+            url: '', // not used, but required by interface
             name:
               credential?.credentialSubject?.achievement[0]?.name ||
               `Credential ${id.substring(0, 5)}...`,
-            isAttestation: false
+            isAttestation: false,
+            vc: credential // full object
           }
         })
 
@@ -301,9 +302,17 @@ export default function CertificationsAndLicenses({
           updatedCertifications[activeSectionIndex] = {
             ...currentCert,
             verificationStatus: 'verified',
-            credentialLink: selectedCredentials[0].url,
+            credentialLink:
+              selectedCredentials &&
+              selectedCredentials.length > 0 &&
+              selectedCredentials[0].vc
+                ? JSON.stringify(selectedCredentials[0].vc)
+                : '',
             // If not an attestation, we can use the first credential to populate cert details
-            ...(!isAttestation && selectedCredentials[0]
+            ...(!isAttestation &&
+            selectedCredentials &&
+            selectedCredentials.length > 0 &&
+            selectedCredentials[0]
               ? {
                   credentialId: selectedCredentials[0].id
                 }
@@ -348,7 +357,9 @@ export default function CertificationsAndLicenses({
           certification.verificationStatus = 'unverified'
           certification.credentialLink = ''
         } else {
-          certification.credentialLink = updatedCredentials[0]?.url || ''
+          certification.credentialLink = updatedCredentials[0]?.vc
+            ? JSON.stringify(updatedCredentials[0].vc)
+            : ''
         }
 
         updatedCertifications[certificationIndex] = certification
@@ -596,7 +607,7 @@ export default function CertificationsAndLicenses({
                   </Box>
                 )}
 
-              {evidence[index] && evidence[index].length > 0 && (
+              {evidence && evidence[index] && evidence[index].length > 0 && (
                 <Box sx={{ mt: 2 }}>
                   <Typography variant='body2' sx={{ fontWeight: 'bold', mb: 1 }}>
                     Attached Files:

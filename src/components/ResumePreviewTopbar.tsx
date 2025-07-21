@@ -168,8 +168,18 @@ const ResumePreviewTopbar: React.FC<ResumePreviewTopbarProps> = ({
         console.error('Resume is null, cannot prepare for VC')
         return
       }
-      const preparedResume = prepareResumeForVC(resume, {})
+      const preparedResume = await prepareResumeForVC(resume, {})
       console.log('PREPARED FORM DATA', preparedResume)
+
+      // PATCH: Ensure processed employmentHistory is used in credentialSubject
+      if (
+        preparedResume.credentialSubject &&
+        preparedResume.employmentHistory &&
+        Array.isArray(preparedResume.employmentHistory)
+      ) {
+        preparedResume.credentialSubject.employmentHistory =
+          preparedResume.employmentHistory
+      }
 
       const signedResume = await instances.resumeVC.sign({
         formData: preparedResume,

@@ -1,12 +1,14 @@
+import { replaceCredentialLinksWithContent } from '../services/credentialService'
+
 /**
  * Adapter to transform resume data to make it compatible with the resumeVC.sign function
  * This ensures all data is properly preserved during the signing process
  */
-export const prepareResumeForVC = (
+export const prepareResumeForVC = async (
   resume: Resume | null,
   sectionEvidence?: Record<string, string[][]>,
   allFiles?: any[]
-): any => {
+): Promise<any> => {
   if (!resume) {
     console.error('Cannot prepare null resume for VC')
     return null
@@ -80,67 +82,79 @@ export const prepareResumeForVC = (
     }))
   }
 
-  if (preparedResume.education?.items) {
-    preparedResume.education.items = preparedResume.education.items.map((edu: any) => ({
-      ...edu,
-      degree: edu.degree ?? edu.type ?? '',
-      fieldOfStudy: edu.field ?? edu.fieldOfStudy ?? ''
-    }))
-  }
-
-  if (preparedResume.certifications?.items) {
-    preparedResume.certifications.items = preparedResume.certifications.items.map(
-      (cert: any) => ({
-        ...cert,
-        date: cert.issueDate ?? cert.date ?? '',
-        url: cert.credentialLink ?? cert.url ?? ''
-      })
-    )
-  }
-
-  if (preparedResume.professionalAffiliations?.items) {
-    preparedResume.professionalAffiliations.items =
-      preparedResume.professionalAffiliations.items.map((aff: any) => ({
-        ...aff,
-        role: aff.role ?? aff.name ?? ''
+  // Convert experience to employmentHistory and replace credential links with full content
+  if (preparedResume.experience?.items) {
+    console.log(
+      '🔍 Processing experience items for credential replacement:',
+      preparedResume.experience.items.map((exp: any) => ({
+        hasCredentialLink: !!exp.credentialLink,
+        credentialLink: exp.credentialLink
       }))
-  }
-
-  if (preparedResume.projects?.items) {
-    preparedResume.projects.items = preparedResume.projects.items.map((proj: any) => ({
-      ...proj,
-      startDate: proj.startDate ?? '',
-      endDate: proj.endDate ?? ''
-    }))
-  }
-
-  if (preparedResume.awards?.items) {
-    preparedResume.awards.items = preparedResume.awards.items.map((award: any) => ({
-      title: award.title ?? '',
-      issuer: award.issuer ?? '',
-      date: award.date ?? award.issueDate ?? '',
-      description: award.description ?? '',
-      ...award
-    }))
-  }
-
-  if (preparedResume.publications?.items) {
-    preparedResume.publications.items = preparedResume.publications.items.map(
-      (pub: any) => ({
-        title: pub.title ?? '',
-        publisher: pub.publisher ?? '',
-        date: pub.date ?? pub.publishedDate ?? '',
-        url: pub.url ?? '',
-        ...pub
+    )
+    preparedResume.employmentHistory = await Promise.all(
+      preparedResume.experience.items.map(async (exp: any) => {
+        const processedExp = await replaceCredentialLinksWithContent(exp)
+        return { ...exp, ...processedExp }
       })
     )
   }
 
+  // Education
+  if (preparedResume.education?.items) {
+    preparedResume.educationAndLearning = await Promise.all(
+      preparedResume.education.items.map(async (edu: any) => {
+        const processedEdu = await replaceCredentialLinksWithContent(edu)
+        return { ...edu, ...processedEdu }
+      })
+    )
+  }
+
+  // Certifications
+  if (preparedResume.certifications?.items) {
+    preparedResume.certificationsVC = await Promise.all(
+      preparedResume.certifications.items.map(async (cert: any) => {
+        const processedCert = await replaceCredentialLinksWithContent(cert)
+        return { ...cert, ...processedCert }
+      })
+    )
+  }
+
+  // Skills
+  if (preparedResume.skills?.items) {
+    preparedResume.skillsVC = await Promise.all(
+      preparedResume.skills.items.map(async (skill: any) => {
+        const processedSkill = await replaceCredentialLinksWithContent(skill)
+        return { ...skill, ...processedSkill }
+      })
+    )
+  }
+
+  // Projects
+  if (preparedResume.projects?.items) {
+    preparedResume.projectsVC = await Promise.all(
+      preparedResume.projects.items.map(async (proj: any) => {
+        const processedProj = await replaceCredentialLinksWithContent(proj)
+        return { ...proj, ...processedProj }
+      })
+    )
+  }
+
+  // Professional Affiliations
+  if (preparedResume.professionalAffiliations?.items) {
+    preparedResume.professionalAffiliationsVC = await Promise.all(
+      preparedResume.professionalAffiliations.items.map(async (aff: any) => {
+        const processedAff = await replaceCredentialLinksWithContent(aff)
+        return { ...aff, ...processedAff }
+      })
+    )
+  }
+
+  // Volunteer Work
   if (preparedResume.volunteerWork?.items) {
-    preparedResume.volunteerWork.items = preparedResume.volunteerWork.items.map(
-      (vol: any) => ({
-        ...vol,
-        role: vol.role ?? ''
+    preparedResume.volunteerWorkVC = await Promise.all(
+      preparedResume.volunteerWork.items.map(async (vol: any) => {
+        const processedVol = await replaceCredentialLinksWithContent(vol)
+        return { ...vol, ...processedVol }
       })
     )
   }
@@ -538,6 +552,30 @@ export const transformEditorToVCSchema = (resume: any): any => {
           '@id': 'https://schema.org/employmentHistory',
           '@container': '@list'
         },
+        educationAndLearning: {
+          '@id': 'https://schema.org/EducationalOccupationalProgram',
+          '@container': '@list'
+        },
+        certifications: {
+          '@id': 'https://schema.org/EducationalOccupationalCredential',
+          '@container': '@list'
+        },
+        skills: {
+          '@id': 'https://schema.org/skills',
+          '@container': '@list'
+        },
+        projects: {
+          '@id': 'https://schema.org/Project',
+          '@container': '@list'
+        },
+        professionalAffiliations: {
+          '@id': 'https://schema.org/OrganizationRole',
+          '@container': '@list'
+        },
+        volunteerWork: {
+          '@id': 'https://schema.org/VolunteerRole',
+          '@container': '@list'
+        },
         company: 'https://schema.org/worksFor',
         position: 'https://schema.org/jobTitle',
         description: 'https://schema.org/description',
@@ -545,14 +583,6 @@ export const transformEditorToVCSchema = (resume: any): any => {
         endDate: 'https://schema.org/endDate',
         stillEmployed: 'https://schema.org/Boolean',
         duration: 'https://schema.org/temporalCoverage',
-        skills: {
-          '@id': 'https://schema.org/skills',
-          '@container': '@list'
-        },
-        educationAndLearning: {
-          '@id': 'https://schema.org/EducationalOccupationalProgram',
-          '@container': '@list'
-        },
         degree: 'https://schema.org/educationalCredentialAwarded',
         fieldOfStudy: 'https://schema.org/studyField',
         institution: 'https://schema.org/educationalInstitution',
@@ -570,20 +600,8 @@ export const transformEditorToVCSchema = (resume: any): any => {
         },
         publisher: 'https://schema.org/publisher',
         url: 'https://schema.org/url',
-        certifications: {
-          '@id': 'https://schema.org/EducationalOccupationalCredential',
-          '@container': '@list'
-        },
-        professionalAffiliations: {
-          '@id': 'https://schema.org/OrganizationRole',
-          '@container': '@list'
-        },
-        organization: 'https://schema.org/memberOf',
-        role: 'https://schema.org/jobTitle',
-        volunteerWork: {
-          '@id': 'https://schema.org/VolunteerRole',
-          '@container': '@list'
-        },
+        activeAffiliation: 'https://schema.org/Boolean',
+        currentlyVolunteering: 'https://schema.org/Boolean',
         hobbiesAndInterests: {
           '@id': 'https://schema.org/knowsAbout',
           '@container': '@set'
@@ -599,10 +617,6 @@ export const transformEditorToVCSchema = (resume: any): any => {
           '@container': '@list'
         },
         author: 'https://schema.org/author',
-        projects: {
-          '@id': 'https://schema.org/Project',
-          '@container': '@list'
-        },
         issuanceDate: 'https://schema.org/issuanceDate',
         credentialSubject: 'https://schema.org/credentialSubject',
         person: 'https://schema.org/Person',
@@ -643,53 +657,27 @@ export const transformEditorToVCSchema = (resume: any): any => {
       narrative: {
         text: resume.summary || ''
       },
-      experience: Array.isArray(resume.experience?.items)
-        ? resume.experience.items.map((exp: any) => ({
-            company: exp.company || '',
-            title: exp.title || '',
-            description: exp.description || '',
-            startDate: exp.startDate || '',
-            endDate: exp.endDate || '',
-            stillEmployed: exp.currentlyEmployed || false
-          }))
+      employmentHistory: Array.isArray(resume.employmentHistory)
+        ? resume.employmentHistory.map((exp: any) => ({ ...exp }))
         : [],
-      skills: Array.isArray(resume.skills?.items)
-        ? resume.skills.items.map((skill: any) => ({
-            name: skill.skills || ''
-          }))
+      educationAndLearning: Array.isArray(resume.educationAndLearning)
+        ? resume.educationAndLearning.map((edu: any) => ({ ...edu }))
         : [],
-      educationAndLearning: Array.isArray(resume.education?.items)
-        ? resume.education.items.map((edu: any) => ({
-            institution: edu.institution || '',
-            degree: edu.degree || '',
-            fieldOfStudy: edu.field || '',
-            startDate: edu.startDate || '',
-            endDate: edu.endDate || ''
-          }))
+      certifications: Array.isArray(resume.certificationsVC)
+        ? resume.certificationsVC.map((cert: any) => ({ ...cert }))
         : [],
-      awards: [],
-      publications: [],
-      certifications: [],
-      professionalAffiliations: Array.isArray(resume.professionalAffiliations?.items)
-        ? resume.professionalAffiliations.items.map((aff: any) => ({
-            organization: aff.organization || '',
-            role: aff.name || '',
-            startDate: aff.startDate || '',
-            endDate: aff.endDate || ''
-          }))
+      skills: Array.isArray(resume.skillsVC)
+        ? resume.skillsVC.map((skill: any) => ({ ...skill }))
         : [],
-      volunteerWork: [],
-      hobbiesAndInterests: Array.isArray(resume.hobbiesAndInterests)
-        ? resume.hobbiesAndInterests
+      projects: Array.isArray(resume.projectsVC)
+        ? resume.projectsVC.map((proj: any) => ({ ...proj }))
         : [],
-      languages: Array.isArray(resume.languages?.items)
-        ? resume.languages.items.map((lang: any) => ({
-            language: lang.name || '',
-            proficiency: ''
-          }))
+      professionalAffiliations: Array.isArray(resume.professionalAffiliationsVC)
+        ? resume.professionalAffiliationsVC.map((aff: any) => ({ ...aff }))
         : [],
-      testimonials: [],
-      projects: []
+      volunteerWork: Array.isArray(resume.volunteerWorkVC)
+        ? resume.volunteerWorkVC.map((vol: any) => ({ ...vol }))
+        : []
     }
   }
 

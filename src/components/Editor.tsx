@@ -81,6 +81,25 @@ const computeResumeHash = (resume: any): string => {
   return JSON.stringify(fieldsToCheck)
 }
 
+// FINAL PATCH: Guarantee credentialLink is a JSON string if fullCredential is present in the signed object (all sections)
+function forceCredentialJsonString(sectionArr: any[]): any[] {
+  if (!Array.isArray(sectionArr)) return sectionArr
+  return sectionArr.map(item => {
+    if (
+      item.credentialLink &&
+      typeof item.credentialLink === 'string' &&
+      !item.credentialLink.startsWith('{') &&
+      item.fullCredential
+    ) {
+      return {
+        ...item,
+        credentialLink: JSON.stringify(item.fullCredential)
+      }
+    }
+    return item
+  })
+}
+
 const ResumeEditor: React.FC = () => {
   const navigate = useNavigate()
   const location = useLocation()
@@ -581,7 +600,7 @@ const ResumeEditor: React.FC = () => {
   const handleSaveDraft = async () => {
     try {
       setIsDraftSaving(true)
-      const preparedResume = prepareResumeForVC(resume, sectionEvidence, allFiles)
+      const preparedResume = await prepareResumeForVC(resume, sectionEvidence, allFiles)
       console.log('Saving draft with evidence:', {
         sectionEvidence,
         evidenceInPreparedResume: preparedResume?.evidence
@@ -662,9 +681,55 @@ const ResumeEditor: React.FC = () => {
       }
 
       console.log('Current sectionEvidence before preparing for VC:', sectionEvidence)
-      const preparedResume = prepareResumeForVC(resume, sectionEvidence, allFiles)
+      // TRACE REDUX STATE AND RESUME OBJECT
+      try {
+        const { store } = await import('../redux/store')
+        const state = store.getState()
+        console.log('🚨 REDUX resume state:', state.resume)
+        console.log('🚨 REDUX vcReducer state:', state.vcReducer)
+      } catch (e) {
+        console.warn('Could not import redux store for tracing:', e)
+      }
+      console.log('🚨 Resume object before prepareResumeForVC:', resume)
+      const preparedResume = await prepareResumeForVC(resume, sectionEvidence, allFiles)
       console.log('PREPARED FORM DATA', preparedResume)
       console.log('FORM DATA - Evidence section:', preparedResume.evidence)
+
+      // PATCH: Ensure processed employmentHistory is used in credentialSubject
+      if (
+        preparedResume.credentialSubject &&
+        preparedResume.employmentHistory &&
+        Array.isArray(preparedResume.employmentHistory)
+      ) {
+        preparedResume.credentialSubject.employmentHistory =
+          preparedResume.employmentHistory
+      }
+
+      // FINAL PATCH: Guarantee credentialLink is a JSON string if fullCredential is present in the prepared data (all sections)
+      if (preparedResume.credentialSubject) {
+        preparedResume.credentialSubject.employmentHistory = forceCredentialJsonString(
+          preparedResume.credentialSubject.employmentHistory
+        )
+        preparedResume.credentialSubject.educationAndLearning = forceCredentialJsonString(
+          preparedResume.credentialSubject.educationAndLearning
+        )
+        preparedResume.credentialSubject.certifications = forceCredentialJsonString(
+          preparedResume.credentialSubject.certifications
+        )
+        preparedResume.credentialSubject.skills = forceCredentialJsonString(
+          preparedResume.credentialSubject.skills
+        )
+        preparedResume.credentialSubject.projects = forceCredentialJsonString(
+          preparedResume.credentialSubject.projects
+        )
+        preparedResume.credentialSubject.professionalAffiliations =
+          forceCredentialJsonString(
+            preparedResume.credentialSubject.professionalAffiliations
+          )
+        preparedResume.credentialSubject.volunteerWork = forceCredentialJsonString(
+          preparedResume.credentialSubject.volunteerWork
+        )
+      }
 
       // Sign resume
       const signedResume = await instances.resumeVC.sign({
@@ -674,6 +739,56 @@ const ResumeEditor: React.FC = () => {
       })
       if (!signedResume) {
         throw new Error('Failed to sign resume')
+      }
+
+      // FINAL PATCH: Guarantee credentialLink is a JSON string if fullCredential is present in the signed object
+      if (
+        signedResume.credentialSubject &&
+        Array.isArray(signedResume.credentialSubject.employmentHistory)
+      ) {
+        signedResume.credentialSubject.employmentHistory =
+          signedResume.credentialSubject.employmentHistory.map((exp: any) => {
+            if (
+              exp.credentialLink &&
+              (typeof exp.credentialLink !== 'string' ||
+                (typeof exp.credentialLink === 'string' &&
+                  !exp.credentialLink.startsWith('{')))
+            ) {
+              if (exp.fullCredential) {
+                return {
+                  ...exp,
+                  credentialLink: JSON.stringify(exp.fullCredential)
+                }
+              }
+            }
+            return exp
+          })
+      }
+
+      // FINAL PATCH: Guarantee credentialLink is a JSON string if fullCredential is present in the signed object (all sections)
+      if (signedResume.credentialSubject) {
+        signedResume.credentialSubject.employmentHistory = forceCredentialJsonString(
+          signedResume.credentialSubject.employmentHistory
+        )
+        signedResume.credentialSubject.educationAndLearning = forceCredentialJsonString(
+          signedResume.credentialSubject.educationAndLearning
+        )
+        signedResume.credentialSubject.certifications = forceCredentialJsonString(
+          signedResume.credentialSubject.certifications
+        )
+        signedResume.credentialSubject.skills = forceCredentialJsonString(
+          signedResume.credentialSubject.skills
+        )
+        signedResume.credentialSubject.projects = forceCredentialJsonString(
+          signedResume.credentialSubject.projects
+        )
+        signedResume.credentialSubject.professionalAffiliations =
+          forceCredentialJsonString(
+            signedResume.credentialSubject.professionalAffiliations
+          )
+        signedResume.credentialSubject.volunteerWork = forceCredentialJsonString(
+          signedResume.credentialSubject.volunteerWork
+        )
       }
 
       // Save the signed resume
