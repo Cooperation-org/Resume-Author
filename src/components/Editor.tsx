@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react'
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import {
   Box,
   Button,
@@ -160,6 +160,9 @@ const ResumeEditor: React.FC = () => {
   const { accessToken } = useSelector((state: RootState) => state.auth)
   const refreshToken = getLocalStorage('refresh_token')
 
+  // Memoize the resume hash computation
+  const currentResumeHash = useMemo(() => computeResumeHash(resume), [resume])
+
   // Handle creating a new resume (clear form data)
   useEffect(() => {
     if (!resumeId && isInitialized) {
@@ -260,16 +263,17 @@ const ResumeEditor: React.FC = () => {
   // Check if resume has been modified using the optimized hash comparison
   useEffect(() => {
     if (resume && originalResumeRef.current) {
-      const currentResumeHash = computeResumeHash(resume)
       const newDirtyState = currentResumeHash !== originalResumeRef.current
-
-      // Only update if the state is actually changing
-      if (newDirtyState !== isDirty) {
-        console.log(`Dirty state changed to: ${newDirtyState ? 'dirty' : 'clean'}`)
-        setIsDirty(newDirtyState)
-      }
+      // Only update if state actually changes to prevent unnecessary re-renders
+      setIsDirty(prev => {
+        if (prev !== newDirtyState) {
+          console.log(`Dirty state changed to: ${newDirtyState ? 'dirty' : 'clean'}`)
+          return newDirtyState
+        }
+        return prev
+      })
     }
-  }, [resume, isDirty])
+  }, [currentResumeHash])
 
   // Handle browser's built-in beforeunload dialog for page reloads
   useEffect(() => {
@@ -851,6 +855,11 @@ const ResumeEditor: React.FC = () => {
         }
       }
       dispatch(fetchUserResumes() as any)
+      
+      // Navigate to view the signed resume
+      // The file.id contains the Google Drive ID of the newly signed resume
+      navigate(`/resume/view?id=${file.id}`)
+      
     } catch (error) {
       console.error('Error signing and saving:', error)
     } finally {
