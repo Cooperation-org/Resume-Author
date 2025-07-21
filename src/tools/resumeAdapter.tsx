@@ -101,10 +101,20 @@ export const prepareResumeForVC = async (
 
   // Education
   if (preparedResume.education?.items) {
+    preparedResume.education.items = preparedResume.education.items.map((edu: any) => {
+      // Set degree and fieldOfStudy directly from type and programName if present
+      if (edu.type) edu.degree = edu.type
+      if (edu.programName) edu.fieldOfStudy = edu.programName
+      return edu
+    })
     preparedResume.educationAndLearning = await Promise.all(
       preparedResume.education.items.map(async (edu: any) => {
         const processedEdu = await replaceCredentialLinksWithContent(edu)
-        return { ...edu, ...processedEdu }
+        const base = { ...edu, ...processedEdu }
+        base.degree = edu.degree || ''
+        base.fieldOfStudy = edu.fieldOfStudy || ''
+        base.description = edu.description || processedEdu.description || ''
+        return base
       })
     )
   }
@@ -114,7 +124,11 @@ export const prepareResumeForVC = async (
     preparedResume.certificationsVC = await Promise.all(
       preparedResume.certifications.items.map(async (cert: any) => {
         const processedCert = await replaceCredentialLinksWithContent(cert)
-        return { ...cert, ...processedCert }
+        return {
+          ...cert,
+          credentialLink: cert.credentialLink ?? '',
+          ...processedCert
+        }
       })
     )
   }
@@ -144,7 +158,12 @@ export const prepareResumeForVC = async (
     preparedResume.professionalAffiliationsVC = await Promise.all(
       preparedResume.professionalAffiliations.items.map(async (aff: any) => {
         const processedAff = await replaceCredentialLinksWithContent(aff)
-        return { ...aff, ...processedAff }
+        return {
+          ...aff,
+          description: aff.description ?? '',
+          // preserve RTE fields
+          ...processedAff
+        }
       })
     )
   }
@@ -159,11 +178,28 @@ export const prepareResumeForVC = async (
     )
   }
 
-  if (
-    preparedResume.hobbiesAndInterests &&
-    !Array.isArray(preparedResume.hobbiesAndInterests)
-  ) {
-    preparedResume.hobbiesAndInterests = []
+  if (preparedResume.hobbiesAndInterests) {
+    if (
+      Array.isArray(preparedResume.hobbiesAndInterests) &&
+      preparedResume.hobbiesAndInterests.length > 0 &&
+      typeof preparedResume.hobbiesAndInterests[0] === 'object'
+    ) {
+      // Already array of objects
+      preparedResume.hobbiesAndInterests = preparedResume.hobbiesAndInterests.map(
+        (hobby: any) => ({
+          name: hobby.name ?? '',
+          description: hobby.description ?? ''
+        })
+      )
+    } else if (Array.isArray(preparedResume.hobbiesAndInterests)) {
+      // Array of strings, convert to objects
+      preparedResume.hobbiesAndInterests = preparedResume.hobbiesAndInterests.map(
+        (hobby: any) => ({
+          name: hobby,
+          description: ''
+        })
+      )
+    }
   }
 
   if (preparedResume.testimonials?.items) {
@@ -661,10 +697,18 @@ export const transformEditorToVCSchema = (resume: any): any => {
         ? resume.employmentHistory.map((exp: any) => ({ ...exp }))
         : [],
       educationAndLearning: Array.isArray(resume.educationAndLearning)
-        ? resume.educationAndLearning.map((edu: any) => ({ ...edu }))
+        ? resume.educationAndLearning.map((edu: any) => ({
+            ...edu,
+            degree: edu.type || edu.degree || '',
+            fieldOfStudy: edu.programName || edu.fieldOfStudy || '',
+            description: edu.description || ''
+          }))
         : [],
       certifications: Array.isArray(resume.certificationsVC)
-        ? resume.certificationsVC.map((cert: any) => ({ ...cert }))
+        ? resume.certificationsVC.map((cert: any) => ({
+            ...cert,
+            credentialLink: cert.credentialLink ?? ''
+          }))
         : [],
       skills: Array.isArray(resume.skillsVC)
         ? resume.skillsVC.map((skill: any) => ({ ...skill }))
@@ -673,10 +717,19 @@ export const transformEditorToVCSchema = (resume: any): any => {
         ? resume.projectsVC.map((proj: any) => ({ ...proj }))
         : [],
       professionalAffiliations: Array.isArray(resume.professionalAffiliationsVC)
-        ? resume.professionalAffiliationsVC.map((aff: any) => ({ ...aff }))
+        ? resume.professionalAffiliationsVC.map((aff: any) => ({
+            ...aff,
+            description: aff.description ?? ''
+          }))
         : [],
       volunteerWork: Array.isArray(resume.volunteerWorkVC)
         ? resume.volunteerWorkVC.map((vol: any) => ({ ...vol }))
+        : [],
+      hobbiesAndInterests: Array.isArray(resume.hobbiesAndInterests)
+        ? resume.hobbiesAndInterests.map((hobby: any) => ({
+            name: hobby.name ?? hobby ?? '',
+            description: hobby.description ?? ''
+          }))
         : []
     }
   }

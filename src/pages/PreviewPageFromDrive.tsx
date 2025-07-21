@@ -173,6 +173,10 @@ const PreviewPageFromDrive: React.FC = () => {
             ['narrative', 'text'],
             safeGet(resumeContent, ['summary'], '')
           ),
+          // PATCH: Add professionalSummary if present
+          ...(resumeContent.professionalSummary
+            ? { professionalSummary: resumeContent.professionalSummary }
+            : {}),
           experience: {
             items: [
               ...(resumeContent.employmentHistory ?? []),

@@ -5,6 +5,7 @@ import { BlueVerifiedBadge } from '../assets/svgs'
 import { useSelector } from 'react-redux'
 import { RootState } from '../redux/store'
 import { HTMLWithVerifiedLinks, isVerifiedLink } from '../tools/htmlUtils'
+import MinimalCredentialViewer from './MinimalCredentialViewer'
 
 const PAGE_SIZE = {
   width: '210mm',
@@ -95,8 +96,9 @@ const LinkWithFavicon: React.FC<{ url: string; platform?: string }> = ({
 }
 
 // Updated PageHeader component
-const PageHeader: React.FC<{ fullName: string; forcedId?: string }> = ({
+const PageHeader: React.FC<{ fullName: string; city?: string; forcedId?: string }> = ({
   fullName,
+  city,
   forcedId
 }) => {
   const [resumeLink, setResumeLink] = useState<string>('')
@@ -120,6 +122,11 @@ const PageHeader: React.FC<{ fullName: string; forcedId?: string }> = ({
         <Typography sx={{ fontWeight: 600, color: '#2E2E48', fontSize: '30px' }}>
           {fullName}
         </Typography>
+        {city && (
+          <Typography sx={{ fontWeight: 400, color: '#2E2E48', fontSize: '18px', ml: 2 }}>
+            {city}
+          </Typography>
+        )}
       </Box>
       <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
         <Box
@@ -280,6 +287,90 @@ const SocialLinksSection: React.FC<{
   )
 }
 
+// Helper to render credential link as blue link or MinimalCredentialViewer
+function renderCredentialLink(credentialLink: string | undefined) {
+  if (!credentialLink) return null
+  let credObj = null
+  try {
+    if (credentialLink.startsWith('{')) {
+      credObj = JSON.parse(credentialLink)
+    }
+  } catch (e) {}
+  if (credObj) {
+    return <MinimalCredentialViewer vcData={credObj} />
+  }
+  // fallback: treat as URL
+  return (
+    <a
+      href={credentialLink}
+      target='_blank'
+      rel='noopener noreferrer'
+      style={{ color: '#2563EB', textDecoration: 'underline', fontWeight: 600 }}
+    >
+      View Credential
+    </a>
+  )
+}
+
+// Helper to render portfolio links/images
+function renderPortfolio(portfolio: any[] | undefined) {
+  if (!portfolio || !Array.isArray(portfolio) || portfolio.length === 0) return null
+  return (
+    <ul style={{ paddingLeft: 20, margin: 0 }}>
+      {portfolio.map((item, idx) =>
+        item.name && item.url ? (
+          <li key={idx} style={{ marginBottom: 2 }}>
+            <a
+              href={item.url}
+              target='_blank'
+              rel='noopener noreferrer'
+              style={{ color: '#2563EB', textDecoration: 'underline' }}
+            >
+              {item.name}
+            </a>
+          </li>
+        ) : null
+      )}
+    </ul>
+  )
+}
+
+// Helper to render date or duration for sections
+function renderDateOrDuration({
+  duration,
+  startDate,
+  endDate,
+  currentlyVolunteering,
+  noExpiration,
+  issueDate
+}: {
+  duration?: string
+  startDate?: string
+  endDate?: string
+  currentlyVolunteering?: boolean
+  noExpiration?: boolean
+  issueDate?: string
+}) {
+  if (duration) {
+    return duration
+  }
+  if (noExpiration) {
+    return 'No Expiration'
+  }
+  if (issueDate) {
+    return `Issued on ${issueDate}`
+  }
+  const start = startDate ?? ''
+  let end = endDate ?? ''
+  if (!endDate && (currentlyVolunteering || start)) {
+    end = 'Present'
+  }
+  if (!start && !end) {
+    return ''
+  }
+  return `${start}${start ? ' - ' : ''}${end}`
+}
+
 const ExperienceSection: React.FC<{ items: WorkExperience[] }> = ({ items }) => {
   if (!items?.length) return null
   return (
@@ -291,7 +382,14 @@ const ExperienceSection: React.FC<{ items: WorkExperience[] }> = ({ items }) => 
           startDate: item.startDate,
           endDate: item.endDate
         })
-
+        let credLink = item.credentialLink
+        let credObj = null
+        if (credLink && credLink.startsWith('{')) {
+          try {
+            credObj = JSON.parse(credLink)
+          } catch (e) {}
+        }
+        let portfolio = credObj?.credentialSubject?.portfolio
         return (
           <Box key={item.id} sx={{ mb: '30px' }}>
             <Box sx={{ display: 'flex', alignItems: 'center' }}>
@@ -339,6 +437,10 @@ const ExperienceSection: React.FC<{ items: WorkExperience[] }> = ({ items }) => 
                 <HTMLWithVerifiedLinks htmlContent={item.description} />
               </Typography>
             )}
+            {/* Credential Link */}
+            {renderCredentialLink(item.credentialLink)}
+            {/* Portfolio */}
+            {renderPortfolio(portfolio)}
           </Box>
         )
       })}
@@ -358,7 +460,14 @@ const EducationSection: React.FC<{ items: Education[] }> = ({ items }) => {
           endDate: item.endDate,
           currentlyVolunteering: item.currentlyEnrolled
         })
-
+        let credLink = item.credentialLink
+        let credObj = null
+        if (credLink && credLink.startsWith('{')) {
+          try {
+            credObj = JSON.parse(credLink)
+          } catch (e) {}
+        }
+        let portfolio = credObj?.credentialSubject?.portfolio
         // Fix for empty degree and program name
         let educationTitle = ''
         if (item.type && item.programName) {
@@ -368,14 +477,11 @@ const EducationSection: React.FC<{ items: Education[] }> = ({ items }) => {
         } else if (item.programName) {
           educationTitle = item.programName
         }
-
-        // Only add comma if we have both a title and institution
         if (educationTitle && item.institution) {
           educationTitle += `, ${item.institution}`
         } else if (item.institution) {
           educationTitle = item.institution
         }
-
         return (
           <Box key={item.id} sx={{ mb: 2 }}>
             <Box sx={{ display: 'flex', alignItems: 'flex-start' }}>
@@ -414,6 +520,10 @@ const EducationSection: React.FC<{ items: Education[] }> = ({ items }) => {
                     <HTMLWithVerifiedLinks htmlContent={item.description} />
                   </Typography>
                 )}
+                {/* Credential Link */}
+                {renderCredentialLink(item.credentialLink)}
+                {/* Portfolio */}
+                {renderPortfolio(portfolio)}
               </Box>
             </Box>
           </Box>
@@ -423,72 +533,31 @@ const EducationSection: React.FC<{ items: Education[] }> = ({ items }) => {
   )
 }
 
-const renderDateOrDuration = ({
-  duration,
-  startDate,
-  endDate,
-  currentlyVolunteering,
-  noExpiration,
-  issueDate // Add parameter for certification issue date
-}: {
-  duration?: string
-  startDate?: string
-  endDate?: string
-  currentlyVolunteering?: boolean
-  noExpiration?: boolean
-  issueDate?: string // New parameter
-}) => {
-  if (duration) {
-    return duration
-  }
-
-  if (noExpiration) {
-    return 'No Expiration'
-  }
-
-  // Handle certification issue date directly
-  if (issueDate) {
-    return `Issued on ${issueDate}`
-  }
-
-  const start = startDate ?? ''
-  let end = endDate ?? ''
-
-  if (!endDate && (currentlyVolunteering || start)) {
-    end = 'Present'
-  }
-
-  if (!start && !end) {
-    return ''
-  }
-
-  return `${start}${start ? ' - ' : ''}${end}`
-}
-
 const CertificationsSection: React.FC<{ items: Certification[] }> = ({ items }) => {
   if (!items?.length) return null
-
   return (
     <Box sx={{ mb: '30px' }}>
       <SectionTitle>Certifications</SectionTitle>
       {items.map(item => {
-        // Directly use issueDate rather than going through renderDateOrDuration
-        // This ensures certification dates are always displayed
         let displayDate = ''
-
         if (item.noExpiration) {
           displayDate = 'No Expiration'
         }
-
         if (item.issueDate) {
-          // Show the issue date along with expiration status
           if (displayDate) {
             displayDate = `Issued on ${item.issueDate} | ${displayDate}`
           } else {
             displayDate = `Issued on ${item.issueDate}`
           }
         }
-
+        let credLink = item.credentialLink
+        let credObj = null
+        if (credLink && credLink.startsWith('{')) {
+          try {
+            credObj = JSON.parse(credLink)
+          } catch (e) {}
+        }
+        let portfolio = credObj?.credentialSubject?.portfolio
         return (
           <Box key={item.id || item.name} sx={{ mb: 2 }}>
             <Box sx={{ display: 'flex', alignItems: 'flex-start' }}>
@@ -539,6 +608,10 @@ const CertificationsSection: React.FC<{ items: Certification[] }> = ({ items }) 
                     Credential ID: {item.credentialId}
                   </Typography>
                 )}
+                {/* Credential Link */}
+                {renderCredentialLink(item.credentialLink)}
+                {/* Portfolio */}
+                {renderPortfolio(portfolio)}
               </Box>
             </Box>
           </Box>
@@ -555,6 +628,14 @@ const ProjectsSection: React.FC<{ items: Project[] }> = ({ items }) => {
       <SectionTitle>Projects</SectionTitle>
       {items.map(item => {
         const dateText = renderDateOrDuration({})
+        let credLink = item.credentialLink
+        let credObj = null
+        if (credLink && credLink.startsWith('{')) {
+          try {
+            credObj = JSON.parse(credLink)
+          } catch (e) {}
+        }
+        let portfolio = credObj?.credentialSubject?.portfolio
         return (
           <Box key={item.id} sx={{ mb: 3 }}>
             <Box sx={{ display: 'flex', alignItems: 'flex-start' }}>
@@ -591,6 +672,10 @@ const ProjectsSection: React.FC<{ items: Project[] }> = ({ items }) => {
                     <LinkWithFavicon url={item.url} />
                   </Box>
                 )}
+                {/* Credential Link */}
+                {renderCredentialLink(item.credentialLink)}
+                {/* Portfolio */}
+                {renderPortfolio(portfolio)}
               </Box>
             </Box>
           </Box>
@@ -613,6 +698,14 @@ const ProfessionalAffiliationsSection: React.FC<{
           startDate: item.startDate,
           endDate: item.endDate
         })
+        let credLink = item.credentialLink
+        let credObj = null
+        if (credLink && credLink.startsWith('{')) {
+          try {
+            credObj = JSON.parse(credLink)
+          } catch (e) {}
+        }
+        let portfolio = credObj?.credentialSubject?.portfolio
         return (
           <Box key={item.id} sx={{ mb: 2 }}>
             <Box sx={{ display: 'flex', alignItems: 'flex-start' }}>
@@ -651,6 +744,10 @@ const ProfessionalAffiliationsSection: React.FC<{
                     Active Affiliation
                   </Typography>
                 )}
+                {/* Credential Link */}
+                {renderCredentialLink(item.credentialLink)}
+                {/* Portfolio */}
+                {renderPortfolio(portfolio)}
               </Box>
             </Box>
           </Box>
@@ -672,6 +769,14 @@ const VolunteerWorkSection: React.FC<{ items: VolunteerWork[] }> = ({ items }) =
           endDate: item.endDate,
           currentlyVolunteering: item.currentlyVolunteering
         })
+        let credLink = item.credentialLink
+        let credObj = null
+        if (credLink && credLink.startsWith('{')) {
+          try {
+            credObj = JSON.parse(credLink)
+          } catch (e) {}
+        }
+        let portfolio = credObj?.credentialSubject?.portfolio
         return (
           <Box key={item.id} sx={{ mb: 2 }}>
             <Box sx={{ display: 'flex', alignItems: 'flex-start' }}>
@@ -683,6 +788,14 @@ const VolunteerWorkSection: React.FC<{ items: VolunteerWork[] }> = ({ items }) =
                 >
                   {item.role} at {item.organization}
                 </Typography>
+                {item.location && (
+                  <Typography
+                    variant='body2'
+                    sx={{ fontFamily: 'Arial', fontSize: '16px', fontWeight: 400 }}
+                  >
+                    {item.location}
+                  </Typography>
+                )}
                 {dateText && (
                   <Typography
                     variant='body2'
@@ -699,6 +812,10 @@ const VolunteerWorkSection: React.FC<{ items: VolunteerWork[] }> = ({ items }) =
                     <HTMLWithVerifiedLinks htmlContent={item.description} />
                   </Typography>
                 )}
+                {/* Credential Link */}
+                {renderCredentialLink(item.credentialLink)}
+                {/* Portfolio */}
+                {renderPortfolio(portfolio)}
               </Box>
             </Box>
           </Box>
@@ -714,29 +831,43 @@ const SkillsSection: React.FC<{ items: Skill[] }> = ({ items }) => {
     <Box sx={{ mb: '30px' }}>
       <SectionTitle>Skills</SectionTitle>
       <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
-        {items.map(item => (
-          <Box
-            key={item.id}
-            sx={{
-              display: 'flex',
-              alignItems: 'flex-start',
-              gap: 1,
-              width: 'calc(100% - 8px)'
-            }}
-          >
-            {item.verificationStatus === 'verified' && <BlueVerifiedBadge />}
-            <Typography
+        {items.map(item => {
+          let credLink = item.credentialLink
+          let credObj = null
+          if (credLink && credLink.startsWith('{')) {
+            try {
+              credObj = JSON.parse(credLink)
+            } catch (e) {}
+          }
+          let portfolio = credObj?.credentialSubject?.portfolio
+          return (
+            <Box
+              key={item.id}
               sx={{
-                fontWeight: 400,
-                fontSize: '16px',
-                fontFamily: 'Arial',
-                ml: item.verificationStatus === 'verified' ? 1 : 0
+                display: 'flex',
+                alignItems: 'flex-start',
+                gap: 1,
+                width: 'calc(100% - 8px)'
               }}
             >
-              <HTMLWithVerifiedLinks htmlContent={item.skills || ''} />
-            </Typography>
-          </Box>
-        ))}
+              {item.verificationStatus === 'verified' && <BlueVerifiedBadge />}
+              <Typography
+                sx={{
+                  fontWeight: 400,
+                  fontSize: '16px',
+                  fontFamily: 'Arial',
+                  ml: item.verificationStatus === 'verified' ? 1 : 0
+                }}
+              >
+                <HTMLWithVerifiedLinks htmlContent={item.skills || ''} />
+              </Typography>
+              {/* Credential Link */}
+              {renderCredentialLink(item.credentialLink)}
+              {/* Portfolio */}
+              {renderPortfolio(portfolio)}
+            </Box>
+          )
+        })}
       </Box>
     </Box>
   )
@@ -891,6 +1022,18 @@ function usePagination(content: ReactNode[]) {
   return { pages, measureRef }
 }
 
+// Patch: Extract summary from professionalSummary.credentialSubject.narrative if present
+function getSummary(resume: any) {
+  if (
+    resume.professionalSummary &&
+    resume.professionalSummary.credentialSubject &&
+    resume.professionalSummary.credentialSubject.narrative
+  ) {
+    return resume.professionalSummary.credentialSubject.narrative
+  }
+  return resume.summary || ''
+}
+
 const ResumePreview: React.FC<{ data?: Resume; forcedId?: string }> = ({
   data: propData,
   forcedId
@@ -911,8 +1054,10 @@ const ResumePreview: React.FC<{ data?: Resume; forcedId?: string }> = ({
 
   if (!resume) return null
 
-  if (resume.summary) {
-    contentSections.push(<SummarySection key='summary' summary={resume.summary} />)
+  // Always add summary as the first section, using getSummary
+  const summary = getSummary(resume)
+  if (summary) {
+    contentSections.push(<SummarySection key='summary' summary={summary} />)
   }
   if (resume.contact?.socialLinks) {
     contentSections.push(
@@ -1019,6 +1164,7 @@ const ResumePreview: React.FC<{ data?: Resume; forcedId?: string }> = ({
             >
               <PageHeader
                 fullName={resume.contact?.fullName || 'Your Name'}
+                city={resume.contact?.location?.city}
                 forcedId={forcedId}
               />
               <Box
