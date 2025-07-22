@@ -7,6 +7,9 @@ import ResumePreview from '../components/resumePreview'
 import ResumePreviewTopbar from '../components/ResumePreviewTopbar'
 import html2pdf from 'html2pdf.js'
 import { useLocation } from 'react-router-dom'
+import { useDispatch } from 'react-redux'
+import { setSelectedResume } from '../redux/slices/resume'
+import { AppDispatch } from '../redux/store'
 
 const PreviewPage = () => {
   const [isDraftSaving, setIsDraftSaving] = useState(false)
@@ -15,6 +18,7 @@ const PreviewPage = () => {
   const [error, setError] = useState<string | null>(null)
   const [resumeData, setResumeData] = useState<any>(null)
   const location = useLocation()
+  const dispatch = useDispatch<AppDispatch>()
 
   // Get resumeId from URL parameters
   const queryParams = new URLSearchParams(location.search)
@@ -33,9 +37,13 @@ const PreviewPage = () => {
         const fileData = await storage.retrieve(resumeId)
 
         if (fileData?.data ?? fileData) {
-          setResumeData(fileData.data)
+          const data = fileData.data ?? fileData
+          setResumeData(data)
+          // Also update Redux state so Sign and Save has access to the resume data
+          dispatch(setSelectedResume(data))
         } else {
           setResumeData(fileData)
+          dispatch(setSelectedResume(fileData))
         }
         setIsLoading(false)
       } catch (err) {
@@ -54,7 +62,7 @@ const PreviewPage = () => {
     } else {
       setIsLoading(false)
     }
-  }, [resumeId])
+  }, [resumeId, dispatch])
 
   const exportResumeToPDF = () => {
     if (!resumeData) return
