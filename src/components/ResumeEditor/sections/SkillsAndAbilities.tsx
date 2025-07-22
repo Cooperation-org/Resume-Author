@@ -10,6 +10,7 @@ import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline'
 import CloseIcon from '@mui/icons-material/Close'
 import CredentialOverlay from '../../CredentialsOverlay'
 import AttachFileIcon from '@mui/icons-material/AttachFile'
+import VerifiedCredentialsList from '../../common/VerifiedCredentialsList'
 
 interface FileItem {
   id: string
@@ -44,6 +45,34 @@ interface SelectedCredential {
   url: string
   name: string
   vc: any
+}
+
+// Helper to get credential name (robust, checks all possible locations)
+function getCredentialName(claim: any): string {
+  if (!claim) return ''
+  if (claim.name) return claim.name
+  if (claim.credentialSubject) {
+    if (
+      claim.credentialSubject.achievement &&
+      claim.credentialSubject.achievement[0]?.name
+    ) {
+      return claim.credentialSubject.achievement[0].name
+    }
+    if (claim.credentialSubject.credentialName) {
+      return claim.credentialSubject.credentialName
+    }
+    if (claim.credentialSubject.name) {
+      return claim.credentialSubject.name
+    }
+    if (claim.credentialSubject.title) {
+      return claim.credentialSubject.title
+    }
+  }
+  // Try fallback for root-level achievement
+  if (claim.achievement && claim.achievement[0]?.name) {
+    return claim.achievement[0].name
+  }
+  return ''
 }
 
 export default function SkillsAndAbilities({
@@ -238,28 +267,26 @@ export default function SkillsAndAbilities({
           const credential = vcs.find((c: any) => (c?.originalItem?.id || c.id) === id)
           return {
             id,
-            url: '', // not used, but required by interface
-            name:
-              credential?.credentialSubject?.achievement[0]?.name ||
-              `Credential ${id.substring(0, 5)}...`,
-            vc: credential // full object
+            url: '',
+            name: getCredentialName(credential),
+            vc: credential
           }
         })
-
+        // Deduplicate by id
+        const deduped: SelectedCredential[] = Array.from(
+          new Map(selectedCredentials.map(c => [c.id, c])).values()
+        )
         setSkills(prevSkills => {
           const updatedSkills = [...prevSkills]
           updatedSkills[activeSectionIndex] = {
             ...updatedSkills[activeSectionIndex],
             verificationStatus: 'verified',
             credentialLink:
-              selectedCredentials &&
-              selectedCredentials.length > 0 &&
-              selectedCredentials[0].id
-                ? `${selectedCredentials[0].id},${JSON.stringify(selectedCredentials[0].vc)}`
+              deduped && deduped.length > 0 && deduped[0].id && deduped[0].vc
+                ? `${deduped[0].id},${JSON.stringify(deduped[0].vc)}`
                 : '',
-            selectedCredentials
+            selectedCredentials: deduped
           }
-
           dispatch(
             updateSection({
               sectionId: 'skills',
@@ -268,11 +295,9 @@ export default function SkillsAndAbilities({
               }
             })
           )
-
           return updatedSkills
         })
       }
-
       setShowCredentialsOverlay(false)
       setActiveSectionIndex(null)
     },
@@ -286,7 +311,12 @@ export default function SkillsAndAbilities({
         updatedSkills[itemIndex].selectedCredentials = updatedSkills[
           itemIndex
         ].selectedCredentials.filter((_, index) => index !== credentialIndex)
-
+        // Deduplicate by id
+        updatedSkills[itemIndex].selectedCredentials = Array.from(
+          new Map(
+            updatedSkills[itemIndex].selectedCredentials.map(c => [c.id, c])
+          ).values()
+        )
         dispatch(
           updateSection({
             sectionId: 'skills',
@@ -295,7 +325,6 @@ export default function SkillsAndAbilities({
             }
           })
         )
-
         return updatedSkills
       })
     },
@@ -400,53 +429,11 @@ export default function SkillsAndAbilities({
               />
 
               {skill.selectedCredentials && skill.selectedCredentials.length > 0 && (
-                <Box sx={{ mt: 2 }}>
-                  <Typography variant='body2' sx={{ fontWeight: 'bold', mb: 1 }}>
-                    Verified Credentials:
-                  </Typography>
-                  {skill.selectedCredentials.map((credential, credIndex) => (
-                    <Box
-                      key={`credential-${credential.id}-${credIndex}`}
-                      sx={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        mb: 0.5,
-                        backgroundColor: '#f5f5f5',
-                        p: 0.5,
-                        borderRadius: 1
-                      }}
-                    >
-                      <Typography
-                        variant='body2'
-                        sx={{
-                          color: 'primary.main',
-                          textDecoration: 'underline',
-                          cursor: 'pointer'
-                        }}
-                        onClick={() => window.open(credential.url, '_blank')}
-                      >
-                        {credential.name || `Credential ${credIndex + 1}`}
-                      </Typography>
-                      <IconButton
-                        size='small'
-                        onClick={e => {
-                          e.stopPropagation()
-                          handleRemoveCredential(index, credIndex)
-                        }}
-                        sx={{
-                          p: 0.5,
-                          color: 'grey.500',
-                          '&:hover': {
-                            color: 'error.main'
-                          }
-                        }}
-                      >
-                        <CloseIcon fontSize='small' />
-                      </IconButton>
-                    </Box>
-                  ))}
-                </Box>
+                <VerifiedCredentialsList
+                  credentials={skill.selectedCredentials}
+                  onRemove={credIndex => handleRemoveCredential(index, credIndex)}
+                  getCredentialName={getCredentialName}
+                />
               )}
 
               {evidence && evidence[index] && evidence[index].length > 0 && (

@@ -29,6 +29,7 @@ import AttachFileIcon from '@mui/icons-material/AttachFile'
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider'
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns'
 import MinimalCredentialViewer from '../../MinimalCredentialViewer'
+import VerifiedCredentialsList from '../../common/VerifiedCredentialsList'
 
 interface FileItem {
   id: string
@@ -85,8 +86,8 @@ export default function CertificationsAndLicenses({
   const [showCredentialsOverlay, setShowCredentialsOverlay] = useState(false)
   const [activeSectionIndex, setActiveSectionIndex] = useState<number | null>(null)
   const vcs = useSelector((state: any) => state.vcReducer.vcs)
-  const [openCredDialog, setOpenCredDialog] = useState(false)
-  const [dialogCredObj, setDialogCredObj] = useState<any>(null)
+  // const [openCredDialog, setOpenCredDialog] = useState(false)
+  // const [dialogCredObj, setDialogCredObj] = useState<any>(null)
 
   const [certifications, setCertifications] = useState<CertificationItem[]>([
     {
@@ -127,8 +128,12 @@ export default function CertificationsAndLicenses({
   )
 
   useEffect(() => {
-    if (resume?.certifications?.items && resume.certifications.items.length > 0) {
-      const typedItems = resume.certifications.items.map((item: any) => ({
+    const items =
+      resume && resume.certifications && Array.isArray(resume.certifications.items)
+        ? resume.certifications.items
+        : []
+    if (items.length > 0) {
+      const typedItems = items.map((item: any) => ({
         name: item.name || '',
         issuer: item.issuer || '',
         issueDate: item.issueDate || '',
@@ -293,52 +298,34 @@ export default function CertificationsAndLicenses({
             vc: credential // full object
           }
         })
-
-        setCertifications(prevCertifications => {
-          const updatedCertifications = [...prevCertifications]
-          const currentCert = updatedCertifications[activeSectionIndex]
-          const isAttestation = currentCert.name && currentCert.issuer
-          if (isAttestation) {
-            selectedCredentials.forEach(cred => {
-              cred.isAttestation = true
-            })
-          }
-
-          updatedCertifications[activeSectionIndex] = {
-            ...currentCert,
+        // Deduplicate by id
+        const deduped: SelectedCredential[] = Array.from(
+          new Map(selectedCredentials.map(c => [c.id, c])).values()
+        )
+        setCertifications(prev => {
+          const updated = [...prev]
+          updated[activeSectionIndex] = {
+            ...updated[activeSectionIndex],
             verificationStatus: 'verified',
-            credentialId:
-              selectedCredentials &&
-              selectedCredentials.length > 0 &&
-              selectedCredentials[0].id
-                ? selectedCredentials[0].id
-                : '',
             credentialLink:
-              selectedCredentials &&
-              selectedCredentials.length > 0 &&
-              selectedCredentials[0].id &&
-              selectedCredentials[0].vc
-                ? `${selectedCredentials[0].id},${JSON.stringify(selectedCredentials[0].vc)}`
+              deduped &&
+              deduped.length > 0 &&
+              deduped[0] &&
+              deduped[0].id &&
+              deduped[0].vc
+                ? `${deduped[0].id},${JSON.stringify(deduped[0].vc)}`
                 : '',
-            selectedCredentials: [
-              ...(currentCert.selectedCredentials || []),
-              ...selectedCredentials
-            ]
+            selectedCredentials: deduped
           }
-
           dispatch(
             updateSection({
               sectionId: 'certifications',
-              content: {
-                items: updatedCertifications
-              }
+              content: { items: updated }
             })
           )
-
-          return updatedCertifications
+          return updated
         })
       }
-
       setShowCredentialsOverlay(false)
       setActiveSectionIndex(null)
     },
@@ -346,36 +333,31 @@ export default function CertificationsAndLicenses({
   )
 
   const handleRemoveCredential = useCallback(
-    (certificationIndex: number, credentialIndex: number) => {
-      setCertifications(prevCertifications => {
-        const updatedCertifications = [...prevCertifications]
-        const certification = { ...updatedCertifications[certificationIndex] }
-
-        const updatedCredentials = (certification.selectedCredentials || []).filter(
-          (_, i) => i !== credentialIndex
+    (certIndex: number, credIndex: number) => {
+      setCertifications(prev => {
+        const updated = [...prev]
+        const cert = { ...updated[certIndex] }
+        const newCreds = cert.selectedCredentials.filter((_, i) => i !== credIndex)
+        // Deduplicate by id
+        cert.selectedCredentials = Array.from(
+          new Map(newCreds.map(c => [c.id, c])).values()
         )
-
-        certification.selectedCredentials = updatedCredentials
-        if (updatedCredentials.length === 0) {
-          certification.verificationStatus = 'unverified'
-          certification.credentialLink = ''
+        if (!cert.selectedCredentials.length) {
+          cert.verificationStatus = 'unverified'
+          cert.credentialLink = ''
         } else {
-          certification.credentialLink = updatedCredentials[0]?.vc
-            ? JSON.stringify(updatedCredentials[0].vc)
+          cert.credentialLink = cert.selectedCredentials[0]?.vc
+            ? JSON.stringify(cert.selectedCredentials[0].vc)
             : ''
         }
-
-        updatedCertifications[certificationIndex] = certification
+        updated[certIndex] = cert
         dispatch(
           updateSection({
             sectionId: 'certifications',
-            content: {
-              items: updatedCertifications
-            }
+            content: { items: updated }
           })
         )
-
-        return updatedCertifications
+        return updated
       })
     },
     [dispatch]
@@ -387,34 +369,21 @@ export default function CertificationsAndLicenses({
     }
   }
 
+  // Helper to get credential name (restore previous working logic)
   function getCredentialName(claim: any): string {
-    try {
-      if (!claim || typeof claim !== 'object') {
-        return 'Invalid Credential'
-      }
-      const credentialSubject = claim.credentialSubject
-      if (!credentialSubject || typeof credentialSubject !== 'object') {
-        return 'Unknown Credential'
-      }
-      if (credentialSubject.employeeName) {
-        return `Performance Review: ${credentialSubject.employeeJobTitle || 'Unknown Position'}`
-      }
-      if (credentialSubject.volunteerWork) {
-        return `Volunteer: ${credentialSubject.volunteerWork}`
-      }
-      if (credentialSubject.role) {
-        return `Employment: ${credentialSubject.role}`
-      }
-      if (credentialSubject.credentialName) {
-        return credentialSubject.credentialName
-      }
-      if (credentialSubject.achievement && credentialSubject.achievement[0]?.name) {
-        return credentialSubject.achievement[0].name
-      }
-      return 'Credential'
-    } catch {
-      return 'Credential'
+    if (!claim) return ''
+    if (claim.name) return claim.name
+    if (
+      claim.credentialSubject &&
+      claim.credentialSubject.achievement &&
+      claim.credentialSubject.achievement[0]?.name
+    ) {
+      return claim.credentialSubject.achievement[0].name
     }
+    if (claim.credentialSubject && claim.credentialSubject.credentialName) {
+      return claim.credentialSubject.credentialName
+    }
+    return ''
   }
 
   return (
@@ -425,353 +394,254 @@ export default function CertificationsAndLicenses({
         specific credentials.
       </Typography>
 
-      {certifications.map((certification, index) => (
-        <Box
-          key={`certification-${index}`}
-          sx={{
-            backgroundColor: '#F1F1FB',
-            px: '20px',
-            py: '10px',
-            display: 'flex',
-            flexDirection: 'column',
-            borderRadius: '4px',
-            gap: 2
-          }}
-        >
+      {(Array.isArray(certifications) ? certifications : []).map(
+        (certification, index) => (
           <Box
-            display='flex'
-            alignItems='center'
-            justifyContent='space-between'
-            onClick={() => toggleExpanded(index)}
-            sx={{ cursor: 'pointer' }}
+            key={`certification-${index}`}
+            sx={{
+              backgroundColor: '#F1F1FB',
+              px: '20px',
+              py: '10px',
+              display: 'flex',
+              flexDirection: 'column',
+              borderRadius: '4px',
+              gap: 2
+            }}
           >
-            <Box display='flex' alignItems='center' gap={2} flexGrow={1}>
-              <SVGSectionIcon />
-              {!expandedItems[index] ? (
-                <>
-                  <Typography variant='body1'>Certification:</Typography>
-                  <Typography variant='body1' sx={{ fontWeight: 'medium' }}>
-                    {certification.name || 'Untitled Certification'}
-                  </Typography>
-                  {certification.verificationStatus === 'verified' && (
-                    <Tooltip title='Verified credential'>
-                      <VerifiedIcon sx={{ color: '#34C759', fontSize: 18 }} />
-                    </Tooltip>
-                  )}
-                </>
-              ) : (
-                <Box display='flex' alignItems='center'>
-                  <Typography variant='body1'>Certification Details</Typography>
-                </Box>
-              )}
-            </Box>
-            <IconButton
-              onClick={e => {
-                e.stopPropagation()
-                toggleExpanded(index)
-              }}
-              sx={{
-                transform: expandedItems[index] ? 'rotate(180deg)' : 'rotate(0deg)',
-                transition: 'transform 0.3s ease'
-              }}
+            <Box
+              display='flex'
+              alignItems='center'
+              justifyContent='space-between'
+              onClick={() => toggleExpanded(index)}
+              sx={{ cursor: 'pointer' }}
             >
-              <SVGDownIcon />
-            </IconButton>
-          </Box>
-
-          {expandedItems[index] && (
-            <>
-              <TextField
-                sx={{ bgcolor: '#FFF' }}
-                size='small'
-                fullWidth
-                label='Certification/License Name'
-                placeholder='e.g., Professional Project Manager (PMP)'
-                value={certification.name}
-                onChange={e => handleCertificationChange(index, 'name', e.target.value)}
-                variant='outlined'
-              />
-
-              <TextField
-                sx={{ bgcolor: '#FFF' }}
-                size='small'
-                fullWidth
-                label='Issuing Organization'
-                placeholder='e.g., Project Management Institute'
-                value={certification.issuer}
-                onChange={e => handleCertificationChange(index, 'issuer', e.target.value)}
-              />
-
-              <LocalizationProvider dateAdapter={AdapterDateFns}>
-                <Box sx={{ display: 'flex', gap: 2 }}>
-                  <Box sx={{ width: '50%' }}>
-                    <Typography variant='body2' sx={{ mb: 1 }}>
-                      Issue Date
+              <Box display='flex' alignItems='center' gap={2} flexGrow={1}>
+                <SVGSectionIcon />
+                {!expandedItems[index] ? (
+                  <>
+                    <Typography variant='body1'>Certification:</Typography>
+                    <Typography variant='body1' sx={{ fontWeight: 'medium' }}>
+                      {certification.name || 'Untitled Certification'}
                     </Typography>
-                    <TextField
-                      sx={{
-                        bgcolor: '#FFF',
-                        '& .MuiInputLabel-root': {
-                          transform: 'translate(14px, -9px) scale(0.75)'
-                        }
-                      }}
-                      size='small'
-                      fullWidth
-                      type='date'
-                      value={certification.issueDate}
-                      onChange={e =>
-                        handleCertificationChange(index, 'issueDate', e.target.value)
-                      }
-                      InputLabelProps={{ shrink: true }}
-                    />
-                  </Box>
-
-                  <Box sx={{ width: '50%' }}>
-                    <Typography variant='body2' sx={{ mb: 1 }}>
-                      Expiry Date
-                    </Typography>
-                    <TextField
-                      sx={{
-                        bgcolor: '#FFF',
-                        '& .MuiInputLabel-root': {
-                          transform: 'translate(14px, -9px) scale(0.75)'
-                        }
-                      }}
-                      size='small'
-                      fullWidth
-                      type='date'
-                      value={certification.expiryDate}
-                      onChange={e =>
-                        handleCertificationChange(index, 'expiryDate', e.target.value)
-                      }
-                      InputLabelProps={{ shrink: true }}
-                      disabled={certification.noExpiration}
-                    />
-                  </Box>
-                </Box>
-              </LocalizationProvider>
-
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    checked={certification.noExpiration}
-                    onChange={e =>
-                      handleCertificationChange(index, 'noExpiration', e.target.checked)
-                    }
-                  />
-                }
-                label='This certification does not expire'
-              />
-
-              <TextField
-                sx={{ bgcolor: '#FFF' }}
-                size='small'
-                fullWidth
-                label='Credential ID (optional)'
-                placeholder='e.g., ABC123456'
-                value={certification.credentialId}
-                onChange={e =>
-                  handleCertificationChange(index, 'credentialId', e.target.value)
-                }
-              />
-
-              {certification.selectedCredentials &&
-                certification.selectedCredentials.length > 0 && (
-                  <Box sx={{ mt: 2 }}>
-                    <Typography variant='body2' sx={{ fontWeight: 'bold', mb: 1 }}>
-                      Verified Credentials:
-                    </Typography>
-                    {certification.selectedCredentials.map((credential, credIndex) => (
-                      <Box
-                        key={`credential-${credential.id}-${credIndex}`}
-                        sx={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'space-between',
-                          mb: 0.5,
-                          backgroundColor: '#f5f5f5',
-                          p: 0.5,
-                          borderRadius: 1
-                        }}
-                      >
-                        <Typography
-                          variant='body2'
-                          sx={{
-                            color: 'primary.main',
-                            textDecoration: 'underline',
-                            cursor: 'pointer'
-                          }}
-                          onClick={() => {
-                            // Parse credentialLink for dialog
-                            let credObj = null
-                            let credId = undefined
-                            try {
-                              if (
-                                certification.credentialLink &&
-                                certification.credentialLink.match(/^([\w-]+),\{.*\}$/)
-                              ) {
-                                const commaIdx = certification.credentialLink.indexOf(',')
-                                credId = certification.credentialLink.slice(0, commaIdx)
-                                const jsonStr = certification.credentialLink.slice(
-                                  commaIdx + 1
-                                )
-                                credObj = JSON.parse(jsonStr)
-                                credObj.credentialId = credId
-                              } else if (
-                                certification.credentialLink &&
-                                certification.credentialLink.startsWith('{')
-                              ) {
-                                credObj = JSON.parse(certification.credentialLink)
-                              }
-                            } catch (e) {}
-                            if (credObj) {
-                              setDialogCredObj(credObj)
-                              setOpenCredDialog(true)
-                            }
-                          }}
-                        >
-                          {(() => {
-                            let credObj = null
-                            let credId = undefined
-                            try {
-                              if (
-                                certification.credentialLink &&
-                                certification.credentialLink.match(/^([\w-]+),\{.*\}$/)
-                              ) {
-                                const commaIdx = certification.credentialLink.indexOf(',')
-                                credId = certification.credentialLink.slice(0, commaIdx)
-                                const jsonStr = certification.credentialLink.slice(
-                                  commaIdx + 1
-                                )
-                                credObj = JSON.parse(jsonStr)
-                                credObj.credentialId = credId
-                              } else if (
-                                certification.credentialLink &&
-                                certification.credentialLink.startsWith('{')
-                              ) {
-                                credObj = JSON.parse(certification.credentialLink)
-                              }
-                            } catch (e) {}
-                            return credObj
-                              ? getCredentialName(credObj)
-                              : `Credential ${credIndex + 1}`
-                          })()}
-                        </Typography>
-                        <IconButton
-                          size='small'
-                          onClick={e => {
-                            e.stopPropagation()
-                            handleRemoveCredential(index, credIndex)
-                          }}
-                          sx={{
-                            p: 0.5,
-                            color: 'grey.500',
-                            '&:hover': { color: 'error.main' }
-                          }}
-                        >
-                          <CloseIcon fontSize='small' />
-                        </IconButton>
-                      </Box>
-                    ))}
-                    <Dialog
-                      open={openCredDialog}
-                      onClose={() => setOpenCredDialog(false)}
-                      maxWidth='xs'
-                    >
-                      <DialogContent sx={{ p: 0 }}>
-                        {dialogCredObj && (
-                          <MinimalCredentialViewer vcData={dialogCredObj} />
-                        )}
-                      </DialogContent>
-                    </Dialog>
+                    {certification.verificationStatus === 'verified' && (
+                      <Tooltip title='Verified credential'>
+                        <VerifiedIcon sx={{ color: '#34C759', fontSize: 18 }} />
+                      </Tooltip>
+                    )}
+                  </>
+                ) : (
+                  <Box display='flex' alignItems='center'>
+                    <Typography variant='body1'>Certification Details</Typography>
                   </Box>
                 )}
+              </Box>
+              <IconButton
+                onClick={e => {
+                  e.stopPropagation()
+                  toggleExpanded(index)
+                }}
+                sx={{
+                  transform: expandedItems[index] ? 'rotate(180deg)' : 'rotate(0deg)',
+                  transition: 'transform 0.3s ease'
+                }}
+              >
+                <SVGDownIcon />
+              </IconButton>
+            </Box>
 
-              {evidence && evidence[index] && evidence[index].length > 0 && (
-                <Box sx={{ mt: 2 }}>
-                  <Typography variant='body2' sx={{ fontWeight: 'bold', mb: 1 }}>
-                    Attached Files:
-                  </Typography>
-                  {evidence[index].map((fileId, fileIndex) => {
-                    const file = allFiles.find(f => f.id === fileId)
-                    return (
-                      <Box
-                        key={`file-${fileId}-${fileIndex}`}
+            {expandedItems[index] && (
+              <>
+                <TextField
+                  sx={{ bgcolor: '#FFF' }}
+                  size='small'
+                  fullWidth
+                  label='Certification/License Name'
+                  placeholder='e.g., Professional Project Manager (PMP)'
+                  value={certification.name}
+                  onChange={e => handleCertificationChange(index, 'name', e.target.value)}
+                  variant='outlined'
+                />
+
+                <TextField
+                  sx={{ bgcolor: '#FFF' }}
+                  size='small'
+                  fullWidth
+                  label='Issuing Organization'
+                  placeholder='e.g., Project Management Institute'
+                  value={certification.issuer}
+                  onChange={e =>
+                    handleCertificationChange(index, 'issuer', e.target.value)
+                  }
+                />
+
+                <LocalizationProvider dateAdapter={AdapterDateFns}>
+                  <Box sx={{ display: 'flex', gap: 2 }}>
+                    <Box sx={{ width: '50%' }}>
+                      <Typography variant='body2' sx={{ mb: 1 }}>
+                        Issue Date
+                      </Typography>
+                      <TextField
                         sx={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'space-between',
-                          mb: 0.5,
-                          backgroundColor: '#e8f4f8',
-                          p: 0.5,
-                          borderRadius: 1
+                          bgcolor: '#FFF',
+                          '& .MuiInputLabel-root': {
+                            transform: 'translate(14px, -9px) scale(0.75)'
+                          }
                         }}
-                      >
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                          <AttachFileIcon fontSize='small' color='primary' />
-                          <Typography
-                            variant='body2'
-                            sx={{
-                              color: 'primary.main',
-                              cursor: 'pointer'
+                        size='small'
+                        fullWidth
+                        type='date'
+                        value={certification.issueDate}
+                        onChange={e =>
+                          handleCertificationChange(index, 'issueDate', e.target.value)
+                        }
+                        InputLabelProps={{ shrink: true }}
+                      />
+                    </Box>
+
+                    <Box sx={{ width: '50%' }}>
+                      <Typography variant='body2' sx={{ mb: 1 }}>
+                        Expiry Date
+                      </Typography>
+                      <TextField
+                        sx={{
+                          bgcolor: '#FFF',
+                          '& .MuiInputLabel-root': {
+                            transform: 'translate(14px, -9px) scale(0.75)'
+                          }
+                        }}
+                        size='small'
+                        fullWidth
+                        type='date'
+                        value={certification.expiryDate}
+                        onChange={e =>
+                          handleCertificationChange(index, 'expiryDate', e.target.value)
+                        }
+                        InputLabelProps={{ shrink: true }}
+                        disabled={certification.noExpiration}
+                      />
+                    </Box>
+                  </Box>
+                </LocalizationProvider>
+
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={certification.noExpiration}
+                      onChange={e =>
+                        handleCertificationChange(index, 'noExpiration', e.target.checked)
+                      }
+                    />
+                  }
+                  label='This certification does not expire'
+                />
+
+                <TextField
+                  sx={{ bgcolor: '#FFF' }}
+                  size='small'
+                  fullWidth
+                  label='Credential ID (optional)'
+                  placeholder='e.g., ABC123456'
+                  value={certification.credentialId}
+                  onChange={e =>
+                    handleCertificationChange(index, 'credentialId', e.target.value)
+                  }
+                />
+
+                {Array.isArray(certification.selectedCredentials) &&
+                  certification.selectedCredentials.length > 0 && (
+                    <VerifiedCredentialsList
+                      credentials={certification.selectedCredentials}
+                      onRemove={credIndex => handleRemoveCredential(index, credIndex)}
+                      getCredentialName={getCredentialName}
+                    />
+                  )}
+
+                {Array.isArray(evidence?.[index]) && evidence[index].length > 0 && (
+                  <Box sx={{ mt: 2 }}>
+                    <Typography variant='body2' sx={{ fontWeight: 'bold', mb: 1 }}>
+                      Attached Files:
+                    </Typography>
+                    {(evidence[index] || []).map((fileId, fileIndex) => {
+                      const file = allFiles.find(f => f.id === fileId)
+                      return (
+                        <Box
+                          key={`file-${fileId || ''}-${fileIndex}`}
+                          sx={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            mb: 0.5,
+                            backgroundColor: '#e8f4f8',
+                            p: 0.5,
+                            borderRadius: 1
+                          }}
+                        >
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <AttachFileIcon fontSize='small' color='primary' />
+                            <Typography
+                              variant='body2'
+                              sx={{
+                                color: 'primary.main',
+                                cursor: 'pointer'
+                              }}
+                              onClick={() => {
+                                if (file?.url) {
+                                  window.open(file.url, '_blank')
+                                }
+                              }}
+                            >
+                              {file?.name || `File ${fileIndex + 1}`}
+                            </Typography>
+                          </Box>
+                          <IconButton
+                            size='small'
+                            onClick={e => {
+                              e.stopPropagation()
+                              handleRemoveFile(index, fileIndex)
                             }}
-                            onClick={() => {
-                              if (file?.url) {
-                                window.open(file.url, '_blank')
+                            sx={{
+                              p: 0.5,
+                              color: 'grey.500',
+                              '&:hover': {
+                                color: 'error.main'
                               }
                             }}
                           >
-                            {file?.name || `File ${fileIndex + 1}`}
-                          </Typography>
+                            <CloseIcon fontSize='small' />
+                          </IconButton>
                         </Box>
-                        <IconButton
-                          size='small'
-                          onClick={e => {
-                            e.stopPropagation()
-                            handleRemoveFile(index, fileIndex)
-                          }}
-                          sx={{
-                            p: 0.5,
-                            color: 'grey.500',
-                            '&:hover': {
-                              color: 'error.main'
-                            }
-                          }}
-                        >
-                          <CloseIcon fontSize='small' />
-                        </IconButton>
-                      </Box>
-                    )
-                  })}
-                </Box>
-              )}
+                      )
+                    })}
+                  </Box>
+                )}
 
-              <Box
-                sx={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  marginTop: '20px',
-                  gap: '15px'
-                }}
-              >
-                <StyledButton
-                  startIcon={<SVGAddFiles />}
-                  onClick={() => onAddFiles && onAddFiles(index)}
+                <Box
+                  sx={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    marginTop: '20px',
+                    gap: '15px'
+                  }}
                 >
-                  Add file(s)
-                </StyledButton>
-                <StyledButton
-                  startIcon={<SVGDeleteSection />}
-                  onClick={() => handleDeleteCertification(index)}
-                >
-                  Delete this item
-                </StyledButton>
-              </Box>
-            </>
-          )}
-        </Box>
-      ))}
+                  <StyledButton
+                    startIcon={<SVGAddFiles />}
+                    onClick={() => onAddFiles && onAddFiles(index)}
+                  >
+                    Add file(s)
+                  </StyledButton>
+                  <StyledButton
+                    startIcon={<SVGDeleteSection />}
+                    onClick={() => handleDeleteCertification(index)}
+                  >
+                    Delete this item
+                  </StyledButton>
+                </Box>
+              </>
+            )}
+          </Box>
+        )
+      )}
 
       <Box
         sx={{
@@ -842,7 +712,8 @@ export default function CertificationsAndLicenses({
           onSelect={handleCredentialSelect}
           initialSelectedCredentials={
             activeSectionIndex !== null &&
-            certifications[activeSectionIndex]?.selectedCredentials
+            certifications[activeSectionIndex] &&
+            certifications[activeSectionIndex].selectedCredentials
               ? certifications[activeSectionIndex].selectedCredentials
               : []
           }

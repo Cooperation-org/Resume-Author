@@ -29,6 +29,7 @@ import CloseIcon from '@mui/icons-material/Close'
 import CredentialOverlay from '../../CredentialsOverlay'
 import AttachFileIcon from '@mui/icons-material/AttachFile'
 import MinimalCredentialViewer from '../../MinimalCredentialViewer'
+import VerifiedCredentialsList from '../../common/VerifiedCredentialsList'
 
 const PinkSwitch = styled(Switch)(({ theme }) => ({
   '& .MuiSwitch-switchBase.Mui-checked': {
@@ -381,12 +382,12 @@ export default function WorkExperience({
   }, [])
 
   const handleCredentialSelect = useCallback(
-    (selectedIDs: string[]) => {
-      if (activeSectionIndex !== null && selectedIDs.length > 0) {
-        const selected = selectedIDs.map(id => {
+    (selectedCredentialIDs: string[]) => {
+      if (activeSectionIndex !== null && selectedCredentialIDs.length > 0) {
+        const selectedCredentials = selectedCredentialIDs.map(id => {
           const credential = vcs.find((c: any) => (c?.originalItem?.id || c.id) === id)
           return {
-            id,
+            id: id,
             url: '',
             name:
               credential?.credentialSubject?.achievement?.[0]?.name ||
@@ -394,16 +395,24 @@ export default function WorkExperience({
             credential
           }
         })
+        // Deduplicate by id
+        const deduped: SelectedCredential[] = Array.from(
+          new Map(selectedCredentials.map(c => [c.id, c])).values()
+        )
         setWorkExperiences(prev => {
           const updated = [...prev]
           updated[activeSectionIndex] = {
             ...updated[activeSectionIndex],
             verificationStatus: 'verified',
             credentialLink:
-              selected[0].id && selected[0].credential
-                ? `${selected[0].id},${JSON.stringify(selected[0].credential)}`
+              deduped &&
+              deduped.length > 0 &&
+              deduped[0] &&
+              deduped[0].id &&
+              deduped[0].credential
+                ? `${deduped[0].id},${JSON.stringify(deduped[0].credential)}`
                 : '',
-            selectedCredentials: selected
+            selectedCredentials: deduped
           }
           dispatch(
             updateSection({
@@ -426,13 +435,16 @@ export default function WorkExperience({
         const updated = [...prev]
         const exp = { ...updated[expIndex] }
         const newCreds = exp.selectedCredentials.filter((_, i) => i !== credIndex)
-        exp.selectedCredentials = newCreds
-        if (!newCreds.length) {
+        // Deduplicate by id
+        exp.selectedCredentials = Array.from(
+          new Map(newCreds.map(c => [c.id, c])).values()
+        )
+        if (!exp.selectedCredentials.length) {
           exp.verificationStatus = 'unverified'
           exp.credentialLink = ''
         } else {
-          exp.credentialLink = newCreds[0]?.credential
-            ? JSON.stringify(newCreds[0].credential)
+          exp.credentialLink = exp.selectedCredentials[0]?.credential
+            ? JSON.stringify(exp.selectedCredentials[0].credential)
             : ''
         }
         updated[expIndex] = exp
@@ -719,117 +731,14 @@ export default function WorkExperience({
                 onFocus={onFocus}
               />
 
-              {experience.selectedCredentials.length > 0 && (
-                <Box sx={{ mt: 2 }}>
-                  <Typography variant='body2' sx={{ fontWeight: 'bold', mb: 1 }}>
-                    Verified Credentials:
-                  </Typography>
-                  {experience.selectedCredentials.map((credential, credIndex) => (
-                    <Box
-                      key={`credential-${credential.id}-${credIndex}`}
-                      sx={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        mb: 0.5,
-                        backgroundColor: '#f5f5f5',
-                        p: 0.5,
-                        borderRadius: 1
-                      }}
-                    >
-                      <Typography
-                        variant='body2'
-                        sx={{
-                          color: 'primary.main',
-                          textDecoration: 'underline',
-                          cursor: 'pointer'
-                        }}
-                        onClick={() => {
-                          let credObj = null
-                          let credId = undefined
-                          try {
-                            if (
-                              experience.credentialLink &&
-                              experience.credentialLink.match(/^([\w-]+),\{.*\}$/)
-                            ) {
-                              const commaIdx = experience.credentialLink.indexOf(',')
-                              credId = experience.credentialLink.slice(0, commaIdx)
-                              const jsonStr = experience.credentialLink.slice(
-                                commaIdx + 1
-                              )
-                              credObj = JSON.parse(jsonStr)
-                              credObj.credentialId = credId
-                            } else if (
-                              experience.credentialLink &&
-                              experience.credentialLink.startsWith('{')
-                            ) {
-                              credObj = JSON.parse(experience.credentialLink)
-                            }
-                          } catch (e) {}
-                          if (credObj) {
-                            setDialogCredObj(credObj)
-                            setOpenCredDialog(true)
-                          }
-                        }}
-                      >
-                        {(() => {
-                          let credObj = null
-                          let credId = undefined
-                          try {
-                            if (
-                              experience.credentialLink &&
-                              experience.credentialLink.match(/^([\w-]+),\{.*\}$/)
-                            ) {
-                              const commaIdx = experience.credentialLink.indexOf(',')
-                              credId = experience.credentialLink.slice(0, commaIdx)
-                              const jsonStr = experience.credentialLink.slice(
-                                commaIdx + 1
-                              )
-                              credObj = JSON.parse(jsonStr)
-                              credObj.credentialId = credId
-                            } else if (
-                              experience.credentialLink &&
-                              experience.credentialLink.startsWith('{')
-                            ) {
-                              credObj = JSON.parse(experience.credentialLink)
-                            }
-                          } catch (e) {}
-                          return credObj
-                            ? getCredentialName(credObj)
-                            : `Credential ${credIndex + 1}`
-                        })()}
-                      </Typography>
-                      <IconButton
-                        size='small'
-                        onClick={e => {
-                          e.stopPropagation()
-                          handleRemoveCredential(index, credIndex)
-                        }}
-                        sx={{
-                          p: 0.5,
-                          color: 'grey.500',
-                          '&:hover': {
-                            color: 'error.main'
-                          }
-                        }}
-                      >
-                        <CloseIcon fontSize='small' />
-                      </IconButton>
-                    </Box>
-                  ))}
-                  <Dialog
-                    open={openCredDialog}
-                    onClose={() => setOpenCredDialog(false)}
-                    maxWidth='xs'
-                  >
-                    <DialogContent sx={{ p: 0 }}>
-                      {dialogCredObj && (
-                        <MinimalCredentialViewer vcData={dialogCredObj} />
-                      )}
-                    </DialogContent>
-                  </Dialog>
-                </Box>
-              )}
+              {Array.isArray(experience.selectedCredentials) &&
+                experience.selectedCredentials.length > 0 && (
+                  <VerifiedCredentialsList
+                    credentials={experience.selectedCredentials}
+                    onRemove={credIndex => handleRemoveCredential(index, credIndex)}
+                    getCredentialName={getCredentialName}
+                  />
+                )}
 
               {evidence[index] && evidence[index].length > 0 && (
                 <Box sx={{ mt: 2 }}>

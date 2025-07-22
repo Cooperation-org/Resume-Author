@@ -30,6 +30,7 @@ import CloseIcon from '@mui/icons-material/Close'
 import CredentialOverlay from '../../CredentialsOverlay'
 import AttachFileIcon from '@mui/icons-material/AttachFile'
 import MinimalCredentialViewer from '../../MinimalCredentialViewer'
+import VerifiedCredentialsList from '../../common/VerifiedCredentialsList'
 
 const PinkSwitch = styled(Switch)(({ theme }) => ({
   '& .MuiSwitch-switchBase.Mui-checked': {
@@ -93,6 +94,7 @@ interface FileItem {
   googleId?: string
 }
 
+// Helper to get credential name (copied verbatim from resumePreview)
 function getCredentialName(claim: any): string {
   try {
     if (!claim || typeof claim !== 'object') {
@@ -216,8 +218,12 @@ export default function Education({
   )
 
   useEffect(() => {
-    if (resume?.education?.items && resume.education.items.length > 0) {
-      const typedItems = resume.education.items.map((item: any) => ({
+    const items =
+      resume && resume.education && Array.isArray(resume.education.items)
+        ? resume.education.items
+        : []
+    if (items.length > 0) {
+      const typedItems = items.map((item: any) => ({
         type: item.type || 'Bachelors',
         programName: item.programName || '',
         institution: item.institution || '',
@@ -411,19 +417,24 @@ export default function Education({
             vc: credential
           }
         })
+        // Deduplicate by id
+        const deduped: SelectedCredential[] = Array.from(
+          new Map(selectedCredentials.map(c => [c.id, c])).values()
+        )
         setEducations(prev => {
           const updated = [...prev]
           updated[activeSectionIndex] = {
             ...updated[activeSectionIndex],
             verificationStatus: 'verified',
             credentialLink:
-              selectedCredentials &&
-              selectedCredentials.length > 0 &&
-              selectedCredentials[0].id &&
-              selectedCredentials[0].vc
-                ? `${selectedCredentials[0].id},${JSON.stringify(selectedCredentials[0].vc)}`
+              deduped &&
+              deduped.length > 0 &&
+              deduped[0] &&
+              deduped[0].id &&
+              deduped[0].vc
+                ? `${deduped[0].id},${JSON.stringify(deduped[0].vc)}`
                 : '',
-            selectedCredentials
+            selectedCredentials: deduped
           }
           dispatch(
             updateSection({
@@ -446,12 +457,17 @@ export default function Education({
         const updated = [...prev]
         const edu = { ...updated[eduIndex] }
         const newCreds = edu.selectedCredentials.filter((_, i) => i !== credIndex)
-        edu.selectedCredentials = newCreds
-        if (!newCreds.length) {
+        // Deduplicate by id
+        edu.selectedCredentials = Array.from(
+          new Map(newCreds.map(c => [c.id, c])).values()
+        )
+        if (!edu.selectedCredentials.length) {
           edu.verificationStatus = 'unverified'
           edu.credentialLink = ''
         } else {
-          edu.credentialLink = newCreds[0]?.vc ? JSON.stringify(newCreds[0].vc) : ''
+          edu.credentialLink = edu.selectedCredentials[0]?.vc
+            ? JSON.stringify(edu.selectedCredentials[0].vc)
+            : ''
         }
         updated[eduIndex] = edu
         dispatch(
@@ -725,127 +741,25 @@ export default function Education({
                 onFocus={onFocus}
               />
 
-              {education.selectedCredentials &&
+              {Array.isArray(education.selectedCredentials) &&
                 education.selectedCredentials.length > 0 && (
-                  <Box sx={{ mt: 2 }}>
-                    <Typography variant='body2' sx={{ fontWeight: 'bold', mb: 1 }}>
-                      Verified Credentials:
-                    </Typography>
-                    {education.selectedCredentials.map((credential, credIndex) => (
-                      <Box
-                        key={`credential-${credential.id}-${credIndex}`}
-                        sx={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'space-between',
-                          mb: 0.5,
-                          backgroundColor: '#f5f5f5',
-                          p: 0.5,
-                          borderRadius: 1
-                        }}
-                      >
-                        <Typography
-                          variant='body2'
-                          sx={{
-                            color: 'primary.main',
-                            textDecoration: 'underline',
-                            cursor: 'pointer'
-                          }}
-                          onClick={() => {
-                            let credObj = null
-                            let credId = undefined
-                            try {
-                              if (
-                                education.credentialLink &&
-                                education.credentialLink.match(/^([\w-]+),\{.*\}$/)
-                              ) {
-                                const commaIdx = education.credentialLink.indexOf(',')
-                                credId = education.credentialLink.slice(0, commaIdx)
-                                const jsonStr = education.credentialLink.slice(
-                                  commaIdx + 1
-                                )
-                                credObj = JSON.parse(jsonStr)
-                                credObj.credentialId = credId
-                              } else if (
-                                education.credentialLink &&
-                                education.credentialLink.startsWith('{')
-                              ) {
-                                credObj = JSON.parse(education.credentialLink)
-                              }
-                            } catch (e) {}
-                            if (credObj) {
-                              setDialogCredObj(credObj)
-                              setOpenCredDialog(true)
-                            }
-                          }}
-                        >
-                          {(() => {
-                            let credObj = null
-                            let credId = undefined
-                            try {
-                              if (
-                                education.credentialLink &&
-                                education.credentialLink.match(/^([\w-]+),\{.*\}$/)
-                              ) {
-                                const commaIdx = education.credentialLink.indexOf(',')
-                                credId = education.credentialLink.slice(0, commaIdx)
-                                const jsonStr = education.credentialLink.slice(
-                                  commaIdx + 1
-                                )
-                                credObj = JSON.parse(jsonStr)
-                                credObj.credentialId = credId
-                              } else if (
-                                education.credentialLink &&
-                                education.credentialLink.startsWith('{')
-                              ) {
-                                credObj = JSON.parse(education.credentialLink)
-                              }
-                            } catch (e) {}
-                            return credObj
-                              ? getCredentialName(credObj)
-                              : `Credential ${credIndex + 1}`
-                          })()}
-                        </Typography>
-                        <IconButton
-                          size='small'
-                          onClick={e => {
-                            e.stopPropagation()
-                            handleRemoveCredential(index, credIndex)
-                          }}
-                          sx={{
-                            p: 0.5,
-                            color: 'grey.500',
-                            '&:hover': { color: 'error.main' }
-                          }}
-                        >
-                          <CloseIcon fontSize='small' />
-                        </IconButton>
-                      </Box>
-                    ))}
-                    <Dialog
-                      open={openCredDialog}
-                      onClose={() => setOpenCredDialog(false)}
-                      maxWidth='xs'
-                    >
-                      <DialogContent sx={{ p: 0 }}>
-                        {dialogCredObj && (
-                          <MinimalCredentialViewer vcData={dialogCredObj} />
-                        )}
-                      </DialogContent>
-                    </Dialog>
-                  </Box>
+                  <VerifiedCredentialsList
+                    credentials={education.selectedCredentials}
+                    onRemove={credIndex => handleRemoveCredential(index, credIndex)}
+                    getCredentialName={getCredentialName}
+                  />
                 )}
 
-              {evidence && evidence[index] && evidence[index].length > 0 && (
+              {Array.isArray(evidence?.[index]) && evidence[index].length > 0 && (
                 <Box sx={{ mt: 2 }}>
                   <Typography variant='body2' sx={{ fontWeight: 'bold', mb: 1 }}>
                     Attached Files:
                   </Typography>
-                  {evidence[index].map((fileId, fileIndex) => {
+                  {(evidence[index] || []).map((fileId, fileIndex) => {
                     const file = allFiles.find(f => f.id === fileId)
                     return (
                       <Box
-                        key={`file-${fileId}-${fileIndex}`}
+                        key={`file-${fileId || ''}-${fileIndex}`}
                         sx={{
                           display: 'flex',
                           alignItems: 'center',
@@ -990,7 +904,9 @@ export default function Education({
           }}
           onSelect={handleCredentialSelect}
           initialSelectedCredentials={
-            activeSectionIndex !== null
+            activeSectionIndex !== null &&
+            educations[activeSectionIndex] &&
+            educations[activeSectionIndex].selectedCredentials
               ? educations[activeSectionIndex].selectedCredentials
               : []
           }

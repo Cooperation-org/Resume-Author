@@ -29,6 +29,7 @@ import CloseIcon from '@mui/icons-material/Close'
 import CredentialOverlay from '../../CredentialsOverlay'
 import AttachFileIcon from '@mui/icons-material/AttachFile'
 import MinimalCredentialViewer from '../../MinimalCredentialViewer'
+import VerifiedCredentialsList from '../../common/VerifiedCredentialsList'
 
 const PinkSwitch = styled(Switch)(({ theme }) => ({
   '& .MuiSwitch-switchBase.Mui-checked': {
@@ -212,8 +213,12 @@ export default function VolunteerWork({
   }, [dateChangeString, dispatch, volunteerWorks, useDuration])
 
   useEffect(() => {
-    if (resume?.volunteerWork?.items && resume.volunteerWork.items.length > 0) {
-      const typed = resume.volunteerWork.items.map((item: any) => ({
+    const items =
+      resume && resume.volunteerWork && Array.isArray(resume.volunteerWork.items)
+        ? resume.volunteerWork.items
+        : []
+    if (items.length > 0) {
+      const typed = items.map((item: any) => ({
         role: item.role || '',
         organization: item.organization || '',
         location: item.location || '',
@@ -391,19 +396,24 @@ export default function VolunteerWork({
             vc: credential
           }
         })
+        // Deduplicate by id
+        const deduped: SelectedCredential[] = Array.from(
+          new Map(selectedCredentials.map(c => [c.id, c])).values()
+        )
         setVolunteerWorks(prev => {
           const updated = [...prev]
           updated[activeSectionIndex] = {
             ...updated[activeSectionIndex],
             verificationStatus: 'verified',
             credentialLink:
-              selectedCredentials &&
-              selectedCredentials.length > 0 &&
-              selectedCredentials[0].id &&
-              selectedCredentials[0].vc
-                ? `${selectedCredentials[0].id},${JSON.stringify(selectedCredentials[0].vc)}`
+              deduped &&
+              deduped.length > 0 &&
+              deduped[0] &&
+              deduped[0].id &&
+              deduped[0].vc
+                ? `${deduped[0].id},${JSON.stringify(deduped[0].vc)}`
                 : '',
-            selectedCredentials
+            selectedCredentials: deduped
           }
           dispatch(
             updateSection({
@@ -426,12 +436,17 @@ export default function VolunteerWork({
         const updated = [...prev]
         const vol = { ...updated[volIndex] }
         const newCreds = vol.selectedCredentials.filter((_, i) => i !== credIndex)
-        vol.selectedCredentials = newCreds
-        if (!newCreds.length) {
+        // Deduplicate by id
+        vol.selectedCredentials = Array.from(
+          new Map(newCreds.map(c => [c.id, c])).values()
+        )
+        if (!vol.selectedCredentials.length) {
           vol.verificationStatus = 'unverified'
           vol.credentialLink = ''
         } else {
-          vol.credentialLink = newCreds[0]?.vc ? JSON.stringify(newCreds[0].vc) : ''
+          vol.credentialLink = vol.selectedCredentials[0]?.vc
+            ? JSON.stringify(vol.selectedCredentials[0].vc)
+            : ''
         }
         updated[volIndex] = vol
         dispatch(
@@ -684,127 +699,25 @@ export default function VolunteerWork({
                 onFocus={onFocus}
               />
 
-              {volunteer.selectedCredentials &&
+              {Array.isArray(volunteer.selectedCredentials) &&
                 volunteer.selectedCredentials.length > 0 && (
-                  <Box sx={{ mt: 2 }}>
-                    <Typography variant='body2' sx={{ fontWeight: 'bold', mb: 1 }}>
-                      Verified Credentials:
-                    </Typography>
-                    {volunteer.selectedCredentials.map((credential, credIndex) => (
-                      <Box
-                        key={`credential-${credential.id}-${credIndex}`}
-                        sx={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'space-between',
-                          mb: 0.5,
-                          backgroundColor: '#f5f5f5',
-                          p: 0.5,
-                          borderRadius: 1
-                        }}
-                      >
-                        <Typography
-                          variant='body2'
-                          sx={{
-                            color: 'primary.main',
-                            textDecoration: 'underline',
-                            cursor: 'pointer'
-                          }}
-                          onClick={() => {
-                            let credObj = null
-                            let credId = undefined
-                            try {
-                              if (
-                                volunteer.credentialLink &&
-                                volunteer.credentialLink.match(/^([\w-]+),\{.*\}$/)
-                              ) {
-                                const commaIdx = volunteer.credentialLink.indexOf(',')
-                                credId = volunteer.credentialLink.slice(0, commaIdx)
-                                const jsonStr = volunteer.credentialLink.slice(
-                                  commaIdx + 1
-                                )
-                                credObj = JSON.parse(jsonStr)
-                                credObj.credentialId = credId
-                              } else if (
-                                volunteer.credentialLink &&
-                                volunteer.credentialLink.startsWith('{')
-                              ) {
-                                credObj = JSON.parse(volunteer.credentialLink)
-                              }
-                            } catch (e) {}
-                            if (credObj) {
-                              setDialogCredObj(credObj)
-                              setOpenCredDialog(true)
-                            }
-                          }}
-                        >
-                          {(() => {
-                            let credObj = null
-                            let credId = undefined
-                            try {
-                              if (
-                                volunteer.credentialLink &&
-                                volunteer.credentialLink.match(/^([\w-]+),\{.*\}$/)
-                              ) {
-                                const commaIdx = volunteer.credentialLink.indexOf(',')
-                                credId = volunteer.credentialLink.slice(0, commaIdx)
-                                const jsonStr = volunteer.credentialLink.slice(
-                                  commaIdx + 1
-                                )
-                                credObj = JSON.parse(jsonStr)
-                                credObj.credentialId = credId
-                              } else if (
-                                volunteer.credentialLink &&
-                                volunteer.credentialLink.startsWith('{')
-                              ) {
-                                credObj = JSON.parse(volunteer.credentialLink)
-                              }
-                            } catch (e) {}
-                            return credObj
-                              ? getCredentialName(credObj)
-                              : `Credential ${credIndex + 1}`
-                          })()}
-                        </Typography>
-                        <IconButton
-                          size='small'
-                          onClick={e => {
-                            e.stopPropagation()
-                            handleRemoveCredential(index, credIndex)
-                          }}
-                          sx={{
-                            p: 0.5,
-                            color: 'grey.500',
-                            '&:hover': { color: 'error.main' }
-                          }}
-                        >
-                          <CloseIcon fontSize='small' />
-                        </IconButton>
-                      </Box>
-                    ))}
-                    <Dialog
-                      open={openCredDialog}
-                      onClose={() => setOpenCredDialog(false)}
-                      maxWidth='xs'
-                    >
-                      <DialogContent sx={{ p: 0 }}>
-                        {dialogCredObj && (
-                          <MinimalCredentialViewer vcData={dialogCredObj} />
-                        )}
-                      </DialogContent>
-                    </Dialog>
-                  </Box>
+                  <VerifiedCredentialsList
+                    credentials={volunteer.selectedCredentials}
+                    onRemove={credIndex => handleRemoveCredential(index, credIndex)}
+                    getCredentialName={getCredentialName}
+                  />
                 )}
 
-              {evidence && evidence[index] && evidence[index].length > 0 && (
+              {Array.isArray(evidence?.[index]) && evidence[index].length > 0 && (
                 <Box sx={{ mt: 2 }}>
                   <Typography variant='body2' sx={{ fontWeight: 'bold', mb: 1 }}>
                     Attached Files:
                   </Typography>
-                  {evidence[index].map((fileId, fileIndex) => {
+                  {(evidence[index] || []).map((fileId, fileIndex) => {
                     const file = allFiles.find(f => f.id === fileId)
                     return (
                       <Box
-                        key={`file-${fileId}-${fileIndex}`}
+                        key={`file-${fileId || ''}-${fileIndex}`}
                         sx={{
                           display: 'flex',
                           alignItems: 'center',
@@ -949,7 +862,9 @@ export default function VolunteerWork({
           }}
           onSelect={handleCredentialSelect}
           initialSelectedCredentials={
-            activeSectionIndex !== null
+            activeSectionIndex !== null &&
+            volunteerWorks[activeSectionIndex] &&
+            volunteerWorks[activeSectionIndex].selectedCredentials
               ? volunteerWorks[activeSectionIndex].selectedCredentials
               : []
           }
@@ -959,6 +874,7 @@ export default function VolunteerWork({
   )
 }
 
+// Helper to get credential name (copied verbatim from resumePreview)
 function getCredentialName(claim: any): string {
   try {
     if (!claim || typeof claim !== 'object') {

@@ -18,6 +18,7 @@ import AttachFileIcon from '@mui/icons-material/AttachFile'
 import Dialog from '@mui/material/Dialog'
 import DialogContent from '@mui/material/DialogContent'
 import MinimalCredentialViewer from '../../MinimalCredentialViewer'
+import VerifiedCredentialsList from '../../common/VerifiedCredentialsList'
 
 interface ProjectsProps {
   onAddFiles?: (itemIndex?: number) => void
@@ -73,8 +74,7 @@ export default function Projects({
   const [showCredentialsOverlay, setShowCredentialsOverlay] = useState(false)
   const [activeSectionIndex, setActiveSectionIndex] = useState<number | null>(null)
   const vcs = useSelector((state: any) => state.vcReducer.vcs)
-  const [openCredDialog, setOpenCredDialog] = useState(false)
-  const [dialogCredObj, setDialogCredObj] = useState<any>(null)
+  // Remove credential dialog state and rendering from this section
 
   const [projects, setProjects] = useState<ProjectItem[]>([
     {
@@ -113,8 +113,12 @@ export default function Projects({
   )
 
   useEffect(() => {
-    if (resume?.projects?.items && resume.projects.items.length > 0) {
-      const typedItems = resume.projects.items.map((item: any) => ({
+    const items =
+      resume && resume.projects && Array.isArray(resume.projects.items)
+        ? resume.projects.items
+        : []
+    if (items.length > 0) {
+      const typedItems = items.map((item: any) => ({
         name: item.name || '',
         description: item.description || '',
         url: item.url || '',
@@ -300,19 +304,24 @@ export default function Projects({
             vc: credential
           }
         })
+        // Deduplicate by id
+        const deduped: SelectedCredential[] = Array.from(
+          new Map(selectedCredentials.map(c => [c.id, c])).values()
+        )
         setProjects(prev => {
           const updated = [...prev]
           updated[activeSectionIndex] = {
             ...updated[activeSectionIndex],
             verificationStatus: 'verified',
             credentialLink:
-              selectedCredentials &&
-              selectedCredentials.length > 0 &&
-              selectedCredentials[0].id &&
-              selectedCredentials[0].vc
-                ? `${selectedCredentials[0].id},${JSON.stringify(selectedCredentials[0].vc)}`
+              deduped &&
+              deduped.length > 0 &&
+              deduped[0] &&
+              deduped[0].id &&
+              deduped[0].vc
+                ? `${deduped[0].id},${JSON.stringify(deduped[0].vc)}`
                 : '',
-            selectedCredentials
+            selectedCredentials: deduped
           }
           dispatch(
             updateSection({
@@ -330,37 +339,31 @@ export default function Projects({
   )
 
   const handleRemoveCredential = useCallback(
-    (projectIndex: number, credentialIndex: number) => {
-      setProjects(prevProjects => {
-        const updatedProjects = [...prevProjects]
-        const project = { ...updatedProjects[projectIndex] }
-
-        const updatedCredentials = (project.selectedCredentials || []).filter(
-          (_, i) => i !== credentialIndex
+    (projIndex: number, credIndex: number) => {
+      setProjects(prev => {
+        const updated = [...prev]
+        const proj = { ...updated[projIndex] }
+        const newCreds = proj.selectedCredentials.filter((_, i) => i !== credIndex)
+        // Deduplicate by id
+        proj.selectedCredentials = Array.from(
+          new Map(newCreds.map(c => [c.id, c])).values()
         )
-
-        project.selectedCredentials = updatedCredentials
-        if (updatedCredentials.length === 0) {
-          project.verificationStatus = 'unverified'
-          project.credentialLink = ''
+        if (!proj.selectedCredentials.length) {
+          proj.verificationStatus = 'unverified'
+          proj.credentialLink = ''
         } else {
-          project.credentialLink = updatedCredentials[0]?.vc
-            ? JSON.stringify(updatedCredentials[0].vc)
+          proj.credentialLink = proj.selectedCredentials[0]?.vc
+            ? JSON.stringify(proj.selectedCredentials[0].vc)
             : ''
         }
-
-        updatedProjects[projectIndex] = project
-
+        updated[projIndex] = proj
         dispatch(
           updateSection({
             sectionId: 'projects',
-            content: {
-              items: updatedProjects
-            }
+            content: { items: updated }
           })
         )
-
-        return updatedProjects
+        return updated
       })
     },
     [dispatch]
@@ -397,6 +400,7 @@ export default function Projects({
     [onRemoveFile]
   )
 
+  // Helper to get credential name (copied verbatim from resumePreview)
   function getCredentialName(claim: any): string {
     try {
       if (!claim || typeof claim !== 'object') {
@@ -510,122 +514,25 @@ export default function Projects({
                 onFocus={onFocus}
               />
 
-              {project.selectedCredentials && project.selectedCredentials.length > 0 && (
-                <Box sx={{ mt: 2 }}>
-                  <Typography variant='body2' sx={{ fontWeight: 'bold', mb: 1 }}>
-                    Verified Credentials:
-                  </Typography>
-                  {project.selectedCredentials.map((credential, credIndex) => (
-                    <Box
-                      key={`credential-${credential.id}-${credIndex}`}
-                      sx={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        mb: 0.5,
-                        backgroundColor: '#f5f5f5',
-                        p: 0.5,
-                        borderRadius: 1
-                      }}
-                    >
-                      <Typography
-                        variant='body2'
-                        sx={{
-                          color: 'primary.main',
-                          textDecoration: 'underline',
-                          cursor: 'pointer'
-                        }}
-                        onClick={() => {
-                          let credObj = null
-                          let credId = undefined
-                          try {
-                            if (
-                              project.credentialLink &&
-                              project.credentialLink.match(/^([\w-]+),\{.*\}$/)
-                            ) {
-                              const commaIdx = project.credentialLink.indexOf(',')
-                              credId = project.credentialLink.slice(0, commaIdx)
-                              const jsonStr = project.credentialLink.slice(commaIdx + 1)
-                              credObj = JSON.parse(jsonStr)
-                              credObj.credentialId = credId
-                            } else if (
-                              project.credentialLink &&
-                              project.credentialLink.startsWith('{')
-                            ) {
-                              credObj = JSON.parse(project.credentialLink)
-                            }
-                          } catch (e) {}
-                          if (credObj) {
-                            setDialogCredObj(credObj)
-                            setOpenCredDialog(true)
-                          }
-                        }}
-                      >
-                        {(() => {
-                          let credObj = null
-                          let credId = undefined
-                          try {
-                            if (
-                              project.credentialLink &&
-                              project.credentialLink.match(/^([\w-]+),\{.*\}$/)
-                            ) {
-                              const commaIdx = project.credentialLink.indexOf(',')
-                              credId = project.credentialLink.slice(0, commaIdx)
-                              const jsonStr = project.credentialLink.slice(commaIdx + 1)
-                              credObj = JSON.parse(jsonStr)
-                              credObj.credentialId = credId
-                            } else if (
-                              project.credentialLink &&
-                              project.credentialLink.startsWith('{')
-                            ) {
-                              credObj = JSON.parse(project.credentialLink)
-                            }
-                          } catch (e) {}
-                          return credObj
-                            ? getCredentialName(credObj)
-                            : `Credential ${credIndex + 1}`
-                        })()}
-                      </Typography>
-                      <IconButton
-                        size='small'
-                        onClick={e => {
-                          e.stopPropagation()
-                          handleRemoveCredential(index, credIndex)
-                        }}
-                        sx={{
-                          p: 0.5,
-                          color: 'grey.500',
-                          '&:hover': { color: 'error.main' }
-                        }}
-                      >
-                        <CloseIcon fontSize='small' />
-                      </IconButton>
-                    </Box>
-                  ))}
-                  <Dialog
-                    open={openCredDialog}
-                    onClose={() => setOpenCredDialog(false)}
-                    maxWidth='xs'
-                  >
-                    <DialogContent sx={{ p: 0 }}>
-                      {dialogCredObj && (
-                        <MinimalCredentialViewer vcData={dialogCredObj} />
-                      )}
-                    </DialogContent>
-                  </Dialog>
-                </Box>
-              )}
+              {Array.isArray(project.selectedCredentials) &&
+                project.selectedCredentials.length > 0 && (
+                  <VerifiedCredentialsList
+                    credentials={project.selectedCredentials}
+                    onRemove={credIndex => handleRemoveCredential(index, credIndex)}
+                    getCredentialName={getCredentialName}
+                  />
+                )}
 
-              {evidence && evidence[index] && evidence[index].length > 0 && (
+              {Array.isArray(evidence?.[index]) && evidence[index].length > 0 && (
                 <Box sx={{ mt: 2 }}>
                   <Typography variant='body2' sx={{ fontWeight: 'bold', mb: 1 }}>
                     Attached Files:
                   </Typography>
-                  {evidence[index].map((fileId, fileIndex) => {
+                  {(evidence[index] || []).map((fileId, fileIndex) => {
                     const file = allFiles.find(f => f.id === fileId)
                     return (
                       <Box
-                        key={`file-${fileId}-${fileIndex}`}
+                        key={`file-${fileId || ''}-${fileIndex}`}
                         sx={{
                           display: 'flex',
                           alignItems: 'center',
@@ -771,7 +678,8 @@ export default function Projects({
           onSelect={handleCredentialSelect}
           initialSelectedCredentials={
             activeSectionIndex !== null &&
-            projects[activeSectionIndex]?.selectedCredentials
+            projects[activeSectionIndex] &&
+            projects[activeSectionIndex].selectedCredentials
               ? projects[activeSectionIndex].selectedCredentials
               : []
           }
