@@ -44,9 +44,9 @@ const RawPreview = () => {
         // Extract the actual file ID if it's a Google Drive link
         const actualFileId = extractGoogleDriveId(fullFileId)
 
-        console.log('Using file ID:', actualFileId)
+        
         const fileData = await getFileViaFirebase(actualFileId)
-        console.log('🚀 ~ extractRawCredential ~ fileData:', fileData)
+        
         setRawCredential(fileData)
       } catch (err) {
         setError('Failed to extract raw credential')

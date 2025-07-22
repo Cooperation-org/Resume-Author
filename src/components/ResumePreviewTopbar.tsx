@@ -133,7 +133,6 @@ const ResumePreviewTopbar: React.FC<ResumePreviewTopbarProps> = ({
         resume: resume,
         type: 'unsigned'
       })
-      console.log('Saved Resume:', savedResume)
     } catch (error) {
       console.error('Error saving draft:', error)
     }
@@ -174,14 +173,7 @@ const ResumePreviewTopbar: React.FC<ResumePreviewTopbarProps> = ({
         console.error('Resume is null, cannot prepare for VC')
         throw new Error('Resume is null, cannot prepare for VC')
       }
-      console.log('Resume data before preparation:', {
-        name: resume.name,
-        fullName: resume.contact?.fullName,
-        hasSummary: !!resume.summary,
-        experienceCount: resume.experience?.items?.length || 0
-      })
       const preparedResume = await prepareResumeForVC(resume, {})
-      console.log('PREPARED FORM DATA', preparedResume)
 
       // PATCH: Ensure processed employmentHistory is used in credentialSubject
       if (
@@ -206,7 +198,6 @@ const ResumePreviewTopbar: React.FC<ResumePreviewTopbarProps> = ({
         resume: signedResume,
         type: 'sign'
       })
-      console.log('Signed resume saved with file:', file)
       if (!file?.id) {
         throw new Error('Failed to save resume')
       }
@@ -225,7 +216,6 @@ const ResumePreviewTopbar: React.FC<ResumePreviewTopbarProps> = ({
           type: 'unsigned'
         })
 
-        console.log('Completed unsigned resume saved:', unsignedFile)
       }
 
       await storeFileTokens({
@@ -236,7 +226,6 @@ const ResumePreviewTopbar: React.FC<ResumePreviewTopbarProps> = ({
         }
       })
 
-      console.log('Resume successfully signed and saved:', signedResume)
       return file // Return the file object with the ID
     } catch (error: any) {
       console.error('Error signing and saving:', error)
@@ -274,11 +263,9 @@ const ResumePreviewTopbar: React.FC<ResumePreviewTopbarProps> = ({
 
     try {
       const file = await handleSignAndSave()
-      console.log('Sign and save completed, file returned:', file)
       // Only navigate if sign and save was successful
       // Navigate to the saved resume view page
       if (file?.id) {
-        console.log('Navigating to resume view with ID:', file.id)
         // Navigate immediately to the correct route format
         navigate(`/resume/view/${file.id}`)
       } else {

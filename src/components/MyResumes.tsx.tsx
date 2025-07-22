@@ -12,7 +12,7 @@ const ResumeScreen: React.FC = () => {
   const { signed, unsigned, status, error } = useSelector(
     (state: RootState) => state.myresumes
   )
-  console.log('🚀 ~ unsigned:', unsigned)
+  
 
   useEffect(() => {
     const fetchResumes = async () => {
@@ -28,7 +28,7 @@ const ResumeScreen: React.FC = () => {
           try {
             const refreshToken = getLocalStorage('refresh_token')
             if (refreshToken) {
-              console.log('Refreshing access token...')
+              
               await refreshAccessToken(refreshToken)
 
               dispatch(fetchUserResumes())

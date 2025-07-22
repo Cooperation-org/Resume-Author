@@ -42,7 +42,7 @@ const PrevResumesList: React.FC<PrevResumesListProps> = ({ open, onClose }) => {
       const resumeManager = new Resume(storage)
       const nonSignedResumes = await resumeManager.getNonSignedResumes()
 
-      console.log('🚀 ~ getSessions ~ nonSignedResumes:', nonSignedResumes)
+      
 
       // Map resumes to the required format for display
       const sessions = nonSignedResumes.map((resume: any) => ({
@@ -65,7 +65,7 @@ const PrevResumesList: React.FC<PrevResumesListProps> = ({ open, onClose }) => {
   }, [open, getSessions])
 
   const handleSelectResume = (resume: { id: string; name: string; content: any }) => {
-    console.log('Selected resume:', resume)
+    
     dispatch(setSelectedResume(resume.content)) // Dispatch the selected resume content
     onClose() // Close the dialog
   }
