@@ -15,11 +15,12 @@ export const prepareResumeForVC = async (
   }
 
   const preparedResume = JSON.parse(JSON.stringify(resume))
+  
+  // Convert file IDs to actual Google Drive URLs for saving
+  let evidenceWithUrls: Record<string, string[][]> = {}
 
   // Add evidence/files data if provided
   if (sectionEvidence && allFiles) {
-    // Convert file IDs to actual Google Drive URLs for saving
-    const evidenceWithUrls: Record<string, string[][]> = {}
 
     Object.keys(sectionEvidence).forEach(sectionId => {
       const sectionFiles = sectionEvidence[sectionId]
@@ -35,12 +36,14 @@ export const prepareResumeForVC = async (
         })
       )
     })
+  }
 
-    preparedResume.evidence = evidenceWithUrls
+  preparedResume.evidence = evidenceWithUrls
+  if (sectionEvidence && allFiles) {
     console.log('Converting evidence IDs to URLs:', {
       originalEvidence: sectionEvidence,
       convertedEvidence: evidenceWithUrls,
-      availableFiles: allFiles.length
+      availableFiles: allFiles?.length || 0
     })
   }
 
@@ -74,11 +77,12 @@ export const prepareResumeForVC = async (
   }
 
   if (preparedResume.experience?.items) {
-    preparedResume.experience.items = preparedResume.experience.items.map((exp: any) => ({
+    preparedResume.experience.items = preparedResume.experience.items.map((exp: any, index: number) => ({
       ...exp,
       stillEmployed: exp.currentlyEmployed ?? false,
       title: exp.title ?? exp.position ?? '',
-      company: exp.company ?? ''
+      company: exp.company ?? '',
+      attachedFiles: evidenceWithUrls?.['Work Experience']?.[index] || exp.attachedFiles || []
     }))
   }
 
@@ -92,42 +96,56 @@ export const prepareResumeForVC = async (
       }))
     )
     preparedResume.employmentHistory = await Promise.all(
-      preparedResume.experience.items.map(async (exp: any) => {
+      preparedResume.experience.items.map(async (exp: any, index: number) => {
         const processedExp = await replaceCredentialLinksWithContent(exp)
-        return { ...exp, ...processedExp }
+        // Add attachedFiles from evidence if available
+        const attachedFiles = evidenceWithUrls?.['Work Experience']?.[index] || []
+        return { ...exp, ...processedExp, attachedFiles }
       })
     )
   }
 
   // Education
   if (preparedResume.education?.items) {
-    preparedResume.education.items = preparedResume.education.items.map((edu: any) => {
+    preparedResume.education.items = preparedResume.education.items.map((edu: any, index: number) => {
       // Set degree and fieldOfStudy directly from type and programName if present
       if (edu.type) edu.degree = edu.type
       if (edu.programName) edu.fieldOfStudy = edu.programName
-      return edu
+      return {
+        ...edu,
+        attachedFiles: evidenceWithUrls?.['Education']?.[index] || edu.attachedFiles || []
+      }
     })
     preparedResume.educationAndLearning = await Promise.all(
-      preparedResume.education.items.map(async (edu: any) => {
+      preparedResume.education.items.map(async (edu: any, index: number) => {
         const processedEdu = await replaceCredentialLinksWithContent(edu)
         const base = { ...edu, ...processedEdu }
         base.degree = edu.degree || ''
         base.fieldOfStudy = edu.fieldOfStudy || ''
         base.description = edu.description || processedEdu.description || ''
-        return base
+        // Add attachedFiles from evidence if available
+        const attachedFiles = evidenceWithUrls?.['Education']?.[index] || []
+        return { ...base, attachedFiles }
       })
     )
   }
 
   // Certifications
   if (preparedResume.certifications?.items) {
+    preparedResume.certifications.items = preparedResume.certifications.items.map((cert: any, index: number) => ({
+      ...cert,
+      attachedFiles: evidenceWithUrls?.['Certifications and Licenses']?.[index] || cert.attachedFiles || []
+    }))
     preparedResume.certificationsVC = await Promise.all(
-      preparedResume.certifications.items.map(async (cert: any) => {
+      preparedResume.certifications.items.map(async (cert: any, index: number) => {
         const processedCert = await replaceCredentialLinksWithContent(cert)
+        // Add attachedFiles from evidence if available
+        const attachedFiles = evidenceWithUrls?.['Certifications and Licenses']?.[index] || []
         return {
           ...cert,
           credentialLink: cert.credentialLink ?? '',
-          ...processedCert
+          ...processedCert,
+          attachedFiles
         }
       })
     )
@@ -145,24 +163,37 @@ export const prepareResumeForVC = async (
 
   // Projects
   if (preparedResume.projects?.items) {
+    preparedResume.projects.items = preparedResume.projects.items.map((proj: any, index: number) => ({
+      ...proj,
+      attachedFiles: evidenceWithUrls?.['Projects']?.[index] || proj.attachedFiles || []
+    }))
     preparedResume.projectsVC = await Promise.all(
-      preparedResume.projects.items.map(async (proj: any) => {
+      preparedResume.projects.items.map(async (proj: any, index: number) => {
         const processedProj = await replaceCredentialLinksWithContent(proj)
-        return { ...proj, ...processedProj }
+        // Add attachedFiles from evidence if available
+        const attachedFiles = evidenceWithUrls?.['Projects']?.[index] || []
+        return { ...proj, ...processedProj, attachedFiles }
       })
     )
   }
 
   // Professional Affiliations
   if (preparedResume.professionalAffiliations?.items) {
+    preparedResume.professionalAffiliations.items = preparedResume.professionalAffiliations.items.map((aff: any, index: number) => ({
+      ...aff,
+      attachedFiles: evidenceWithUrls?.['Professional Affiliations']?.[index] || aff.attachedFiles || []
+    }))
     preparedResume.professionalAffiliationsVC = await Promise.all(
-      preparedResume.professionalAffiliations.items.map(async (aff: any) => {
+      preparedResume.professionalAffiliations.items.map(async (aff: any, index: number) => {
         const processedAff = await replaceCredentialLinksWithContent(aff)
+        // Add attachedFiles from evidence if available
+        const attachedFiles = evidenceWithUrls?.['Professional Affiliations']?.[index] || []
         return {
           ...aff,
           description: aff.description ?? '',
           // preserve RTE fields
-          ...processedAff
+          ...processedAff,
+          attachedFiles
         }
       })
     )
@@ -170,10 +201,16 @@ export const prepareResumeForVC = async (
 
   // Volunteer Work
   if (preparedResume.volunteerWork?.items) {
+    preparedResume.volunteerWork.items = preparedResume.volunteerWork.items.map((vol: any, index: number) => ({
+      ...vol,
+      attachedFiles: evidenceWithUrls?.['Volunteer Work']?.[index] || vol.attachedFiles || []
+    }))
     preparedResume.volunteerWorkVC = await Promise.all(
-      preparedResume.volunteerWork.items.map(async (vol: any) => {
+      preparedResume.volunteerWork.items.map(async (vol: any, index: number) => {
         const processedVol = await replaceCredentialLinksWithContent(vol)
-        return { ...vol, ...processedVol }
+        // Add attachedFiles from evidence if available
+        const attachedFiles = evidenceWithUrls?.['Volunteer Work']?.[index] || []
+        return { ...vol, ...processedVol, attachedFiles }
       })
     )
   }
@@ -263,7 +300,7 @@ export const transformVCToResume = (vc: any): Resume => {
     summary: subject.narrative?.text ?? '',
 
     experience: {
-      items: (subject.experience ?? []).map((exp: any) => ({
+      items: (subject.experience ?? subject.employmentHistory ?? []).map((exp: any) => ({
         title: exp.title ?? '',
         company: exp.company ?? '',
         duration: exp.duration ?? '',
@@ -273,7 +310,8 @@ export const transformVCToResume = (vc: any): Resume => {
         startDate: exp.startDate ?? '',
         id: '',
         verificationStatus: 'unverified',
-        credentialLink: ''
+        credentialLink: '',
+        attachedFiles: exp.attachedFiles ?? []
       }))
     },
 
@@ -294,7 +332,8 @@ export const transformVCToResume = (vc: any): Resume => {
         degree: edu.degree ?? '',
         field: edu.fieldOfStudy ?? '',
         startDate: edu.startDate ?? '',
-        endDate: edu.endDate ?? ''
+        endDate: edu.endDate ?? '',
+        attachedFiles: edu.attachedFiles ?? []
       }))
     },
 
