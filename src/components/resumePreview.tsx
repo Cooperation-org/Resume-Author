@@ -207,8 +207,7 @@ const PageFooter: React.FC<{
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        height: `${FOOTER_HEIGHT_PX}px`,
-        overflow: 'hidden'
+        height: `${FOOTER_HEIGHT_PX}px`
       }}
     >
       <Typography
@@ -410,486 +409,519 @@ function renderDateOrDuration({
   return `${start}${start ? ' - ' : ''}${end}`
 }
 
-const ExperienceSection: React.FC<{ items: WorkExperience[] }> = ({ items }) => {
-  if (!items?.length) return null
+// Single Experience Item Component
+const ExperienceItem: React.FC<{ item: WorkExperience; index: number }> = ({ item, index }) => {
+  const dateText = renderDateOrDuration({
+    duration: item.duration,
+    startDate: item.startDate,
+    endDate: item.endDate
+  })
+  let credLink = item.credentialLink
+  let credObj = null
+  if (credLink && credLink.startsWith('{')) {
+    try {
+      credObj = JSON.parse(credLink)
+    } catch (e) {}
+  }
+  let portfolio = credObj?.credentialSubject?.portfolio
+
   return (
-    <Box sx={{ mb: '15px' }}> {/* Reduced margin from 20px */}
-      <SectionTitle>Work Experience</SectionTitle>
-      {items.map((item, index) => {
-        const dateText = renderDateOrDuration({
-          duration: item.duration,
-          startDate: item.startDate,
-          endDate: item.endDate
-        })
-        let credLink = item.credentialLink
-        let credObj = null
-        if (credLink && credLink.startsWith('{')) {
-          try {
-            credObj = JSON.parse(credLink)
-          } catch (e) {}
-        }
-        let portfolio = credObj?.credentialSubject?.portfolio
+    <Box key={item.id || `exp-${index}`} sx={{ mb: '15px' }}> {/* Reduced margin from 20px */}
+      <Box sx={{ display: 'flex', alignItems: 'center' }}>
+        {item.verificationStatus === 'verified' && <BlueVerifiedBadge />}
+        <Typography
+          variant='subtitle1'
+          sx={{
+            fontWeight: 700,
+            ml: item.verificationStatus === 'verified' ? 1 : 0,
+            fontSize: '16px', // Standardized font size
+            fontFamily: 'Arial'
+          }}
+        >
+          {item.position ?? item.title}
+        </Typography>
+      </Box>
+      <Typography
+        variant='body2'
+        sx={{
+          color: '#000',
+          fontWeight: 400,
+          fontSize: '14px', // Slightly smaller for company name
+          fontFamily: 'Arial'
+        }}
+      >
+        {item.company}
+      </Typography>
+      {dateText && (
+        <Typography
+          variant='body2'
+          sx={{
+            color: '#000',
+            mb: 0.5,
+            fontWeight: 400,
+            fontSize: '14px',
+            fontFamily: 'Arial'
+          }}
+        >
+          {dateText}
+        </Typography>
+      )}
+      {item.description && (
+        <Typography
+          variant='body2'
+          sx={{
+            mb: 1,
+            fontWeight: 400,
+            fontSize: '14px', // Reduced font size for descriptions
+            fontFamily: 'Arial',
+            lineHeight: 1.5 // Better line spacing
+          }}
+        >
+          <HTMLWithVerifiedLinks htmlContent={item.description} />
+        </Typography>
+      )}
+      {/* Credential Link */}
+      {renderCredentialLink(item.credentialLink)}
+      {/* Portfolio */}
+      {renderPortfolio(portfolio)}
+    </Box>
+  )
+}
 
-        // Truncate very long descriptions for preview
-        const MAX_DESC_LENGTH = 800 // characters
-        let description = item.description || ''
-        const isTruncated = description.length > MAX_DESC_LENGTH
-        if (isTruncated) {
-          description = description.substring(0, MAX_DESC_LENGTH) + '...'
-        }
-
-        return (
-          <Box key={item.id || `exp-${index}`} sx={{ mb: '15px' }}> {/* Reduced margin from 20px */}
-            <Box sx={{ display: 'flex', alignItems: 'center' }}>
-              {item.verificationStatus === 'verified' && <BlueVerifiedBadge />}
-              <Typography
-                variant='subtitle1'
-                sx={{
-                  fontWeight: 700,
-                  ml: item.verificationStatus === 'verified' ? 1 : 0,
-                  fontSize: '16px', // Standardized font size
-                  fontFamily: 'Arial'
-                }}
-              >
-                {item.position ?? item.title}
-              </Typography>
-            </Box>
+// Single Education Item Component
+const EducationItem: React.FC<{ item: Education }> = ({ item }) => {
+  const dateText = renderDateOrDuration({
+    duration: item.duration,
+    startDate: item.startDate,
+    endDate: item.endDate,
+    currentlyVolunteering: item.currentlyEnrolled
+  })
+  let credLink = item.credentialLink
+  let credObj = null
+  if (credLink && credLink.startsWith('{')) {
+    try {
+      credObj = JSON.parse(credLink)
+    } catch (e) {}
+  }
+  let portfolio = credObj?.credentialSubject?.portfolio
+  // Fix for empty degree and program name
+  let educationTitle = ''
+  if (item.type && item.programName) {
+    educationTitle = `${item.type} in ${item.programName}`
+  } else if (item.type) {
+    educationTitle = String(item.type)
+  } else if (item.programName) {
+    educationTitle = String(item.programName)
+  }
+  if (educationTitle && item.institution) {
+    educationTitle += `, ${item.institution}`
+  } else if (item.institution) {
+    educationTitle = item.institution
+  }
+  return (
+    <Box key={item.id} sx={{ mb: 2 }}>
+      <Box sx={{ display: 'flex', alignItems: 'flex-start' }}>
+        {item.awardEarned && <BlueVerifiedBadge />}
+        <Box sx={{ ml: item.awardEarned ? 1 : 0 }}>
+          <Typography
+            variant='subtitle1'
+            sx={{ fontWeight: 700, fontSize: '15px', fontFamily: 'Arial' }}
+          >
+            {educationTitle}
+          </Typography>
+          {dateText && (
             <Typography
               variant='body2'
               sx={{
                 color: '#000',
                 fontWeight: 400,
-                fontSize: '14px', // Slightly smaller for company name
+                fontSize: '15px',
                 fontFamily: 'Arial'
               }}
             >
-              {item.company}
+              {dateText}
+              {item.inProgress ? ' | In Progress' : ''}
             </Typography>
-            {dateText && (
-              <Typography
-                variant='body2'
-                sx={{
-                  color: '#000',
-                  mb: 0.5,
-                  fontWeight: 400,
-                  fontSize: '14px',
-                  fontFamily: 'Arial'
-                }}
-              >
-                {dateText}
-              </Typography>
-            )}
-            {description && (
-              <>
-                <Typography
-                  variant='body2'
-                  sx={{
-                    mb: 1,
-                    fontWeight: 400,
-                    fontSize: '14px', // Reduced font size for descriptions
-                    fontFamily: 'Arial',
-                    lineHeight: 1.5 // Better line spacing
-                  }}
-                >
-                  <HTMLWithVerifiedLinks htmlContent={description} />
-                </Typography>
-                {isTruncated && (
-                  <Typography
-                    variant='caption'
-                    sx={{
-                      fontStyle: 'italic',
-                      color: '#666'
-                    }}
-                  >
-                    (Content truncated for preview)
-                  </Typography>
-                )}
-              </>
-            )}
-            {/* Credential Link */}
-            {renderCredentialLink(item.credentialLink)}
-            {/* Portfolio */}
-            {renderPortfolio(portfolio)}
-          </Box>
-        )
-      })}
+          )}
+          {item.description && (
+            <Typography
+              variant='body2'
+              sx={{
+                color: '#000',
+                fontWeight: 400,
+                fontSize: '14px',
+                fontFamily: 'Arial'
+              }}
+            >
+              <HTMLWithVerifiedLinks htmlContent={item.description} />
+            </Typography>
+          )}
+          {/* Credential Link */}
+          {renderCredentialLink(item.credentialLink)}
+          {/* Portfolio */}
+          {renderPortfolio(portfolio)}
+        </Box>
+      </Box>
     </Box>
   )
 }
 
-const EducationSection: React.FC<{ items: Education[] }> = ({ items }) => {
-  if (!items?.length) return null
+// Single Certification Item Component
+const CertificationItem: React.FC<{ item: Certification }> = ({ item }) => {
+  let displayDate = ''
+  if (item.noExpiration) {
+    displayDate = 'No Expiration'
+  }
+  if (item.issueDate) {
+    if (displayDate) {
+      displayDate = `Issued on ${item.issueDate} | ${displayDate}`
+    } else {
+      displayDate = `Issued on ${item.issueDate}`
+    }
+  }
+  let credLink = item.credentialLink
+  let credObj = null
+  if (credLink && credLink.startsWith('{')) {
+    try {
+      credObj = JSON.parse(credLink)
+    } catch (e) {}
+  }
+  let portfolio = credObj?.credentialSubject?.portfolio
   return (
-    <Box sx={{ mb: '15px' }}> {/* Reduced margin from 20px */}
-      <SectionTitle>Education</SectionTitle>
-      {items.map(item => {
-        const dateText = renderDateOrDuration({
-          duration: item.duration,
-          startDate: item.startDate,
-          endDate: item.endDate,
-          currentlyVolunteering: item.currentlyEnrolled
-        })
-        let credLink = item.credentialLink
-        let credObj = null
-        if (credLink && credLink.startsWith('{')) {
-          try {
-            credObj = JSON.parse(credLink)
-          } catch (e) {}
-        }
-        let portfolio = credObj?.credentialSubject?.portfolio
-        // Fix for empty degree and program name
-        let educationTitle = ''
-        if (item.type && item.programName) {
-          educationTitle = `${item.type} in ${item.programName}`
-        } else if (item.type) {
-          educationTitle = item.type
-        } else if (item.programName) {
-          educationTitle = item.programName
-        }
-        if (educationTitle && item.institution) {
-          educationTitle += `, ${item.institution}`
-        } else if (item.institution) {
-          educationTitle = item.institution
-        }
-        return (
-          <Box key={item.id} sx={{ mb: 2 }}>
-            <Box sx={{ display: 'flex', alignItems: 'flex-start' }}>
-              {item.awardEarned && <BlueVerifiedBadge />}
-              <Box sx={{ ml: item.awardEarned ? 1 : 0 }}>
-                <Typography
-                  variant='subtitle1'
-                  sx={{ fontWeight: 700, fontSize: '15px', fontFamily: 'Arial' }}
-                >
-                  {educationTitle}
-                </Typography>
-                {dateText && (
-                  <Typography
-                    variant='body2'
-                    sx={{
-                      color: '#000',
-                      fontWeight: 400,
-                      fontSize: '15px',
-                      fontFamily: 'Arial'
-                    }}
-                  >
-                    {dateText}
-                    {item.inProgress ? ' | In Progress' : ''}
-                  </Typography>
-                )}
-                {item.description && (
-                  <Typography
-                    variant='body2'
-                    sx={{
-                      color: '#000',
-                      fontWeight: 400,
-                      fontSize: '14px',
-                      fontFamily: 'Arial'
-                    }}
-                  >
-                    <HTMLWithVerifiedLinks htmlContent={item.description} />
-                  </Typography>
-                )}
-                {/* Credential Link */}
-                {renderCredentialLink(item.credentialLink)}
-                {/* Portfolio */}
-                {renderPortfolio(portfolio)}
-              </Box>
-            </Box>
-          </Box>
-        )
-      })}
+    <Box key={item.id || item.name} sx={{ mb: 2 }}>
+      <Box sx={{ display: 'flex', alignItems: 'flex-start' }}>
+        {item.verificationStatus === 'verified' && <BlueVerifiedBadge />}
+        <Box sx={{ ml: item.verificationStatus === 'verified' ? 1 : 0 }}>
+          <Typography
+            variant='subtitle1'
+            sx={{ fontWeight: 700, fontSize: '16px', fontFamily: 'Arial' }}
+          >
+            {item.name}
+          </Typography>
+          {item.issuer && (
+            <Typography
+              variant='body2'
+              sx={{
+                color: '#000',
+                fontFamily: 'Arial',
+                fontSize: '16px',
+                fontWeight: 400
+              }}
+            >
+              Issued by {item.issuer}
+            </Typography>
+          )}
+          {displayDate && (
+            <Typography
+              variant='body2'
+              sx={{
+                color: '#000',
+                fontFamily: 'Arial',
+                fontSize: '16px',
+                fontWeight: 400
+              }}
+            >
+              {displayDate}
+            </Typography>
+          )}
+          {item.verificationStatus === 'verified' && item.credentialId && (
+            <Typography
+              variant='body2'
+              sx={{
+                color: '#2563EB',
+                fontFamily: 'Arial',
+                fontSize: '16px',
+                fontWeight: 400
+              }}
+            >
+              Credential ID: {item.credentialId}
+            </Typography>
+          )}
+          {/* Credential Link */}
+          {renderCredentialLink(item.credentialLink)}
+          {/* Portfolio */}
+          {renderPortfolio(portfolio)}
+        </Box>
+      </Box>
     </Box>
   )
 }
 
-const CertificationsSection: React.FC<{ items: Certification[] }> = ({ items }) => {
-  if (!items?.length) return null
+// Single Project Item Component
+const ProjectItem: React.FC<{ item: Project }> = ({ item }) => {
+  const dateText = renderDateOrDuration({})
+  let credLink = item.credentialLink
+  let credObj = null
+  if (credLink && credLink.startsWith('{')) {
+    try {
+      credObj = JSON.parse(credLink)
+    } catch (e) {}
+  }
+  let portfolio = credObj?.credentialSubject?.portfolio
   return (
-    <Box sx={{ mb: '20px' }}> {/* Keep this at 20px as it was already 30px */}
-      <SectionTitle>Certifications</SectionTitle>
-      {items.map(item => {
-        let displayDate = ''
-        if (item.noExpiration) {
-          displayDate = 'No Expiration'
-        }
-        if (item.issueDate) {
-          if (displayDate) {
-            displayDate = `Issued on ${item.issueDate} | ${displayDate}`
-          } else {
-            displayDate = `Issued on ${item.issueDate}`
-          }
-        }
-        let credLink = item.credentialLink
-        let credObj = null
-        if (credLink && credLink.startsWith('{')) {
-          try {
-            credObj = JSON.parse(credLink)
-          } catch (e) {}
-        }
-        let portfolio = credObj?.credentialSubject?.portfolio
-        return (
-          <Box key={item.id || item.name} sx={{ mb: 2 }}>
-            <Box sx={{ display: 'flex', alignItems: 'flex-start' }}>
-              {item.verificationStatus === 'verified' && <BlueVerifiedBadge />}
-              <Box sx={{ ml: item.verificationStatus === 'verified' ? 1 : 0 }}>
-                <Typography
-                  variant='subtitle1'
-                  sx={{ fontWeight: 700, fontSize: '16px', fontFamily: 'Arial' }}
-                >
-                  {item.name}
-                </Typography>
-                {item.issuer && (
-                  <Typography
-                    variant='body2'
-                    sx={{
-                      color: '#000',
-                      fontFamily: 'Arial',
-                      fontSize: '16px',
-                      fontWeight: 400
-                    }}
-                  >
-                    Issued by {item.issuer}
-                  </Typography>
-                )}
-                {displayDate && (
-                  <Typography
-                    variant='body2'
-                    sx={{
-                      color: '#000',
-                      fontFamily: 'Arial',
-                      fontSize: '16px',
-                      fontWeight: 400
-                    }}
-                  >
-                    {displayDate}
-                  </Typography>
-                )}
-                {item.verificationStatus === 'verified' && item.credentialId && (
-                  <Typography
-                    variant='body2'
-                    sx={{
-                      color: '#2563EB',
-                      fontFamily: 'Arial',
-                      fontSize: '16px',
-                      fontWeight: 400
-                    }}
-                  >
-                    Credential ID: {item.credentialId}
-                  </Typography>
-                )}
-                {/* Credential Link */}
-                {renderCredentialLink(item.credentialLink)}
-                {/* Portfolio */}
-                {renderPortfolio(portfolio)}
-              </Box>
+    <Box key={item.id} sx={{ mb: 3 }}>
+      <Box sx={{ display: 'flex', alignItems: 'flex-start' }}>
+        {item.verificationStatus === 'verified' && <BlueVerifiedBadge />}
+        <Box sx={{ ml: item.verificationStatus === 'verified' ? 1 : 0 }}>
+          <Typography
+            variant='subtitle1'
+            sx={{ fontWeight: 700, fontFamily: 'Arial', fontSize: '16px' }}
+          >
+            {item.name}
+          </Typography>
+          {dateText && (
+            <Typography
+              variant='body2'
+              sx={{
+                fontFamily: 'Arial',
+                fontSize: '16px',
+                fontWeight: 400
+              }}
+            >
+              {dateText}
+            </Typography>
+          )}
+          {item.description && (
+            <Typography
+              variant='body2'
+              sx={{ mb: 1, fontFamily: 'Arial', fontSize: '16px', fontWeight: 400 }}
+            >
+              <HTMLWithVerifiedLinks htmlContent={item.description} />
+            </Typography>
+          )}
+          {item.url && (
+            <Box sx={{ mb: 1 }}>
+              <LinkWithFavicon url={item.url} />
             </Box>
-          </Box>
-        )
-      })}
+          )}
+          {/* Credential Link */}
+          {renderCredentialLink(item.credentialLink)}
+          {/* Portfolio */}
+          {renderPortfolio(portfolio)}
+        </Box>
+      </Box>
     </Box>
   )
 }
 
-const ProjectsSection: React.FC<{ items: Project[] }> = ({ items }) => {
-  if (!items?.length) return null
+// Single Professional Affiliation Item Component
+const ProfessionalAffiliationItem: React.FC<{ item: ProfessionalAffiliation }> = ({ item }) => {
+  const dateText = renderDateOrDuration({
+    duration: item.duration,
+    startDate: item.startDate,
+    endDate: item.endDate
+  })
+  let credLink = item.credentialLink
+  let credObj = null
+  if (credLink && credLink.startsWith('{')) {
+    try {
+      credObj = JSON.parse(credLink)
+    } catch (e) {}
+  }
+  let portfolio = credObj?.credentialSubject?.portfolio
   return (
-    <Box sx={{ mb: '30px' }}>
-      <SectionTitle>Projects</SectionTitle>
-      {items.map(item => {
-        const dateText = renderDateOrDuration({})
-        let credLink = item.credentialLink
-        let credObj = null
-        if (credLink && credLink.startsWith('{')) {
-          try {
-            credObj = JSON.parse(credLink)
-          } catch (e) {}
-        }
-        let portfolio = credObj?.credentialSubject?.portfolio
-        return (
-          <Box key={item.id} sx={{ mb: 3 }}>
-            <Box sx={{ display: 'flex', alignItems: 'flex-start' }}>
-              {item.verificationStatus === 'verified' && <BlueVerifiedBadge />}
-              <Box sx={{ ml: item.verificationStatus === 'verified' ? 1 : 0 }}>
-                <Typography
-                  variant='subtitle1'
-                  sx={{ fontWeight: 700, fontFamily: 'Arial', fontSize: '16px' }}
-                >
-                  {item.name}
-                </Typography>
-                {dateText && (
-                  <Typography
-                    variant='body2'
-                    sx={{
-                      fontFamily: 'Arial',
-                      fontSize: '16px',
-                      fontWeight: 400
-                    }}
-                  >
-                    {dateText}
-                  </Typography>
-                )}
-                {item.description && (
-                  <Typography
-                    variant='body2'
-                    sx={{ mb: 1, fontFamily: 'Arial', fontSize: '16px', fontWeight: 400 }}
-                  >
-                    <HTMLWithVerifiedLinks htmlContent={item.description} />
-                  </Typography>
-                )}
-                {item.url && (
-                  <Box sx={{ mb: 1 }}>
-                    <LinkWithFavicon url={item.url} />
-                  </Box>
-                )}
-                {/* Credential Link */}
-                {renderCredentialLink(item.credentialLink)}
-                {/* Portfolio */}
-                {renderPortfolio(portfolio)}
-              </Box>
-            </Box>
-          </Box>
-        )
-      })}
+    <Box key={item.id} sx={{ mb: 2 }}>
+      <Box sx={{ display: 'flex', alignItems: 'flex-start' }}>
+        {item.verificationStatus === 'verified' && <BlueVerifiedBadge />}
+        <Box sx={{ ml: item.verificationStatus === 'verified' ? 1 : 0 }}>
+          <Typography
+            variant='subtitle1'
+            sx={{ fontWeight: 700, fontSize: '16px', fontFamily: 'Arial' }}
+          >
+            {item.name ?? item.role ?? 'Affiliation'}
+            {item.organization && ` of the ${item.organization}`}
+          </Typography>
+          {dateText && (
+            <Typography
+              variant='body2'
+              sx={{
+                color: '#000',
+                fontFamily: 'Arial',
+                fontSize: '16px',
+                fontWeight: 400
+              }}
+            >
+              {dateText}
+            </Typography>
+          )}
+          {item.activeAffiliation && (
+            <Typography
+              variant='body2'
+              sx={{
+                color: '#000',
+                fontFamily: 'Arial',
+                fontSize: '16px',
+                fontWeight: 400
+              }}
+            >
+              Active Affiliation
+            </Typography>
+          )}
+          {/* Credential Link */}
+          {renderCredentialLink(item.credentialLink)}
+          {/* Portfolio */}
+          {renderPortfolio(portfolio)}
+        </Box>
+      </Box>
     </Box>
   )
 }
 
-const ProfessionalAffiliationsSection: React.FC<{
-  items: ProfessionalAffiliation[]
-}> = ({ items }) => {
-  if (!items?.length) return null
+// Single Volunteer Work Item Component
+const VolunteerWorkItem: React.FC<{ item: VolunteerWork }> = ({ item }) => {
+  const dateText = renderDateOrDuration({
+    duration: item.duration,
+    startDate: item.startDate,
+    endDate: item.endDate,
+    currentlyVolunteering: item.currentlyVolunteering
+  })
+  let credLink = item.credentialLink
+  let credObj = null
+  if (credLink && credLink.startsWith('{')) {
+    try {
+      credObj = JSON.parse(credLink)
+    } catch (e) {}
+  }
+  let portfolio = credObj?.credentialSubject?.portfolio
   return (
-    <Box sx={{ mb: '15px' }}> {/* Reduced margin from 20px */}
-      <SectionTitle>Professional Affiliations</SectionTitle>
-      {items.map(item => {
-        const dateText = renderDateOrDuration({
-          duration: item.duration,
-          startDate: item.startDate,
-          endDate: item.endDate
-        })
-        let credLink = item.credentialLink
-        let credObj = null
-        if (credLink && credLink.startsWith('{')) {
-          try {
-            credObj = JSON.parse(credLink)
-          } catch (e) {}
-        }
-        let portfolio = credObj?.credentialSubject?.portfolio
-        return (
-          <Box key={item.id} sx={{ mb: 2 }}>
-            <Box sx={{ display: 'flex', alignItems: 'flex-start' }}>
-              {item.verificationStatus === 'verified' && <BlueVerifiedBadge />}
-              <Box sx={{ ml: item.verificationStatus === 'verified' ? 1 : 0 }}>
-                <Typography
-                  variant='subtitle1'
-                  sx={{ fontWeight: 700, fontSize: '16px', fontFamily: 'Arial' }}
-                >
-                  {item.name ?? item.role ?? 'Affiliation'}
-                  {item.organization && ` of the ${item.organization}`}
-                </Typography>
-                {dateText && (
-                  <Typography
-                    variant='body2'
-                    sx={{
-                      color: '#000',
-                      fontFamily: 'Arial',
-                      fontSize: '16px',
-                      fontWeight: 400
-                    }}
-                  >
-                    {dateText}
-                  </Typography>
-                )}
-                {item.activeAffiliation && (
-                  <Typography
-                    variant='body2'
-                    sx={{
-                      color: '#000',
-                      fontFamily: 'Arial',
-                      fontSize: '16px',
-                      fontWeight: 400
-                    }}
-                  >
-                    Active Affiliation
-                  </Typography>
-                )}
-                {/* Credential Link */}
-                {renderCredentialLink(item.credentialLink)}
-                {/* Portfolio */}
-                {renderPortfolio(portfolio)}
-              </Box>
-            </Box>
-          </Box>
-        )
-      })}
+    <Box key={item.id} sx={{ mb: 2 }}>
+      <Box sx={{ display: 'flex', alignItems: 'flex-start' }}>
+        {item.verificationStatus === 'verified' && <BlueVerifiedBadge />}
+        <Box sx={{ ml: item.verificationStatus === 'verified' ? 1 : 0 }}>
+          <Typography
+            variant='subtitle1'
+            sx={{ fontWeight: 700, fontFamily: 'Arial', fontSize: '16px' }}
+          >
+            {item.role} at {item.organization}
+          </Typography>
+          {item.location && (
+            <Typography
+              variant='body2'
+              sx={{ fontFamily: 'Arial', fontSize: '16px', fontWeight: 400 }}
+            >
+              {item.location}
+            </Typography>
+          )}
+          {dateText && (
+            <Typography
+              variant='body2'
+              sx={{ fontFamily: 'Arial', fontSize: '16px', fontWeight: 400 }}
+            >
+              {dateText}
+            </Typography>
+          )}
+          {item.description && (
+            <Typography
+              variant='body2'
+              sx={{ mb: 1, fontFamily: 'Arial', fontSize: '16px', fontWeight: 400 }}
+            >
+              <HTMLWithVerifiedLinks htmlContent={item.description} />
+            </Typography>
+          )}
+          {/* Credential Link */}
+          {renderCredentialLink(item.credentialLink)}
+          {/* Portfolio */}
+          {renderPortfolio(portfolio)}
+        </Box>
+      </Box>
     </Box>
   )
 }
 
-const VolunteerWorkSection: React.FC<{ items: VolunteerWork[] }> = ({ items }) => {
-  if (!items?.length) return null
+// Single Skill Item Component
+const SkillItem: React.FC<{ item: Skill }> = ({ item }) => {
+  let credLink = item.credentialLink
+  let credObj = null
+  if (credLink && credLink.startsWith('{')) {
+    try {
+      credObj = JSON.parse(credLink)
+    } catch (e) {}
+  }
+  let portfolio = credObj?.credentialSubject?.portfolio
   return (
-    <Box sx={{ mb: '30px' }}>
-      <SectionTitle>Volunteer Work</SectionTitle>
-      {items.map(item => {
-        const dateText = renderDateOrDuration({
-          duration: item.duration,
-          startDate: item.startDate,
-          endDate: item.endDate,
-          currentlyVolunteering: item.currentlyVolunteering
-        })
-        let credLink = item.credentialLink
-        let credObj = null
-        if (credLink && credLink.startsWith('{')) {
-          try {
-            credObj = JSON.parse(credLink)
-          } catch (e) {}
-        }
-        let portfolio = credObj?.credentialSubject?.portfolio
-        return (
-          <Box key={item.id} sx={{ mb: 2 }}>
-            <Box sx={{ display: 'flex', alignItems: 'flex-start' }}>
-              {item.verificationStatus === 'verified' && <BlueVerifiedBadge />}
-              <Box sx={{ ml: item.verificationStatus === 'verified' ? 1 : 0 }}>
-                <Typography
-                  variant='subtitle1'
-                  sx={{ fontWeight: 700, fontFamily: 'Arial', fontSize: '16px' }}
-                >
-                  {item.role} at {item.organization}
-                </Typography>
-                {item.location && (
-                  <Typography
-                    variant='body2'
-                    sx={{ fontFamily: 'Arial', fontSize: '16px', fontWeight: 400 }}
-                  >
-                    {item.location}
-                  </Typography>
-                )}
-                {dateText && (
-                  <Typography
-                    variant='body2'
-                    sx={{ fontFamily: 'Arial', fontSize: '16px', fontWeight: 400 }}
-                  >
-                    {dateText}
-                  </Typography>
-                )}
-                {item.description && (
-                  <Typography
-                    variant='body2'
-                    sx={{ mb: 1, fontFamily: 'Arial', fontSize: '16px', fontWeight: 400 }}
-                  >
-                    <HTMLWithVerifiedLinks htmlContent={item.description} />
-                  </Typography>
-                )}
-                {/* Credential Link */}
-                {renderCredentialLink(item.credentialLink)}
-                {/* Portfolio */}
-                {renderPortfolio(portfolio)}
-              </Box>
-            </Box>
-          </Box>
-        )
-      })}
+    <Box
+      key={item.id}
+      sx={{
+        display: 'flex',
+        alignItems: 'flex-start',
+        gap: 1,
+        width: 'calc(100% - 8px)',
+        mb: 1
+      }}
+    >
+      {item.verificationStatus === 'verified' && <BlueVerifiedBadge />}
+      <Typography
+        sx={{
+          fontWeight: 400,
+          fontSize: '16px',
+          fontFamily: 'Arial',
+          ml: item.verificationStatus === 'verified' ? 1 : 0
+        }}
+      >
+        <HTMLWithVerifiedLinks htmlContent={item.skills || ''} />
+      </Typography>
+      {/* Credential Link */}
+      {renderCredentialLink(item.credentialLink)}
+      {/* Portfolio */}
+      {renderPortfolio(portfolio)}
+    </Box>
+  )
+}
+
+// Single Language Item Component
+const LanguageItem: React.FC<{ lang: Language; idx: number }> = ({ lang, idx }) => {
+  return (
+    <Box
+      key={lang.id || `language-${idx}`}
+      sx={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: 1,
+        width: 'calc(100% - 8px)',
+        mb: 1
+      }}
+    >
+      <Typography sx={{ fontWeight: 400, fontSize: '16px', fontFamily: 'Arial' }}>
+        {lang.name} {lang.proficiency ? `(${lang.proficiency})` : ''}
+      </Typography>
+    </Box>
+  )
+}
+
+// Single Hobby Item Component
+const HobbyItem: React.FC<{ hobby: string; idx: number }> = ({ hobby, idx }) => {
+  return (
+    <Typography
+      component='li'
+      key={`hobby-${idx}`}
+      sx={{ fontWeight: 400, fontSize: '16px', fontFamily: 'Arial', mb: 1 }}
+    >
+      {hobby}
+    </Typography>
+  )
+}
+
+// Single Publication Item Component
+const PublicationItem: React.FC<{ item: Publication }> = ({ item }) => {
+  return (
+    <Box key={item.id} sx={{ mb: 2 }}>
+      <Typography
+        variant='subtitle1'
+        sx={{ fontWeight: 700, fontFamily: 'Arial', fontSize: '16px' }}
+      >
+        {item.title}
+      </Typography>
+      <Typography
+        variant='body2'
+        sx={{ fontFamily: 'Arial', fontSize: '16px', fontWeight: 400 }}
+      >
+        {item.publisher} | {item.publishedDate || 'Published'}
+      </Typography>
+      {item.url && (
+        <Box sx={{ mb: 1 }}>
+          <LinkWithFavicon url={item.url} />
+        </Box>
+      )}
     </Box>
   )
 }
@@ -900,43 +932,9 @@ const SkillsSection: React.FC<{ items: Skill[] }> = ({ items }) => {
     <Box sx={{ mb: '15px' }}> {/* Reduced margin from 20px */}
       <SectionTitle>Skills</SectionTitle>
       <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
-        {items.map(item => {
-          let credLink = item.credentialLink
-          let credObj = null
-          if (credLink && credLink.startsWith('{')) {
-            try {
-              credObj = JSON.parse(credLink)
-            } catch (e) {}
-          }
-          let portfolio = credObj?.credentialSubject?.portfolio
-          return (
-            <Box
-              key={item.id}
-              sx={{
-                display: 'flex',
-                alignItems: 'flex-start',
-                gap: 1,
-                width: 'calc(100% - 8px)'
-              }}
-            >
-              {item.verificationStatus === 'verified' && <BlueVerifiedBadge />}
-              <Typography
-                sx={{
-                  fontWeight: 400,
-                  fontSize: '16px',
-                  fontFamily: 'Arial',
-                  ml: item.verificationStatus === 'verified' ? 1 : 0
-                }}
-              >
-                <HTMLWithVerifiedLinks htmlContent={item.skills || ''} />
-              </Typography>
-              {/* Credential Link */}
-              {renderCredentialLink(item.credentialLink)}
-              {/* Portfolio */}
-              {renderPortfolio(portfolio)}
-            </Box>
-          )
-        })}
+        {items.map(item => (
+          <SkillItem key={item.id} item={item} />
+        ))}
       </Box>
     </Box>
   )
@@ -949,19 +947,7 @@ const LanguagesSection: React.FC<{ items: Language[] }> = ({ items }) => {
       <SectionTitle>Languages</SectionTitle>
       <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
         {items.map((lang, idx) => (
-          <Box
-            key={lang.id || `language-${idx}`}
-            sx={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 1,
-              width: 'calc(100% - 8px)'
-            }}
-          >
-            <Typography sx={{ fontWeight: 400, fontSize: '16px', fontFamily: 'Arial' }}>
-              {lang.name} {lang.proficiency ? `(${lang.proficiency})` : ''}
-            </Typography>
-          </Box>
+          <LanguageItem key={lang.id || `language-${idx}`} lang={lang} idx={idx} />
         ))}
       </Box>
     </Box>
@@ -975,49 +961,14 @@ const HobbiesSection: React.FC<{ items: string[] }> = ({ items }) => {
       <SectionTitle>Hobbies and Interests</SectionTitle>
       <Box component='ul' sx={{ pl: 2 }}>
         {items.map((hobby, idx) => (
-          <Typography
-            component='li'
-            key={`hobby-${idx}`}
-            sx={{ fontWeight: 400, fontSize: '16px', fontFamily: 'Arial', mb: 1 }}
-          >
-            {hobby}
-          </Typography>
+          <HobbyItem key={`hobby-${idx}`} hobby={hobby} idx={idx} />
         ))}
       </Box>
     </Box>
   )
 }
 
-const PublicationsSection: React.FC<{ items: Publication[] }> = ({ items }) => {
-  if (!items?.length) return null
-  return (
-    <Box sx={{ mb: '30px' }}>
-      <SectionTitle>Publications</SectionTitle>
-      {items.map(item => (
-        <Box key={item.id} sx={{ mb: 2 }}>
-          <Typography
-            variant='subtitle1'
-            sx={{ fontWeight: 700, fontFamily: 'Arial', fontSize: '16px' }}
-          >
-            {item.title}
-          </Typography>
-          <Typography
-            variant='body2'
-            sx={{ fontFamily: 'Arial', fontSize: '16px', fontWeight: 400 }}
-          >
-            {item.publisher} | {item.publishedDate || 'Published'}
-          </Typography>
-          {item.url && (
-            <Box sx={{ mb: 1 }}>
-              <LinkWithFavicon url={item.url} />
-            </Box>
-          )}
-        </Box>
-      ))}
-    </Box>
-  )
-}
-
+// Improved usePagination that handles item-level splitting
 function usePagination(content: ReactNode[]) {
   const [pages, setPages] = useState<ReactNode[][]>([])
   const measureRef = useRef<HTMLDivElement>(null)
@@ -1067,11 +1018,12 @@ function usePagination(content: ReactNode[]) {
         const marginBottom = parseFloat(computedStyle.marginBottom)
         const height = (el as HTMLElement).offsetHeight + marginTop + marginBottom
 
-        console.log(`Section ${idx}:`, {
+        console.log(`Element ${idx}:`, {
           height,
           marginTop,
           marginBottom,
-          offsetHeight: (el as HTMLElement).offsetHeight
+          offsetHeight: (el as HTMLElement).offsetHeight,
+          element: content[idx]
         })
         return height
       })
@@ -1085,29 +1037,29 @@ function usePagination(content: ReactNode[]) {
       const effectiveMaxHeight = contentMaxHeightPx - SAFETY_MARGIN
 
       for (let i = 0; i < content.length; i++) {
-        const section = content[i]
-        const sectionHeight = contentHeights[i] || 0
+        const element = content[i]
+        const elementHeight = contentHeights[i] || 0
 
-        console.log(`Processing section ${i}:`, {
+        console.log(`Processing element ${i}:`, {
           currentHeight,
-          sectionHeight,
-          wouldBe: currentHeight + sectionHeight,
+          elementHeight,
+          wouldBe: currentHeight + elementHeight,
           maxHeight: effectiveMaxHeight,
-          fits: currentHeight + sectionHeight <= effectiveMaxHeight
+          fits: currentHeight + elementHeight <= effectiveMaxHeight
         })
 
-        // Check if adding this section would exceed the page height
-        if (currentHeight > 0 && currentHeight + sectionHeight > effectiveMaxHeight) {
+        // Check if adding this element would exceed the page height
+        if (currentHeight > 0 && currentHeight + elementHeight > effectiveMaxHeight) {
           // Start a new page
-          console.log(`Breaking to new page at section ${i}`)
+          console.log(`Breaking to new page at element ${i}`)
           paginated.push([...currentPage])
           currentPage = []
           currentHeight = 0
         }
 
-        // Add section to current page
-        currentPage.push(section)
-        currentHeight += sectionHeight
+        // Add element to current page
+        currentPage.push(element)
+        currentHeight += elementHeight
       }
       if (currentPage.length > 0) {
         paginated.push(currentPage)
@@ -1117,9 +1069,9 @@ function usePagination(content: ReactNode[]) {
       }
 
       console.log('Final pagination:', {
-        totalSections: content.length,
+        totalElements: content.length,
         totalPages: paginated.length,
-        sectionsPerPage: paginated.map(p => p.length)
+        elementsPerPage: paginated.map(p => p.length)
       })
 
       setPages(paginated)
@@ -1172,8 +1124,9 @@ const ResumePreview: React.FC<{ data?: Resume; forcedId?: string }> = ({
   }, [])
 
   // Build content sections array - memoized to prevent recreation on every render
+  // Now we flatten sections with multiple items into individual elements
   const contentSections = useMemo(() => {
-    const sections: ReactNode[] = []
+    const elements: ReactNode[] = []
     
     if (resume) {
       console.log('Building content sections:', {
@@ -1184,73 +1137,139 @@ const ResumePreview: React.FC<{ data?: Resume; forcedId?: string }> = ({
         skillsCount: resume.skills?.items?.length || 0
       })
 
-      // Always add summary as the first section, using getSummary
+      // Always add summary as the first element, using getSummary
       const summary = getSummary(resume)
       if (summary) {
-        sections.push(<SummarySection key='summary' summary={summary} />)
+        elements.push(<SummarySection key='summary' summary={summary} />)
       }
       if (resume.contact?.socialLinks) {
-        sections.push(
+        elements.push(
           <SocialLinksSection key='social' socialLinks={resume.contact.socialLinks} />
         )
       }
+      
+      // Experience section - add title then each item separately
       if (resume.experience?.items?.length) {
-        sections.push(
-          <ExperienceSection key='experience' items={resume.experience.items} />
+        elements.push(
+          <Box key='experience-title' sx={{ mb: '8px' }}>
+            <SectionTitle>Work Experience</SectionTitle>
+          </Box>
         )
+        resume.experience.items.forEach((item, index) => {
+          elements.push(
+            <ExperienceItem key={`experience-${item.id || index}`} item={item} index={index} />
+          )
+        })
       }
+      
+      // Certifications section - add title then each item separately
       if (resume.certifications?.items?.length) {
-        sections.push(
-          <CertificationsSection key='certifications' items={resume.certifications.items} />
+        elements.push(
+          <Box key='certifications-title' sx={{ mb: '8px' }}>
+            <SectionTitle>Certifications</SectionTitle>
+          </Box>
         )
+        resume.certifications.items.forEach((item) => {
+          elements.push(
+            <CertificationItem key={`certification-${item.id || item.name}`} item={item} />
+          )
+        })
       }
+      
+      // Education section - add title then each item separately
       if (resume.education?.items?.length) {
-        sections.push(
-          <EducationSection key='education' items={resume.education.items} />
+        elements.push(
+          <Box key='education-title' sx={{ mb: '8px' }}>
+            <SectionTitle>Education</SectionTitle>
+          </Box>
         )
+        resume.education.items.forEach((item) => {
+          elements.push(
+            <EducationItem key={`education-${item.id}`} item={item} />
+          )
+        })
       }
+      
+      // Skills section - keep as one unit since it's usually not that tall
       if (resume.skills?.items?.length) {
-        sections.push(<SkillsSection key='skills' items={resume.skills.items} />)
+        elements.push(<SkillsSection key='skills' items={resume.skills.items} />)
       }
+      
+      // Professional Affiliations - add title then each item separately
       if (resume.professionalAffiliations?.items?.length) {
-        sections.push(
-          <ProfessionalAffiliationsSection
-            key='affiliations'
-            items={resume.professionalAffiliations.items}
-          />
+        elements.push(
+          <Box key='affiliations-title' sx={{ mb: '8px' }}>
+            <SectionTitle>Professional Affiliations</SectionTitle>
+          </Box>
         )
+        resume.professionalAffiliations.items.forEach((item) => {
+          elements.push(
+            <ProfessionalAffiliationItem key={`affiliation-${item.id}`} item={item} />
+          )
+        })
       }
+      
+      // Languages section - keep as one unit
       if (resume.languages?.items?.length) {
-        sections.push(
+        elements.push(
           <LanguagesSection key='languages' items={resume.languages.items} />
         )
       }
+      
+      // Hobbies section - keep as one unit
       if (resume.hobbiesAndInterests?.length) {
-        sections.push(
+        elements.push(
           <HobbiesSection key='hobbies' items={resume.hobbiesAndInterests} />
         )
       }
+      
+      // Projects - add title then each item separately
       if (resume.projects?.items?.length) {
-        sections.push(
-          <ProjectsSection key='projects' items={resume.projects.items} />
+        elements.push(
+          <Box key='projects-title' sx={{ mb: '8px' }}>
+            <SectionTitle>Projects</SectionTitle>
+          </Box>
         )
+        resume.projects.items.forEach((item) => {
+          elements.push(
+            <ProjectItem key={`project-${item.id}`} item={item} />
+          )
+        })
       }
+      
+      // Publications - add title then each item separately
       if (resume.publications?.items?.length) {
-        sections.push(
-          <PublicationsSection key='publications' items={resume.publications.items} />
+        elements.push(
+          <Box key='publications-title' sx={{ mb: '8px' }}>
+            <SectionTitle>Publications</SectionTitle>
+          </Box>
         )
+        resume.publications.items.forEach((item) => {
+          elements.push(
+            <PublicationItem key={`publication-${item.id}`} item={item} />
+          )
+        })
       }
+      
+      // Volunteer Work - add title then each item separately
       if (resume.volunteerWork?.items?.length) {
-        sections.push(
-          <VolunteerWorkSection key='volunteer' items={resume.volunteerWork.items} />
+        elements.push(
+          <Box key='volunteer-title' sx={{ mb: '8px' }}>
+            <SectionTitle>Volunteer Work</SectionTitle>
+          </Box>
         )
+        resume.volunteerWork.items.forEach((item) => {
+          elements.push(
+            <VolunteerWorkItem key={`volunteer-${item.id}`} item={item} />
+          )
+        })
       }
     }
     
-    return sections
+    return elements
   }, [resume])
 
-  // Now use pagination with the built content sections
+  // Now use pagination with the flattened content elements
   const { pages, measureRef } = usePagination(contentSections)
 
   if (!resume) return null
@@ -1336,10 +1355,10 @@ const ResumePreview: React.FC<{ data?: Resume; forcedId?: string }> = ({
                   pt: CONTENT_PADDING_TOP + 'px',
                   pb: CONTENT_PADDING_BOTTOM + 'px',
                   px: '50px',
-                  overflow: 'hidden',
                   position: 'relative',
                   minHeight: 0,
-                  height: `calc(100% - ${HEADER_HEIGHT_PX}px - ${FOOTER_HEIGHT_PX}px)`
+                  height: `calc(100% - ${HEADER_HEIGHT_PX}px - ${FOOTER_HEIGHT_PX}px)`,
+                  overflow: 'hidden' // Prevent content from spilling out
                 }}
               >
                 {pageContent}
