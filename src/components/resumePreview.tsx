@@ -838,6 +838,7 @@ const ExperienceItem: React.FC<{
                 }
               }}
             >
+              <WorkspacePremiumIcon sx={{ fontSize: 16, color: '#2563EB' }} />
               {credObj &&
                 (credObj.credentialStatus === 'verified' ||
                   credObj.credentialStatus?.status === 'verified') && (
@@ -977,6 +978,7 @@ const EducationItem: React.FC<{
                     }
                   }}
                 >
+                  <WorkspacePremiumIcon sx={{ fontSize: 16, color: '#2563EB' }} />
                   {credObj &&
                     (credObj.credentialStatus === 'verified' ||
                       credObj.credentialStatus?.status === 'verified') && (
