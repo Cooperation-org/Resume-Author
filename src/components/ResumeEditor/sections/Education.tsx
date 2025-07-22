@@ -834,6 +834,12 @@ export default function Education({
                   Add file(s)
                 </StyledButton>
                 <StyledButton
+                  startIcon={<SVGAddFiles />}
+                  onClick={() => handleOpenCredentialsOverlay(index)}
+                >
+                  Add credential
+                </StyledButton>
+                <StyledButton
                   startIcon={<SVGDeleteSection />}
                   onClick={() => handleDeleteEducation(index)}
                 >
@@ -852,31 +858,7 @@ export default function Education({
           gap: '20px'
         }}
       >
-        <Button
-          variant='contained'
-          color='primary'
-          onClick={() => handleOpenCredentialsOverlay(educations.length - 1)}
-          sx={{
-            borderRadius: '4px',
-            width: '100%',
-            textTransform: 'none',
-            padding: '8px 44px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            backgroundColor: '#F3F5F8',
-            color: '#2E2E48',
-            boxShadow: 'none',
-            fontFamily: 'Nunito sans',
-            fontSize: '14px',
-            fontWeight: 500
-          }}
-        >
-          <AddCircleOutlineIcon
-            sx={{ marginRight: 1, width: '16px', height: '16px', color: '#2E2E48' }}
-          />
-          Add credential
-        </Button>
+        {/* Removed the broken Add credential button that was hardcoded to last item */}
 
         <Button
           variant='contained'

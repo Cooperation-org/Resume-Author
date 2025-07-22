@@ -83,7 +83,7 @@ interface WorkExperienceItem {
   currentlyEmployed: boolean
   description: string
   achievements: string[]
-  id: string
+  id: string // Unique identifier for each work experience item
   verificationStatus: string
   credentialLink: string // always a string
   selectedCredentials: SelectedCredential[]
@@ -106,9 +106,13 @@ export default function WorkExperience({
 
   const [showCredentialsOverlay, setShowCredentialsOverlay] = useState(false)
   const [activeSectionIndex, setActiveSectionIndex] = useState<number | null>(null)
+  const [activeItemId, setActiveItemId] = useState<string | null>(null)
   const [openCredDialog, setOpenCredDialog] = useState(false)
   const [dialogCredObj, setDialogCredObj] = useState<any>(null)
 
+  // Generate initial unique ID
+  const initialId = `work-exp-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+  
   const [workExperiences, setWorkExperiences] = useState<WorkExperienceItem[]>([
     {
       title: '',
@@ -121,7 +125,7 @@ export default function WorkExperience({
       currentlyEmployed: false,
       description: '',
       achievements: [],
-      id: '',
+      id: initialId,
       verificationStatus: 'unverified',
       credentialLink: '',
       selectedCredentials: []
@@ -141,6 +145,11 @@ export default function WorkExperience({
         clearTimeout(reduxUpdateTimeoutRef.current)
       }
       reduxUpdateTimeoutRef.current = setTimeout(() => {
+        console.log('Debounced Redux update with items:', items.map(item => ({
+          id: item.id,
+          title: item.title,
+          hasCredentials: item.selectedCredentials.length > 0
+        })))
         dispatch(
           updateSection({
             sectionId: 'experience',
@@ -216,34 +225,84 @@ export default function WorkExperience({
   }, [dateChangeString, dispatch, workExperiences, useDuration])
 
   useEffect(() => {
+    // Skip updates while credentials overlay is open to prevent data shifting
+    if (showCredentialsOverlay) {
+      console.log('Skipping Redux update - credentials overlay is open')
+      return
+    }
+    
+    // Also skip if we're in the middle of a credential update
+    if (activeSectionIndex !== null) {
+      console.log('Skipping Redux update - credential attachment in progress')
+      return
+    }
+    
     if (resume?.experience?.items && resume.experience.items.length > 0) {
       console.log('Loading experience items from Redux:', resume.experience.items)
       
-      const typedItems = resume.experience.items.map((item: any) => ({
-        title: item.title || '',
-        company: item.company || '',
-        position: item.position || '',
-        duration: item.duration || '',
-        showDuration: !!item.currentlyEmployed,
-        startDate: item.startDate || '',
-        endDate: item.endDate || '',
-        currentlyEmployed: !!item.currentlyEmployed,
-        description: item.description || '',
-        achievements: item.achievements || [],
-        id: item.id || '',
-        verificationStatus: item.verificationStatus || 'unverified',
-        credentialLink: Array.isArray(item.credentialLink)
-          ? item.credentialLink
-          : item.credentialLink
-            ? [item.credentialLink]
-            : [],
-        selectedCredentials: item.selectedCredentials || [],
-        ...item
-      })) as WorkExperienceItem[]
+      const typedItems = resume.experience.items.map((item: any, idx: number) => {
+        // Ensure each item has a unique ID
+        const itemId = item.id || `work-exp-${Date.now()}-${idx}-${Math.random().toString(36).substr(2, 9)}`
+        
+        // Parse credentialLink if it exists and selectedCredentials is empty
+        let selectedCredentials = item.selectedCredentials || []
+        if (item.credentialLink && selectedCredentials.length === 0) {
+          try {
+            // credentialLink is a JSON string of an array of strings
+            const credLinksArray = JSON.parse(item.credentialLink)
+            if (Array.isArray(credLinksArray)) {
+              selectedCredentials = credLinksArray.map((credLink: string) => {
+                // Each credLink is "fileId,{vc json}"
+                const commaIndex = credLink.indexOf(',')
+                if (commaIndex > -1) {
+                  const fileId = credLink.substring(0, commaIndex)
+                  const vcJson = credLink.substring(commaIndex + 1)
+                  try {
+                    const vc = JSON.parse(vcJson)
+                    return {
+                      id: vc?.originalItem?.id || vc?.id || fileId,
+                      url: '',
+                      name: vc?.credentialSubject?.achievement?.[0]?.name || `Credential`,
+                      vc: vc,
+                      fileId: fileId
+                    }
+                  } catch (e) {
+                    console.error('Error parsing VC JSON:', e)
+                    return null
+                  }
+                }
+                return null
+              }).filter(Boolean)
+            }
+          } catch (e) {
+            console.error('Error parsing credentialLink:', e, 'for item:', item.title)
+          }
+        }
+        
+        return {
+          title: item.title || '',
+          company: item.company || '',
+          position: item.position || '',
+          duration: item.duration || '',
+          showDuration: !!item.currentlyEmployed,
+          startDate: item.startDate || '',
+          endDate: item.endDate || '',
+          currentlyEmployed: !!item.currentlyEmployed,
+          description: item.description || '',
+          achievements: item.achievements || [],
+          id: itemId,
+          verificationStatus: item.verificationStatus || 'unverified',
+          credentialLink: item.credentialLink || '',
+          selectedCredentials: selectedCredentials,
+          ...item
+        }
+      }) as WorkExperienceItem[]
       
       console.log('Typed items with credentials:', typedItems.map(item => ({
+        id: item.id,
         title: item.title,
-        credentialLink: item.credentialLink
+        credentialLink: item.credentialLink,
+        hasCredentials: item.selectedCredentials.length > 0
       })))
 
       const needUpdate =
@@ -269,7 +328,7 @@ export default function WorkExperience({
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [resume])
+  }, [resume, showCredentialsOverlay, activeSectionIndex]) // Added showCredentialsOverlay and activeSectionIndex to dependencies
 
   const handleWorkExperienceChange = useCallback(
     (index: number, field: string, val: any) => {
@@ -316,6 +375,8 @@ export default function WorkExperience({
   )
 
   const handleAddAnotherItem = useCallback(() => {
+    // Ensure unique ID with timestamp and random string
+    const uniqueId = `work-exp-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
     const emptyItem: WorkExperienceItem = {
       title: '',
       company: '',
@@ -327,7 +388,7 @@ export default function WorkExperience({
       currentlyEmployed: false,
       description: '',
       achievements: [],
-      id: '',
+      id: uniqueId,
       verificationStatus: 'unverified',
       credentialLink: '',
       selectedCredentials: []
@@ -389,9 +450,10 @@ export default function WorkExperience({
     }))
   }, [])
 
-  const handleOpenCredentialsOverlay = useCallback((i: number) => {
-    console.log('Opening credentials overlay for index:', i)
+  const handleOpenCredentialsOverlay = useCallback((i: number, itemId: string) => {
+    console.log('Opening credentials overlay for index:', i, 'itemId:', itemId)
     setActiveSectionIndex(i)
+    setActiveItemId(itemId)
     setShowCredentialsOverlay(true)
     // Prevent focus from changing while overlay is open
     if (onFocus) {
@@ -404,12 +466,18 @@ export default function WorkExperience({
       console.log('handleCredentialSelect called with:', {
         selectedCredentialIDs,
         activeSectionIndex,
+        activeItemId,
         vcsLength: vcs?.length
       })
       
-      if (activeSectionIndex !== null && selectedCredentialIDs.length > 0) {
+      if (activeSectionIndex !== null && activeItemId !== null && selectedCredentialIDs.length > 0 && vcs) {
+        // Cancel any pending debounced updates before credential attachment
+        if (reduxUpdateTimeoutRef.current) {
+          clearTimeout(reduxUpdateTimeoutRef.current)
+          reduxUpdateTimeoutRef.current = null
+        }
         const selectedCredentials = selectedCredentialIDs.map(id => {
-          const credential = vcs.find((c: any) => (c?.originalItem?.id || c.id) === id)
+          const credential = vcs?.find((c: any) => (c?.originalItem?.id || c.id) === id)
           console.log('Found credential for id', id, ':', credential)
           
           let fileId = ''
@@ -440,6 +508,7 @@ export default function WorkExperience({
           
         console.log('Saving credential:', {
           activeSectionIndex,
+          activeItemId,
           credLinks,
           stringified: JSON.stringify(credLinks),
           deduped
@@ -447,19 +516,37 @@ export default function WorkExperience({
         
         setWorkExperiences(prev => {
           const updated = [...prev]
-          updated[activeSectionIndex] = {
-            ...updated[activeSectionIndex],
+          
+          // Find the item by ID instead of index to handle array reordering
+          const targetIndex = updated.findIndex(item => item.id === activeItemId)
+          if (targetIndex === -1) {
+            console.error('Target item not found with ID:', activeItemId)
+            return prev
+          }
+          
+          const targetItem = updated[targetIndex]
+          console.log('Found target item at index:', targetIndex, 'with ID:', targetItem.id)
+          
+          // Verify the index hasn't changed
+          if (targetIndex !== activeSectionIndex) {
+            console.warn('Item moved from index', activeSectionIndex, 'to', targetIndex)
+          }
+          
+          updated[targetIndex] = {
+            ...targetItem,
             verificationStatus: 'verified',
             credentialLink: JSON.stringify(credLinks), // always a stringified array
             selectedCredentials: deduped
           }
           
-          console.log('Updated work experience:', updated[activeSectionIndex])
+          console.log('Updated work experience:', updated[targetIndex])
           console.log('Redux update with credentialLink:', {
-            credentialLink: updated[activeSectionIndex].credentialLink,
-            type: typeof updated[activeSectionIndex].credentialLink
+            itemId: updated[targetIndex].id,
+            credentialLink: updated[targetIndex].credentialLink,
+            type: typeof updated[targetIndex].credentialLink
           })
           
+          // Dispatch immediately for credential updates (no debouncing)
           dispatch(
             updateSection({
               sectionId: 'experience',
@@ -471,13 +558,15 @@ export default function WorkExperience({
       } else {
         console.log('Not saving credential - missing data:', {
           activeSectionIndex,
+          activeItemId,
           selectedCredentialIDsLength: selectedCredentialIDs.length
         })
       }
       setShowCredentialsOverlay(false)
       setActiveSectionIndex(null)
+      setActiveItemId(null)
     },
-    [activeSectionIndex, dispatch, vcs]
+    [activeSectionIndex, activeItemId, dispatch, vcs]
   )
 
   const handleRemoveCredential = useCallback(
@@ -494,9 +583,14 @@ export default function WorkExperience({
           exp.verificationStatus = 'unverified'
           exp.credentialLink = ''
         } else {
-          exp.credentialLink = exp.selectedCredentials[0]?.vc
-            ? JSON.stringify(exp.selectedCredentials[0].vc)
-            : ''
+          // Rebuild credentialLink in the same format as handleCredentialSelect
+          const credLinks = exp.selectedCredentials
+            .map(cred => {
+              const fileId = cred.fileId || cred.id
+              return fileId && cred.vc ? `${fileId},${JSON.stringify(cred.vc)}` : ''
+            })
+            .filter(Boolean)
+          exp.credentialLink = JSON.stringify(credLinks)
         }
         updated[expIndex] = exp
         dispatch(
@@ -583,7 +677,7 @@ export default function WorkExperience({
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       {workExperiences.map((experience, index) => (
         <Box
-          key={`experience-${index}`}
+          key={`experience-${experience.id || index}`}
           sx={{
             backgroundColor: '#F1F1FB',
             px: '20px',
@@ -775,7 +869,7 @@ export default function WorkExperience({
                 Describe your role at this company:
               </Typography>
               <TextEditor
-                key={`work-experience-editor-${index}-${experience.id || index}`}
+                key={`work-experience-editor-${experience.id}`}
                 value={experience.description || ''}
                 onChange={val => handleDescriptionChange(index, val)}
                 onAddCredential={onAddCredential}
@@ -866,7 +960,7 @@ export default function WorkExperience({
                 </StyledButton>
                 <StyledButton
                   startIcon={<VerifiedIcon />}
-                  onClick={() => handleOpenCredentialsOverlay(index)}
+                  onClick={() => handleOpenCredentialsOverlay(index, experience.id)}
                 >
                   Add credential
                 </StyledButton>
@@ -922,6 +1016,7 @@ export default function WorkExperience({
             console.log('Closing credentials overlay')
             setShowCredentialsOverlay(false)
             setActiveSectionIndex(null)
+            setActiveItemId(null)
           }}
           onSelect={(ids) => {
             console.log('CredentialOverlay onSelect called with:', ids)
