@@ -58,6 +58,7 @@ interface SelectedCredential {
   url: string
   name: string
   vc?: any // full object
+  fileId?: string
 }
 
 interface FileItem {
@@ -83,7 +84,7 @@ interface WorkExperienceItem {
   achievements: string[]
   id: string
   verificationStatus: string
-  credentialLink: string
+  credentialLink: string // always a string
   selectedCredentials: SelectedCredential[]
 }
 
@@ -228,7 +229,11 @@ export default function WorkExperience({
         achievements: item.achievements || [],
         id: item.id || '',
         verificationStatus: item.verificationStatus || 'unverified',
-        credentialLink: item.credentialLink || '',
+        credentialLink: Array.isArray(item.credentialLink)
+          ? item.credentialLink
+          : item.credentialLink
+            ? [item.credentialLink]
+            : [],
         selectedCredentials: item.selectedCredentials || [],
         ...item
       })) as WorkExperienceItem[]
@@ -386,32 +391,37 @@ export default function WorkExperience({
       if (activeSectionIndex !== null && selectedCredentialIDs.length > 0) {
         const selectedCredentials = selectedCredentialIDs.map(id => {
           const credential = vcs.find((c: any) => (c?.originalItem?.id || c.id) === id)
+          let fileId = ''
+          if (credential && credential.id && typeof credential.id === 'string') {
+            fileId = credential.id.startsWith('urn:') ? '' : credential.id
+          }
           return {
             id: id,
             url: '',
             name:
               credential?.credentialSubject?.achievement?.[0]?.name ||
               `Credential ${id.substring(0, 5)}...`,
-            vc: credential // use vc, not credential
+            vc: credential,
+            fileId: fileId
           }
         })
         // Deduplicate by id
         const deduped: SelectedCredential[] = Array.from(
           new Map(selectedCredentials.map(c => [c.id, c])).values()
         )
+        // Build credentialLink as a JSON stringified array
+        const credLinks = deduped
+          .map(cred => {
+            const fileId = cred.fileId || cred.id
+            return fileId && cred.vc ? `${fileId},${JSON.stringify(cred.vc)}` : ''
+          })
+          .filter(Boolean)
         setWorkExperiences(prev => {
           const updated = [...prev]
           updated[activeSectionIndex] = {
             ...updated[activeSectionIndex],
             verificationStatus: 'verified',
-            credentialLink:
-              deduped &&
-              deduped.length > 0 &&
-              deduped[0] &&
-              deduped[0].id &&
-              deduped[0].vc
-                ? `${deduped[0].id},${JSON.stringify(deduped[0].vc)}`
-                : '',
+            credentialLink: JSON.stringify(credLinks), // always a stringified array
             selectedCredentials: deduped
           }
           dispatch(

@@ -332,7 +332,8 @@ const PreviewPageFromDrive: React.FC = () => {
                 verificationStatus: cert.verificationStatus ?? 'unverified',
                 noExpiration:
                   cert.noExpiration !== undefined ? cert.noExpiration : !cert.expiryDate,
-                score: cert.score ?? ''
+                score: cert.score ?? '',
+                credentialLink: cert.credentialLink ?? ''
               }
             })
           },
@@ -383,7 +384,8 @@ const PreviewPageFromDrive: React.FC = () => {
                 duration: duration,
                 verificationStatus: volunteer.verificationStatus ?? 'unverified',
                 location: volunteer.location ?? '',
-                cause: volunteer.cause ?? ''
+                cause: volunteer.cause ?? '',
+                credentialLink: volunteer.credentialLink ?? ''
               }
             })
           },
