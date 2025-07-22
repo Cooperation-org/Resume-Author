@@ -519,7 +519,6 @@ export default function Projects({
                   <VerifiedCredentialsList
                     credentials={project.selectedCredentials}
                     onRemove={credIndex => handleRemoveCredential(index, credIndex)}
-                    getCredentialName={getCredentialName}
                   />
                 )}
 

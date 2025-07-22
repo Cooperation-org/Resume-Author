@@ -704,7 +704,6 @@ export default function VolunteerWork({
                   <VerifiedCredentialsList
                     credentials={volunteer.selectedCredentials}
                     onRemove={credIndex => handleRemoveCredential(index, credIndex)}
-                    getCredentialName={getCredentialName}
                   />
                 )}
 

@@ -57,7 +57,7 @@ interface SelectedCredential {
   id: string
   url: string
   name: string
-  credential?: any // full object
+  vc?: any // full object
 }
 
 interface FileItem {
@@ -392,7 +392,7 @@ export default function WorkExperience({
             name:
               credential?.credentialSubject?.achievement?.[0]?.name ||
               `Credential ${id.substring(0, 5)}...`,
-            credential
+            vc: credential // use vc, not credential
           }
         })
         // Deduplicate by id
@@ -409,8 +409,8 @@ export default function WorkExperience({
               deduped.length > 0 &&
               deduped[0] &&
               deduped[0].id &&
-              deduped[0].credential
-                ? `${deduped[0].id},${JSON.stringify(deduped[0].credential)}`
+              deduped[0].vc
+                ? `${deduped[0].id},${JSON.stringify(deduped[0].vc)}`
                 : '',
             selectedCredentials: deduped
           }
@@ -443,8 +443,8 @@ export default function WorkExperience({
           exp.verificationStatus = 'unverified'
           exp.credentialLink = ''
         } else {
-          exp.credentialLink = exp.selectedCredentials[0]?.credential
-            ? JSON.stringify(exp.selectedCredentials[0].credential)
+          exp.credentialLink = exp.selectedCredentials[0]?.vc
+            ? JSON.stringify(exp.selectedCredentials[0].vc)
             : ''
         }
         updated[expIndex] = exp
@@ -736,7 +736,6 @@ export default function WorkExperience({
                   <VerifiedCredentialsList
                     credentials={experience.selectedCredentials}
                     onRemove={credIndex => handleRemoveCredential(index, credIndex)}
-                    getCredentialName={getCredentialName}
                   />
                 )}
 

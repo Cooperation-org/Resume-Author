@@ -713,7 +713,6 @@ export default function ProfessionalAffiliations({
                   <VerifiedCredentialsList
                     credentials={affiliation.selectedCredentials}
                     onRemove={credIndex => handleRemoveCredential(index, credIndex)}
-                    getCredentialName={getCredentialName}
                   />
                 )}
 
