@@ -87,6 +87,7 @@ interface WorkExperienceItem {
   verificationStatus: string
   credentialLink: string // always a string
   selectedCredentials: SelectedCredential[]
+  attachedFiles?: string[] // Array of file URLs or IDs
 }
 
 export default function WorkExperience({
@@ -128,7 +129,8 @@ export default function WorkExperience({
       id: initialId,
       verificationStatus: 'unverified',
       credentialLink: '',
-      selectedCredentials: []
+      selectedCredentials: [],
+      attachedFiles: []
     }
   ])
 
@@ -294,6 +296,7 @@ export default function WorkExperience({
           verificationStatus: item.verificationStatus || 'unverified',
           credentialLink: item.credentialLink || '',
           selectedCredentials: selectedCredentials,
+          attachedFiles: item.attachedFiles || [],
           ...item
         }
       }) as WorkExperienceItem[]
@@ -391,7 +394,8 @@ export default function WorkExperience({
       id: uniqueId,
       verificationStatus: 'unverified',
       credentialLink: '',
-      selectedCredentials: []
+      selectedCredentials: [],
+      attachedFiles: []
     }
     setWorkExperiences(prev => {
       const arr = [...prev, emptyItem]
@@ -634,6 +638,51 @@ export default function WorkExperience({
       onFocus()
     }
   }, []) // Remove onFocus from dependencies to prevent re-renders
+
+  // Sync evidence (files) with work experience items
+  useEffect(() => {
+    if (evidence && allFiles) {
+      setWorkExperiences(prev => {
+        const updated = [...prev]
+        let hasChanges = false
+        
+        evidence.forEach((itemFiles, index) => {
+          if (updated[index] && itemFiles && itemFiles.length > 0) {
+            // Convert file IDs to URLs
+            const fileUrls = itemFiles.map(fileId => {
+              const file = allFiles.find(f => f.id === fileId)
+              if (file?.googleId) {
+                return `https://drive.google.com/uc?export=view&id=${file.googleId}`
+              } else if (file?.url) {
+                return file.url
+              }
+              return fileId
+            })
+            
+            if (JSON.stringify(updated[index].attachedFiles) !== JSON.stringify(fileUrls)) {
+              updated[index] = {
+                ...updated[index],
+                attachedFiles: fileUrls
+              }
+              hasChanges = true
+            }
+          }
+        })
+        
+        if (hasChanges) {
+          // Dispatch to Redux
+          dispatch(
+            updateSection({
+              sectionId: 'experience',
+              content: { items: updated }
+            })
+          )
+        }
+        
+        return hasChanges ? updated : prev
+      })
+    }
+  }, [evidence, allFiles, dispatch])
   const handleRemoveFile = useCallback(
     (experienceIndex: number, fileIndex: number) => {
       if (onRemoveFile) {

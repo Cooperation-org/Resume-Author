@@ -59,6 +59,7 @@ interface WorkExperience extends VerifiableItem {
   verificationStatus?: 'unverified' | 'verified'
   credentialLink?: string
   evidence?: string[]
+  attachedFiles?: string[]
   [key: string]: any
 }
 

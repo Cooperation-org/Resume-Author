@@ -17,6 +17,7 @@ import Dialog from '@mui/material/Dialog'
 import DialogContent from '@mui/material/DialogContent'
 import CloseIcon from '@mui/icons-material/Close'
 import WorkspacePremiumIcon from '@mui/icons-material/WorkspacePremium'
+import AttachFileIcon from '@mui/icons-material/AttachFile'
 
 const PAGE_SIZE = {
   width: '210mm',
@@ -849,6 +850,59 @@ const ExperienceItem: React.FC<{
           ))}
         </Box>
       )}
+      {/* Render attached files */}
+      {item.attachedFiles && item.attachedFiles.length > 0 && (
+        <Box sx={{ mt: 1, display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+          {item.attachedFiles.map((fileUrl: string, idx: number) => {
+            // Extract filename from URL or use a default
+            let fileName = `Attachment ${idx + 1}`
+            try {
+              if (fileUrl.includes('drive.google.com')) {
+                // For Google Drive URLs, we can't easily get the filename
+                fileName = `File ${idx + 1}`
+              } else {
+                // Try to extract filename from URL
+                const urlParts = fileUrl.split('/')
+                const lastPart = urlParts[urlParts.length - 1]
+                if (lastPart && !lastPart.includes('?')) {
+                  fileName = decodeURIComponent(lastPart)
+                }
+              }
+            } catch (e) {
+              console.error('Error parsing file URL:', e)
+            }
+            
+            return (
+              <Box
+                key={`file-${idx}`}
+                sx={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  cursor: 'pointer',
+                  '&:hover': {
+                    opacity: 0.8
+                  }
+                }}
+                onClick={() => window.open(fileUrl, '_blank')}
+              >
+                <AttachFileIcon sx={{ fontSize: 16, color: '#2563EB' }} />
+                <Typography
+                  variant='body2'
+                  sx={{
+                    color: '#2563EB',
+                    textDecoration: 'underline',
+                    fontSize: '14px',
+                    fontFamily: 'Arial'
+                  }}
+                >
+                  {fileName}
+                </Typography>
+              </Box>
+            )
+          })}
+        </Box>
+      )}
     </Box>
   )
 }
@@ -1240,6 +1294,7 @@ const ProjectItem: React.FC<{
                     }
                   }}
                 >
+                  <WorkspacePremiumIcon sx={{ fontSize: 16, color: '#2563EB' }} />
                   {credObj &&
                     (credObj.credentialStatus === 'verified' ||
                       credObj.credentialStatus?.status === 'verified') && (
@@ -1365,6 +1420,7 @@ const ProfessionalAffiliationItem: React.FC<{
                     }
                   }}
                 >
+                  <WorkspacePremiumIcon sx={{ fontSize: 16, color: '#2563EB' }} />
                   {credObj &&
                     (credObj.credentialStatus === 'verified' ||
                       credObj.credentialStatus?.status === 'verified') && (
@@ -1488,6 +1544,7 @@ const VolunteerWorkItem: React.FC<{
                     }
                   }}
                 >
+                  <WorkspacePremiumIcon sx={{ fontSize: 16, color: '#2563EB' }} />
                   {credObj &&
                     (credObj.credentialStatus === 'verified' ||
                       credObj.credentialStatus?.status === 'verified') && (
@@ -1678,6 +1735,7 @@ const SkillsSection: React.FC<{
                 }
               }}
             >
+              <WorkspacePremiumIcon sx={{ fontSize: 16, color: '#2563EB' }} />
               {credObj &&
                 (credObj.credentialStatus === 'verified' ||
                   credObj.credentialStatus?.status === 'verified') && (
