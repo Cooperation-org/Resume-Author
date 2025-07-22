@@ -208,6 +208,21 @@ const RightSidebar = ({
       ) {
         return credentialSubject.achievement[0].name
       }
+      
+      // Handle OpenBadge format where achievement is an object, not array
+      if (
+        credentialSubject.achievement &&
+        typeof credentialSubject.achievement === 'object' &&
+        !Array.isArray(credentialSubject.achievement) &&
+        credentialSubject.achievement.name
+      ) {
+        return credentialSubject.achievement.name
+      }
+      
+      // Check for credential name at root level (OpenBadge/external format)
+      if (vc.name && typeof vc.name === 'string') {
+        return vc.name
+      }
 
       return ''
     } catch (error) {
