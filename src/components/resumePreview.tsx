@@ -285,9 +285,9 @@ const SocialLinksSection: React.FC<{
 }> = ({ socialLinks }) => {
   if (!socialLinks) return null
 
-  // Filter out Twitter
+  // Remove twitter from social links
   const filteredLinks = Object.entries(socialLinks).filter(
-    ([platform, url]) => platform.toLowerCase() !== 'twitter' && url
+    ([platform, url]) => platform.toLowerCase() !== 'twitter' && !!url
   )
   if (!filteredLinks.length) return null
 
