@@ -1,4 +1,4 @@
-import React, { useRef, useState, ReactNode, useLayoutEffect, useEffect } from 'react'
+import React, { useRef, useState, ReactNode, useLayoutEffect, useEffect, useMemo } from 'react'
 import { Box, Typography, Link } from '@mui/material'
 import ResumeQRCode from './ResumeQRCode'
 import { BlueVerifiedBadge } from '../assets/svgs'
@@ -1171,80 +1171,84 @@ const ResumePreview: React.FC<{ data?: Resume; forcedId?: string }> = ({
     return () => clearTimeout(timeoutId)
   }, [])
 
-  // Build content sections array
-  const contentSections: ReactNode[] = []
+  // Build content sections array - memoized to prevent recreation on every render
+  const contentSections = useMemo(() => {
+    const sections: ReactNode[] = []
+    
+    if (resume) {
+      console.log('Building content sections:', {
+        hasSummary: !!resume.summary,
+        hasSocialLinks: !!resume.contact?.socialLinks,
+        experienceCount: resume.experience?.items?.length || 0,
+        educationCount: resume.education?.items?.length || 0,
+        skillsCount: resume.skills?.items?.length || 0
+      })
 
-  if (resume) {
-    console.log('Building content sections:', {
-      hasSummary: !!resume.summary,
-      hasSocialLinks: !!resume.contact?.socialLinks,
-      experienceCount: resume.experience?.items?.length || 0,
-      educationCount: resume.education?.items?.length || 0,
-      skillsCount: resume.skills?.items?.length || 0
-    })
-
-    // Always add summary as the first section, using getSummary
-    const summary = getSummary(resume)
-    if (summary) {
-      contentSections.push(<SummarySection key='summary' summary={summary} />)
+      // Always add summary as the first section, using getSummary
+      const summary = getSummary(resume)
+      if (summary) {
+        sections.push(<SummarySection key='summary' summary={summary} />)
+      }
+      if (resume.contact?.socialLinks) {
+        sections.push(
+          <SocialLinksSection key='social' socialLinks={resume.contact.socialLinks} />
+        )
+      }
+      if (resume.experience?.items?.length) {
+        sections.push(
+          <ExperienceSection key='experience' items={resume.experience.items} />
+        )
+      }
+      if (resume.certifications?.items?.length) {
+        sections.push(
+          <CertificationsSection key='certifications' items={resume.certifications.items} />
+        )
+      }
+      if (resume.education?.items?.length) {
+        sections.push(
+          <EducationSection key='education' items={resume.education.items} />
+        )
+      }
+      if (resume.skills?.items?.length) {
+        sections.push(<SkillsSection key='skills' items={resume.skills.items} />)
+      }
+      if (resume.professionalAffiliations?.items?.length) {
+        sections.push(
+          <ProfessionalAffiliationsSection
+            key='affiliations'
+            items={resume.professionalAffiliations.items}
+          />
+        )
+      }
+      if (resume.languages?.items?.length) {
+        sections.push(
+          <LanguagesSection key='languages' items={resume.languages.items} />
+        )
+      }
+      if (resume.hobbiesAndInterests?.length) {
+        sections.push(
+          <HobbiesSection key='hobbies' items={resume.hobbiesAndInterests} />
+        )
+      }
+      if (resume.projects?.items?.length) {
+        sections.push(
+          <ProjectsSection key='projects' items={resume.projects.items} />
+        )
+      }
+      if (resume.publications?.items?.length) {
+        sections.push(
+          <PublicationsSection key='publications' items={resume.publications.items} />
+        )
+      }
+      if (resume.volunteerWork?.items?.length) {
+        sections.push(
+          <VolunteerWorkSection key='volunteer' items={resume.volunteerWork.items} />
+        )
+      }
     }
-    if (resume.contact?.socialLinks) {
-      contentSections.push(
-        <SocialLinksSection key='social' socialLinks={resume.contact.socialLinks} />
-      )
-    }
-    if (resume.experience?.items?.length) {
-      contentSections.push(
-        <ExperienceSection key='experience' items={resume.experience.items} />
-      )
-    }
-    if (resume.certifications?.items?.length) {
-      contentSections.push(
-        <CertificationsSection key='certifications' items={resume.certifications.items} />
-      )
-    }
-    if (resume.education?.items?.length) {
-      contentSections.push(
-        <EducationSection key='education' items={resume.education.items} />
-      )
-    }
-    if (resume.skills?.items?.length) {
-      contentSections.push(<SkillsSection key='skills' items={resume.skills.items} />)
-    }
-    if (resume.professionalAffiliations?.items?.length) {
-      contentSections.push(
-        <ProfessionalAffiliationsSection
-          key='affiliations'
-          items={resume.professionalAffiliations.items}
-        />
-      )
-    }
-    if (resume.languages?.items?.length) {
-      contentSections.push(
-        <LanguagesSection key='languages' items={resume.languages.items} />
-      )
-    }
-    if (resume.hobbiesAndInterests?.length) {
-      contentSections.push(
-        <HobbiesSection key='hobbies' items={resume.hobbiesAndInterests} />
-      )
-    }
-    if (resume.projects?.items?.length) {
-      contentSections.push(
-        <ProjectsSection key='projects' items={resume.projects.items} />
-      )
-    }
-    if (resume.publications?.items?.length) {
-      contentSections.push(
-        <PublicationsSection key='publications' items={resume.publications.items} />
-      )
-    }
-    if (resume.volunteerWork?.items?.length) {
-      contentSections.push(
-        <VolunteerWorkSection key='volunteer' items={resume.volunteerWork.items} />
-      )
-    }
-  }
+    
+    return sections
+  }, [resume])
 
   // Now use pagination with the built content sections
   const { pages, measureRef } = usePagination(contentSections)
