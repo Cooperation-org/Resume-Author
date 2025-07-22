@@ -120,31 +120,51 @@ const MinimalCredentialViewer: React.FC<MinimalCredentialViewerProps> = ({ vcDat
 
   const renderPortfolio = () => {
     if (!hasPortfolio) return null
+    // Filter out nameless or invalid evidence
+    const validPortfolio = subject.portfolio!.filter(
+      item =>
+        typeof item.name === 'string' &&
+        item.name.trim().length > 1 &&
+        typeof item.url === 'string' &&
+        item.url.trim().length > 5 &&
+        item.url !== 'https://'
+    )
+    if (validPortfolio.length === 0) return null
     return (
-      <Box sx={{ mt: 2 }}>
-        <Typography sx={{ fontWeight: 600, mb: 1 }}>
+      <Box sx={{ mt: 3 }}>
+        <Typography sx={{ fontWeight: 700, mb: 1, color: '#222' }}>
           Supporting Evidence / Portfolio:
         </Typography>
         <Grid container spacing={2}>
-          {subject.portfolio!.map((item, idx) => {
+          {validPortfolio.map((item, idx) => {
             const isImage = item.url.match(/\.(jpeg|jpg|png|gif|webp|svg)$/i)
             return (
-              <Grid item xs={12} sm={6} md={4} key={idx}>
+              <Grid item xs={12} key={idx}>
                 {isImage ? (
-                  <Box sx={{ mb: 1 }}>
+                  <Box
+                    sx={{
+                      mb: 1,
+                      borderRadius: 2,
+                      overflow: 'hidden',
+                      boxShadow: '0 2px 8px rgba(30,64,175,0.10)',
+                      transition: 'box-shadow 0.2s',
+                      '&:hover': { boxShadow: '0 4px 16px rgba(30,64,175,0.18)' }
+                    }}
+                  >
                     <img
                       src={item.url}
                       alt={item.name}
                       style={{
-                        maxWidth: '100%',
+                        width: '100%',
                         maxHeight: 120,
-                        borderRadius: 6,
-                        border: '1px solid #e0e0e0'
+                        objectFit: 'cover',
+                        borderRadius: 8,
+                        display: 'block'
                       }}
                     />
                     <Typography
                       variant='caption'
-                      sx={{ display: 'block', mt: 0.5, wordBreak: 'break-all' }}
+                      sx={{ display: 'block', mt: 0.5, wordBreak: 'break-all', px: 1 }}
                     >
                       {item.name}
                     </Typography>
@@ -155,8 +175,27 @@ const MinimalCredentialViewer: React.FC<MinimalCredentialViewerProps> = ({ vcDat
                     target='_blank'
                     rel='noopener noreferrer'
                     underline='hover'
-                    sx={{ color: '#2563EB', fontWeight: 500, wordBreak: 'break-all' }}
+                    sx={{
+                      color: '#2563EB',
+                      fontWeight: 600,
+                      wordBreak: 'normal',
+                      overflowWrap: 'break-word',
+                      minWidth: 0,
+                      maxWidth: '100%',
+                      whiteSpace: 'normal',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 1,
+                      px: 1,
+                      py: 0.5,
+                      borderRadius: 1,
+                      transition: 'background 0.2s',
+                      '&:hover': { background: '#e9f0ff' }
+                    }}
                   >
+                    <Box component='span' sx={{ fontSize: 18, mr: 0.5 }}>
+                      📄
+                    </Box>
                     {item.name}
                   </MuiLink>
                 )}
@@ -405,7 +444,7 @@ const MinimalCredentialViewer: React.FC<MinimalCredentialViewerProps> = ({ vcDat
             {subject.portfolio!.map((item, idx) => {
               const isImage = item.url.match(/\.(jpeg|jpg|png|gif|webp|svg)$/i)
               return (
-                <Grid item xs={12} sm={6} md={4} key={idx}>
+                <Grid item xs={12} key={idx}>
                   {isImage ? (
                     <Box
                       sx={{
@@ -444,7 +483,11 @@ const MinimalCredentialViewer: React.FC<MinimalCredentialViewerProps> = ({ vcDat
                       sx={{
                         color: '#2563EB',
                         fontWeight: 600,
-                        wordBreak: 'break-all',
+                        wordBreak: 'normal',
+                        overflowWrap: 'break-word',
+                        minWidth: 0,
+                        maxWidth: '100%',
+                        whiteSpace: 'normal',
                         display: 'flex',
                         alignItems: 'center',
                         gap: 1,
