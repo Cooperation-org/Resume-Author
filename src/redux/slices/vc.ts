@@ -1,4 +1,4 @@
-import { GoogleDriveStorage, Resume } from '@cooperation/vc-storage'
+
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
 import { getLocalStorage } from '../../tools/cookie'
 import StorageService from '../../storage-singlton'

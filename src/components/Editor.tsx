@@ -258,7 +258,7 @@ const ResumeEditor: React.FC = () => {
 
       fetchResumeData()
     }
-  }, [resumeId, isInitialized, dispatch, instances.storage, navigate])
+  }, [resumeId, isInitialized, dispatch, instances.storage, navigate, resume])
 
   // Check if resume has been modified using the optimized hash comparison
   useEffect(() => {
@@ -907,13 +907,13 @@ const ResumeEditor: React.FC = () => {
     }
   }
 
-  const handleSectionFocus = useCallback(
-    (sectionId: string) => {
-      console.log('Setting active section:', sectionId)
-      dispatch(setActiveSection(sectionId))
-    },
-    [dispatch]
-  )
+  // const handleSectionFocus = useCallback(
+  //   (sectionId: string) => {
+  //     console.log('Setting active section:', sectionId)
+  //     dispatch(setActiveSection(sectionId))
+  //   },
+  //   [dispatch]
+  // )
   const getSectionEvidence = (sectionId: string, itemCount: number): string[][] => {
     const section = sectionEvidence[sectionId] || []
     if (Array.isArray(section) && Array.isArray(section[0])) return section as string[][]

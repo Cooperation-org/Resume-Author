@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState } from 'react'
 import {
   Box,
   Typography,
@@ -6,7 +6,12 @@ import {
   createTheme,
   CircularProgress,
   useMediaQuery,
-  Stack
+  Stack,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions
 } from '@mui/material'
 import { useNavigate } from 'react-router-dom'
 import { useSelector } from 'react-redux'
@@ -90,6 +95,7 @@ const ResumePreviewTopbar: React.FC<ResumePreviewTopbarProps> = ({
   setIsSigningSaving,
   resumeId
 }) => {
+  const [showAuthError, setShowAuthError] = useState(false)
   const navigate = useNavigate()
   const resume = useSelector((state: RootState) => state?.resume.resume)
   const { instances } = useGoogleDrive()
@@ -148,7 +154,7 @@ const ResumePreviewTopbar: React.FC<ResumePreviewTopbarProps> = ({
   const handleSignAndSave = async () => {
     if (!instances?.resumeVC || !instances?.resumeManager) {
       console.error('Required services not available')
-      return
+      throw new Error('Required services not available')
     }
 
     try {
@@ -166,7 +172,7 @@ const ResumePreviewTopbar: React.FC<ResumePreviewTopbarProps> = ({
 
       if (!resume) {
         console.error('Resume is null, cannot prepare for VC')
-        return
+        throw new Error('Resume is null, cannot prepare for VC')
       }
       const preparedResume = await prepareResumeForVC(resume, {})
       console.log('PREPARED FORM DATA', preparedResume)
@@ -224,22 +230,61 @@ const ResumePreviewTopbar: React.FC<ResumePreviewTopbarProps> = ({
       })
 
       console.log('Resume successfully signed and saved:', signedResume)
-    } catch (error) {
+      return true // Return success
+    } catch (error: any) {
       console.error('Error signing and saving:', error)
+      
+      // Check for OAuth/authentication errors
+      if (error.message?.includes('401') || 
+          error.message?.includes('403') || 
+          error.message?.includes('unauthorized') ||
+          error.message?.toLowerCase().includes('auth') ||
+          error.message?.includes('token') ||
+          error.response?.status === 401 ||
+          error.response?.status === 403) {
+        // Create a more specific error for OAuth issues
+        const authError = new Error('Authentication expired. Please log out and log in again to continue.');
+        (authError as any).isAuthError = true;
+        throw authError;
+      }
+      
+      throw error // Re-throw other errors
     }
   }
 
   const onSignAndSave = async () => {
+    // Check if resume exists before attempting to sign
+    if (!resume) {
+      console.error('No resume data available to sign');
+      // Navigate back to edit page or show error
+      handleBackToEdit();
+      return;
+    }
+
     if (typeof setIsSigningSaving === 'function') {
       setIsSigningSaving(true)
     }
 
-    await handleSignAndSave()
-
-    if (typeof setIsSigningSaving === 'function') {
-      setIsSigningSaving(false)
+    try {
+      await handleSignAndSave()
+      // Only navigate if sign and save was successful
+      // The navigation should happen after the file is saved
+      // Wait a moment to ensure the save is complete
+      setTimeout(() => {
+        navigate('/resume/import')
+      }, 500)
+    } catch (error) {
+      console.error('Error in onSignAndSave:', error)
+      // Check if it's an authentication error
+      if ((error as any).isAuthError) {
+        setShowAuthError(true)
+      }
+      // Don't navigate on error
+    } finally {
+      if (typeof setIsSigningSaving === 'function') {
+        setIsSigningSaving(false)
+      }
     }
-    navigate('/resume/import')
   }
 
   const getButtonSx = (baseWidth: string) => ({
@@ -280,7 +325,16 @@ const ResumePreviewTopbar: React.FC<ResumePreviewTopbarProps> = ({
     textTransform: 'none'
   })
 
+  const handleLogout = () => {
+    // Clear local storage
+    localStorage.removeItem('auth')
+    localStorage.removeItem('refresh_token')
+    // Navigate to login
+    navigate('/login')
+  }
+
   return (
+    <>
     <Box
       sx={{
         width: 'calc(100% - 5vw)',
@@ -549,6 +603,32 @@ const ResumePreviewTopbar: React.FC<ResumePreviewTopbarProps> = ({
         </Box>
       </Box>
     </Box>
+      
+      {/* OAuth Error Dialog */}
+      <Dialog
+        open={showAuthError}
+        onClose={() => setShowAuthError(false)}
+        aria-labelledby="auth-error-dialog-title"
+        aria-describedby="auth-error-dialog-description"
+      >
+        <DialogTitle id="auth-error-dialog-title">
+          Authentication Required
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText id="auth-error-dialog-description">
+            Your session has expired. Please log out and log in again to continue signing your resume.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setShowAuthError(false)}>
+            Cancel
+          </Button>
+          <Button onClick={handleLogout} variant="contained" autoFocus>
+            Log Out
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </>
   )
 }
 

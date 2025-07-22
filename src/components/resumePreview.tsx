@@ -254,9 +254,7 @@ const PageFooter: React.FC<{
 const SummarySection: React.FC<{ summary?: string }> = ({ summary }) => {
   if (!summary) return null
   return (
-    <Box sx={{ mb: '20px' }}>
-      {' '}
-      {/* Reduced margin */}
+    <Box sx={{ mb: '15px' }}> {/* Reduced margin from 20px */}
       <SectionTitle>Professional Summary</SectionTitle>
       <Typography
         variant='body2'
@@ -283,12 +281,8 @@ const SocialLinksSection: React.FC<{
   if (!hasLinks) return null
 
   return (
-    <Box sx={{ mb: '20px' }}>
-      {' '}
-      {/* Reduced margin */}
+    <Box sx={{ mb: '15px' }}> {/* Reduced margin from 20px */}
       <Box sx={{ display: 'flex', gap: '15px', flexWrap: 'wrap', flexDirection: 'row' }}>
-        {' '}
-        {/* Reduced gap */}
         {Object.entries(socialLinks).map(([platform, url]) =>
           url ? (
             <Box key={platform}>
@@ -419,9 +413,7 @@ function renderDateOrDuration({
 const ExperienceSection: React.FC<{ items: WorkExperience[] }> = ({ items }) => {
   if (!items?.length) return null
   return (
-    <Box sx={{ mb: '20px' }}>
-      {' '}
-      {/* Reduced margin */}
+    <Box sx={{ mb: '15px' }}> {/* Reduced margin from 20px */}
       <SectionTitle>Work Experience</SectionTitle>
       {items.map((item, index) => {
         const dateText = renderDateOrDuration({
@@ -447,9 +439,7 @@ const ExperienceSection: React.FC<{ items: WorkExperience[] }> = ({ items }) => 
         }
 
         return (
-          <Box key={item.id || `exp-${index}`} sx={{ mb: '20px' }}>
-            {' '}
-            {/* Reduced margin */}
+          <Box key={item.id || `exp-${index}`} sx={{ mb: '15px' }}> {/* Reduced margin from 20px */}
             <Box sx={{ display: 'flex', alignItems: 'center' }}>
               {item.verificationStatus === 'verified' && <BlueVerifiedBadge />}
               <Typography
@@ -530,9 +520,7 @@ const ExperienceSection: React.FC<{ items: WorkExperience[] }> = ({ items }) => 
 const EducationSection: React.FC<{ items: Education[] }> = ({ items }) => {
   if (!items?.length) return null
   return (
-    <Box sx={{ mb: '20px' }}>
-      {' '}
-      {/* Reduced margin */}
+    <Box sx={{ mb: '15px' }}> {/* Reduced margin from 20px */}
       <SectionTitle>Education</SectionTitle>
       {items.map(item => {
         const dateText = renderDateOrDuration({
@@ -617,7 +605,7 @@ const EducationSection: React.FC<{ items: Education[] }> = ({ items }) => {
 const CertificationsSection: React.FC<{ items: Certification[] }> = ({ items }) => {
   if (!items?.length) return null
   return (
-    <Box sx={{ mb: '30px' }}>
+    <Box sx={{ mb: '20px' }}> {/* Keep this at 20px as it was already 30px */}
       <SectionTitle>Certifications</SectionTitle>
       {items.map(item => {
         let displayDate = ''
@@ -771,9 +759,7 @@ const ProfessionalAffiliationsSection: React.FC<{
 }> = ({ items }) => {
   if (!items?.length) return null
   return (
-    <Box sx={{ mb: '20px' }}>
-      {' '}
-      {/* Reduced margin */}
+    <Box sx={{ mb: '15px' }}> {/* Reduced margin from 20px */}
       <SectionTitle>Professional Affiliations</SectionTitle>
       {items.map(item => {
         const dateText = renderDateOrDuration({
@@ -911,9 +897,7 @@ const VolunteerWorkSection: React.FC<{ items: VolunteerWork[] }> = ({ items }) =
 const SkillsSection: React.FC<{ items: Skill[] }> = ({ items }) => {
   if (!items?.length) return null
   return (
-    <Box sx={{ mb: '20px' }}>
-      {' '}
-      {/* Reduced margin */}
+    <Box sx={{ mb: '15px' }}> {/* Reduced margin from 20px */}
       <SectionTitle>Skills</SectionTitle>
       <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
         {items.map(item => {
@@ -1097,7 +1081,7 @@ function usePagination(content: ReactNode[]) {
       const paginated: ReactNode[][] = []
 
       // Add a buffer to prevent content from touching the footer
-      const SAFETY_MARGIN = 40 // Increased to prevent overlap
+      const SAFETY_MARGIN = 20 // Reduced from 40 to use more page space
       const effectiveMaxHeight = contentMaxHeightPx - SAFETY_MARGIN
 
       for (let i = 0; i < content.length; i++) {
