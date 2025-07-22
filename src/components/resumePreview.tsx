@@ -147,7 +147,6 @@ const FirstPageHeader: React.FC<{
           gap: 1
         }}
       >
-        {/* Name and City Row */}
         <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 2 }}>
           <Typography
             sx={{ fontWeight: 600, color: '#2E2E48', fontSize: '30px', lineHeight: 1 }}
@@ -161,7 +160,6 @@ const FirstPageHeader: React.FC<{
           )}
         </Box>
 
-        {/* Contact Info Row */}
         {(email || phone) && (
           <Box sx={{ display: 'flex', gap: 3, alignItems: 'center' }}>
             {email && (
@@ -245,14 +243,13 @@ const FirstPageHeader: React.FC<{
         )}
       </Box>
 
-      {/* Right side with View Source and QR Code */}
       <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
         <Box
           sx={{
             textAlign: 'center',
             py: '20px',
             mr: '15px',
-            display: hasValidId ? 'block' : 'none'
+            display: hasValidId ? 'block' : 'none' // Hide when no valid ID
           }}
         >
           <Link
