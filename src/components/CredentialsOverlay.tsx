@@ -145,7 +145,13 @@ const CredentialOverlay: React.FC<CredentialOverlayProps> = ({
   }
 
   const handleContinue = () => {
-    onSelect(selectedCredentials)
+    if (Array.isArray(selectedCredentials)) {
+      // Deduplicate by ID before passing to onSelect
+      const deduped = Array.from(new Set(selectedCredentials))
+      onSelect(deduped)
+    } else {
+      onSelect([])
+    }
     onClose?.()
   }
 

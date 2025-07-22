@@ -29,6 +29,7 @@ import CredentialOverlay from '../../CredentialsOverlay'
 import TextEditor from '../../TextEditor/Texteditor'
 import AttachFileIcon from '@mui/icons-material/AttachFile'
 import MinimalCredentialViewer from '../../MinimalCredentialViewer'
+import VerifiedCredentialsList from '../../common/VerifiedCredentialsList'
 
 const PinkSwitch = styled(Switch)(({ theme }) => ({
   '& .MuiSwitch-switchBase.Mui-checked': {
@@ -99,8 +100,8 @@ export default function ProfessionalAffiliations({
   const [showCredentialsOverlay, setShowCredentialsOverlay] = useState(false)
   const [activeSectionIndex, setActiveSectionIndex] = useState<number | null>(null)
   const vcs = useSelector((state: any) => state.vcReducer.vcs)
-  const [openCredDialog, setOpenCredDialog] = useState(false)
-  const [dialogCredObj, setDialogCredObj] = useState<any>(null)
+  // const [openCredDialog, setOpenCredDialog] = useState(false)
+  // const [dialogCredObj, setDialogCredObj] = useState<any>(null)
 
   const [affiliations, setAffiliations] = useState<AffiliationItem[]>([
     {
@@ -165,6 +166,7 @@ export default function ProfessionalAffiliations({
     }
   }
 
+  // Helper to get credential name (copied verbatim from resumePreview)
   function getCredentialName(claim: any): string {
     try {
       if (!claim || typeof claim !== 'object') {
@@ -196,11 +198,14 @@ export default function ProfessionalAffiliations({
   }
 
   useEffect(() => {
-    if (
-      resume?.professionalAffiliations?.items &&
-      resume.professionalAffiliations.items.length > 0
-    ) {
-      const typedItems = resume.professionalAffiliations.items.map((item: any) => ({
+    const items =
+      resume &&
+      resume.professionalAffiliations &&
+      Array.isArray(resume.professionalAffiliations.items)
+        ? resume.professionalAffiliations.items
+        : []
+    if (items.length > 0) {
+      const typedItems = items.map((item: any) => ({
         name: item.name || '',
         organization: item.organization || '',
         startDate: item.startDate || '',
@@ -415,19 +420,24 @@ export default function ProfessionalAffiliations({
             vc: credential
           }
         })
+        // Deduplicate by id
+        const deduped: SelectedCredential[] = Array.from(
+          new Map(selectedCredentials.map(c => [c.id, c])).values()
+        )
         setAffiliations(prev => {
           const updated = [...prev]
           updated[activeSectionIndex] = {
             ...updated[activeSectionIndex],
             verificationStatus: 'verified',
             credentialLink:
-              selectedCredentials &&
-              selectedCredentials.length > 0 &&
-              selectedCredentials[0].id &&
-              selectedCredentials[0].vc
-                ? `${selectedCredentials[0].id},${JSON.stringify(selectedCredentials[0].vc)}`
+              deduped &&
+              deduped.length > 0 &&
+              deduped[0] &&
+              deduped[0].id &&
+              deduped[0].vc
+                ? `${deduped[0].id},${JSON.stringify(deduped[0].vc)}`
                 : '',
-            selectedCredentials
+            selectedCredentials: deduped
           }
           dispatch(
             updateSection({
@@ -450,15 +460,18 @@ export default function ProfessionalAffiliations({
         const updated = [...prev]
         const aff = { ...updated[affIndex] }
         const newCreds = aff.selectedCredentials.filter((_, i) => i !== credIndex)
-
-        aff.selectedCredentials = newCreds
-        if (!newCreds.length) {
+        // Deduplicate by id
+        aff.selectedCredentials = Array.from(
+          new Map(newCreds.map(c => [c.id, c])).values()
+        )
+        if (!aff.selectedCredentials.length) {
           aff.verificationStatus = 'unverified'
           aff.credentialLink = ''
         } else {
-          aff.credentialLink = newCreds[0]?.vc ? JSON.stringify(newCreds[0].vc) : ''
+          aff.credentialLink = aff.selectedCredentials[0]?.vc
+            ? JSON.stringify(aff.selectedCredentials[0].vc)
+            : ''
         }
-
         updated[affIndex] = aff
         dispatch(
           updateSection({
@@ -695,127 +708,25 @@ export default function ProfessionalAffiliations({
                 onFocus={onFocus}
               />
 
-              {affiliation.selectedCredentials &&
+              {Array.isArray(affiliation.selectedCredentials) &&
                 affiliation.selectedCredentials.length > 0 && (
-                  <Box sx={{ mt: 2 }}>
-                    <Typography variant='body2' sx={{ fontWeight: 'bold', mb: 1 }}>
-                      Verified Credentials:
-                    </Typography>
-                    {affiliation.selectedCredentials.map((credential, credIndex) => (
-                      <Box
-                        key={`credential-${credential.id}-${credIndex}`}
-                        sx={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'space-between',
-                          mb: 0.5,
-                          backgroundColor: '#f5f5f5',
-                          p: 0.5,
-                          borderRadius: 1
-                        }}
-                      >
-                        <Typography
-                          variant='body2'
-                          sx={{
-                            color: 'primary.main',
-                            textDecoration: 'underline',
-                            cursor: 'pointer'
-                          }}
-                          onClick={() => {
-                            let credObj = null
-                            let credId = undefined
-                            try {
-                              if (
-                                affiliation.credentialLink &&
-                                affiliation.credentialLink.match(/^([\w-]+),\{.*\}$/)
-                              ) {
-                                const commaIdx = affiliation.credentialLink.indexOf(',')
-                                credId = affiliation.credentialLink.slice(0, commaIdx)
-                                const jsonStr = affiliation.credentialLink.slice(
-                                  commaIdx + 1
-                                )
-                                credObj = JSON.parse(jsonStr)
-                                credObj.credentialId = credId
-                              } else if (
-                                affiliation.credentialLink &&
-                                affiliation.credentialLink.startsWith('{')
-                              ) {
-                                credObj = JSON.parse(affiliation.credentialLink)
-                              }
-                            } catch (e) {}
-                            if (credObj) {
-                              setDialogCredObj(credObj)
-                              setOpenCredDialog(true)
-                            }
-                          }}
-                        >
-                          {(() => {
-                            let credObj = null
-                            let credId = undefined
-                            try {
-                              if (
-                                affiliation.credentialLink &&
-                                affiliation.credentialLink.match(/^([\w-]+),\{.*\}$/)
-                              ) {
-                                const commaIdx = affiliation.credentialLink.indexOf(',')
-                                credId = affiliation.credentialLink.slice(0, commaIdx)
-                                const jsonStr = affiliation.credentialLink.slice(
-                                  commaIdx + 1
-                                )
-                                credObj = JSON.parse(jsonStr)
-                                credObj.credentialId = credId
-                              } else if (
-                                affiliation.credentialLink &&
-                                affiliation.credentialLink.startsWith('{')
-                              ) {
-                                credObj = JSON.parse(affiliation.credentialLink)
-                              }
-                            } catch (e) {}
-                            return credObj
-                              ? getCredentialName(credObj)
-                              : `Credential ${credIndex + 1}`
-                          })()}
-                        </Typography>
-                        <IconButton
-                          size='small'
-                          onClick={e => {
-                            e.stopPropagation()
-                            handleRemoveCredential(index, credIndex)
-                          }}
-                          sx={{
-                            p: 0.5,
-                            color: 'grey.500',
-                            '&:hover': { color: 'error.main' }
-                          }}
-                        >
-                          <CloseIcon fontSize='small' />
-                        </IconButton>
-                      </Box>
-                    ))}
-                    <Dialog
-                      open={openCredDialog}
-                      onClose={() => setOpenCredDialog(false)}
-                      maxWidth='xs'
-                    >
-                      <DialogContent sx={{ p: 0 }}>
-                        {dialogCredObj && (
-                          <MinimalCredentialViewer vcData={dialogCredObj} />
-                        )}
-                      </DialogContent>
-                    </Dialog>
-                  </Box>
+                  <VerifiedCredentialsList
+                    credentials={affiliation.selectedCredentials}
+                    onRemove={credIndex => handleRemoveCredential(index, credIndex)}
+                    getCredentialName={getCredentialName}
+                  />
                 )}
 
-              {evidence && evidence[index] && evidence[index].length > 0 && (
+              {Array.isArray(evidence?.[index]) && evidence[index].length > 0 && (
                 <Box sx={{ mt: 2 }}>
                   <Typography variant='body2' sx={{ fontWeight: 'bold', mb: 1 }}>
                     Attached Files:
                   </Typography>
-                  {evidence[index].map((fileId, fileIndex) => {
+                  {(evidence[index] || []).map((fileId, fileIndex) => {
                     const file = allFiles.find(f => f.id === fileId)
                     return (
                       <Box
-                        key={`file-${fileId}-${fileIndex}`}
+                        key={`file-${fileId || ''}-${fileIndex}`}
                         sx={{
                           display: 'flex',
                           alignItems: 'center',
@@ -961,7 +872,8 @@ export default function ProfessionalAffiliations({
           onSelect={handleCredentialSelect}
           initialSelectedCredentials={
             activeSectionIndex !== null &&
-            affiliations[activeSectionIndex]?.selectedCredentials
+            affiliations[activeSectionIndex] &&
+            affiliations[activeSectionIndex].selectedCredentials
               ? affiliations[activeSectionIndex].selectedCredentials
               : []
           }
