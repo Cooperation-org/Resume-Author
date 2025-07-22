@@ -174,6 +174,12 @@ const ResumePreviewTopbar: React.FC<ResumePreviewTopbarProps> = ({
         console.error('Resume is null, cannot prepare for VC')
         throw new Error('Resume is null, cannot prepare for VC')
       }
+      console.log('Resume data before preparation:', {
+        name: resume.name,
+        fullName: resume.contact?.fullName,
+        hasSummary: !!resume.summary,
+        experienceCount: resume.experience?.items?.length || 0
+      })
       const preparedResume = await prepareResumeForVC(resume, {})
       console.log('PREPARED FORM DATA', preparedResume)
 
@@ -200,6 +206,7 @@ const ResumePreviewTopbar: React.FC<ResumePreviewTopbarProps> = ({
         resume: signedResume,
         type: 'sign'
       })
+      console.log('Signed resume saved with file:', file)
       if (!file?.id) {
         throw new Error('Failed to save resume')
       }
@@ -230,7 +237,7 @@ const ResumePreviewTopbar: React.FC<ResumePreviewTopbarProps> = ({
       })
 
       console.log('Resume successfully signed and saved:', signedResume)
-      return true // Return success
+      return file // Return the file object with the ID
     } catch (error: any) {
       console.error('Error signing and saving:', error)
       
@@ -266,13 +273,17 @@ const ResumePreviewTopbar: React.FC<ResumePreviewTopbarProps> = ({
     }
 
     try {
-      await handleSignAndSave()
+      const file = await handleSignAndSave()
+      console.log('Sign and save completed, file returned:', file)
       // Only navigate if sign and save was successful
-      // The navigation should happen after the file is saved
-      // Wait a moment to ensure the save is complete
-      setTimeout(() => {
-        navigate('/resume/import')
-      }, 500)
+      // Navigate to the saved resume view page
+      if (file?.id) {
+        console.log('Navigating to resume view with ID:', file.id)
+        // Navigate immediately to the correct route format
+        navigate(`/resume/view/${file.id}`)
+      } else {
+        console.error('No file ID returned from sign and save')
+      }
     } catch (error) {
       console.error('Error in onSignAndSave:', error)
       // Check if it's an authentication error
