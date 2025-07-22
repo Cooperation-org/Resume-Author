@@ -545,7 +545,10 @@ const ResumePreviewTopbar: React.FC<ResumePreviewTopbarProps> = ({
               <Button
                 variant='contained'
                 onClick={() => {
-                  navigate('/credential-raw/' + resumeId)
+                  // Pass the current resume data through navigation state
+                  navigate('/credential-raw/' + resumeId, {
+                    state: { credential: resume }
+                  })
                 }}
                 sx={{
                   ...getButtonSx('181px'),

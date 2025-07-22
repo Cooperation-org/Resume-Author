@@ -3,11 +3,16 @@ import { getFileViaFirebase } from '../firebase/storage'
 import { useParams, useLocation } from 'react-router-dom'
 
 const RawPreview = () => {
-  const [rawCredential, setRawCredential] = useState<any>(null)
-  const [loading, setLoading] = useState<boolean>(true)
-  const [error, setError] = useState<string | null>(null)
   const { fileId } = useParams<{ fileId: string }>()
   const location = useLocation()
+  
+  // Check if credential was passed via navigation state
+  const locationState = location.state as { credential?: any } | null
+  const passedCredential = locationState?.credential
+  
+  const [rawCredential, setRawCredential] = useState<any>(passedCredential || null)
+  const [loading, setLoading] = useState<boolean>(!passedCredential) // Don't load if we have data
+  const [error, setError] = useState<string | null>(null)
   const [viewType, setViewType] = useState<'formatted' | 'raw'>('formatted')
 
   const getFullFileId = useCallback((): string => {
@@ -32,6 +37,11 @@ const RawPreview = () => {
 
   useEffect(() => {
     const extractRawCredential = async () => {
+      // Skip loading if we already have the credential from navigation state
+      if (passedCredential) {
+        return
+      }
+      
       const fullFileId = getFullFileId()
 
       if (!fullFileId) {
@@ -57,14 +67,19 @@ const RawPreview = () => {
     }
 
     extractRawCredential()
-  }, [fileId, getFullFileId, location.pathname])
+  }, [fileId, getFullFileId, location.pathname, passedCredential])
 
   // Function to download JSON file
   const downloadJson = () => {
-    if (!rawCredential) return
+    const credentialToDownload = rawCredential
+    
+    if (!credentialToDownload) {
+      setError('No credential data available to download')
+      return
+    }
 
     // Create a Blob with the JSON data
-    const blob = new Blob([JSON.stringify(rawCredential, null, 2)], {
+    const blob = new Blob([JSON.stringify(credentialToDownload, null, 2)], {
       type: 'application/json'
     })
 

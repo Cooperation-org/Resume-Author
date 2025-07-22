@@ -32,8 +32,14 @@ export const HTMLWithVerifiedLinks: React.FC<{ htmlContent: string }> = ({
   const cleanedHTML = cleanHTML(htmlContent)
   const hasLinkedCredsLinks = cleanedHTML.includes('linkedcreds.allskillscount.org/view/')
 
+  // Add styling to all links in the content
+  const styledHTML = cleanedHTML.replace(
+    /<a\s+([^>]*href=["'][^"']+["'][^>]*)>/gi,
+    '<a $1 style="color: #2563EB; text-decoration: underline;">'
+  )
+
   if (!hasLinkedCredsLinks) {
-    return <span dangerouslySetInnerHTML={{ __html: cleanedHTML }} />
+    return <span dangerouslySetInnerHTML={{ __html: styledHTML }} />
   }
 
   // Split the HTML into parts at each linkedcreds link
@@ -43,11 +49,11 @@ export const HTMLWithVerifiedLinks: React.FC<{ htmlContent: string }> = ({
   let lastIndex = 0
   let match
 
-  while ((match = regex.exec(cleanedHTML)) !== null) {
+  while ((match = regex.exec(styledHTML)) !== null) {
     if (match.index > lastIndex) {
       parts.push({
         type: 'html',
-        content: cleanedHTML.substring(lastIndex, match.index)
+        content: styledHTML.substring(lastIndex, match.index)
       })
     }
 
@@ -59,10 +65,10 @@ export const HTMLWithVerifiedLinks: React.FC<{ htmlContent: string }> = ({
     lastIndex = match.index + match[0].length
   }
 
-  if (lastIndex < cleanedHTML.length) {
+  if (lastIndex < styledHTML.length) {
     parts.push({
       type: 'html',
-      content: cleanedHTML.substring(lastIndex)
+      content: styledHTML.substring(lastIndex)
     })
   }
 
