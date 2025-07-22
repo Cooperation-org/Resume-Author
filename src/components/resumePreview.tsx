@@ -111,7 +111,9 @@ const FirstPageHeader: React.FC<{
   city?: string
   forcedId?: string
   socialLinks?: Record<string, string | undefined>
-}> = ({ fullName, city, forcedId, socialLinks }) => {
+  email?: string
+  phone?: string
+}> = ({ fullName, city, forcedId, socialLinks, email, phone }) => {
   const [resumeLink, setResumeLink] = useState<string>('')
   const [hasValidId, setHasValidId] = useState<boolean>(false)
 
@@ -141,57 +143,106 @@ const FirstPageHeader: React.FC<{
           display: 'flex',
           flexDirection: 'column',
           ml: '45px',
-          justifyContent: 'center'
+          justifyContent: 'center',
+          gap: 1
         }}
       >
-        <Box sx={{ display: 'flex', alignItems: 'center' }}>
-          <Typography sx={{ fontWeight: 600, color: '#2E2E48', fontSize: '30px' }}>
+        <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 2 }}>
+          <Typography
+            sx={{ fontWeight: 600, color: '#2E2E48', fontSize: '30px', lineHeight: 1 }}
+          >
             {fullName}
           </Typography>
           {city && (
-            <Typography
-              sx={{ fontWeight: 400, color: '#2E2E48', fontSize: '18px', ml: 2 }}
-            >
+            <Typography sx={{ fontWeight: 400, color: '#666', fontSize: '20px' }}>
               {city}
             </Typography>
           )}
         </Box>
-        {filteredLinks.length > 0 && (
-          <Box sx={{ display: 'flex', gap: '20px', mt: 2, flexWrap: 'wrap' }}>
-            {filteredLinks.map(([platform, url]) =>
+
+        {(email || phone) && (
+          <Box sx={{ display: 'flex', gap: 3, alignItems: 'center' }}>
+            {email && (
+              <Link
+                href={`mailto:${email}`}
+                sx={{
+                  color: '#2563EB',
+                  textDecoration: 'none',
+                  fontSize: '16px',
+                  fontWeight: 400,
+                  fontFamily: 'Arial',
+                  '&:hover': {
+                    textDecoration: 'underline'
+                  }
+                }}
+              >
+                {email}
+              </Link>
+            )}
+            {email && phone && (
+              <Typography sx={{ color: '#666', fontSize: '16px' }}>|</Typography>
+            )}
+            {phone && (
+              <Link
+                href={`tel:${phone}`}
+                sx={{
+                  color: '#2563EB',
+                  textDecoration: 'none',
+                  fontSize: '16px',
+                  fontWeight: 400,
+                  fontFamily: 'Arial',
+                  '&:hover': {
+                    textDecoration: 'underline'
+                  }
+                }}
+              >
+                {phone}
+              </Link>
+            )}
+          </Box>
+        )}
+
+        {/* Social Links Row */}
+        {socialLinks && Object.values(socialLinks).some(link => !!link) && (
+          <Box sx={{ display: 'flex', gap: 3, flexWrap: 'wrap' }}>
+            {Object.entries(socialLinks).map(([platform, url], index, array) =>
               url ? (
-                <Box
-                  key={platform}
-                  sx={{ display: 'flex', alignItems: 'center', gap: 1 }}
-                >
-                  <img
-                    src={`https://www.google.com/s2/favicons?domain=${platform.toLowerCase()}.com&sz=32`}
-                    alt={`${platform} favicon`}
-                    style={{ width: 16, height: 16, borderRadius: '50%' }}
-                  />
-                  <Link
-                    href={url.startsWith('http') ? url : `https://${url}`}
-                    target='_blank'
-                    rel='noopener noreferrer'
-                    sx={{
-                      color: '#2563EB',
-                      textDecoration: 'underline',
-                      fontSize: '14px',
-                      fontWeight: 400,
-                      fontFamily: 'Arial',
-                      '&:hover': {
-                        opacity: 0.8
-                      }
-                    }}
-                  >
-                    {url.replace(/^https?:\/\//, '').replace(/^www\./, '')}
-                  </Link>
-                </Box>
+                <React.Fragment key={platform}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                    <img
+                      src={`https://www.google.com/s2/favicons?domain=${platform.toLowerCase()}.com&sz=32`}
+                      alt={`${platform} favicon`}
+                      style={{ width: 16, height: 16, borderRadius: '50%' }}
+                    />
+                    <Link
+                      href={url.startsWith('http') ? url : `https://${url}`}
+                      target='_blank'
+                      rel='noopener noreferrer'
+                      sx={{
+                        color: '#2563EB',
+                        textDecoration: 'none',
+                        fontSize: '16px',
+                        fontWeight: 400,
+                        fontFamily: 'Arial',
+                        '&:hover': {
+                          textDecoration: 'underline'
+                        }
+                      }}
+                    >
+                      {url.replace(/^https?:\/\//, '').replace(/^www\./, '')}
+                    </Link>
+                  </Box>
+                  {index < array.length - 1 &&
+                    Object.entries(socialLinks).filter(([_, u]) => u)[index + 1] && (
+                      <Typography sx={{ color: '#666', fontSize: '16px' }}>|</Typography>
+                    )}
+                </React.Fragment>
               ) : null
             )}
           </Box>
         )}
       </Box>
+
       <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
         <Box
           sx={{
@@ -2098,6 +2149,8 @@ const ResumePreview: React.FC<{ data?: Resume; forcedId?: string }> = ({
                   city={resume.contact?.location?.city}
                   forcedId={forcedId}
                   socialLinks={resume.contact?.socialLinks}
+                  email={resume.contact?.email}
+                  phone={resume.contact?.phone}
                 />
               ) : (
                 <SubsequentPageHeader
