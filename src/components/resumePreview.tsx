@@ -598,9 +598,6 @@ function renderDateOrDuration({
 }
 
 // Single Experience Item Component
-<<<<<<< HEAD
-const ExperienceItem: React.FC<{ item: WorkExperience; index: number }> = ({ item, index }) => {
-=======
 const ExperienceItem: React.FC<{
   item: WorkExperience
   index: number
@@ -1469,11 +1466,7 @@ const ResumePreview: React.FC<{ data?: Resume; forcedId?: string }> = ({
             renderCredentialLink={renderCredentialLink}
           />
         )
-        resume.professionalAffiliations.items.forEach((item) => {
-          elements.push(
-            <ProfessionalAffiliationItem key={`affiliation-${item.id}`} item={item} />
-          )
-        })
+      // Removed duplicate code - this was incorrectly placed inside the skills section
       }
 
       // Professional Affiliations - add title then each item separately
