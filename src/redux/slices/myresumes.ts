@@ -1,7 +1,7 @@
 import { refreshAccessToken } from './../../tools/auth'
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit'
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { GoogleDriveStorage, Resume as ResumeManager } from '@cooperation/vc-storage' //NOSONAR
+import { GoogleDriveStorage, Resume as ResumeManager } from '@linked-claims/vc-storage' //NOSONAR
 import { getLocalStorage } from '../../tools/cookie'
 import StorageService from '../../storage-singlton'
 

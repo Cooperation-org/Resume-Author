@@ -1,4 +1,4 @@
-// import { GoogleDriveStorage, Resume, ResumeVC } from '@cooperation/vc-storage'
+// import { GoogleDriveStorage, Resume, ResumeVC } from '@linked-claims/vc-storage'
 
 const signResume = async ({
   resume,

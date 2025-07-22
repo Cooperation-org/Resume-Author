@@ -1,7 +1,7 @@
 import React, { useCallback, useState, useEffect } from 'react'
 import { useDispatch } from 'react-redux'
 import { getLocalStorage } from '../tools/cookie'
-import { GoogleDriveStorage, Resume } from '@cooperation/vc-storage'
+import { GoogleDriveStorage, Resume } from '@linked-claims/vc-storage'
 
 import {
   Dialog,
