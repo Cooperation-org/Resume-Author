@@ -47,7 +47,7 @@ const App = () => {
           await refreshAccessToken(refreshToken, (token: string) => {
             dispatch(setAuth({ accessToken: token }))
           })
-          console.log('Token refreshed successfully on app startup')
+          
         } catch (error) {
           console.error('Failed to refresh token on app startup:', error)
         }

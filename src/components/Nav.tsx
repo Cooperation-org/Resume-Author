@@ -66,7 +66,7 @@ const Nav = () => {
   }
 
   const handleLogin = () => {
-    console.log('isLogged', isLogged)
+    
     if (!isLogged) {
       login('/resume/import')
     } else {

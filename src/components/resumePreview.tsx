@@ -554,7 +554,7 @@ function getCredentialName(claim: any): string {
 
 // Helper to get credential links as array (handles both new and old formats)
 function getCredentialLinks(credentialLink: string | string[] | undefined): string[] {
-  console.log('getCredentialLinks input:', credentialLink, typeof credentialLink)
+  
   
   if (!credentialLink) return []
   if (Array.isArray(credentialLink)) return credentialLink
@@ -562,7 +562,7 @@ function getCredentialLinks(credentialLink: string | string[] | undefined): stri
     try {
       if (credentialLink.trim().startsWith('[')) {
         const parsed = JSON.parse(credentialLink)
-        console.log('Parsed credential links:', parsed)
+        
         return parsed
       }
       return [credentialLink]
