@@ -168,45 +168,20 @@ const ResumeCard: React.FC<ResumeCardProps> = ({
   // Get time ago for the appropriate timestamp based on whether it's a draft or signed resume
   const getResumeDate = (): string => {
     // Add some helpful debug logging to understand the resume data structure
-    console.log(
-      `ResumeCard (${isDraft ? 'Draft' : 'Signed'}) - ID: ${id}, Title: ${title}`
-    )
 
     if (isDraft) {
       // For drafts, we expect the date in content.lastUpdated
       if (resume?.content?.lastUpdated) {
-        console.log('Using draft resume.content.lastUpdated:', resume.content.lastUpdated)
         return resume.content.lastUpdated
       } else {
-        // Log potential issues with draft resume structure
-        console.log(
-          'Draft resume missing content.lastUpdated, using fallback date:',
-          date
-        )
-        console.log(
-          'Draft resume content structure:',
-          resume?.content ? Object.keys(resume.content) : 'No content'
-        )
         return date // Use the date prop as fallback
       }
     } else {
       // For signed resumes, we expect the date in content.issuanceDate
       if (resume?.content?.issuanceDate) {
-        console.log(
-          'Using signed resume.content.issuanceDate:',
-          resume.content.issuanceDate
-        )
         return resume.content.issuanceDate
       } else {
         // Log potential issues with signed resume structure
-        console.log(
-          'Signed resume missing content.issuanceDate, using fallback date:',
-          date
-        )
-        console.log(
-          'Signed resume content structure:',
-          resume?.content ? Object.keys(resume.content) : 'No content'
-        )
         return date
       }
     }
@@ -216,7 +191,6 @@ const ResumeCard: React.FC<ResumeCardProps> = ({
   const timeAgo = getTimeAgo(resumeDate)
 
   // Additional logging to debug time calculations
-  console.log(`Resume time details - Date: ${resumeDate}, TimeAgo: ${timeAgo}`)
 
   const inputRef = useRef<HTMLInputElement | null>(null)
 
@@ -249,7 +223,6 @@ const ResumeCard: React.FC<ResumeCardProps> = ({
           const newFileName = `${editedTitle}.json`
           await storage.updateFileData(id, { fileName: newFileName })
 
-          console.log('✅ File renamed successfully:', newFileName)
         } catch (error) {
           console.error('❌ Error renaming file:', error)
         }
@@ -477,7 +450,6 @@ const ResumeCard: React.FC<ResumeCardProps> = ({
     setDeleteDialogOpen(false)
     handleMenuClose()
     const deleted = await storage.delete(id)
-    console.log('🚀 ~ handleConfirmDelete ~ deleted:', deleted)
   }
 
   const handlePreviewResume = () => {

@@ -224,7 +224,7 @@ export default function ResumeUploadPage() {
 
         vcData = await response.json()
       } catch (corsError) {
-        console.log('Direct fetch failed, likely due to CORS. Trying backend proxy...')
+        
 
         // Use the backend server as a proxy
         try {
@@ -246,7 +246,7 @@ export default function ResumeUploadPage() {
 
           vcData = await proxyResponse.json()
         } catch (backendError) {
-          console.log('Backend proxy failed. Trying public CORS proxy...')
+          
 
           // Fallback to public CORS proxy
           try {

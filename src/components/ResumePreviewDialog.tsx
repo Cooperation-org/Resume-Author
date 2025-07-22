@@ -287,7 +287,7 @@ const ResumePreviewDialog: React.FC<ResumePreviewDialogProps> = ({
           }
         }
 
-        console.log('Transformed Resume Data:', transformedResumeData)
+        
 
         setResumeData(transformedResumeData)
         setIsLoading(false)

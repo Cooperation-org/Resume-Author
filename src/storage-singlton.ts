@@ -31,7 +31,7 @@ class StorageService {
   public initialize(accessToken: string): void {
     // Only initialize if token is different or instances don't exist
     if (this.token !== accessToken || !this.storage || !this.resumeManager) {
-      console.log('Initializing storage service with new token')
+      
       this.token = accessToken
       this.storage = new GoogleDriveStorage(accessToken)
       this.resumeManager = new Resume(this.storage)
@@ -41,10 +41,10 @@ class StorageService {
 
   public async refreshAndReinitialize(): Promise<void> {
     try {
-      console.log('Refreshing token and re-initializing storage...')
+      
       const newToken = await refreshAccessToken(undefined, this.onTokenUpdate)
       this.initialize(newToken)
-      console.log('Storage re-initialized with fresh token')
+      
     } catch (error) {
       console.error('Failed to refresh token and re-initialize storage:', error)
       logout()
@@ -61,7 +61,7 @@ class StorageService {
         error?.message?.includes('Invalid Credentials') ||
         error?.message?.includes('authentication')
       ) {
-        console.log('Detected authentication error, attempting to refresh...')
+        
         await this.refreshAndReinitialize()
 
         return await apiCall()

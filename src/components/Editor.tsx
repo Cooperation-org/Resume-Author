@@ -244,7 +244,7 @@ const ResumeEditor: React.FC = () => {
                 setResumeName('Untitled Resume')
               }
 
-              console.log('Resume loaded successfully from Google Drive')
+              
             } else {
               console.error('Retrieved resume data is empty')
             }
@@ -267,7 +267,7 @@ const ResumeEditor: React.FC = () => {
       // Only update if state actually changes to prevent unnecessary re-renders
       setIsDirty(prev => {
         if (prev !== newDirtyState) {
-          console.log(`Dirty state changed to: ${newDirtyState ? 'dirty' : 'clean'}`)
+          
           return newDirtyState
         }
         return prev
@@ -416,7 +416,7 @@ const ResumeEditor: React.FC = () => {
           type: 'unsigned'
         })
 
-        console.log('Resume saved successfully before exit', result)
+        
 
         // Update our original reference so it's no longer dirty
         originalResumeRef.current = computeResumeHash(resume)
@@ -492,8 +492,8 @@ const ResumeEditor: React.FC = () => {
 
   const handleAddCredential = useCallback(
     (text: string) => {
-      console.log('handleAddCredential called with text:', text)
-      console.log('Current activeSection:', activeSection)
+      
+      
       
       if (!activeSection) {
         console.error('No active section found')
@@ -582,7 +582,7 @@ const ResumeEditor: React.FC = () => {
           [activeSectionId]: prevArr
         }
 
-        console.log('Updated sectionEvidence:', newEvidence)
+        
         return newEvidence
       })
     }
@@ -592,7 +592,7 @@ const ResumeEditor: React.FC = () => {
   }
 
   const handleRemoveFile = (sectionId: string, itemIndex: number, fileIndex: number) => {
-    console.log('handleRemoveFile called:', { sectionId, itemIndex, fileIndex })
+    
 
     setSectionEvidence(prev => {
       const section = prev[sectionId] || []
@@ -609,13 +609,13 @@ const ResumeEditor: React.FC = () => {
         [sectionId]: newSection
       }
 
-      console.log('Updated sectionEvidence after removal:', newEvidence)
+      
       return newEvidence
     })
   }
 
   const handlePreview = () => {
-    console.log(resume)
+    
     // If we have a resumeId, pass it to the preview page
     if (resumeId) {
       handleNavigate(`/resume/view?id=${resumeId}`)
@@ -668,7 +668,7 @@ const ResumeEditor: React.FC = () => {
       }
       dispatch(fetchUserResumes() as any)
 
-      console.log('Saved Resume:', savedResume)
+      
     } catch (error) {
       console.error('Error saving draft:', error)
     } finally {
@@ -708,20 +708,20 @@ const ResumeEditor: React.FC = () => {
         return
       }
 
-      console.log('Current sectionEvidence before preparing for VC:', sectionEvidence)
+      
       // TRACE REDUX STATE AND RESUME OBJECT
       try {
         const { store } = await import('../redux/store')
         const state = store.getState()
-        console.log('🚨 REDUX resume state:', state.resume)
-        console.log('🚨 REDUX vcReducer state:', state.vcReducer)
+        
+        
       } catch (e) {
         console.warn('Could not import redux store for tracing:', e)
       }
-      console.log('🚨 Resume object before prepareResumeForVC:', resume)
+      
       const preparedResume = await prepareResumeForVC(resume, sectionEvidence, allFiles)
-      console.log('PREPARED FORM DATA', preparedResume)
-      console.log('FORM DATA - Evidence section:', preparedResume.evidence)
+      
+      
 
       // PATCH: Ensure processed employmentHistory is used in credentialSubject
       if (
@@ -854,7 +854,7 @@ const ResumeEditor: React.FC = () => {
         if (file.id) {
           const newUrl = `/resume/new?id=${file.id}`
           window.history.replaceState({}, '', newUrl)
-          console.log('Updated URL from temporary to real ID after signing:', file.id)
+          
         }
       }
       dispatch(fetchUserResumes() as any)
@@ -912,7 +912,7 @@ const ResumeEditor: React.FC = () => {
 
   const handleSectionFocus = useCallback(
     (sectionId: string) => {
-      console.log('Setting active section:', sectionId)
+      
       dispatch(setActiveSection(sectionId))
     },
     [dispatch]
@@ -1265,7 +1265,7 @@ const ResumeEditor: React.FC = () => {
       <FileSelectorOverlay
         open={fileSelectorOpen}
         onClose={() => {
-          console.log('FileSelectorOverlay closing')
+          
           setFileSelectorOpen(false)
           setActiveSectionId(null)
           setActiveItemIndex(undefined)

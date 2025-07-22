@@ -149,7 +149,7 @@ const PreviewPageFromDrive: React.FC = () => {
           resumeContent = parsedContent ?? fileData ?? {}
         }
 
-        console.log('Raw resume content:', resumeContent)
+        
 
         const transformedResumeData: Resume = {
           id: id ?? '',
@@ -484,7 +484,7 @@ const PreviewPageFromDrive: React.FC = () => {
           }
         }
 
-        console.log('Transformed Resume Data:', transformedResumeData)
+        
 
         setResumeData(transformedResumeData)
         setIsLoading(false)
