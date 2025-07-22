@@ -2027,7 +2027,6 @@ const ResumePreview: React.FC<{ data?: Resume; forcedId?: string }> = ({
             setOpenCredDialog={setOpenCredDialog}
           />
         )
-        // Removed duplicate code - this was incorrectly placed inside the skills section
       }
 
       // Professional Affiliations - add title then each item separately
