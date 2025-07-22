@@ -9,7 +9,9 @@ import {
   Checkbox,
   FormControlLabel,
   Button,
-  IconButton
+  IconButton,
+  Dialog,
+  DialogContent
 } from '@mui/material'
 import {
   SVGSectionIcon,
@@ -26,6 +28,7 @@ import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline'
 import CloseIcon from '@mui/icons-material/Close'
 import CredentialOverlay from '../../CredentialsOverlay'
 import AttachFileIcon from '@mui/icons-material/AttachFile'
+import MinimalCredentialViewer from '../../MinimalCredentialViewer'
 
 const PinkSwitch = styled(Switch)(({ theme }) => ({
   '& .MuiSwitch-switchBase.Mui-checked': {
@@ -100,6 +103,8 @@ export default function WorkExperience({
 
   const [showCredentialsOverlay, setShowCredentialsOverlay] = useState(false)
   const [activeSectionIndex, setActiveSectionIndex] = useState<number | null>(null)
+  const [openCredDialog, setOpenCredDialog] = useState(false)
+  const [dialogCredObj, setDialogCredObj] = useState<any>(null)
 
   const [workExperiences, setWorkExperiences] = useState<WorkExperienceItem[]>([
     {
@@ -382,11 +387,11 @@ export default function WorkExperience({
           const credential = vcs.find((c: any) => (c?.originalItem?.id || c.id) === id)
           return {
             id,
-            url: '', // not used, but required by interface
+            url: '',
             name:
               credential?.credentialSubject?.achievement?.[0]?.name ||
               `Credential ${id.substring(0, 5)}...`,
-            credential // full object
+            credential
           }
         })
         setWorkExperiences(prev => {
@@ -394,9 +399,10 @@ export default function WorkExperience({
           updated[activeSectionIndex] = {
             ...updated[activeSectionIndex],
             verificationStatus: 'verified',
-            credentialLink: selected[0].credential
-              ? JSON.stringify(selected[0].credential)
-              : '',
+            credentialLink:
+              selected[0].id && selected[0].credential
+                ? `${selected[0].id},${JSON.stringify(selected[0].credential)}`
+                : '',
             selectedCredentials: selected
           }
           dispatch(
@@ -479,6 +485,36 @@ export default function WorkExperience({
     },
     [onRemoveFile]
   )
+
+  function getCredentialName(claim: any): string {
+    try {
+      if (!claim || typeof claim !== 'object') {
+        return 'Invalid Credential'
+      }
+      const credentialSubject = claim.credentialSubject
+      if (!credentialSubject || typeof credentialSubject !== 'object') {
+        return 'Unknown Credential'
+      }
+      if (credentialSubject.employeeName) {
+        return `Performance Review: ${credentialSubject.employeeJobTitle || 'Unknown Position'}`
+      }
+      if (credentialSubject.volunteerWork) {
+        return `Volunteer: ${credentialSubject.volunteerWork}`
+      }
+      if (credentialSubject.role) {
+        return `Employment: ${credentialSubject.role}`
+      }
+      if (credentialSubject.credentialName) {
+        return credentialSubject.credentialName
+      }
+      if (credentialSubject.achievement && credentialSubject.achievement[0]?.name) {
+        return credentialSubject.achievement[0].name
+      }
+      return 'Credential'
+    } catch {
+      return 'Credential'
+    }
+  }
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: '20px' }} onFocus={onFocus}>
@@ -708,9 +744,60 @@ export default function WorkExperience({
                           textDecoration: 'underline',
                           cursor: 'pointer'
                         }}
-                        onClick={() => window.open(credential.url, '_blank')}
+                        onClick={() => {
+                          let credObj = null
+                          let credId = undefined
+                          try {
+                            if (
+                              experience.credentialLink &&
+                              experience.credentialLink.match(/^([\w-]+),\{.*\}$/)
+                            ) {
+                              const commaIdx = experience.credentialLink.indexOf(',')
+                              credId = experience.credentialLink.slice(0, commaIdx)
+                              const jsonStr = experience.credentialLink.slice(
+                                commaIdx + 1
+                              )
+                              credObj = JSON.parse(jsonStr)
+                              credObj.credentialId = credId
+                            } else if (
+                              experience.credentialLink &&
+                              experience.credentialLink.startsWith('{')
+                            ) {
+                              credObj = JSON.parse(experience.credentialLink)
+                            }
+                          } catch (e) {}
+                          if (credObj) {
+                            setDialogCredObj(credObj)
+                            setOpenCredDialog(true)
+                          }
+                        }}
                       >
-                        {credential.name || `Credential ${credIndex + 1}`}
+                        {(() => {
+                          let credObj = null
+                          let credId = undefined
+                          try {
+                            if (
+                              experience.credentialLink &&
+                              experience.credentialLink.match(/^([\w-]+),\{.*\}$/)
+                            ) {
+                              const commaIdx = experience.credentialLink.indexOf(',')
+                              credId = experience.credentialLink.slice(0, commaIdx)
+                              const jsonStr = experience.credentialLink.slice(
+                                commaIdx + 1
+                              )
+                              credObj = JSON.parse(jsonStr)
+                              credObj.credentialId = credId
+                            } else if (
+                              experience.credentialLink &&
+                              experience.credentialLink.startsWith('{')
+                            ) {
+                              credObj = JSON.parse(experience.credentialLink)
+                            }
+                          } catch (e) {}
+                          return credObj
+                            ? getCredentialName(credObj)
+                            : `Credential ${credIndex + 1}`
+                        })()}
                       </Typography>
                       <IconButton
                         size='small'
@@ -730,6 +817,17 @@ export default function WorkExperience({
                       </IconButton>
                     </Box>
                   ))}
+                  <Dialog
+                    open={openCredDialog}
+                    onClose={() => setOpenCredDialog(false)}
+                    maxWidth='xs'
+                  >
+                    <DialogContent sx={{ p: 0 }}>
+                      {dialogCredObj && (
+                        <MinimalCredentialViewer vcData={dialogCredObj} />
+                      )}
+                    </DialogContent>
+                  </Dialog>
                 </Box>
               )}
 

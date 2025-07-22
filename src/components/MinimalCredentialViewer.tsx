@@ -117,6 +117,8 @@ const MinimalCredentialViewer: React.FC<MinimalCredentialViewerProps> = ({ vcDat
   const credentialTitle = getCredentialTitle(vcData, vcType)
   const personName = getPersonName(subject)
   const hasPortfolio = Array.isArray(subject.portfolio) && subject.portfolio.length > 0
+  // Use fileId from parent if available, otherwise fallback to id in the JSON
+  const fileId = vcData.credentialId || vcData.id
 
   const renderPortfolio = () => {
     if (!hasPortfolio) return null
@@ -508,6 +510,46 @@ const MinimalCredentialViewer: React.FC<MinimalCredentialViewerProps> = ({ vcDat
               )
             })}
           </Grid>
+        </Box>
+      )}
+      {fileId && (
+        <Box
+          sx={{
+            mt: 3,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'flex-start',
+            gap: 2
+          }}
+        >
+          <MuiLink
+            href={`https://linked-creds-author-businees-enhancement.vercel.app/view/${fileId}`}
+            target='_blank'
+            rel='noopener noreferrer'
+            sx={{
+              color: '#2563EB',
+              fontWeight: 700,
+              textDecoration: 'underline',
+              fontSize: '16px',
+              mb: 1
+            }}
+          >
+            View Origin
+          </MuiLink>
+          <Box
+            sx={{
+              border: '1px solid #e0e7ef',
+              borderRadius: 2,
+              p: 1,
+              background: '#fff'
+            }}
+          >
+            <img
+              src={`https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=https://linked-creds-author-businees-enhancement.vercel.app/api/credential-raw/${fileId}`}
+              alt='QR Code'
+              style={{ width: 120, height: 120 }}
+            />
+          </Box>
         </Box>
       )}
       <style>{`

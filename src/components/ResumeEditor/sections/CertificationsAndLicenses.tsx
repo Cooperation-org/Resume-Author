@@ -7,7 +7,9 @@ import {
   FormControlLabel,
   Button,
   IconButton,
-  Tooltip
+  Tooltip,
+  Dialog,
+  DialogContent
 } from '@mui/material'
 import {
   SVGSectionIcon,
@@ -26,6 +28,7 @@ import CredentialOverlay from '../../CredentialsOverlay'
 import AttachFileIcon from '@mui/icons-material/AttachFile'
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider'
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns'
+import MinimalCredentialViewer from '../../MinimalCredentialViewer'
 
 interface FileItem {
   id: string
@@ -82,6 +85,8 @@ export default function CertificationsAndLicenses({
   const [showCredentialsOverlay, setShowCredentialsOverlay] = useState(false)
   const [activeSectionIndex, setActiveSectionIndex] = useState<number | null>(null)
   const vcs = useSelector((state: any) => state.vcReducer.vcs)
+  const [openCredDialog, setOpenCredDialog] = useState(false)
+  const [dialogCredObj, setDialogCredObj] = useState<any>(null)
 
   const [certifications, setCertifications] = useState<CertificationItem[]>([
     {
@@ -302,21 +307,19 @@ export default function CertificationsAndLicenses({
           updatedCertifications[activeSectionIndex] = {
             ...currentCert,
             verificationStatus: 'verified',
+            credentialId:
+              selectedCredentials &&
+              selectedCredentials.length > 0 &&
+              selectedCredentials[0].id
+                ? selectedCredentials[0].id
+                : '',
             credentialLink:
               selectedCredentials &&
               selectedCredentials.length > 0 &&
+              selectedCredentials[0].id &&
               selectedCredentials[0].vc
-                ? JSON.stringify(selectedCredentials[0].vc)
+                ? `${selectedCredentials[0].id},${JSON.stringify(selectedCredentials[0].vc)}`
                 : '',
-            // If not an attestation, we can use the first credential to populate cert details
-            ...(!isAttestation &&
-            selectedCredentials &&
-            selectedCredentials.length > 0 &&
-            selectedCredentials[0]
-              ? {
-                  credentialId: selectedCredentials[0].id
-                }
-              : {}),
             selectedCredentials: [
               ...(currentCert.selectedCredentials || []),
               ...selectedCredentials
@@ -381,6 +384,36 @@ export default function CertificationsAndLicenses({
   const handleRemoveFile = (itemIndex: number, fileIndex: number) => {
     if (onRemoveFile) {
       onRemoveFile('certifications', itemIndex, fileIndex)
+    }
+  }
+
+  function getCredentialName(claim: any): string {
+    try {
+      if (!claim || typeof claim !== 'object') {
+        return 'Invalid Credential'
+      }
+      const credentialSubject = claim.credentialSubject
+      if (!credentialSubject || typeof credentialSubject !== 'object') {
+        return 'Unknown Credential'
+      }
+      if (credentialSubject.employeeName) {
+        return `Performance Review: ${credentialSubject.employeeJobTitle || 'Unknown Position'}`
+      }
+      if (credentialSubject.volunteerWork) {
+        return `Volunteer: ${credentialSubject.volunteerWork}`
+      }
+      if (credentialSubject.role) {
+        return `Employment: ${credentialSubject.role}`
+      }
+      if (credentialSubject.credentialName) {
+        return credentialSubject.credentialName
+      }
+      if (credentialSubject.achievement && credentialSubject.achievement[0]?.name) {
+        return credentialSubject.achievement[0].name
+      }
+      return 'Credential'
+    } catch {
+      return 'Credential'
     }
   }
 
@@ -546,9 +579,7 @@ export default function CertificationsAndLicenses({
                 certification.selectedCredentials.length > 0 && (
                   <Box sx={{ mt: 2 }}>
                     <Typography variant='body2' sx={{ fontWeight: 'bold', mb: 1 }}>
-                      {certification.selectedCredentials.some(c => c.isAttestation)
-                        ? 'Credential Attestations:'
-                        : 'Digital Credentials:'}
+                      Verified Credentials:
                     </Typography>
                     {certification.selectedCredentials.map((credential, credIndex) => (
                       <Box
@@ -558,34 +589,74 @@ export default function CertificationsAndLicenses({
                           alignItems: 'center',
                           justifyContent: 'space-between',
                           mb: 0.5,
-                          backgroundColor: credential.isAttestation
-                            ? '#f0f7ff'
-                            : '#f5f5f5',
+                          backgroundColor: '#f5f5f5',
                           p: 0.5,
-                          borderRadius: 1,
-                          border: credential.isAttestation ? '1px solid #d0e8ff' : 'none'
+                          borderRadius: 1
                         }}
                       >
-                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                          {credential.isAttestation && (
-                            <Tooltip title='Attestation verifying this certification'>
-                              <VerifiedIcon
-                                sx={{ color: '#1976d2', fontSize: 16, mr: 0.5 }}
-                              />
-                            </Tooltip>
-                          )}
-                          <Typography
-                            variant='body2'
-                            sx={{
-                              color: 'primary.main',
-                              textDecoration: 'underline',
-                              cursor: 'pointer'
-                            }}
-                            onClick={() => window.open(credential.url, '_blank')}
-                          >
-                            {credential.name || `Credential ${credIndex + 1}`}
-                          </Typography>
-                        </Box>
+                        <Typography
+                          variant='body2'
+                          sx={{
+                            color: 'primary.main',
+                            textDecoration: 'underline',
+                            cursor: 'pointer'
+                          }}
+                          onClick={() => {
+                            // Parse credentialLink for dialog
+                            let credObj = null
+                            let credId = undefined
+                            try {
+                              if (
+                                certification.credentialLink &&
+                                certification.credentialLink.match(/^([\w-]+),\{.*\}$/)
+                              ) {
+                                const commaIdx = certification.credentialLink.indexOf(',')
+                                credId = certification.credentialLink.slice(0, commaIdx)
+                                const jsonStr = certification.credentialLink.slice(
+                                  commaIdx + 1
+                                )
+                                credObj = JSON.parse(jsonStr)
+                                credObj.credentialId = credId
+                              } else if (
+                                certification.credentialLink &&
+                                certification.credentialLink.startsWith('{')
+                              ) {
+                                credObj = JSON.parse(certification.credentialLink)
+                              }
+                            } catch (e) {}
+                            if (credObj) {
+                              setDialogCredObj(credObj)
+                              setOpenCredDialog(true)
+                            }
+                          }}
+                        >
+                          {(() => {
+                            let credObj = null
+                            let credId = undefined
+                            try {
+                              if (
+                                certification.credentialLink &&
+                                certification.credentialLink.match(/^([\w-]+),\{.*\}$/)
+                              ) {
+                                const commaIdx = certification.credentialLink.indexOf(',')
+                                credId = certification.credentialLink.slice(0, commaIdx)
+                                const jsonStr = certification.credentialLink.slice(
+                                  commaIdx + 1
+                                )
+                                credObj = JSON.parse(jsonStr)
+                                credObj.credentialId = credId
+                              } else if (
+                                certification.credentialLink &&
+                                certification.credentialLink.startsWith('{')
+                              ) {
+                                credObj = JSON.parse(certification.credentialLink)
+                              }
+                            } catch (e) {}
+                            return credObj
+                              ? getCredentialName(credObj)
+                              : `Credential ${credIndex + 1}`
+                          })()}
+                        </Typography>
                         <IconButton
                           size='small'
                           onClick={e => {
@@ -595,15 +666,24 @@ export default function CertificationsAndLicenses({
                           sx={{
                             p: 0.5,
                             color: 'grey.500',
-                            '&:hover': {
-                              color: 'error.main'
-                            }
+                            '&:hover': { color: 'error.main' }
                           }}
                         >
                           <CloseIcon fontSize='small' />
                         </IconButton>
                       </Box>
                     ))}
+                    <Dialog
+                      open={openCredDialog}
+                      onClose={() => setOpenCredDialog(false)}
+                      maxWidth='xs'
+                    >
+                      <DialogContent sx={{ p: 0 }}>
+                        {dialogCredObj && (
+                          <MinimalCredentialViewer vcData={dialogCredObj} />
+                        )}
+                      </DialogContent>
+                    </Dialog>
                   </Box>
                 )}
 
