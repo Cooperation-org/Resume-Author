@@ -15,6 +15,7 @@ import { HTMLWithVerifiedLinks, isVerifiedLink } from '../tools/htmlUtils'
 import MinimalCredentialViewer from './MinimalCredentialViewer'
 import Dialog from '@mui/material/Dialog'
 import DialogContent from '@mui/material/DialogContent'
+import CloseIcon from '@mui/icons-material/Close'
 
 const PAGE_SIZE = {
   width: '210mm',
@@ -105,10 +106,10 @@ const LinkWithFavicon: React.FC<{ url: string; platform?: string }> = ({
 }
 
 // First Page Header with social links
-const FirstPageHeader: React.FC<{ 
-  fullName: string; 
-  city?: string; 
-  forcedId?: string;
+const FirstPageHeader: React.FC<{
+  fullName: string
+  city?: string
+  forcedId?: string
   socialLinks?: Record<string, string | undefined>
 }> = ({ fullName, city, forcedId, socialLinks }) => {
   const [resumeLink, setResumeLink] = useState<string>('')
@@ -128,13 +129,22 @@ const FirstPageHeader: React.FC<{
         height: `${HEADER_HEIGHT_PX}px`
       }}
     >
-      <Box sx={{ display: 'flex', flexDirection: 'column', ml: '45px', justifyContent: 'center' }}>
+      <Box
+        sx={{
+          display: 'flex',
+          flexDirection: 'column',
+          ml: '45px',
+          justifyContent: 'center'
+        }}
+      >
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
           <Typography sx={{ fontWeight: 600, color: '#2E2E48', fontSize: '30px' }}>
             {fullName}
           </Typography>
           {city && (
-            <Typography sx={{ fontWeight: 400, color: '#2E2E48', fontSize: '18px', ml: 2 }}>
+            <Typography
+              sx={{ fontWeight: 400, color: '#2E2E48', fontSize: '18px', ml: 2 }}
+            >
               {city}
             </Typography>
           )}
@@ -143,7 +153,10 @@ const FirstPageHeader: React.FC<{
           <Box sx={{ display: 'flex', gap: '20px', mt: 2, flexWrap: 'wrap' }}>
             {Object.entries(socialLinks).map(([platform, url]) =>
               url ? (
-                <Box key={platform} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Box
+                  key={platform}
+                  sx={{ display: 'flex', alignItems: 'center', gap: 1 }}
+                >
                   <img
                     src={`https://www.google.com/s2/favicons?domain=${platform.toLowerCase()}.com&sz=32`}
                     alt={`${platform} favicon`}
@@ -399,7 +412,9 @@ const PageFooter: React.FC<{
 const SummarySection: React.FC<{ summary?: string }> = ({ summary }) => {
   if (!summary) return null
   return (
-    <Box sx={{ mb: '30px' }}> {/* Increased margin for more space before Work Experience */}
+    <Box sx={{ mb: '30px' }}>
+      {' '}
+      {/* Increased margin for more space before Work Experience */}
       <SectionTitle>Professional Summary</SectionTitle>
       <Typography
         variant='body2'
@@ -1224,7 +1239,7 @@ function usePagination(content: ReactNode[]) {
         FOOTER_HEIGHT_PX -
         CONTENT_PADDING_TOP -
         CONTENT_PADDING_BOTTOM
-        
+
       // Subsequent pages have smaller header (60px)
       const subsequentPageContentMaxHeightPx =
         fullPageHeightPx -
@@ -1284,10 +1299,13 @@ function usePagination(content: ReactNode[]) {
       for (let i = 0; i < content.length; i++) {
         const element = content[i]
         const elementHeight = contentHeights[i] || 0
-        
+
         // Determine which max height to use based on current page number
         const currentPageIndex = paginated.length
-        const contentMaxHeightPx = currentPageIndex === 0 ? firstPageContentMaxHeightPx : subsequentPageContentMaxHeightPx
+        const contentMaxHeightPx =
+          currentPageIndex === 0
+            ? firstPageContentMaxHeightPx
+            : subsequentPageContentMaxHeightPx
         const effectiveMaxHeight = contentMaxHeightPx - SAFETY_MARGIN
 
         console.log(`Processing element ${i}:`, {
@@ -1401,7 +1419,7 @@ const ResumePreview: React.FC<{ data?: Resume; forcedId?: string }> = ({
         elements.push(<SummarySection key='summary' summary={summary} />)
       }
       // Social links are now in the first page header, so we don't add them here
-      
+
       // Experience section - add title then each item separately
       if (resume.experience?.items?.length) {
         elements.push(
@@ -1466,7 +1484,7 @@ const ResumePreview: React.FC<{ data?: Resume; forcedId?: string }> = ({
             renderCredentialLink={renderCredentialLink}
           />
         )
-      // Removed duplicate code - this was incorrectly placed inside the skills section
+        // Removed duplicate code - this was incorrectly placed inside the skills section
       }
 
       // Professional Affiliations - add title then each item separately
@@ -1567,12 +1585,46 @@ const ResumePreview: React.FC<{ data?: Resume; forcedId?: string }> = ({
       <Dialog
         open={openCredDialog}
         onClose={() => setOpenCredDialog(false)}
-        maxWidth='md'
-        fullWidth
+        maxWidth='xs'
+        PaperProps={{
+          sx: {
+            borderRadius: 4,
+            boxShadow: '0 8px 32px rgba(0,0,0,0.18)',
+            background: 'rgba(255,255,255,0.95)',
+            backdropFilter: 'blur(6px)',
+            position: 'relative',
+            overflow: 'visible'
+          }
+        }}
+        BackdropProps={{
+          sx: {
+            background: 'rgba(30, 41, 59, 0.25)',
+            backdropFilter: 'blur(2px)'
+          }
+        }}
       >
         <DialogContent
-          sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}
+          sx={{ display: 'block', p: 0, background: 'transparent', position: 'relative' }}
         >
+          {/* Close button */}
+          <Box
+            sx={{
+              position: 'absolute',
+              top: 8,
+              right: 8,
+              zIndex: 2,
+              cursor: 'pointer',
+              color: '#222',
+              bgcolor: 'rgba(255,255,255,0.7)',
+              borderRadius: '50%',
+              p: 0.5,
+              transition: 'background 0.2s',
+              '&:hover': { bgcolor: '#e0e7ef', color: '#003FE0' }
+            }}
+            onClick={() => setOpenCredDialog(false)}
+          >
+            <CloseIcon fontSize='medium' />
+          </Box>
           {dialogCredObj && <MinimalCredentialViewer vcData={dialogCredObj} />}
           {dialogImageUrl && (
             <img
