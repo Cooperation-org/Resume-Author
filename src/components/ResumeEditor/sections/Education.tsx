@@ -31,6 +31,7 @@ import CredentialOverlay from '../../CredentialsOverlay'
 import AttachFileIcon from '@mui/icons-material/AttachFile'
 import MinimalCredentialViewer from '../../MinimalCredentialViewer'
 import VerifiedCredentialsList from '../../common/VerifiedCredentialsList'
+import AttachedFilesList from '../../common/AttachedFilesList'
 
 const PinkSwitch = styled(Switch)(({ theme }) => ({
   '& .MuiSwitch-switchBase.Mui-checked': {
@@ -75,6 +76,7 @@ interface EducationItem {
   startDate: string
   endDate: string
   selectedCredentials: SelectedCredential[]
+  attachedFiles?: string[]
 }
 
 interface SelectedCredential {
@@ -161,7 +163,8 @@ export default function Education({
       field: '',
       startDate: '',
       endDate: '',
-      selectedCredentials: []
+      selectedCredentials: [],
+      attachedFiles: []
     }
   ])
 
@@ -239,7 +242,8 @@ export default function Education({
         degree: item.degree || '',
         field: item.field || '',
         startDate: item.startDate || '',
-        endDate: item.endDate || ''
+        endDate: item.endDate || '',
+        attachedFiles: item.attachedFiles || []
       })) as EducationItem[]
 
       const shouldUpdate =
@@ -335,7 +339,8 @@ export default function Education({
       field: '',
       startDate: '',
       endDate: '',
-      selectedCredentials: []
+      selectedCredentials: [],
+      attachedFiles: []
     }
 
     setEducations(prev => {
@@ -521,6 +526,52 @@ export default function Education({
       onFocus()
     }
   }, [onFocus])
+
+  // Sync evidence (files) with education items
+  useEffect(() => {
+    if (evidence && allFiles) {
+      setEducations(prev => {
+        const updated = [...prev]
+        let hasChanges = false
+        
+        evidence.forEach((itemFiles, index) => {
+          if (updated[index] && itemFiles && itemFiles.length > 0) {
+            // Convert file IDs to URLs
+            const fileUrls = itemFiles.map(fileId => {
+              const file = allFiles.find(f => f.id === fileId)
+              if (file?.googleId) {
+                return `https://drive.google.com/uc?export=view&id=${file.googleId}`
+              } else if (file?.url) {
+                return file.url
+              }
+              return fileId
+            })
+            
+            if (JSON.stringify(updated[index].attachedFiles) !== JSON.stringify(fileUrls)) {
+              updated[index] = {
+                ...updated[index],
+                attachedFiles: fileUrls
+              }
+              hasChanges = true
+            }
+          }
+        })
+        
+        if (hasChanges) {
+          // Dispatch to Redux
+          dispatch(
+            updateSection({
+              sectionId: 'education',
+              content: { items: updated }
+            })
+          )
+        }
+        
+        return hasChanges ? updated : prev
+      })
+    }
+  }, [evidence, allFiles, dispatch])
+
   const handleRemoveFile = useCallback(
     (educationIndex: number, fileIndex: number) => {
       if (onRemoveFile) {
@@ -760,62 +811,20 @@ export default function Education({
                 )}
 
               {Array.isArray(evidence?.[index]) && evidence[index].length > 0 && (
-                <Box sx={{ mt: 2 }}>
-                  <Typography variant='body2' sx={{ fontWeight: 'bold', mb: 1 }}>
-                    Attached Files:
-                  </Typography>
-                  {(evidence[index] || []).map((fileId, fileIndex) => {
+                <AttachedFilesList
+                  files={evidence[index].map(fileId => {
                     const file = allFiles.find(f => f.id === fileId)
-                    return (
-                      <Box
-                        key={`file-${fileId || ''}-${fileIndex}`}
-                        sx={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'space-between',
-                          mb: 0.5,
-                          backgroundColor: '#e8f4f8',
-                          p: 0.5,
-                          borderRadius: 1
-                        }}
-                      >
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                          <AttachFileIcon fontSize='small' color='primary' />
-                          <Typography
-                            variant='body2'
-                            sx={{
-                              color: 'primary.main',
-                              cursor: 'pointer'
-                            }}
-                            onClick={() => {
-                              if (file?.url) {
-                                window.open(file.url, '_blank')
-                              }
-                            }}
-                          >
-                            {file?.name || `File ${fileIndex + 1}`}
-                          </Typography>
-                        </Box>
-                        <IconButton
-                          size='small'
-                          onClick={e => {
-                            e.stopPropagation()
-                            handleRemoveFile(index, fileIndex)
-                          }}
-                          sx={{
-                            p: 0.5,
-                            color: 'grey.500',
-                            '&:hover': {
-                              color: 'error.main'
-                            }
-                          }}
-                        >
-                          <CloseIcon fontSize='small' />
-                        </IconButton>
-                      </Box>
-                    )
+                    return file || {
+                      id: fileId,
+                      name: `File ${evidence[index].indexOf(fileId) + 1}`,
+                      url: '',
+                      uploaded: false,
+                      fileExtension: '',
+                      file: new File([], '')
+                    }
                   })}
-                </Box>
+                  onRemove={fileIndex => handleRemoveFile(index, fileIndex)}
+                />
               )}
 
               <Box

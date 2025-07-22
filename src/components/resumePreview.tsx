@@ -658,6 +658,64 @@ function renderPortfolio(portfolio: any[] | undefined) {
   )
 }
 
+// Helper to render attached files
+function renderAttachedFiles(attachedFiles: string[] | undefined) {
+  if (!attachedFiles || attachedFiles.length === 0) return null
+  
+  return (
+    <Box sx={{ mt: 1, display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+      {attachedFiles.map((fileUrl: string, idx: number) => {
+        // Extract filename from URL or use a default
+        let fileName = `Attachment ${idx + 1}`
+        try {
+          if (fileUrl.includes('drive.google.com')) {
+            // For Google Drive URLs, we can't easily get the filename
+            fileName = `File ${idx + 1}`
+          } else {
+            // Try to extract filename from URL
+            const urlParts = fileUrl.split('/')
+            const lastPart = urlParts[urlParts.length - 1]
+            if (lastPart && !lastPart.includes('?')) {
+              fileName = decodeURIComponent(lastPart)
+            }
+          }
+        } catch (e) {
+          console.error('Error parsing file URL:', e)
+        }
+        
+        return (
+          <Box
+            key={`file-${idx}`}
+            sx={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '4px',
+              cursor: 'pointer',
+              '&:hover': {
+                opacity: 0.8
+              }
+            }}
+            onClick={() => window.open(fileUrl, '_blank')}
+          >
+            <AttachFileIcon sx={{ fontSize: 16, color: '#2563EB' }} />
+            <Typography
+              variant='body2'
+              sx={{
+                color: '#2563EB',
+                textDecoration: 'underline',
+                fontSize: '14px',
+                fontFamily: 'Arial'
+              }}
+            >
+              {fileName}
+            </Typography>
+          </Box>
+        )
+      })}
+    </Box>
+  )
+}
+
 // Helper to render date or duration for sections
 function renderDateOrDuration({
   duration,
@@ -851,58 +909,7 @@ const ExperienceItem: React.FC<{
         </Box>
       )}
       {/* Render attached files */}
-      {item.attachedFiles && item.attachedFiles.length > 0 && (
-        <Box sx={{ mt: 1, display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-          {item.attachedFiles.map((fileUrl: string, idx: number) => {
-            // Extract filename from URL or use a default
-            let fileName = `Attachment ${idx + 1}`
-            try {
-              if (fileUrl.includes('drive.google.com')) {
-                // For Google Drive URLs, we can't easily get the filename
-                fileName = `File ${idx + 1}`
-              } else {
-                // Try to extract filename from URL
-                const urlParts = fileUrl.split('/')
-                const lastPart = urlParts[urlParts.length - 1]
-                if (lastPart && !lastPart.includes('?')) {
-                  fileName = decodeURIComponent(lastPart)
-                }
-              }
-            } catch (e) {
-              console.error('Error parsing file URL:', e)
-            }
-            
-            return (
-              <Box
-                key={`file-${idx}`}
-                sx={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '4px',
-                  cursor: 'pointer',
-                  '&:hover': {
-                    opacity: 0.8
-                  }
-                }}
-                onClick={() => window.open(fileUrl, '_blank')}
-              >
-                <AttachFileIcon sx={{ fontSize: 16, color: '#2563EB' }} />
-                <Typography
-                  variant='body2'
-                  sx={{
-                    color: '#2563EB',
-                    textDecoration: 'underline',
-                    fontSize: '14px',
-                    fontFamily: 'Arial'
-                  }}
-                >
-                  {fileName}
-                </Typography>
-              </Box>
-            )
-          })}
-        </Box>
-      )}
+      {renderAttachedFiles(item.attachedFiles)}
     </Box>
   )
 }
@@ -1043,6 +1050,8 @@ const EducationItem: React.FC<{
               ))}
             </Box>
           )}
+          {/* Render attached files */}
+          {renderAttachedFiles(item.attachedFiles)}
         </Box>
       </Box>
     </Box>
