@@ -907,13 +907,13 @@ const ResumeEditor: React.FC = () => {
     }
   }
 
-  // const handleSectionFocus = useCallback(
-  //   (sectionId: string) => {
-  //     console.log('Setting active section:', sectionId)
-  //     dispatch(setActiveSection(sectionId))
-  //   },
-  //   [dispatch]
-  // )
+  const handleSectionFocus = useCallback(
+    (sectionId: string) => {
+      console.log('Setting active section:', sectionId)
+      dispatch(setActiveSection(sectionId))
+    },
+    [dispatch]
+  )
   const getSectionEvidence = (sectionId: string, itemCount: number): string[][] => {
     const section = sectionEvidence[sectionId] || []
     if (Array.isArray(section) && Array.isArray(section[0])) return section as string[][]
@@ -1138,6 +1138,7 @@ const ResumeEditor: React.FC = () => {
                     onAddFiles={itemIndex => handleAddFiles(sectionId, itemIndex)}
                     onAddCredential={handleAddCredential}
                     isRemovable={!requiredSections.includes(sectionId)}
+                    onFocus={() => handleSectionFocus(sectionId)}
                     evidence={getSectionEvidence(sectionId, itemCount)}
                     allFiles={allFiles}
                     onRemoveFile={handleRemoveFile}

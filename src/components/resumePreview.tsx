@@ -21,9 +21,9 @@ const PAGE_SIZE = {
   width: '210mm',
   height: '297mm'
 }
-const HEADER_HEIGHT_PX = 125
+const HEADER_HEIGHT_PX = 120
 const FOOTER_HEIGHT_PX = 60 // Footer height including padding (60px + 30px py)
-const CONTENT_PADDING_TOP = 15
+const CONTENT_PADDING_TOP = 20
 const CONTENT_PADDING_BOTTOM = 15
 
 const mmToPx = (mm: number) => mm * 3.779527559
@@ -33,8 +33,8 @@ const SectionTitle: React.FC<{ children: ReactNode }> = ({ children }) => (
     variant='h6'
     sx={{
       fontWeight: 700,
-      mb: '8px', // Reduced from 11px
-      lineHeight: '20px',
+      mb: '6px', // Further reduced
+      lineHeight: '18px',
       fontSize: '16px', // Reduced from 18px
       color: '#000'
     }}
@@ -144,17 +144,18 @@ const FirstPageHeader: React.FC<{
           flexDirection: 'column',
           ml: '45px',
           justifyContent: 'center',
-          gap: 1
+          gap: 0.5,
+          py: 2
         }}
       >
         <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 2 }}>
           <Typography
-            sx={{ fontWeight: 600, color: '#2E2E48', fontSize: '30px', lineHeight: 1 }}
+            sx={{ fontWeight: 600, color: '#2E2E48', fontSize: '28px', lineHeight: 1 }}
           >
             {fullName}
           </Typography>
           {city && (
-            <Typography sx={{ fontWeight: 400, color: '#666', fontSize: '20px' }}>
+            <Typography sx={{ fontWeight: 400, color: '#666', fontSize: '18px' }}>
               {city}
             </Typography>
           )}
@@ -168,7 +169,7 @@ const FirstPageHeader: React.FC<{
                 sx={{
                   color: '#2563EB',
                   textDecoration: 'none',
-                  fontSize: '16px',
+                  fontSize: '15px',
                   fontWeight: 400,
                   fontFamily: 'Arial',
                   '&:hover': {
@@ -180,7 +181,7 @@ const FirstPageHeader: React.FC<{
               </Link>
             )}
             {email && phone && (
-              <Typography sx={{ color: '#666', fontSize: '16px' }}>|</Typography>
+              <Typography sx={{ color: '#666', fontSize: '15px' }}>|</Typography>
             )}
             {phone && (
               <Link
@@ -188,7 +189,7 @@ const FirstPageHeader: React.FC<{
                 sx={{
                   color: '#2563EB',
                   textDecoration: 'none',
-                  fontSize: '16px',
+                  fontSize: '15px',
                   fontWeight: 400,
                   fontFamily: 'Arial',
                   '&:hover': {
@@ -204,7 +205,7 @@ const FirstPageHeader: React.FC<{
 
         {/* Social Links Row */}
         {socialLinks && Object.values(socialLinks).some(link => !!link) && (
-          <Box sx={{ display: 'flex', gap: 3, flexWrap: 'wrap' }}>
+          <Box sx={{ display: 'flex', gap: 2.5, flexWrap: 'wrap', alignItems: 'center' }}>
             {Object.entries(socialLinks).map(([platform, url], index, array) =>
               url ? (
                 <React.Fragment key={platform}>
@@ -221,11 +222,11 @@ const FirstPageHeader: React.FC<{
                       sx={{
                         color: '#2563EB',
                         textDecoration: 'none',
-                        fontSize: '16px',
+                        fontSize: '15px',
                         fontWeight: 400,
                         fontFamily: 'Arial',
                         '&:hover': {
-                          textDecoration: 'underline'
+                        textDecoration: 'underline'
                         }
                       }}
                     >
@@ -234,7 +235,7 @@ const FirstPageHeader: React.FC<{
                   </Box>
                   {index < array.length - 1 &&
                     Object.entries(socialLinks).filter(([_, u]) => u)[index + 1] && (
-                      <Typography sx={{ color: '#666', fontSize: '16px' }}>|</Typography>
+                      <Typography sx={{ color: '#666', fontSize: '14px' }}>|</Typography>
                     )}
                 </React.Fragment>
               ) : null
@@ -470,9 +471,9 @@ const PageFooter: React.FC<{
 const SummarySection: React.FC<{ summary?: string }> = ({ summary }) => {
   if (!summary) return null
   return (
-    <Box sx={{ mb: '30px' }}>
+    <Box sx={{ mb: '12px' }}>
       {' '}
-      {/* Increased margin for more space before Work Experience */}
+      {/* Further reduced to prevent overlap */}
       <SectionTitle>Professional Summary</SectionTitle>
       <Typography
         variant='body2'
@@ -481,7 +482,7 @@ const SummarySection: React.FC<{ summary?: string }> = ({ summary }) => {
           fontWeight: 400,
           fontSize: '14px', // Reduced from 16px
           fontFamily: 'Arial',
-          lineHeight: 1.5
+          lineHeight: 1.4
         }}
       >
         <HTMLWithVerifiedLinks htmlContent={summary} />
@@ -734,8 +735,8 @@ const ExperienceItem: React.FC<{
   })
 
   return (
-    <Box key={item.id || `exp-${index}`} sx={{ mb: '15px' }}>
-      {/* Reduced margin from 20px */}
+    <Box key={item.id || `exp-${index}`} sx={{ mb: '10px' }}>
+      {/* Further reduced to prevent overlap */}
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
         <Typography
           variant='subtitle1'
@@ -781,7 +782,7 @@ const ExperienceItem: React.FC<{
             fontWeight: 400,
             fontSize: '14px', // Reduced font size for descriptions
             fontFamily: 'Arial',
-            lineHeight: 1.5 // Better line spacing
+            lineHeight: 1.4 // Tighter line spacing
           }}
         >
           <HTMLWithVerifiedLinks htmlContent={item.description} />
@@ -899,7 +900,7 @@ const EducationItem: React.FC<{
     educationTitle = item.institution
   }
   return (
-    <Box key={item.id} sx={{ mb: 2 }}>
+    <Box key={item.id} sx={{ mb: '10px' }}>
       <Box sx={{ display: 'flex', alignItems: 'flex-start' }}>
         <Box sx={{ ml: 0 }}>
           <Typography
@@ -1030,7 +1031,7 @@ const CertificationItem: React.FC<{
   })
   let portfolio = dedupedCreds[0]?.credObj?.credentialSubject?.portfolio || null
   return (
-    <Box key={item.id || item.name} sx={{ mb: 2 }}>
+    <Box key={item.id || item.name} sx={{ mb: '10px' }}>
       <Box sx={{ ml: 0 }}>
         <Typography
           variant='subtitle1'
@@ -1161,7 +1162,7 @@ const ProjectItem: React.FC<{
   })
   let portfolio = dedupedCreds[0]?.credObj?.credentialSubject?.portfolio || null
   return (
-    <Box key={item.id} sx={{ mb: 3 }}>
+    <Box key={item.id} sx={{ mb: '10px' }}>
       <Box sx={{ display: 'flex', alignItems: 'flex-start' }}>
         <Box sx={{ ml: 0 }}>
           <Typography
@@ -1284,7 +1285,7 @@ const ProfessionalAffiliationItem: React.FC<{
   })
   let portfolio = dedupedCreds[0]?.credObj?.credentialSubject?.portfolio || null
   return (
-    <Box key={item.id} sx={{ mb: 2 }}>
+    <Box key={item.id} sx={{ mb: '10px' }}>
       <Box sx={{ display: 'flex', alignItems: 'flex-start' }}>
         <Box sx={{ ml: 0 }}>
           <Typography
@@ -1410,7 +1411,7 @@ const VolunteerWorkItem: React.FC<{
   })
   let portfolio = dedupedCreds[0]?.credObj?.credentialSubject?.portfolio || null
   return (
-    <Box key={item.id} sx={{ mb: 2 }}>
+    <Box key={item.id} sx={{ mb: '10px' }}>
       <Box sx={{ display: 'flex', alignItems: 'flex-start' }}>
         <Box sx={{ ml: 0 }}>
           <Typography
@@ -1564,7 +1565,7 @@ const HobbyItem: React.FC<{ hobby: string; idx: number }> = ({ hobby, idx }) => 
 // Single Publication Item Component
 const PublicationItem: React.FC<{ item: Publication }> = ({ item }) => {
   return (
-    <Box key={item.id} sx={{ mb: 2 }}>
+    <Box key={item.id} sx={{ mb: '10px' }}>
       <Typography
         variant='subtitle1'
         sx={{ fontWeight: 700, fontFamily: 'Arial', fontSize: '16px' }}
@@ -1677,7 +1678,7 @@ const SkillsSection: React.FC<{
 const LanguagesSection: React.FC<{ items: Language[] }> = ({ items }) => {
   if (!items?.length) return null
   return (
-    <Box sx={{ mb: '30px' }}>
+    <Box sx={{ mb: '15px' }}>
       <SectionTitle>Languages</SectionTitle>
       <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
         {items.map((lang, idx) => (
@@ -1691,7 +1692,7 @@ const LanguagesSection: React.FC<{ items: Language[] }> = ({ items }) => {
 const HobbiesSection: React.FC<{ items: string[] }> = ({ items }) => {
   if (!items?.length) return null
   return (
-    <Box sx={{ mb: '30px' }}>
+    <Box sx={{ mb: '15px' }}>
       <SectionTitle>Hobbies and Interests</SectionTitle>
       <Box component='ul' sx={{ pl: 2 }}>
         {items.map((hobby, idx) => (
@@ -1748,7 +1749,7 @@ function usePagination(content: ReactNode[]) {
       let currentPage: ReactNode[] = []
       let currentHeight = 0
       const paginated: ReactNode[][] = []
-      const SAFETY_MARGIN = 20
+      const SAFETY_MARGIN = 50
 
       for (let i = 0; i < content.length; i++) {
         const element = content[i]
@@ -1869,9 +1870,9 @@ const ResumePreview: React.FC<{ data?: Resume; forcedId?: string }> = ({
       // Experience section - add title then each item separately
       if (resume.experience?.items?.length) {
         elements.push(
-          <Box key='experience-title' sx={{ mb: '8px' }}>
-            <SectionTitle>Work Experience</SectionTitle>
-          </Box>
+        <Box key='experience-title' sx={{ mb: '6px' }}>
+        <SectionTitle>Work Experience</SectionTitle>
+        </Box>
         )
         resume.experience.items.forEach((item, index) => {
           elements.push(
@@ -1891,9 +1892,9 @@ const ResumePreview: React.FC<{ data?: Resume; forcedId?: string }> = ({
       // Certifications section - add title then each item separately
       if (resume.certifications?.items?.length) {
         elements.push(
-          <Box key='certifications-title' sx={{ mb: '8px' }}>
-            <SectionTitle>Certifications</SectionTitle>
-          </Box>
+        <Box key='certifications-title' sx={{ mb: '6px' }}>
+        <SectionTitle>Certifications</SectionTitle>
+        </Box>
         )
         resume.certifications.items.forEach(item => {
           elements.push(
@@ -1912,9 +1913,9 @@ const ResumePreview: React.FC<{ data?: Resume; forcedId?: string }> = ({
       // Education section - add title then each item separately
       if (resume.education?.items?.length) {
         elements.push(
-          <Box key='education-title' sx={{ mb: '8px' }}>
-            <SectionTitle>Education</SectionTitle>
-          </Box>
+        <Box key='education-title' sx={{ mb: '6px' }}>
+        <SectionTitle>Education</SectionTitle>
+        </Box>
         )
         resume.education.items.forEach(item => {
           elements.push(
@@ -1948,7 +1949,7 @@ const ResumePreview: React.FC<{ data?: Resume; forcedId?: string }> = ({
       // Professional Affiliations - add title then each item separately
       if (resume.professionalAffiliations?.items?.length) {
         elements.push(
-          <Box key='affiliations-title' sx={{ mb: '8px' }}>
+          <Box key='affiliations-title' sx={{ mb: '6px' }}>
             <SectionTitle>Professional Affiliations</SectionTitle>
           </Box>
         )
@@ -1979,7 +1980,7 @@ const ResumePreview: React.FC<{ data?: Resume; forcedId?: string }> = ({
       // Projects - add title then each item separately
       if (resume.projects?.items?.length) {
         elements.push(
-          <Box key='projects-title' sx={{ mb: '8px' }}>
+          <Box key='projects-title' sx={{ mb: '6px' }}>
             <SectionTitle>Projects</SectionTitle>
           </Box>
         )
@@ -2000,7 +2001,7 @@ const ResumePreview: React.FC<{ data?: Resume; forcedId?: string }> = ({
       // Publications - add title then each item separately
       if (resume.publications?.items?.length) {
         elements.push(
-          <Box key='publications-title' sx={{ mb: '8px' }}>
+          <Box key='publications-title' sx={{ mb: '6px' }}>
             <SectionTitle>Publications</SectionTitle>
           </Box>
         )
@@ -2012,7 +2013,7 @@ const ResumePreview: React.FC<{ data?: Resume; forcedId?: string }> = ({
       // Volunteer Work - add title then each item separately
       if (resume.volunteerWork?.items?.length) {
         elements.push(
-          <Box key='volunteer-title' sx={{ mb: '8px' }}>
+          <Box key='volunteer-title' sx={{ mb: '6px' }}>
             <SectionTitle>Volunteer Work</SectionTitle>
           </Box>
         )
@@ -2045,7 +2046,11 @@ const ResumePreview: React.FC<{ data?: Resume; forcedId?: string }> = ({
         width: '100%',
         display: 'flex',
         flexDirection: 'column',
-        overflow: 'visible'
+        overflow: 'visible',
+        '@media print': {
+          margin: 0,
+          padding: 0
+        }
       }}
     >
       {/* Dialog for credential or image viewing */}
@@ -2125,6 +2130,8 @@ const ResumePreview: React.FC<{ data?: Resume; forcedId?: string }> = ({
           {(pages.length > 0 ? pages : [[]]).map((pageContent, pageIndex) => (
             <Box
               key={`page-${pageIndex}`}
+              id={`page-${pageIndex}`}
+              className="resume-page"
               sx={{
                 width: PAGE_SIZE.width,
                 height: PAGE_SIZE.height,
@@ -2134,6 +2141,7 @@ const ResumePreview: React.FC<{ data?: Resume; forcedId?: string }> = ({
                 boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
                 mx: 'auto',
                 mb: '30px',
+                mt: pageIndex === 0 ? '10px' : 0,
                 '@media print': {
                   width: '100%',
                   height: '100%',

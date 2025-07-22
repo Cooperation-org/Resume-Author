@@ -112,7 +112,7 @@ const FileSelectorOverlay: React.FC<FileSelectorOverlayProps> = ({
   const [selected, setSelected] = useState<string[]>([])
   const [thumbs, setThumbs] = useState<Record<string, string>>({})
 
-  console.log('FileSelectorOverlay render:', { open, filesCount: files.length, files })
+  // console.log('FileSelectorOverlay render:', { open, filesCount: files.length, files })
 
   useEffect(() => {
     setSelected(initialSelectedFiles.map(f => f.id))

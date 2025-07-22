@@ -30,6 +30,7 @@ import CredentialOverlay from '../../CredentialsOverlay'
 import AttachFileIcon from '@mui/icons-material/AttachFile'
 import MinimalCredentialViewer from '../../MinimalCredentialViewer'
 import VerifiedCredentialsList from '../../common/VerifiedCredentialsList'
+import VerifiedIcon from '@mui/icons-material/Verified'
 
 const PinkSwitch = styled(Switch)(({ theme }) => ({
   '& .MuiSwitch-switchBase.Mui-checked': {
@@ -382,15 +383,24 @@ export default function WorkExperience({
   }, [])
 
   const handleOpenCredentialsOverlay = useCallback((i: number) => {
+    console.log('Opening credentials overlay for index:', i)
     setActiveSectionIndex(i)
     setShowCredentialsOverlay(true)
   }, [])
 
   const handleCredentialSelect = useCallback(
     (selectedCredentialIDs: string[]) => {
+      console.log('handleCredentialSelect called with:', {
+        selectedCredentialIDs,
+        activeSectionIndex,
+        vcsLength: vcs?.length
+      })
+      
       if (activeSectionIndex !== null && selectedCredentialIDs.length > 0) {
         const selectedCredentials = selectedCredentialIDs.map(id => {
           const credential = vcs.find((c: any) => (c?.originalItem?.id || c.id) === id)
+          console.log('Found credential for id', id, ':', credential)
+          
           let fileId = ''
           if (credential && credential.id && typeof credential.id === 'string') {
             fileId = credential.id.startsWith('urn:') ? '' : credential.id
@@ -416,6 +426,14 @@ export default function WorkExperience({
             return fileId && cred.vc ? `${fileId},${JSON.stringify(cred.vc)}` : ''
           })
           .filter(Boolean)
+          
+        console.log('Saving credential:', {
+          activeSectionIndex,
+          credLinks,
+          stringified: JSON.stringify(credLinks),
+          deduped
+        })
+        
         setWorkExperiences(prev => {
           const updated = [...prev]
           updated[activeSectionIndex] = {
@@ -424,6 +442,9 @@ export default function WorkExperience({
             credentialLink: JSON.stringify(credLinks), // always a stringified array
             selectedCredentials: deduped
           }
+          
+          console.log('Updated work experience:', updated[activeSectionIndex])
+          
           dispatch(
             updateSection({
               sectionId: 'experience',
@@ -431,6 +452,11 @@ export default function WorkExperience({
             })
           )
           return updated
+        })
+      } else {
+        console.log('Not saving credential - missing data:', {
+          activeSectionIndex,
+          selectedCredentialIDsLength: selectedCredentialIDs.length
         })
       }
       setShowCredentialsOverlay(false)
@@ -498,7 +524,7 @@ export default function WorkExperience({
     if (onFocus) {
       onFocus()
     }
-  }, [onFocus])
+  }, []) // Remove onFocus from dependencies to prevent re-renders
   const handleRemoveFile = useCallback(
     (experienceIndex: number, fileIndex: number) => {
       if (onRemoveFile) {
@@ -824,6 +850,12 @@ export default function WorkExperience({
                   Add file(s)
                 </StyledButton>
                 <StyledButton
+                  startIcon={<VerifiedIcon />}
+                  onClick={() => handleOpenCredentialsOverlay(index)}
+                >
+                  Add credential
+                </StyledButton>
+                <StyledButton
                   startIcon={<SVGDeleteSection />}
                   onClick={() => handleDeleteExperience(index)}
                 >
@@ -842,32 +874,6 @@ export default function WorkExperience({
           gap: '20px'
         }}
       >
-        <Button
-          variant='contained'
-          color='primary'
-          onClick={() => handleOpenCredentialsOverlay(workExperiences.length - 1)}
-          sx={{
-            borderRadius: '4px',
-            width: '100%',
-            textTransform: 'none',
-            padding: '8px 44px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            backgroundColor: '#F3F5F8',
-            color: '#2E2E48',
-            boxShadow: 'none',
-            fontFamily: 'Nunito sans',
-            fontSize: '14px',
-            fontWeight: 500
-          }}
-        >
-          <AddCircleOutlineIcon
-            sx={{ marginRight: 1, width: '16px', height: '16px', color: '#2E2E48' }}
-          />
-          Add credential
-        </Button>
-
         <Button
           variant='contained'
           color='primary'
@@ -898,10 +904,14 @@ export default function WorkExperience({
       {showCredentialsOverlay && (
         <CredentialOverlay
           onClose={() => {
+            console.log('Closing credentials overlay')
             setShowCredentialsOverlay(false)
             setActiveSectionIndex(null)
           }}
-          onSelect={handleCredentialSelect}
+          onSelect={(ids) => {
+            console.log('CredentialOverlay onSelect called with:', ids)
+            handleCredentialSelect(ids)
+          }}
           initialSelectedCredentials={
             activeSectionIndex !== null
               ? workExperiences[activeSectionIndex].selectedCredentials
