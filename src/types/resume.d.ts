@@ -85,6 +85,7 @@ interface Education extends VerifiableItem {
   verificationStatus: string
   credentialLink: string
   evidence?: string[]
+  attachedFiles?: string[]
   [key: string]: any
 }
 
@@ -98,6 +99,7 @@ interface Skill extends VerifiableItem {
   verificationStatus: string
   credentialLink: string
   evidence?: string[]
+  attachedFiles?: string[]
   [key: string]: any
 }
 
@@ -119,6 +121,7 @@ interface Project extends VerifiableItem {
   technologies: string[]
   credentialLink?: string
   evidence?: string[]
+  attachedFiles?: string[]
 }
 
 interface Award extends VerifiableItem {
@@ -154,6 +157,7 @@ interface Certification extends VerifiableItem {
   noExpiration: boolean
   score?: string
   evidence?: string[]
+  attachedFiles?: string[]
 }
 
 interface ProfessionalAffiliation extends VerifiableItem {
@@ -171,6 +175,7 @@ interface ProfessionalAffiliation extends VerifiableItem {
   verificationStatus: string
   credentialLink: string
   evidence?: string[]
+  attachedFiles?: string[]
   [key: string]: any
 }
 
@@ -186,6 +191,7 @@ interface VolunteerWork extends VerifiableItem {
   credentialLink?: string
   cause?: string
   evidence?: string[]
+  attachedFiles?: string[]
 }
 
 interface Language extends VerifiableItem {
