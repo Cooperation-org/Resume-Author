@@ -97,7 +97,146 @@ const LinkWithFavicon: React.FC<{ url: string; platform?: string }> = ({
   )
 }
 
-// Updated PageHeader component
+// First Page Header with social links
+const FirstPageHeader: React.FC<{ 
+  fullName: string; 
+  city?: string; 
+  forcedId?: string;
+  socialLinks?: Record<string, string | undefined>
+}> = ({ fullName, city, forcedId, socialLinks }) => {
+  const [resumeLink, setResumeLink] = useState<string>('')
+  const [hasValidId, setHasValidId] = useState<boolean>(false)
+
+  const handleLinkGenerated = (link: string, isValid: boolean) => {
+    setResumeLink(link)
+    setHasValidId(isValid)
+  }
+
+  return (
+    <Box
+      sx={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        backgroundColor: '#F7F9FC',
+        height: `${HEADER_HEIGHT_PX}px`
+      }}
+    >
+      <Box sx={{ display: 'flex', flexDirection: 'column', ml: '45px', justifyContent: 'center' }}>
+        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+          <Typography sx={{ fontWeight: 600, color: '#2E2E48', fontSize: '30px' }}>
+            {fullName}
+          </Typography>
+          {city && (
+            <Typography sx={{ fontWeight: 400, color: '#2E2E48', fontSize: '18px', ml: 2 }}>
+              {city}
+            </Typography>
+          )}
+        </Box>
+        {socialLinks && Object.values(socialLinks).some(link => !!link) && (
+          <Box sx={{ display: 'flex', gap: '20px', mt: 2, flexWrap: 'wrap' }}>
+            {Object.entries(socialLinks).map(([platform, url]) =>
+              url ? (
+                <Box key={platform} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <img
+                    src={`https://www.google.com/s2/favicons?domain=${platform.toLowerCase()}.com&sz=32`}
+                    alt={`${platform} favicon`}
+                    style={{ width: 16, height: 16, borderRadius: '50%' }}
+                  />
+                  <Link
+                    href={url.startsWith('http') ? url : `https://${url}`}
+                    target='_blank'
+                    rel='noopener noreferrer'
+                    sx={{
+                      color: '#2563EB',
+                      textDecoration: 'underline',
+                      fontSize: '14px',
+                      fontWeight: 400,
+                      fontFamily: 'Arial',
+                      '&:hover': {
+                        opacity: 0.8
+                      }
+                    }}
+                  >
+                    {url.replace(/^https?:\/\//, '').replace(/^www\./, '')}
+                  </Link>
+                </Box>
+              ) : null
+            )}
+          </Box>
+        )}
+      </Box>
+      <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
+        <Box
+          sx={{
+            textAlign: 'center',
+            py: '20px',
+            mr: '15px',
+            display: hasValidId ? 'block' : 'none' // Hide when no valid ID
+          }}
+        >
+          <Link
+            href={resumeLink}
+            target='_blank'
+            rel='noopener noreferrer'
+            sx={{
+              color: '#000',
+              textAlign: 'center',
+              fontFamily: 'Arial',
+              fontSize: '12px',
+              fontStyle: 'normal',
+              fontWeight: 400,
+              lineHeight: '16px',
+              textDecorationLine: 'underline',
+              cursor: 'pointer'
+            }}
+          >
+            View Source
+          </Link>
+        </Box>
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            height: `${HEADER_HEIGHT_PX}px`,
+            width: '128px',
+            backgroundColor: '#2563EB'
+          }}
+        >
+          <ResumeQRCode
+            size={86}
+            bgColor='transparent'
+            fgColor='#fff'
+            forcedId={forcedId}
+            onLinkGenerated={handleLinkGenerated}
+          />
+        </Box>
+      </Box>
+    </Box>
+  )
+}
+
+// Simpler header for subsequent pages
+const SubsequentPageHeader: React.FC<{ fullName: string }> = ({ fullName }) => {
+  return (
+    <Box
+      sx={{
+        display: 'flex',
+        justifyContent: 'flex-start',
+        alignItems: 'center',
+        backgroundColor: '#F7F9FC',
+        height: '60px', // Narrower header for subsequent pages
+        pl: '45px'
+      }}
+    >
+      <Typography sx={{ fontWeight: 600, color: '#2E2E48', fontSize: '24px' }}>
+        {fullName}
+      </Typography>
+    </Box>
+  )
+}
+
+// Updated PageHeader component (keeping for backward compatibility)
 const PageHeader: React.FC<{ fullName: string; city?: string; forcedId?: string }> = ({
   fullName,
   city,
@@ -253,7 +392,7 @@ const PageFooter: React.FC<{
 const SummarySection: React.FC<{ summary?: string }> = ({ summary }) => {
   if (!summary) return null
   return (
-    <Box sx={{ mb: '15px' }}> {/* Reduced margin from 20px */}
+    <Box sx={{ mb: '30px' }}> {/* Increased margin for more space before Work Experience */}
       <SectionTitle>Professional Summary</SectionTitle>
       <Typography
         variant='body2'
@@ -981,10 +1120,18 @@ function usePagination(content: ReactNode[]) {
       if (!measureRef.current) return
 
       const fullPageHeightPx = mmToPx(parseFloat(PAGE_SIZE.height))
-      // Calculate actual available content height
-      const contentMaxHeightPx =
+      // Calculate actual available content height for first page (with larger header)
+      const firstPageContentMaxHeightPx =
         fullPageHeightPx -
         HEADER_HEIGHT_PX -
+        FOOTER_HEIGHT_PX -
+        CONTENT_PADDING_TOP -
+        CONTENT_PADDING_BOTTOM
+        
+      // Subsequent pages have smaller header (60px)
+      const subsequentPageContentMaxHeightPx =
+        fullPageHeightPx -
+        60 - // Smaller header height
         FOOTER_HEIGHT_PX -
         CONTENT_PADDING_TOP -
         CONTENT_PADDING_BOTTOM
@@ -995,8 +1142,10 @@ function usePagination(content: ReactNode[]) {
         footerHeight: FOOTER_HEIGHT_PX,
         paddingTop: CONTENT_PADDING_TOP,
         paddingBottom: CONTENT_PADDING_BOTTOM,
-        contentMaxHeightPx,
-        contentMaxHeightMm: contentMaxHeightPx / 3.779527559
+        firstPageContentMaxHeightPx,
+        subsequentPageContentMaxHeightPx,
+        firstPageContentMaxHeightMm: firstPageContentMaxHeightPx / 3.779527559,
+        subsequentPageContentMaxHeightMm: subsequentPageContentMaxHeightPx / 3.779527559
       })
 
       // Wait for images and fonts to load
@@ -1034,17 +1183,22 @@ function usePagination(content: ReactNode[]) {
 
       // Add a buffer to prevent content from touching the footer
       const SAFETY_MARGIN = 20 // Reduced from 40 to use more page space
-      const effectiveMaxHeight = contentMaxHeightPx - SAFETY_MARGIN
 
       for (let i = 0; i < content.length; i++) {
         const element = content[i]
         const elementHeight = contentHeights[i] || 0
+        
+        // Determine which max height to use based on current page number
+        const currentPageIndex = paginated.length
+        const contentMaxHeightPx = currentPageIndex === 0 ? firstPageContentMaxHeightPx : subsequentPageContentMaxHeightPx
+        const effectiveMaxHeight = contentMaxHeightPx - SAFETY_MARGIN
 
         console.log(`Processing element ${i}:`, {
           currentHeight,
           elementHeight,
           wouldBe: currentHeight + elementHeight,
           maxHeight: effectiveMaxHeight,
+          pageIndex: currentPageIndex,
           fits: currentHeight + elementHeight <= effectiveMaxHeight
         })
 
@@ -1142,11 +1296,7 @@ const ResumePreview: React.FC<{ data?: Resume; forcedId?: string }> = ({
       if (summary) {
         elements.push(<SummarySection key='summary' summary={summary} />)
       }
-      if (resume.contact?.socialLinks) {
-        elements.push(
-          <SocialLinksSection key='social' socialLinks={resume.contact.socialLinks} />
-        )
-      }
+      // Social links are now in the first page header, so we don't add them here
       
       // Experience section - add title then each item separately
       if (resume.experience?.items?.length) {
@@ -1345,11 +1495,18 @@ const ResumePreview: React.FC<{ data?: Resume; forcedId?: string }> = ({
                 }
               }}
             >
-              <PageHeader
-                fullName={resume.contact?.fullName || 'Your Name'}
-                city={resume.contact?.location?.city}
-                forcedId={forcedId}
-              />
+              {pageIndex === 0 ? (
+                <FirstPageHeader
+                  fullName={resume.contact?.fullName || 'Your Name'}
+                  city={resume.contact?.location?.city}
+                  forcedId={forcedId}
+                  socialLinks={resume.contact?.socialLinks}
+                />
+              ) : (
+                <SubsequentPageHeader
+                  fullName={resume.contact?.fullName || 'Your Name'}
+                />
+              )}
               <Box
                 sx={{
                   pt: CONTENT_PADDING_TOP + 'px',
@@ -1357,7 +1514,7 @@ const ResumePreview: React.FC<{ data?: Resume; forcedId?: string }> = ({
                   px: '50px',
                   position: 'relative',
                   minHeight: 0,
-                  height: `calc(100% - ${HEADER_HEIGHT_PX}px - ${FOOTER_HEIGHT_PX}px)`,
+                  height: `calc(100% - ${pageIndex === 0 ? HEADER_HEIGHT_PX : 60}px - ${FOOTER_HEIGHT_PX}px)`,
                   overflow: 'hidden' // Prevent content from spilling out
                 }}
               >
