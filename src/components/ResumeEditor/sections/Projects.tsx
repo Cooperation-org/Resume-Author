@@ -310,17 +310,27 @@ export default function Projects({
         )
         setProjects(prev => {
           const updated = [...prev]
+          // Build credentialLink as a JSON stringified array
+          const credLinks = deduped
+            .map(cred => {
+              let fileId = ''
+              if (
+                cred.vc?.originalItem?.id &&
+                !cred.vc.originalItem.id.startsWith('urn:')
+              ) {
+                fileId = cred.vc.originalItem.id
+              } else if (cred.vc?.id && !cred.vc.id.startsWith('urn:')) {
+                fileId = cred.vc.id
+              } else {
+                fileId = cred.id
+              }
+              return fileId && cred.vc ? `${fileId},${JSON.stringify(cred.vc)}` : ''
+            })
+            .filter(Boolean)
           updated[activeSectionIndex] = {
             ...updated[activeSectionIndex],
             verificationStatus: 'verified',
-            credentialLink:
-              deduped &&
-              deduped.length > 0 &&
-              deduped[0] &&
-              deduped[0].id &&
-              deduped[0].vc
-                ? `${deduped[0].id},${JSON.stringify(deduped[0].vc)}`
-                : '',
+            credentialLink: credLinks.length ? JSON.stringify(credLinks) : '',
             selectedCredentials: deduped
           }
           dispatch(

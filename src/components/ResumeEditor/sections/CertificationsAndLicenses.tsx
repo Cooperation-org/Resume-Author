@@ -69,6 +69,7 @@ interface SelectedCredential {
   name: string
   isAttestation?: boolean
   vc?: any // full object
+  fileId?: string // Added fileId to the interface
 }
 
 export default function CertificationsAndLicenses({
@@ -97,9 +98,9 @@ export default function CertificationsAndLicenses({
       expiryDate: '',
       credentialId: '',
       noExpiration: false,
-      id: '',
+      id: '', // Do not prefill id, only use what user types
       verificationStatus: 'unverified',
-      credentialLink: '',
+      credentialLink: '', // Always a string, never null
       selectedCredentials: []
     }
   ])
@@ -138,7 +139,7 @@ export default function CertificationsAndLicenses({
         issuer: item.issuer || '',
         issueDate: item.issueDate || '',
         expiryDate: item.expiryDate || '',
-        credentialId: item.credentialId || '',
+        credentialId: '', // always empty, never prefilled
         noExpiration: Boolean(item.noExpiration),
         id: item.id || '',
         verificationStatus: item.verificationStatus || 'unverified',
@@ -201,7 +202,7 @@ export default function CertificationsAndLicenses({
       issuer: '',
       issueDate: '',
       expiryDate: '',
-      credentialId: '',
+      credentialId: '', // always empty
       noExpiration: false,
       id: '',
       verificationStatus: 'unverified',
@@ -288,6 +289,18 @@ export default function CertificationsAndLicenses({
       if (activeSectionIndex !== null && selectedCredentialIDs.length > 0) {
         const selectedCredentials = selectedCredentialIDs.map(id => {
           const credential = vcs.find((c: any) => (c?.originalItem?.id || c.id) === id)
+          // Extract fileId: prefer credential.originalItem.id if present and not a URN, else credential.id if not a URN, else fallback to id
+          let fileId = ''
+          if (
+            credential?.originalItem?.id &&
+            !credential.originalItem.id.startsWith('urn:')
+          ) {
+            fileId = credential.originalItem.id
+          } else if (credential?.id && !credential.id.startsWith('urn:')) {
+            fileId = credential.id
+          } else {
+            fileId = id
+          }
           return {
             id: id,
             url: '', // not used, but required by interface
@@ -295,7 +308,8 @@ export default function CertificationsAndLicenses({
               credential?.credentialSubject?.achievement[0]?.name ||
               `Credential ${id.substring(0, 5)}...`,
             isAttestation: false,
-            vc: credential // full object
+            vc: credential, // full object
+            fileId: fileId
           }
         })
         // Deduplicate by id
@@ -304,17 +318,16 @@ export default function CertificationsAndLicenses({
         )
         setCertifications(prev => {
           const updated = [...prev]
+          // Build credentialLink as a JSON stringified array
+          const credLinks = deduped
+            .map(cred =>
+              cred.fileId && cred.vc ? `${cred.fileId},${JSON.stringify(cred.vc)}` : ''
+            )
+            .filter(Boolean)
           updated[activeSectionIndex] = {
             ...updated[activeSectionIndex],
             verificationStatus: 'verified',
-            credentialLink:
-              deduped &&
-              deduped.length > 0 &&
-              deduped[0] &&
-              deduped[0].id &&
-              deduped[0].vc
-                ? `${deduped[0].id},${JSON.stringify(deduped[0].vc)}`
-                : '',
+            credentialLink: credLinks.length ? JSON.stringify(credLinks) : '',
             selectedCredentials: deduped
           }
           dispatch(
