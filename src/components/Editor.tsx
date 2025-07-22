@@ -258,7 +258,7 @@ const ResumeEditor: React.FC = () => {
 
       fetchResumeData()
     }
-  }, [resumeId, isInitialized, dispatch, instances.storage, navigate, resume])
+  }, [resumeId, isInitialized, dispatch, instances.storage, navigate])
 
   // Check if resume has been modified using the optimized hash comparison
   useEffect(() => {
