@@ -9,7 +9,9 @@ import {
   styled,
   alpha,
   Button,
-  IconButton
+  IconButton,
+  Dialog,
+  DialogContent
 } from '@mui/material'
 import {
   SVGSectionIcon,
@@ -26,6 +28,7 @@ import CloseIcon from '@mui/icons-material/Close'
 import CredentialOverlay from '../../CredentialsOverlay'
 import TextEditor from '../../TextEditor/Texteditor'
 import AttachFileIcon from '@mui/icons-material/AttachFile'
+import MinimalCredentialViewer from '../../MinimalCredentialViewer'
 
 const PinkSwitch = styled(Switch)(({ theme }) => ({
   '& .MuiSwitch-switchBase.Mui-checked': {
@@ -96,6 +99,8 @@ export default function ProfessionalAffiliations({
   const [showCredentialsOverlay, setShowCredentialsOverlay] = useState(false)
   const [activeSectionIndex, setActiveSectionIndex] = useState<number | null>(null)
   const vcs = useSelector((state: any) => state.vcReducer.vcs)
+  const [openCredDialog, setOpenCredDialog] = useState(false)
+  const [dialogCredObj, setDialogCredObj] = useState<any>(null)
 
   const [affiliations, setAffiliations] = useState<AffiliationItem[]>([
     {
@@ -157,6 +162,36 @@ export default function ProfessionalAffiliations({
       return result || 'Less than a month'
     } catch (error) {
       return ''
+    }
+  }
+
+  function getCredentialName(claim: any): string {
+    try {
+      if (!claim || typeof claim !== 'object') {
+        return 'Invalid Credential'
+      }
+      const credentialSubject = claim.credentialSubject
+      if (!credentialSubject || typeof credentialSubject !== 'object') {
+        return 'Unknown Credential'
+      }
+      if (credentialSubject.employeeName) {
+        return `Performance Review: ${credentialSubject.employeeJobTitle || 'Unknown Position'}`
+      }
+      if (credentialSubject.volunteerWork) {
+        return `Volunteer: ${credentialSubject.volunteerWork}`
+      }
+      if (credentialSubject.role) {
+        return `Employment: ${credentialSubject.role}`
+      }
+      if (credentialSubject.credentialName) {
+        return credentialSubject.credentialName
+      }
+      if (credentialSubject.achievement && credentialSubject.achievement[0]?.name) {
+        return credentialSubject.achievement[0].name
+      }
+      return 'Credential'
+    } catch {
+      return 'Credential'
     }
   }
 
@@ -372,15 +407,14 @@ export default function ProfessionalAffiliations({
         const selectedCredentials = selectedCredentialIDs.map(id => {
           const credential = vcs.find((c: any) => (c?.originalItem?.id || c.id) === id)
           return {
-            id,
-            url: '', // not used, but required by interface
+            id: id,
+            url: '',
             name:
               credential?.credentialSubject?.achievement?.[0]?.name ||
               `Credential ${id.substring(0, 5)}...`,
-            vc: credential // full object
+            vc: credential
           }
         })
-
         setAffiliations(prev => {
           const updated = [...prev]
           updated[activeSectionIndex] = {
@@ -389,8 +423,9 @@ export default function ProfessionalAffiliations({
             credentialLink:
               selectedCredentials &&
               selectedCredentials.length > 0 &&
+              selectedCredentials[0].id &&
               selectedCredentials[0].vc
-                ? JSON.stringify(selectedCredentials[0].vc)
+                ? `${selectedCredentials[0].id},${JSON.stringify(selectedCredentials[0].vc)}`
                 : '',
             selectedCredentials
           }
@@ -686,9 +721,60 @@ export default function ProfessionalAffiliations({
                             textDecoration: 'underline',
                             cursor: 'pointer'
                           }}
-                          onClick={() => window.open(credential.url, '_blank')}
+                          onClick={() => {
+                            let credObj = null
+                            let credId = undefined
+                            try {
+                              if (
+                                affiliation.credentialLink &&
+                                affiliation.credentialLink.match(/^([\w-]+),\{.*\}$/)
+                              ) {
+                                const commaIdx = affiliation.credentialLink.indexOf(',')
+                                credId = affiliation.credentialLink.slice(0, commaIdx)
+                                const jsonStr = affiliation.credentialLink.slice(
+                                  commaIdx + 1
+                                )
+                                credObj = JSON.parse(jsonStr)
+                                credObj.credentialId = credId
+                              } else if (
+                                affiliation.credentialLink &&
+                                affiliation.credentialLink.startsWith('{')
+                              ) {
+                                credObj = JSON.parse(affiliation.credentialLink)
+                              }
+                            } catch (e) {}
+                            if (credObj) {
+                              setDialogCredObj(credObj)
+                              setOpenCredDialog(true)
+                            }
+                          }}
                         >
-                          {credential.name || `Credential ${credIndex + 1}`}
+                          {(() => {
+                            let credObj = null
+                            let credId = undefined
+                            try {
+                              if (
+                                affiliation.credentialLink &&
+                                affiliation.credentialLink.match(/^([\w-]+),\{.*\}$/)
+                              ) {
+                                const commaIdx = affiliation.credentialLink.indexOf(',')
+                                credId = affiliation.credentialLink.slice(0, commaIdx)
+                                const jsonStr = affiliation.credentialLink.slice(
+                                  commaIdx + 1
+                                )
+                                credObj = JSON.parse(jsonStr)
+                                credObj.credentialId = credId
+                              } else if (
+                                affiliation.credentialLink &&
+                                affiliation.credentialLink.startsWith('{')
+                              ) {
+                                credObj = JSON.parse(affiliation.credentialLink)
+                              }
+                            } catch (e) {}
+                            return credObj
+                              ? getCredentialName(credObj)
+                              : `Credential ${credIndex + 1}`
+                          })()}
                         </Typography>
                         <IconButton
                           size='small'
@@ -706,6 +792,17 @@ export default function ProfessionalAffiliations({
                         </IconButton>
                       </Box>
                     ))}
+                    <Dialog
+                      open={openCredDialog}
+                      onClose={() => setOpenCredDialog(false)}
+                      maxWidth='xs'
+                    >
+                      <DialogContent sx={{ p: 0 }}>
+                        {dialogCredObj && (
+                          <MinimalCredentialViewer vcData={dialogCredObj} />
+                        )}
+                      </DialogContent>
+                    </Dialog>
                   </Box>
                 )}
 

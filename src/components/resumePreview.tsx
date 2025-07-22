@@ -561,8 +561,16 @@ function renderCredentialLinkFactory(
   return function renderCredentialLink(credentialLink: string | undefined) {
     if (!credentialLink) return null
     let credObj: any = null
+    let credId: string | undefined = undefined
     try {
-      if (credentialLink.startsWith('{')) {
+      // Handle new format: 'fileid,{json}'
+      if (credentialLink.match(/^([\w-]+),\{.*\}$/)) {
+        const commaIdx = credentialLink.indexOf(',')
+        credId = credentialLink.slice(0, commaIdx)
+        const jsonStr = credentialLink.slice(commaIdx + 1)
+        credObj = JSON.parse(jsonStr)
+        credObj.credentialId = credId // Attach file id for the viewer
+      } else if (credentialLink.startsWith('{')) {
         credObj = JSON.parse(credentialLink)
       }
     } catch (e) {}

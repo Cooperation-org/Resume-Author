@@ -254,8 +254,8 @@ export default function SkillsAndAbilities({
             credentialLink:
               selectedCredentials &&
               selectedCredentials.length > 0 &&
-              selectedCredentials[0].vc
-                ? JSON.stringify(selectedCredentials[0].vc)
+              selectedCredentials[0].id
+                ? `${selectedCredentials[0].id},${JSON.stringify(selectedCredentials[0].vc)}`
                 : '',
             selectedCredentials
           }

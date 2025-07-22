@@ -15,6 +15,9 @@ import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline'
 import CloseIcon from '@mui/icons-material/Close'
 import CredentialOverlay from '../../CredentialsOverlay'
 import AttachFileIcon from '@mui/icons-material/AttachFile'
+import Dialog from '@mui/material/Dialog'
+import DialogContent from '@mui/material/DialogContent'
+import MinimalCredentialViewer from '../../MinimalCredentialViewer'
 
 interface ProjectsProps {
   onAddFiles?: (itemIndex?: number) => void
@@ -70,6 +73,8 @@ export default function Projects({
   const [showCredentialsOverlay, setShowCredentialsOverlay] = useState(false)
   const [activeSectionIndex, setActiveSectionIndex] = useState<number | null>(null)
   const vcs = useSelector((state: any) => state.vcReducer.vcs)
+  const [openCredDialog, setOpenCredDialog] = useState(false)
+  const [dialogCredObj, setDialogCredObj] = useState<any>(null)
 
   const [projects, setProjects] = useState<ProjectItem[]>([
     {
@@ -287,15 +292,14 @@ export default function Projects({
         const selectedCredentials = selectedCredentialIDs.map(id => {
           const credential = vcs.find((c: any) => (c?.originalItem?.id || c.id) === id)
           return {
-            id,
-            url: '', // not used, but required by interface
+            id: id,
+            url: '',
             name:
               credential?.credentialSubject?.achievement?.[0]?.name ||
               `Credential ${id.substring(0, 5)}...`,
-            vc: credential // full object
+            vc: credential
           }
         })
-
         setProjects(prev => {
           const updated = [...prev]
           updated[activeSectionIndex] = {
@@ -304,8 +308,9 @@ export default function Projects({
             credentialLink:
               selectedCredentials &&
               selectedCredentials.length > 0 &&
+              selectedCredentials[0].id &&
               selectedCredentials[0].vc
-                ? JSON.stringify(selectedCredentials[0].vc)
+                ? `${selectedCredentials[0].id},${JSON.stringify(selectedCredentials[0].vc)}`
                 : '',
             selectedCredentials
           }
@@ -391,6 +396,36 @@ export default function Projects({
     },
     [onRemoveFile]
   )
+
+  function getCredentialName(claim: any): string {
+    try {
+      if (!claim || typeof claim !== 'object') {
+        return 'Invalid Credential'
+      }
+      const credentialSubject = claim.credentialSubject
+      if (!credentialSubject || typeof credentialSubject !== 'object') {
+        return 'Unknown Credential'
+      }
+      if (credentialSubject.employeeName) {
+        return `Performance Review: ${credentialSubject.employeeJobTitle || 'Unknown Position'}`
+      }
+      if (credentialSubject.volunteerWork) {
+        return `Volunteer: ${credentialSubject.volunteerWork}`
+      }
+      if (credentialSubject.role) {
+        return `Employment: ${credentialSubject.role}`
+      }
+      if (credentialSubject.credentialName) {
+        return credentialSubject.credentialName
+      }
+      if (credentialSubject.achievement && credentialSubject.achievement[0]?.name) {
+        return credentialSubject.achievement[0].name
+      }
+      return 'Credential'
+    } catch {
+      return 'Credential'
+    }
+  }
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
@@ -500,9 +535,56 @@ export default function Projects({
                           textDecoration: 'underline',
                           cursor: 'pointer'
                         }}
-                        onClick={() => window.open(credential.url, '_blank')}
+                        onClick={() => {
+                          let credObj = null
+                          let credId = undefined
+                          try {
+                            if (
+                              project.credentialLink &&
+                              project.credentialLink.match(/^([\w-]+),\{.*\}$/)
+                            ) {
+                              const commaIdx = project.credentialLink.indexOf(',')
+                              credId = project.credentialLink.slice(0, commaIdx)
+                              const jsonStr = project.credentialLink.slice(commaIdx + 1)
+                              credObj = JSON.parse(jsonStr)
+                              credObj.credentialId = credId
+                            } else if (
+                              project.credentialLink &&
+                              project.credentialLink.startsWith('{')
+                            ) {
+                              credObj = JSON.parse(project.credentialLink)
+                            }
+                          } catch (e) {}
+                          if (credObj) {
+                            setDialogCredObj(credObj)
+                            setOpenCredDialog(true)
+                          }
+                        }}
                       >
-                        {credential.name || `Credential ${credIndex + 1}`}
+                        {(() => {
+                          let credObj = null
+                          let credId = undefined
+                          try {
+                            if (
+                              project.credentialLink &&
+                              project.credentialLink.match(/^([\w-]+),\{.*\}$/)
+                            ) {
+                              const commaIdx = project.credentialLink.indexOf(',')
+                              credId = project.credentialLink.slice(0, commaIdx)
+                              const jsonStr = project.credentialLink.slice(commaIdx + 1)
+                              credObj = JSON.parse(jsonStr)
+                              credObj.credentialId = credId
+                            } else if (
+                              project.credentialLink &&
+                              project.credentialLink.startsWith('{')
+                            ) {
+                              credObj = JSON.parse(project.credentialLink)
+                            }
+                          } catch (e) {}
+                          return credObj
+                            ? getCredentialName(credObj)
+                            : `Credential ${credIndex + 1}`
+                        })()}
                       </Typography>
                       <IconButton
                         size='small'
@@ -520,6 +602,17 @@ export default function Projects({
                       </IconButton>
                     </Box>
                   ))}
+                  <Dialog
+                    open={openCredDialog}
+                    onClose={() => setOpenCredDialog(false)}
+                    maxWidth='xs'
+                  >
+                    <DialogContent sx={{ p: 0 }}>
+                      {dialogCredObj && (
+                        <MinimalCredentialViewer vcData={dialogCredObj} />
+                      )}
+                    </DialogContent>
+                  </Dialog>
                 </Box>
               )}
 
