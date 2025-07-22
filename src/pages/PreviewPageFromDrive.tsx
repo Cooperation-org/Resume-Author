@@ -6,6 +6,7 @@ import { getLocalStorage } from '../tools/cookie'
 import ResumePreview from '../components/resumePreview'
 import html2pdf from 'html2pdf.js'
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf'
+import '../styles/pdf-export.css'
 
 type RawCredentialData = {
   content?: {
@@ -49,29 +50,69 @@ const PreviewPageFromDrive: React.FC = () => {
     [safeGet]
   )
 
-  const exportResumeToPDF = () => {
+  const exportResumeToPDF = async () => {
     if (!resumeData) return
 
     const element = document.getElementById('resume-preview')
     if (!element) return
 
+    // Clone the element to avoid modifying the original
+    const clonedElement = element.cloneNode(true) as HTMLElement
+    
+    // Remove any elements that shouldn't be in the PDF
+    const elementsToRemove = clonedElement.querySelectorAll('.no-print, [data-no-print]')
+    elementsToRemove.forEach(el => el.remove())
+    
+    // Add the cloned element temporarily to the DOM (hidden)
+    clonedElement.style.position = 'absolute'
+    clonedElement.style.left = '-9999px'
+    clonedElement.style.top = '0'
+    document.body.appendChild(clonedElement)
+    
     const options = {
-      margin: [0, 0, 0, 0],
+      margin: 0,
       filename: `${resumeData.contact.fullName}_Resume.pdf`,
-      image: { type: 'jpeg', quality: 0.98 },
-      html2canvas: { scale: 2, useCORS: true, logging: true },
-      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+      image: { 
+        type: 'jpeg', 
+        quality: 0.98
+      },
+      html2canvas: { 
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        letterRendering: true,
+        backgroundColor: '#ffffff',
+        width: 794, // A4 width in pixels at 96 DPI
+        windowWidth: 794,
+        onclone: (clonedDoc: Document) => {
+          // Ensure styles are applied to the cloned document
+          const clonedEl = clonedDoc.getElementById('resume-preview')
+          if (clonedEl) {
+            clonedEl.style.width = '794px'
+            clonedEl.style.margin = '0'
+            clonedEl.style.padding = '0'
+          }
+        }
+      },
+      jsPDF: { 
+        unit: 'pt', 
+        format: 'a4', 
+        orientation: 'portrait',
+        compress: true
+      },
+      pagebreak: { 
+        mode: 'css',
+        before: '.resume-page',
+        avoid: 'tr'
+      }
     }
 
-    const metadata = {
-      title: `${resumeData.contact.fullName}'s Resume`,
-      creator: 'T3 Resume Author',
-      subject: 'Resume',
-      keywords: ['Resume', 'CV', resumeData.contact.fullName],
-      custom: { resumeData: JSON.stringify(resumeData) }
+    try {
+      await html2pdf().set(options).from(clonedElement).save()
+    } finally {
+      // Clean up the cloned element
+      document.body.removeChild(clonedElement)
     }
-
-    html2pdf().set(metadata).from(element).set(options).save()
   }
 
   useEffect(() => {
@@ -541,7 +582,7 @@ const PreviewPageFromDrive: React.FC = () => {
           </IconButton>
         </Box>
       </Box>
-      {resumeData && <ResumePreview data={resumeData} />}
+      {resumeData && <ResumePreview data={resumeData} forcedId={id} />}
     </Box>
   )
 }
