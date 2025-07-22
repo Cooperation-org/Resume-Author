@@ -545,10 +545,31 @@ const ResumePreviewTopbar: React.FC<ResumePreviewTopbarProps> = ({
               <Button
                 variant='contained'
                 onClick={() => {
-                  // Pass the current resume data through navigation state
-                  navigate('/credential-raw/' + resumeId, {
-                    state: { credential: resume }
+                  if (!resume) {
+                    console.error('No resume data to export')
+                    return
+                  }
+                  
+                  // Create a Blob with the resume data
+                  const blob = new Blob([JSON.stringify(resume, null, 2)], {
+                    type: 'application/json'
                   })
+                  
+                  // Create a URL for the blob
+                  const url = URL.createObjectURL(blob)
+                  
+                  // Create a temporary anchor element
+                  const a = document.createElement('a')
+                  a.href = url
+                  a.download = `resume-${resumeId || 'draft'}.json`
+                  
+                  // Trigger the download
+                  document.body.appendChild(a)
+                  a.click()
+                  
+                  // Clean up
+                  document.body.removeChild(a)
+                  URL.revokeObjectURL(url)
                 }}
                 sx={{
                   ...getButtonSx('181px'),
