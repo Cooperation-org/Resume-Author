@@ -16,6 +16,7 @@ import MinimalCredentialViewer from './MinimalCredentialViewer'
 import Dialog from '@mui/material/Dialog'
 import DialogContent from '@mui/material/DialogContent'
 import CloseIcon from '@mui/icons-material/Close'
+import WorkspacePremiumIcon from '@mui/icons-material/WorkspacePremium'
 
 const PAGE_SIZE = {
   width: '210mm',
@@ -552,15 +553,20 @@ function getCredentialName(claim: any): string {
 
 // Helper to get credential links as array (handles both new and old formats)
 function getCredentialLinks(credentialLink: string | string[] | undefined): string[] {
+  console.log('getCredentialLinks input:', credentialLink, typeof credentialLink)
+  
   if (!credentialLink) return []
   if (Array.isArray(credentialLink)) return credentialLink
   if (typeof credentialLink === 'string') {
     try {
       if (credentialLink.trim().startsWith('[')) {
-        return JSON.parse(credentialLink)
+        const parsed = JSON.parse(credentialLink)
+        console.log('Parsed credential links:', parsed)
+        return parsed
       }
       return [credentialLink]
-    } catch {
+    } catch (e) {
+      console.error('Error parsing credential link:', e)
       return [credentialLink]
     }
   }
@@ -613,6 +619,7 @@ function renderCredentialLinkFactory(
             setOpenCredDialog(true)
           }}
         >
+          <WorkspacePremiumIcon sx={{ fontSize: 16, color: '#2563EB' }} />
           {isVerified && <BlueVerifiedBadge />}
           {credName}
         </span>
@@ -709,6 +716,13 @@ const ExperienceItem: React.FC<{
   })
   let credLink = item.credentialLink
   let credObj = null
+  
+  console.log('ExperienceItem credentialLink:', {
+    itemId: item.id,
+    credLink,
+    type: typeof credLink
+  })
+  
   // Render all credential names at the end (deduplicated, valid only)
   const credLinks = getCredentialLinks(credLink)
   const dedupedCreds: { link: string; credObj: any; credId: string }[] = []
@@ -1105,6 +1119,7 @@ const CertificationItem: React.FC<{
                   }
                 }}
               >
+                <WorkspacePremiumIcon sx={{ fontSize: 16, color: '#2563EB', mr: 0.5 }} />
                 {credObj &&
                   (credObj.credentialStatus === 'verified' ||
                     credObj.credentialStatus?.status === 'verified') && (

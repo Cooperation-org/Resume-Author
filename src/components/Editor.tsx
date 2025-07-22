@@ -492,6 +492,9 @@ const ResumeEditor: React.FC = () => {
 
   const handleAddCredential = useCallback(
     (text: string) => {
+      console.log('handleAddCredential called with text:', text)
+      console.log('Current activeSection:', activeSection)
+      
       if (!activeSection) {
         console.error('No active section found')
         return

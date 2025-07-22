@@ -217,6 +217,8 @@ export default function WorkExperience({
 
   useEffect(() => {
     if (resume?.experience?.items && resume.experience.items.length > 0) {
+      console.log('Loading experience items from Redux:', resume.experience.items)
+      
       const typedItems = resume.experience.items.map((item: any) => ({
         title: item.title || '',
         company: item.company || '',
@@ -238,6 +240,11 @@ export default function WorkExperience({
         selectedCredentials: item.selectedCredentials || [],
         ...item
       })) as WorkExperienceItem[]
+      
+      console.log('Typed items with credentials:', typedItems.map(item => ({
+        title: item.title,
+        credentialLink: item.credentialLink
+      })))
 
       const needUpdate =
         initialLoadRef.current || typedItems.length !== workExperiences.length
@@ -386,7 +393,11 @@ export default function WorkExperience({
     console.log('Opening credentials overlay for index:', i)
     setActiveSectionIndex(i)
     setShowCredentialsOverlay(true)
-  }, [])
+    // Prevent focus from changing while overlay is open
+    if (onFocus) {
+      onFocus()
+    }
+  }, [onFocus])
 
   const handleCredentialSelect = useCallback(
     (selectedCredentialIDs: string[]) => {
@@ -444,6 +455,10 @@ export default function WorkExperience({
           }
           
           console.log('Updated work experience:', updated[activeSectionIndex])
+          console.log('Redux update with credentialLink:', {
+            credentialLink: updated[activeSectionIndex].credentialLink,
+            type: typeof updated[activeSectionIndex].credentialLink
+          })
           
           dispatch(
             updateSection({
@@ -565,7 +580,7 @@ export default function WorkExperience({
   }
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', gap: '20px' }} onFocus={onFocus}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       {workExperiences.map((experience, index) => (
         <Box
           key={`experience-${index}`}
