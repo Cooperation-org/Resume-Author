@@ -122,6 +122,13 @@ const FirstPageHeader: React.FC<{
     setHasValidId(isValid)
   }
 
+  // Remove twitter from social links
+  const filteredLinks = socialLinks
+    ? Object.entries(socialLinks).filter(
+        ([platform, url]) => platform.toLowerCase() !== 'twitter' && !!url
+      )
+    : []
+
   return (
     <Box
       sx={{
@@ -1135,13 +1142,14 @@ const SkillItem: React.FC<{
       key={item.id}
       sx={{
         display: 'flex',
+        flexDirection: 'column',
         alignItems: 'flex-start',
-        gap: 1,
+        gap: 0.5,
         width: 'calc(100% - 8px)',
         mb: 1
       }}
     >
-      <Box sx={{ ml: 0 }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
         <Typography
           sx={{
             fontWeight: 400,
@@ -1152,13 +1160,13 @@ const SkillItem: React.FC<{
         >
           <HTMLWithVerifiedLinks htmlContent={item.skills || ''} />
         </Typography>
+        {/* Credential Link with badge */}
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, ml: 1 }}>
+          {item.verificationStatus === 'verified' && <BlueVerifiedBadge />}
+          {renderCredentialLink(item.credentialLink)}
+        </Box>
       </Box>
-      {/* Credential Link with badge */}
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 1 }}>
-        {item.verificationStatus === 'verified' && <BlueVerifiedBadge />}
-        {renderCredentialLink(item.credentialLink)}
-      </Box>
-      {/* Portfolio */}
+      {/* Portfolio (files) listed below the skill/cred */}
       {renderPortfolio(portfolio)}
     </Box>
   )
@@ -1232,7 +1240,7 @@ const SkillsSection: React.FC<{
       {' '}
       {/* Reduced margin from 20px */}
       <SectionTitle>Skills</SectionTitle>
-      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
         {items.map(item => (
           <SkillItem
             key={item.id}
@@ -1279,42 +1287,25 @@ function usePagination(content: ReactNode[]) {
   const measureRef = useRef<HTMLDivElement>(null)
 
   useLayoutEffect(() => {
-    // Give the browser time to properly render and measure
     let timeoutId: NodeJS.Timeout
 
     const measureAndPaginate = () => {
       if (!measureRef.current) return
 
       const fullPageHeightPx = mmToPx(parseFloat(PAGE_SIZE.height))
-      // Calculate actual available content height for first page (with larger header)
       const firstPageContentMaxHeightPx =
         fullPageHeightPx -
         HEADER_HEIGHT_PX -
         FOOTER_HEIGHT_PX -
         CONTENT_PADDING_TOP -
         CONTENT_PADDING_BOTTOM
-
-      // Subsequent pages have smaller header (60px)
       const subsequentPageContentMaxHeightPx =
         fullPageHeightPx -
-        60 - // Smaller header height
+        60 -
         FOOTER_HEIGHT_PX -
         CONTENT_PADDING_TOP -
         CONTENT_PADDING_BOTTOM
 
-      console.log('Page calculations:', {
-        fullPageHeightPx,
-        headerHeight: HEADER_HEIGHT_PX,
-        footerHeight: FOOTER_HEIGHT_PX,
-        paddingTop: CONTENT_PADDING_TOP,
-        paddingBottom: CONTENT_PADDING_BOTTOM,
-        firstPageContentMaxHeightPx,
-        subsequentPageContentMaxHeightPx,
-        firstPageContentMaxHeightMm: firstPageContentMaxHeightPx / 3.779527559,
-        subsequentPageContentMaxHeightMm: subsequentPageContentMaxHeightPx / 3.779527559
-      })
-
-      // Wait for images and fonts to load
       measureRef.current.style.width = PAGE_SIZE.width
       measureRef.current.style.padding = `${CONTENT_PADDING_TOP}px 50px ${CONTENT_PADDING_BOTTOM}px`
 
@@ -1324,37 +1315,23 @@ function usePagination(content: ReactNode[]) {
         return
       }
 
-      // Force layout and get accurate measurements
       const contentHeights = contentElements.map((el, idx) => {
-        // Force reflow
         el.getBoundingClientRect()
         const computedStyle = window.getComputedStyle(el)
         const marginTop = parseFloat(computedStyle.marginTop)
         const marginBottom = parseFloat(computedStyle.marginBottom)
         const height = (el as HTMLElement).offsetHeight + marginTop + marginBottom
-
-        console.log(`Element ${idx}:`, {
-          height,
-          marginTop,
-          marginBottom,
-          offsetHeight: (el as HTMLElement).offsetHeight,
-          element: content[idx]
-        })
         return height
       })
 
       let currentPage: ReactNode[] = []
       let currentHeight = 0
       const paginated: ReactNode[][] = []
-
-      // Add a buffer to prevent content from touching the footer
-      const SAFETY_MARGIN = 20 // Reduced from 40 to use more page space
+      const SAFETY_MARGIN = 20
 
       for (let i = 0; i < content.length; i++) {
         const element = content[i]
         const elementHeight = contentHeights[i] || 0
-
-        // Determine which max height to use based on current page number
         const currentPageIndex = paginated.length
         const contentMaxHeightPx =
           currentPageIndex === 0
@@ -1362,25 +1339,32 @@ function usePagination(content: ReactNode[]) {
             : subsequentPageContentMaxHeightPx
         const effectiveMaxHeight = contentMaxHeightPx - SAFETY_MARGIN
 
-        console.log(`Processing element ${i}:`, {
-          currentHeight,
-          elementHeight,
-          wouldBe: currentHeight + elementHeight,
-          maxHeight: effectiveMaxHeight,
-          pageIndex: currentPageIndex,
-          fits: currentHeight + elementHeight <= effectiveMaxHeight
-        })
+        // --- PATCH: Prevent orphaned section titles ---
+        // If this is a section title (Box with SectionTitle inside), and next element exists,
+        // check if both title and next item fit. If not, break to new page before the title.
+        const isSectionTitle =
+          React.isValidElement(element) &&
+          element.type === Box &&
+          element.props.children &&
+          React.isValidElement(element.props.children) &&
+          element.props.children.type === SectionTitle
+        if (isSectionTitle && i + 1 < content.length) {
+          const nextElementHeight = contentHeights[i + 1] || 0
+          if (currentHeight + elementHeight + nextElementHeight > effectiveMaxHeight) {
+            if (currentPage.length > 0) {
+              paginated.push([...currentPage])
+              currentPage = []
+              currentHeight = 0
+            }
+          }
+        }
+        // --- END PATCH ---
 
-        // Check if adding this element would exceed the page height
         if (currentHeight > 0 && currentHeight + elementHeight > effectiveMaxHeight) {
-          // Start a new page
-          console.log(`Breaking to new page at element ${i}`)
           paginated.push([...currentPage])
           currentPage = []
           currentHeight = 0
         }
-
-        // Add element to current page
         currentPage.push(element)
         currentHeight += elementHeight
       }
@@ -1390,28 +1374,15 @@ function usePagination(content: ReactNode[]) {
       if (paginated.length === 0) {
         paginated.push([])
       }
-
-      console.log('Final pagination:', {
-        totalElements: content.length,
-        totalPages: paginated.length,
-        elementsPerPage: paginated.map(p => p.length)
-      })
-
       setPages(paginated)
     }
-
-    // Initial measure after a short delay
     timeoutId = setTimeout(measureAndPaginate, 300)
-
-    // Re-measure on window resize
     window.addEventListener('resize', measureAndPaginate)
-
     return () => {
       clearTimeout(timeoutId)
       window.removeEventListener('resize', measureAndPaginate)
     }
   }, [content])
-
   return { pages, measureRef }
 }
 
