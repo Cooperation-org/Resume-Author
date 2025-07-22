@@ -858,7 +858,7 @@ const ResumeEditor: React.FC = () => {
       
       // Navigate to view the signed resume
       // The file.id contains the Google Drive ID of the newly signed resume
-      navigate(`/resume/view?id=${file.id}`)
+      navigate(`/resume/view/${file.id}`)
       
     } catch (error) {
       console.error('Error signing and saving:', error)
