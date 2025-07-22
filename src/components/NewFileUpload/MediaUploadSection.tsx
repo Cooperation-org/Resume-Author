@@ -223,7 +223,7 @@ const MediaUploadSection: React.FC<Props> = ({
                 fontWeight: 600
               }}
             >
-              {files.length === 0 ? 'No files yet...' : '+ Add more media'}
+              + Add more media
             </Typography>
             <Box sx={{ width: 'auto', height: 54, display: 'flex' }}>
               <SVGUploadMedia />

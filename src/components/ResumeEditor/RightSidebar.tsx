@@ -41,6 +41,7 @@ const RightSidebar = ({
   const dispatch: AppDispatch = useDispatch()
   const { vcs } = useSelector((state: any) => state.vcReducer)
   const [isLoading, setIsLoading] = useState<boolean>(true)
+  const resume = useSelector((state: RootState) => state.resume?.resume)
 
   const { instances, isInitialized, listFilesMetadata } = useGoogleDrive()
   const [remoteFiles, setRemoteFiles] = useState<DriveFileMeta[]>([])
@@ -258,6 +259,36 @@ const RightSidebar = ({
     })
   }
 
+  // Check if a credential is currently being used in the resume
+  const isCredentialInUse = (vcId: string): boolean => {
+    if (!resume || !vcId) return false
+    
+    // Check all sections that can have credentials
+    const sections = ['experience', 'education', 'skills', 'certifications', 'projects', 'professionalAffiliations', 'volunteerWork']
+    
+    for (const sectionName of sections) {
+      const section = resume[sectionName as keyof typeof resume]
+      if (section && typeof section === 'object' && 'items' in section && Array.isArray(section.items)) {
+        for (const item of section.items) {
+          // Check selectedCredentials array
+          if (item.selectedCredentials && Array.isArray(item.selectedCredentials)) {
+            if (item.selectedCredentials.some((cred: any) => cred.id === vcId || cred.fileId === vcId)) {
+              return true
+            }
+          }
+          // Also check credentialLink in case it contains the ID
+          if (item.credentialLink && typeof item.credentialLink === 'string') {
+            if (item.credentialLink.includes(vcId)) {
+              return true
+            }
+          }
+        }
+      }
+    }
+    
+    return false
+  }
+
   const renderCredentialContent = (vc: any) => {
     const credentialName = getCredentialName(vc)
 
@@ -299,14 +330,17 @@ const RightSidebar = ({
     if (validVCs && validVCs.length > 0) {
       return (
         <Stack spacing={2}>
-          {validVCs.map((vc: any) => (
-            <Box sx={{ display: 'flex', alignItems: 'center' }} key={vc.id}>
-              <Box sx={{ width: 24, height: 24, mr: '10px', display: 'flex' }}>
-                {selectedClaims.includes(vc.id) ? checkmarkBlueSVG() : checkmarkgraySVG()}
+          {validVCs.map((vc: any) => {
+            const isInUse = isCredentialInUse(vc.id || vc.originalItem?.id)
+            return (
+              <Box sx={{ display: 'flex', alignItems: 'center' }} key={vc.id}>
+                <Box sx={{ width: 24, height: 24, mr: '10px', display: 'flex' }}>
+                  {isInUse ? checkmarkBlueSVG() : checkmarkgraySVG()}
+                </Box>
+                {renderCredentialContent(vc)}
               </Box>
-              {renderCredentialContent(vc)}
-            </Box>
-          ))}
+            )
+          })}
         </Stack>
       )
     }

@@ -393,27 +393,39 @@ const FileListDisplay: React.FC<FileListProps> = ({
               <ListItem
                 key={rf.id}
                 disablePadding
-                sx={{ pr: 8 }}
+                sx={{ pr: 2 }}
                 secondaryAction={
-                  <Typography variant='caption' sx={{ pr: 2 }}>
+                  <Typography variant='caption' sx={{ pr: 1, fontSize: '10px' }}>
                     Uploaded
                   </Typography>
                 }
               >
                 <ListItemButton
                   onClick={() => openPreview(getDriveThumbnailUrl(rf.id), rf.mimeType)}
+                  sx={{ pr: 1 }}
                 >
-                  <ListItemAvatar>
+                  <ListItemAvatar sx={{ minWidth: 40 }}>
                     <Avatar
                       src={getDriveThumbnailUrl(rf.id)}
                       alt={rf.name}
                       variant='rounded'
+                      sx={{ width: 32, height: 32 }}
                     />
                   </ListItemAvatar>
                   <ListItemText
                     primary={rf.name}
-                    primaryTypographyProps={{ noWrap: true }}
-                    sx={{ textOverflow: 'ellipsis', overflow: 'hidden' }}
+                    primaryTypographyProps={{ 
+                      fontSize: '14px',
+                      sx: { 
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        display: '-webkit-box',
+                        WebkitLineClamp: 2,
+                        WebkitBoxOrient: 'vertical',
+                        wordBreak: 'break-word',
+                        maxWidth: '150px'
+                      }
+                    }}
                   />
                 </ListItemButton>
               </ListItem>
