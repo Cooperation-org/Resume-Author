@@ -432,7 +432,6 @@ export default function SkillsAndAbilities({
                 <VerifiedCredentialsList
                   credentials={skill.selectedCredentials}
                   onRemove={credIndex => handleRemoveCredential(index, credIndex)}
-                  getCredentialName={getCredentialName}
                 />
               )}
 

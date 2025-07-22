@@ -746,7 +746,6 @@ export default function Education({
                   <VerifiedCredentialsList
                     credentials={education.selectedCredentials}
                     onRemove={credIndex => handleRemoveCredential(index, credIndex)}
-                    getCredentialName={getCredentialName}
                   />
                 )}
 

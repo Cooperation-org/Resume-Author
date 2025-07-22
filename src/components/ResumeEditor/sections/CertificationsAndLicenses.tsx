@@ -552,7 +552,6 @@ export default function CertificationsAndLicenses({
                     <VerifiedCredentialsList
                       credentials={certification.selectedCredentials}
                       onRemove={credIndex => handleRemoveCredential(index, credIndex)}
-                      getCredentialName={getCredentialName}
                     />
                   )}
 
