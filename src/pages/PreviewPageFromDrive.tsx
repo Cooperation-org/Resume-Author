@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react'
 import { Box, CircularProgress, Typography, IconButton } from '@mui/material'
 import { useParams } from 'react-router-dom'
-import { GoogleDriveStorage } from '@cooperation/vc-storage'
+import { GoogleDriveStorage } from '@linked-claims/vc-storage'
 import { getLocalStorage } from '../tools/cookie'
 import ResumePreview from '../components/resumePreview'
 import html2pdf from 'html2pdf.js'

@@ -634,14 +634,40 @@ const ResumeEditor: React.FC = () => {
       })
 
       // Save to Google Drive
-      const savedResume = await instances?.resumeManager?.saveResume({
-        resume: preparedResume || resume,
-        type: 'unsigned'
+      // IMPORTANT: Include the resumeId if we have one to update the existing file
+      const resumeToSave = preparedResume || resume
+      
+      // Log whether we're updating or creating
+      if (resumeId && !resumeId.startsWith('temp-')) {
+        console.log('Updating existing resume with ID:', resumeId)
+      } else {
+        console.log('Creating new resume (no existing ID or temporary ID)')
+      }
+      
+      const saveData: any = {
+        resume: resumeToSave,
+        type: 'unsigned',
+        // Pass the ID if we have one to update the existing file
+        ...(resumeId && !resumeId.startsWith('temp-') ? { id: resumeId } : {})
+      }
+      
+      const savedResume = await instances?.resumeManager?.saveResume(saveData)
+      
+      console.log('Save result:', {
+        requestedId: resumeId,
+        savedId: savedResume?.id,
+        isNewFile: savedResume?.id !== resumeId
       })
 
       // Update our original reference
       if (savedResume) {
-        const newHash = computeResumeHash(resume)
+        // IMPORTANT: Update Redux state with the saved resume data
+        // This ensures the UI reflects the credential links that were replaced with JSON
+        // The savedResume might have the data nested, so check both possibilities
+        const resumeDataToStore = savedResume.data || resumeToSave;
+        dispatch(setSelectedResume(resumeDataToStore))
+        
+        const newHash = computeResumeHash(resumeDataToStore)
         console.log('Updating resume hash after save', {
           oldHash: originalResumeRef.current?.substring(0, 20),
           newHash: newHash.substring(0, 20)
@@ -649,18 +675,20 @@ const ResumeEditor: React.FC = () => {
         originalResumeRef.current = newHash
         setIsDirty(false)
 
-        // If this was a temporary import, clean up localStorage and update URL
-        if (resumeId && resumeId.startsWith('temp-')) {
-          // Clean up the temporary localStorage entry
-          const draftKey = `resume_draft_${resumeId}`
-          localStorage.removeItem(draftKey)
+        // If this was a temporary import OR the saved resume has a different ID, update the URL
+        if ((resumeId && resumeId.startsWith('temp-')) || (savedResume.id && savedResume.id !== resumeId)) {
+          // Clean up the temporary localStorage entry if it exists
+          if (resumeId && resumeId.startsWith('temp-')) {
+            const draftKey = `resume_draft_${resumeId}`
+            localStorage.removeItem(draftKey)
+          }
 
           // Update the URL to use the real Google Drive ID
           if (savedResume.id) {
             const newUrl = `/resume/new?id=${savedResume.id}`
             window.history.replaceState({}, '', newUrl)
             console.log(
-              'Updated URL from temporary to real ID after signing:',
+              'Updated URL to use correct resume ID:',
               savedResume.id
             )
           }
@@ -823,6 +851,8 @@ const ResumeEditor: React.FC = () => {
       }
 
       // Save the signed resume
+      // Note: For signed resumes, we always create a new file (no ID passed)
+      // This preserves the unsigned draft and creates a separate signed version
       const file = await instances.resumeManager.saveResume({
         resume: signedResume,
         type: 'sign'

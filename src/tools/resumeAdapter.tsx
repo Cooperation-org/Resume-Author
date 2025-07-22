@@ -103,6 +103,10 @@ export const prepareResumeForVC = async (
         return { ...exp, ...processedExp, attachedFiles }
       })
     )
+    
+    // IMPORTANT: Also update the original experience.items with the processed credential links
+    // This ensures the UI shows the correct credential data
+    preparedResume.experience.items = preparedResume.employmentHistory
   }
 
   // Education
@@ -128,6 +132,9 @@ export const prepareResumeForVC = async (
         return { ...base, attachedFiles }
       })
     )
+    
+    // Update the original education.items with the processed credential links
+    preparedResume.education.items = preparedResume.educationAndLearning
   }
 
   // Certifications
@@ -149,6 +156,9 @@ export const prepareResumeForVC = async (
         }
       })
     )
+    
+    // Update the original certifications.items with the processed credential links
+    preparedResume.certifications.items = preparedResume.certificationsVC
   }
 
   // Skills
@@ -159,6 +169,9 @@ export const prepareResumeForVC = async (
         return { ...skill, ...processedSkill }
       })
     )
+    
+    // Update the original skills.items with the processed credential links
+    preparedResume.skills.items = preparedResume.skillsVC
   }
 
   // Projects
@@ -175,6 +188,9 @@ export const prepareResumeForVC = async (
         return { ...proj, ...processedProj, attachedFiles }
       })
     )
+    
+    // Update the original projects.items with the processed credential links
+    preparedResume.projects.items = preparedResume.projectsVC
   }
 
   // Professional Affiliations
@@ -197,6 +213,9 @@ export const prepareResumeForVC = async (
         }
       })
     )
+    
+    // Update the original professionalAffiliations.items with the processed credential links
+    preparedResume.professionalAffiliations.items = preparedResume.professionalAffiliationsVC
   }
 
   // Volunteer Work
@@ -213,6 +232,9 @@ export const prepareResumeForVC = async (
         return { ...vol, ...processedVol, attachedFiles }
       })
     )
+    
+    // Update the original volunteerWork.items with the processed credential links
+    preparedResume.volunteerWork.items = preparedResume.volunteerWorkVC
   }
 
   if (preparedResume.hobbiesAndInterests) {
