@@ -455,10 +455,6 @@ export default function WorkExperience({
           }
           
           console.log('Updated work experience:', updated[activeSectionIndex])
-          console.log('Redux update with credentialLink:', {
-            credentialLink: updated[activeSectionIndex].credentialLink,
-            type: typeof updated[activeSectionIndex].credentialLink
-          })
           
           dispatch(
             updateSection({
