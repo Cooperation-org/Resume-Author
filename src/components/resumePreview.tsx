@@ -574,6 +574,22 @@ function getCredentialLinks(credentialLink: string | string[] | undefined): stri
   return []
 }
 
+// Helper function to open credential dialog with proper file ID
+function openCredentialDialog(
+  credObj: any,
+  credId: string,
+  setDialogCredObj: any,
+  setDialogImageUrl: any,
+  setOpenCredDialog: any
+) {
+  const credentialToShow = credObj || {}
+  // Ensure credentialId is always set to the file ID
+  credentialToShow.credentialId = credId
+  setDialogCredObj(credentialToShow)
+  setDialogImageUrl(null)
+  setOpenCredDialog(true)
+}
+
 // Helper to render credential link as a clickable name that opens a dialog
 function renderCredentialLinkFactory(
   setDialogCredObj: any,
@@ -615,9 +631,7 @@ function renderCredentialLinkFactory(
             gap: 4
           }}
           onClick={() => {
-            setDialogCredObj(credObj)
-            setDialogImageUrl(null)
-            setOpenCredDialog(true)
+            openCredentialDialog(credObj, credId || '', setDialogCredObj, setDialogImageUrl, setOpenCredDialog)
           }}
         >
           <WorkspacePremiumIcon sx={{ fontSize: 16, color: '#2563EB' }} />
@@ -789,6 +803,7 @@ const ExperienceItem: React.FC<{
   credLinks.forEach(link => {
     let credObj: any = null
     let credId = ''
+    let isExternal = false
     try {
       if (link.match(/^([\w-]+),\{.*\}$/)) {
         const commaIdx = link.indexOf(',')
@@ -799,9 +814,13 @@ const ExperienceItem: React.FC<{
       } else if (link.startsWith('{')) {
         credObj = JSON.parse(link)
         credId = credObj.credentialId || ''
+      } else if (link) {
+        // Handle external credentials that are just IDs or names
+        credId = link
+        isExternal = true
       }
     } catch {}
-    if (credObj && getCredentialName(credObj) && !seen.has(credId)) {
+    if ((credObj && getCredentialName(credObj) && !seen.has(credId)) || (isExternal && credId && !seen.has(credId))) {
       dedupedCreds.push({ link, credObj, credId })
       seen.add(credId)
     }
@@ -890,11 +909,9 @@ const ExperienceItem: React.FC<{
                 gap: '4px'
               }}
               onClick={() => {
-                if (credObj) {
-                  setDialogCredObj(credObj)
-                  setDialogImageUrl(null)
-                  setOpenCredDialog(true)
-                }
+              if (credObj || credId) {
+              openCredentialDialog(credObj, credId, setDialogCredObj, setDialogImageUrl, setOpenCredDialog)
+              }
               }}
             >
               <WorkspacePremiumIcon sx={{ fontSize: 16, color: '#2563EB' }} />
@@ -903,7 +920,7 @@ const ExperienceItem: React.FC<{
                   credObj.credentialStatus?.status === 'verified') && (
                   <BlueVerifiedBadge />
                 )}
-              {getCredentialName(credObj)}
+              {credObj ? getCredentialName(credObj) : `External Credential ${credId.substring(0, 8)}...`}
             </Typography>
           ))}
         </Box>
@@ -943,6 +960,7 @@ const EducationItem: React.FC<{
   credLinks.forEach(link => {
     let credObj: any = null
     let credId = ''
+    let isExternal = false
     try {
       if (link.match(/^([\w-]+),\{.*\}$/)) {
         const commaIdx = link.indexOf(',')
@@ -953,9 +971,13 @@ const EducationItem: React.FC<{
       } else if (link.startsWith('{')) {
         credObj = JSON.parse(link)
         credId = credObj.credentialId || ''
+      } else if (link) {
+        // Handle external credentials that are just IDs or names
+        credId = link
+        isExternal = true
       }
     } catch {}
-    if (credObj && getCredentialName(credObj) && !seen.has(credId)) {
+    if ((credObj && getCredentialName(credObj) && !seen.has(credId)) || (isExternal && credId && !seen.has(credId))) {
       dedupedCreds.push({ link, credObj, credId })
       seen.add(credId)
     }
@@ -1033,9 +1055,7 @@ const EducationItem: React.FC<{
                   }}
                   onClick={() => {
                     if (credObj) {
-                      setDialogCredObj(credObj)
-                      setDialogImageUrl(null)
-                      setOpenCredDialog(true)
+                      openCredentialDialog(credObj, credId, setDialogCredObj, setDialogImageUrl, setOpenCredDialog)
                     }
                   }}
                 >
@@ -1045,7 +1065,7 @@ const EducationItem: React.FC<{
                       credObj.credentialStatus?.status === 'verified') && (
                       <BlueVerifiedBadge />
                     )}
-                  {getCredentialName(credObj)}
+                  {credObj ? getCredentialName(credObj) : `External Credential ${credId.substring(0, 8)}...`}
                 </Typography>
               ))}
             </Box>
@@ -1091,6 +1111,7 @@ const CertificationItem: React.FC<{
   credLinks.forEach(link => {
     let credObj: any = null
     let credId = ''
+    let isExternal = false
     try {
       if (link.match(/^([\w-]+),\{.*\}$/)) {
         const commaIdx = link.indexOf(',')
@@ -1101,9 +1122,13 @@ const CertificationItem: React.FC<{
       } else if (link.startsWith('{')) {
         credObj = JSON.parse(link)
         credId = credObj.credentialId || ''
+      } else if (link) {
+        // Handle external credentials that are just IDs or names
+        credId = link
+        isExternal = true
       }
     } catch {}
-    if (credObj && getCredentialName(credObj) && !seen.has(credId)) {
+    if ((credObj && getCredentialName(credObj) && !seen.has(credId)) || (isExternal && credId && !seen.has(credId))) {
       dedupedCreds.push({ link, credObj, credId })
       seen.add(credId)
     }
@@ -1178,9 +1203,7 @@ const CertificationItem: React.FC<{
                 }}
                 onClick={() => {
                   if (credObj) {
-                    setDialogCredObj(credObj)
-                    setDialogImageUrl(null)
-                    setOpenCredDialog(true)
+                    openCredentialDialog(credObj, credId, setDialogCredObj, setDialogImageUrl, setOpenCredDialog)
                   }
                 }}
               >
@@ -1190,7 +1213,7 @@ const CertificationItem: React.FC<{
                     credObj.credentialStatus?.status === 'verified') && (
                     <BlueVerifiedBadge />
                   )}
-                {getCredentialName(credObj)}
+                {credObj ? getCredentialName(credObj) : `External Credential ${credId.substring(0, 8)}...`}
               </Typography>
             ))}
           </Box>
@@ -1223,6 +1246,7 @@ const ProjectItem: React.FC<{
   credLinks.forEach(link => {
     let credObj: any = null
     let credId = ''
+    let isExternal = false
     try {
       if (link.match(/^([\w-]+),\{.*\}$/)) {
         const commaIdx = link.indexOf(',')
@@ -1233,9 +1257,13 @@ const ProjectItem: React.FC<{
       } else if (link.startsWith('{')) {
         credObj = JSON.parse(link)
         credId = credObj.credentialId || ''
+      } else if (link) {
+        // Handle external credentials that are just IDs or names
+        credId = link
+        isExternal = true
       }
     } catch {}
-    if (credObj && getCredentialName(credObj) && !seen.has(credId)) {
+    if ((credObj && getCredentialName(credObj) && !seen.has(credId)) || (isExternal && credId && !seen.has(credId))) {
       dedupedCreds.push({ link, credObj, credId })
       seen.add(credId)
     }
@@ -1297,9 +1325,7 @@ const ProjectItem: React.FC<{
                   }}
                   onClick={() => {
                     if (credObj) {
-                      setDialogCredObj(credObj)
-                      setDialogImageUrl(null)
-                      setOpenCredDialog(true)
+                      openCredentialDialog(credObj, credId, setDialogCredObj, setDialogImageUrl, setOpenCredDialog)
                     }
                   }}
                 >
@@ -1309,7 +1335,7 @@ const ProjectItem: React.FC<{
                       credObj.credentialStatus?.status === 'verified') && (
                       <BlueVerifiedBadge />
                     )}
-                  {getCredentialName(credObj)}
+                  {credObj ? getCredentialName(credObj) : `External Credential ${credId.substring(0, 8)}...`}
                 </Typography>
               ))}
             </Box>
@@ -1347,6 +1373,7 @@ const ProfessionalAffiliationItem: React.FC<{
   credLinks.forEach(link => {
     let credObj: any = null
     let credId = ''
+    let isExternal = false
     try {
       if (link.match(/^([\w-]+),\{.*\}$/)) {
         const commaIdx = link.indexOf(',')
@@ -1357,9 +1384,13 @@ const ProfessionalAffiliationItem: React.FC<{
       } else if (link.startsWith('{')) {
         credObj = JSON.parse(link)
         credId = credObj.credentialId || ''
+      } else if (link) {
+        // Handle external credentials that are just IDs or names
+        credId = link
+        isExternal = true
       }
     } catch {}
-    if (credObj && getCredentialName(credObj) && !seen.has(credId)) {
+    if ((credObj && getCredentialName(credObj) && !seen.has(credId)) || (isExternal && credId && !seen.has(credId))) {
       dedupedCreds.push({ link, credObj, credId })
       seen.add(credId)
     }
@@ -1423,9 +1454,7 @@ const ProfessionalAffiliationItem: React.FC<{
                   }}
                   onClick={() => {
                     if (credObj) {
-                      setDialogCredObj(credObj)
-                      setDialogImageUrl(null)
-                      setOpenCredDialog(true)
+                      openCredentialDialog(credObj, credId, setDialogCredObj, setDialogImageUrl, setOpenCredDialog)
                     }
                   }}
                 >
@@ -1435,7 +1464,7 @@ const ProfessionalAffiliationItem: React.FC<{
                       credObj.credentialStatus?.status === 'verified') && (
                       <BlueVerifiedBadge />
                     )}
-                  {getCredentialName(credObj)}
+                  {credObj ? getCredentialName(credObj) : `External Credential ${credId.substring(0, 8)}...`}
                 </Typography>
               ))}
             </Box>
@@ -1474,6 +1503,7 @@ const VolunteerWorkItem: React.FC<{
   credLinks.forEach(link => {
     let credObj: any = null
     let credId = ''
+    let isExternal = false
     try {
       if (link.match(/^([\w-]+),\{.*\}$/)) {
         const commaIdx = link.indexOf(',')
@@ -1484,9 +1514,13 @@ const VolunteerWorkItem: React.FC<{
       } else if (link.startsWith('{')) {
         credObj = JSON.parse(link)
         credId = credObj.credentialId || ''
+      } else if (link) {
+        // Handle external credentials that are just IDs or names
+        credId = link
+        isExternal = true
       }
     } catch {}
-    if (credObj && getCredentialName(credObj) && !seen.has(credId)) {
+    if ((credObj && getCredentialName(credObj) && !seen.has(credId)) || (isExternal && credId && !seen.has(credId))) {
       dedupedCreds.push({ link, credObj, credId })
       seen.add(credId)
     }
@@ -1547,9 +1581,7 @@ const VolunteerWorkItem: React.FC<{
                   }}
                   onClick={() => {
                     if (credObj) {
-                      setDialogCredObj(credObj)
-                      setDialogImageUrl(null)
-                      setOpenCredDialog(true)
+                      openCredentialDialog(credObj, credId, setDialogCredObj, setDialogImageUrl, setOpenCredDialog)
                     }
                   }}
                 >
@@ -1559,7 +1591,7 @@ const VolunteerWorkItem: React.FC<{
                       credObj.credentialStatus?.status === 'verified') && (
                       <BlueVerifiedBadge />
                     )}
-                  {getCredentialName(credObj)}
+                  {credObj ? getCredentialName(credObj) : `External Credential ${credId.substring(0, 8)}...`}
                 </Typography>
               ))}
             </Box>
@@ -1691,6 +1723,7 @@ const SkillsSection: React.FC<{
   allCredLinks.forEach(link => {
     let credObj: any = null
     let credId = ''
+    let isExternal = false
     try {
       if (link.match(/^([\w-]+),\{.*\}$/)) {
         const commaIdx = link.indexOf(',')
@@ -1700,9 +1733,14 @@ const SkillsSection: React.FC<{
         credObj.credentialId = credId
       } else if (link.startsWith('{')) {
         credObj = JSON.parse(link)
+        credId = credObj.credentialId || ''
+      } else if (link) {
+        // Handle external credentials that are just IDs or names
+        credId = link
+        isExternal = true
       }
     } catch {}
-    if (credObj && getCredentialName(credObj) && !seen.has(credId)) {
+    if ((credObj && getCredentialName(credObj) && !seen.has(credId)) || (isExternal && credId && !seen.has(credId))) {
       dedupedCreds.push({ link, credObj, credId })
       seen.add(credId)
     }
@@ -1738,9 +1776,7 @@ const SkillsSection: React.FC<{
               }}
               onClick={() => {
                 if (credObj) {
-                  setDialogCredObj(credObj)
-                  setDialogImageUrl(null)
-                  setOpenCredDialog(true)
+                  openCredentialDialog(credObj, credId, setDialogCredObj, setDialogImageUrl, setOpenCredDialog)
                 }
               }}
             >
@@ -1750,7 +1786,7 @@ const SkillsSection: React.FC<{
                   credObj.credentialStatus?.status === 'verified') && (
                   <BlueVerifiedBadge />
                 )}
-              {getCredentialName(credObj)}
+              {credObj ? getCredentialName(credObj) : `External Credential ${credId.substring(0, 8)}...`}
             </Typography>
           ))}
         </Box>
@@ -1910,6 +1946,7 @@ const ResumePreview: React.FC<{ data?: Resume; forcedId?: string }> = ({
 }) => {
   const storeResume = useSelector((state: RootState) => state.resume?.resume || null)
   const resume = propData || storeResume
+
   const [initialRenderComplete, setInitialRenderComplete] = useState(false)
 
   const [openCredDialog, setOpenCredDialog] = useState(false)
@@ -1920,7 +1957,7 @@ const ResumePreview: React.FC<{ data?: Resume; forcedId?: string }> = ({
   const renderCredentialLink = useMemo(
     () =>
       renderCredentialLinkFactory(setDialogCredObj, setDialogImageUrl, setOpenCredDialog),
-    [setDialogCredObj, setDialogImageUrl, setOpenCredDialog]
+    []
   )
 
   useEffect(() => {
@@ -2115,7 +2152,7 @@ const ResumePreview: React.FC<{ data?: Resume; forcedId?: string }> = ({
       }
     }
     return elements
-  }, [resume])
+  }, [])
 
   // Now use pagination with the flattened content elements
   const { pages, measureRef } = usePagination(contentSections)

@@ -2415,10 +2415,10 @@
   resolved "https://registry.npmjs.org/@leichtgewicht/ip-codec/-/ip-codec-2.0.5.tgz"
   integrity sha512-Vo+PSpZG2/fmgmiNzYK9qWRh8h/CHrwD0mo1h1DzL4yzHNSfWYujGTYsWGreD000gcgmZ7K4Ys6Tx9TxtsKdDw==
 
-"@linked-claims/vc-storage@^1.0.39":
-  version "1.0.39"
-  resolved "https://registry.npmjs.org/@linked-claims/vc-storage/-/vc-storage-1.0.39.tgz"
-  integrity sha512-0NqoCp+4Ms/kCSHAK17l1EVkeTkZOZGa3BoDPslTgBj87cYQR/Wd15EwgnCK8GJOuvOlfEE9ICQJGvA6bE0Zag==
+"@linked-claims/vc-storage@^1.0.40":
+  version "1.0.40"
+  resolved "https://registry.npmjs.org/@linked-claims/vc-storage/-/vc-storage-1.0.40.tgz"
+  integrity sha512-/43z7YPIuFctkg9/jIaD+ol6Ru7akpiwf375vV6MTXfjVQWDYltndZ7YfulXjggy216ZAa6DDmJdPt9ZWGU+yQ==
   dependencies:
     "@did.coop/did-key-ed25519" "^0.0.13"
     "@digitalbazaar/did-method-key" "^5.2.0"
