@@ -118,7 +118,7 @@ const FileListDisplay: React.FC<FileListProps> = ({
   onUploadFile,
   uploadingId
 }) => {
-  const { instances, isInitialized, listFilesMetadata } = useGoogleDrive()
+  const { listFilesMetadata } = useGoogleDrive()
   const { accessToken } = useSelector((state: RootState) => state.auth)
   const [remoteFiles, setRemoteFiles] = useState<DriveFileMeta[]>([])
   const [loadingRemote, setLoadingRemote] = useState(false)

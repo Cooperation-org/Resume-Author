@@ -1,7 +1,6 @@
 import React from 'react'
 import { Box, Typography, IconButton } from '@mui/material'
 import CloseIcon from '@mui/icons-material/Close'
-import AttachFileIcon from '@mui/icons-material/AttachFile'
 import InsertDriveFileIcon from '@mui/icons-material/InsertDriveFile'
 import ImageIcon from '@mui/icons-material/Image'
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf'

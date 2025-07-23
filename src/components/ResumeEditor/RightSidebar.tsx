@@ -36,14 +36,13 @@ const RightSidebar = ({
   onAllFilesUpdate
 }: RightSidebarProps) => {
   const location = useLocation()
-  const [selectedClaims, setSelectedClaims] = useState<string[]>([])
   const { accessToken, isAuthenticated } = useSelector((state: RootState) => state.auth)
   const dispatch: AppDispatch = useDispatch()
   const { vcs } = useSelector((state: any) => state.vcReducer)
   const [isLoading, setIsLoading] = useState<boolean>(true)
   const resume = useSelector((state: RootState) => state.resume?.resume)
 
-  const { instances, isInitialized, listFilesMetadata } = useGoogleDrive()
+  const { listFilesMetadata } = useGoogleDrive()
   const [remoteFiles, setRemoteFiles] = useState<DriveFileMeta[]>([])
 
   const reloadRemoteFiles = useCallback(async () => {
@@ -119,7 +118,8 @@ const RightSidebar = ({
 
     const allFiles = [...localFiles, ...convertedRemoteFiles]
     return allFiles
-  }, [files, remoteFiles, accessToken])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [files, remoteFiles]) // accessToken is not needed here
 
   useEffect(() => {
     const combinedFiles = getAllFiles()
@@ -135,17 +135,6 @@ const RightSidebar = ({
 
   const handleGoogleLogin = async () => {
     await login(location.pathname)
-  }
-
-  const handleClaimToggle = (claimId: string) => {
-    setSelectedClaims(prev => {
-      const isSelected = prev.includes(claimId)
-      if (isSelected) {
-        return prev.filter(id => id !== claimId)
-      } else {
-        return [...prev, claimId]
-      }
-    })
   }
 
   const handleFilesSelected = (newFiles: FileItem[]) => {
@@ -231,23 +220,6 @@ const RightSidebar = ({
     }
   }
 
-  const getCredentialType = (vc: any): string => {
-    try {
-      if (!vc || typeof vc !== 'object') {
-        return 'Unknown'
-      }
-
-      const types = Array.isArray(vc.type) ? vc.type : []
-      if (types.includes('EmploymentCredential')) return 'Employment'
-      if (types.includes('VolunteeringCredential')) return 'Volunteer'
-      if (types.includes('PerformanceReviewCredential')) return 'Performance Review'
-      return 'Skill'
-    } catch (error) {
-      console.error('Error getting credential type:', error)
-      return 'Unknown'
-    }
-  }
-
   const getValidVCs = (vcs: any[]): any[] => {
     if (!Array.isArray(vcs)) return []
 
@@ -317,7 +289,7 @@ const RightSidebar = ({
           fontFamily: 'Nunito Sans',
           cursor: 'pointer'
         }}
-        onClick={() => handleClaimToggle(vc.id)}
+        onClick={() => {/* No action needed - just for visual feedback */}}
       >
         {credentialName}
       </Typography>

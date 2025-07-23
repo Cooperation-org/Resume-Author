@@ -149,14 +149,13 @@ const ResumeEditor: React.FC = () => {
   // Reference to store the original resume state for comparison
   const originalResumeRef = useRef<string | null>(null)
 
-  // Get resumeId and action from URL parameters
+  // Get resumeId from URL parameters
   const queryParams = new URLSearchParams(location.search)
   const resumeId = queryParams.get('id')
-  const action = queryParams.get('action')
 
   const activeSection = useSelector((state: RootState) => state.resume.activeSection)
   const resume = useSelector((state: RootState) => state?.resume.resume)
-  const { instances, isInitialized, listFilesMetadata } = useGoogleDrive()
+  const { instances, isInitialized } = useGoogleDrive()
   const { accessToken } = useSelector((state: RootState) => state.auth)
   const refreshToken = getLocalStorage('refresh_token')
 
@@ -273,7 +272,8 @@ const ResumeEditor: React.FC = () => {
         return prev
       })
     }
-  }, [currentResumeHash])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentResumeHash]) // NEVER include resume here - it causes infinite loops!
 
   // Handle browser's built-in beforeunload dialog for page reloads
   useEffect(() => {
@@ -299,7 +299,8 @@ const ResumeEditor: React.FC = () => {
     return () => {
       window.removeEventListener('beforeunload', handleBeforeUnload)
     }
-  }, [isDirty, resumeId])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isDirty, resumeId]) // Intentionally omitting resume to prevent loops
 
   useEffect(() => {
     if (!resumeId) {
@@ -411,7 +412,7 @@ const ResumeEditor: React.FC = () => {
 
       if (resume && resumeId && instances?.resumeManager) {
         // Save the updated resume to Google Drive
-        const result = await instances.resumeManager.saveResume({
+        await instances.resumeManager.saveResume({
           resume: resume,
           type: 'unsigned'
         })
@@ -639,9 +640,9 @@ const ResumeEditor: React.FC = () => {
       
       // Log whether we're updating or creating
       if (resumeId && !resumeId.startsWith('temp-')) {
-        console.log('Updating existing resume with ID:', resumeId)
+
       } else {
-        console.log('Creating new resume (no existing ID or temporary ID)')
+
       }
       
       const saveData: any = {
@@ -737,15 +738,7 @@ const ResumeEditor: React.FC = () => {
       }
 
       
-      // TRACE REDUX STATE AND RESUME OBJECT
-      try {
-        const { store } = await import('../redux/store')
-        const state = store.getState()
-        
-        
-      } catch (e) {
-        console.warn('Could not import redux store for tracing:', e)
-      }
+      // Prepare resume for signing
       
       const preparedResume = await prepareResumeForVC(resume, sectionEvidence, allFiles)
       

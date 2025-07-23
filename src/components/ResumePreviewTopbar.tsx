@@ -129,7 +129,7 @@ const ResumePreviewTopbar: React.FC<ResumePreviewTopbarProps> = ({
     }
 
     try {
-      const savedResume = await instances.resumeManager.saveResume({
+      await instances.resumeManager.saveResume({
         resume: resume,
         type: 'unsigned'
       })
@@ -211,7 +211,7 @@ const ResumePreviewTopbar: React.FC<ResumePreviewTopbarProps> = ({
         }
 
         // Save the completed unsigned version
-        const unsignedFile = await instances.resumeManager.saveResume({
+        await instances.resumeManager.saveResume({
           resume: completedResume,
           type: 'unsigned'
         })

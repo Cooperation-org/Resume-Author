@@ -449,7 +449,7 @@ const ResumeCard: React.FC<ResumeCardProps> = ({
     dispatch(deleteResume({ id, type: isDraft ? 'unsigned' : 'signed' }))
     setDeleteDialogOpen(false)
     handleMenuClose()
-    const deleted = await storage.delete(id)
+    await storage.delete(id)
   }
 
   const handlePreviewResume = () => {

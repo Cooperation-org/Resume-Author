@@ -1,11 +1,9 @@
 import React from 'react'
-import { Box, useMediaQuery, useTheme } from '@mui/material'
+import { Box } from '@mui/material'
 import Nav from '../components/Nav'
 import Hero from '../components/Hero'
 
 const Landing: React.FC = () => {
-  const theme = useTheme()
-
   return (
     <Box
       sx={{

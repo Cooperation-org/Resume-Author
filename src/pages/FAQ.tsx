@@ -26,7 +26,6 @@ interface FaqItem {
 
 const Faq: React.FC = () => {
   const theme = useTheme()
-  const isMobile = useMediaQuery(theme.breakpoints.down('md'))
   const [expanded, setExpanded] = useState<string | false>(false)
 
   // FAQ data included directly in the component

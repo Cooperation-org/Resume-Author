@@ -119,7 +119,7 @@ export const fetchUserResumes = createAsyncThunk('resume/fetchUserResumes', asyn
       // Check for refresh token errors
       if (/auth|token|credential|OAuth|authentication/i.test(error.message)) {
         try {
-          console.log('Attempting to refresh access token...')
+
           await refreshAccessToken(getLocalStorage('refresh_token') as string)
           // If refresh succeeds, throw a more user-friendly error
           throw new Error('Please refresh the page to continue.')
