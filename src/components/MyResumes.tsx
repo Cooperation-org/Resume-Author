@@ -49,7 +49,7 @@ const ResumeScreen: React.FC = () => {
     logout()
     dispatch(clearAuth())
     navigate('/')
-  }, [navigate])
+  }, [navigate, dispatch])
 
   useEffect(() => {
     if (status === 'loading') {

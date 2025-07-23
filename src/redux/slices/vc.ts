@@ -55,7 +55,7 @@ export const fetchVCs = createAsyncThunk('vc/fetchVCs', async () => {
     return await storage.getAllFilesByType('VCs')
   })
 
-  console.log(': fetchVCs claimsData', claimsData)
+
 
   const vcs = claimsData
     .filter(item => item.data && item.data.fileName)
@@ -72,7 +72,7 @@ export const fetchVCs = createAsyncThunk('vc/fetchVCs', async () => {
     })
 
   // If you want to log the VCs as JSON
-  console.log(': fetchVCs vcs', vcs)
+
 
   return vcs
 })

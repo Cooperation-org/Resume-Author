@@ -124,13 +124,6 @@ const FirstPageHeader: React.FC<{
     setHasValidId(isValid)
   }
 
-  // Remove twitter from social links
-  const filteredLinks = socialLinks
-    ? Object.entries(socialLinks).filter(
-        ([platform, url]) => platform.toLowerCase() !== 'twitter' && !!url
-      )
-    : []
-
   return (
     <Box
       sx={{
@@ -317,89 +310,7 @@ const SubsequentPageHeader: React.FC<{ fullName: string }> = ({ fullName }) => {
   )
 }
 
-// Updated PageHeader component (keeping for backward compatibility)
-const PageHeader: React.FC<{ fullName: string; city?: string; forcedId?: string }> = ({
-  fullName,
-  city,
-  forcedId
-}) => {
-  const [resumeLink, setResumeLink] = useState<string>('')
-  const [hasValidId, setHasValidId] = useState<boolean>(false)
 
-  const handleLinkGenerated = (link: string, isValid: boolean) => {
-    setResumeLink(link)
-    setHasValidId(isValid)
-  }
-
-  return (
-    <Box
-      sx={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        backgroundColor: '#F7F9FC',
-        height: `${HEADER_HEIGHT_PX}px`
-      }}
-    >
-      <Box sx={{ display: 'flex', alignItems: 'center', ml: '45px' }}>
-        <Typography sx={{ fontWeight: 600, color: '#2E2E48', fontSize: '30px' }}>
-          {fullName}
-        </Typography>
-        {city && (
-          <Typography sx={{ fontWeight: 400, color: '#2E2E48', fontSize: '18px', ml: 2 }}>
-            {city}
-          </Typography>
-        )}
-      </Box>
-      <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
-        <Box
-          sx={{
-            textAlign: 'center',
-            py: '20px',
-            mr: '15px',
-            display: hasValidId ? 'block' : 'none' // Hide when no valid ID
-          }}
-        >
-          <Link
-            href={resumeLink}
-            target='_blank'
-            rel='noopener noreferrer'
-            sx={{
-              color: '#000',
-              textAlign: 'center',
-              fontFamily: 'Arial',
-              fontSize: '12px',
-              fontStyle: 'normal',
-              fontWeight: 400,
-              lineHeight: '16px',
-              textDecorationLine: 'underline',
-              cursor: 'pointer'
-            }}
-          >
-            View Source
-          </Link>
-        </Box>
-        <Box
-          sx={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            height: `${HEADER_HEIGHT_PX}px`,
-            width: '128px',
-            backgroundColor: '#2563EB'
-          }}
-        >
-          <ResumeQRCode
-            size={86}
-            bgColor='transparent'
-            fgColor='#fff'
-            forcedId={forcedId}
-            onLinkGenerated={handleLinkGenerated}
-          />
-        </Box>
-      </Box>
-    </Box>
-  )
-}
 
 // Updated PageFooter component
 const PageFooter: React.FC<{
@@ -493,33 +404,7 @@ const SummarySection: React.FC<{ summary?: string }> = ({ summary }) => {
   )
 }
 
-const SocialLinksSection: React.FC<{
-  socialLinks?: Record<string, string | undefined>
-}> = ({ socialLinks }) => {
-  if (!socialLinks) return null
 
-  // Remove twitter from social links
-  const filteredLinks = Object.entries(socialLinks).filter(
-    ([platform, url]) => platform.toLowerCase() !== 'twitter' && !!url
-  )
-  if (!filteredLinks.length) return null
-
-  return (
-    <Box sx={{ mb: '15px' }}>
-      {' '}
-      {/* Reduced margin from 20px */}
-      <Box sx={{ display: 'flex', gap: '15px', flexWrap: 'wrap', flexDirection: 'row' }}>
-        {filteredLinks.map(([platform, url]) =>
-          url ? (
-            <Box key={platform}>
-              <LinkWithFavicon url={url} platform={platform} />
-            </Box>
-          ) : null
-        )}
-      </Box>
-    </Box>
-  )
-}
 
 // Helper to get credential name
 function getCredentialName(claim: any): string {
@@ -554,7 +439,7 @@ function getCredentialName(claim: any): string {
 
 // Helper to get credential links as array (handles both new and old formats)
 function getCredentialLinks(credentialLink: string | string[] | undefined): string[] {
-  console.log('getCredentialLinks input:', credentialLink, 'type:', typeof credentialLink)
+
   
   if (!credentialLink) return []
   if (Array.isArray(credentialLink)) return credentialLink
@@ -568,7 +453,7 @@ function getCredentialLinks(credentialLink: string | string[] | undefined): stri
       // Check for array format (from edit mode)
       if (credentialLink.trim().startsWith('[')) {
         const parsed = JSON.parse(credentialLink)
-        console.log('Parsed array format:', parsed)
+
         return parsed
       }
       // Check if it's a JSON object (but not wrapper format)
@@ -592,7 +477,7 @@ function parseCredentialLink(link: string): { credObj: any; credId: string; file
   let credId = ''
   let fileId = ''
   
-  console.log('parseCredentialLink input:', link)
+
   
   try {
     // Check if this is an object wrapper with fileId
@@ -615,7 +500,7 @@ function parseCredentialLink(link: string): { credObj: any; credId: string; file
             credObj.credentialId = fileId
           }
         }
-        console.log('Parsed wrapped credential:', { fileId, credObj })
+
       }
     } else if (link.match(/^([\w-]+),\{.*\}$/)) {
       // Format: 'fileid,{json}' (native credentials)
@@ -625,7 +510,7 @@ function parseCredentialLink(link: string): { credObj: any; credId: string; file
       const jsonStr = link.slice(commaIdx + 1)
       credObj = JSON.parse(jsonStr)
       credObj.credentialId = fileId
-      console.log('Parsed native credential:', { fileId, credObj })
+
     } else if (link.includes(',{')) {
       // Format: 'url,{json}' (external credentials with URL)
       const commaIdx = link.indexOf(',')
@@ -643,18 +528,18 @@ function parseCredentialLink(link: string): { credObj: any; credId: string; file
         fileId = urlPart.split('/').pop() || urlPart
       }
       credObj.credentialId = fileId
-      console.log('Parsed external credential with URL:', { fileId, credObj, url: urlPart })
+
     } else if (link.startsWith('{')) {
       // Format: '{json}'
       credObj = JSON.parse(link)
       credId = credObj.credentialId || credObj.id || ''
       fileId = credId // For this format, use credId as fileId
-      console.log('Parsed JSON credential:', { fileId, credObj })
+
     } else if (link) {
       // Just a plain ID
       credId = link
       fileId = link
-      console.log('Using plain ID as fileId:', fileId)
+
       // Create a minimal credential object for external credentials
       credObj = { id: fileId, credentialId: fileId }
     }
@@ -747,11 +632,11 @@ function openCredentialDialog(
   setDialogImageUrl: any,
   setOpenCredDialog: any
 ) {
-  console.log('openCredentialDialog called with:', { credObj, fileId })
+
   const credentialToShow = credObj || {}
   // Ensure credentialId is always set to the file ID
   credentialToShow.credentialId = fileId
-  console.log('Setting credentialToShow:', credentialToShow)
+
   setDialogCredObj(credentialToShow)
   setDialogImageUrl(null)
   setOpenCredDialog(true)
@@ -1417,12 +1302,12 @@ const SkillsSection: React.FC<{
   // Collect all credential links from all skill items
   const allCredLinks = items.flatMap(item => {
     const links = getCredentialLinks(item.credentialLink)
-    console.log('Skill item credentialLink:', item.credentialLink)
-    console.log('Parsed links:', links)
+
+
     return links
   })
   const combinedCredentialLink = allCredLinks.length > 0 ? allCredLinks : undefined
-  console.log('Combined credential links for skills:', combinedCredentialLink)
+
   
   return (
     <Box sx={{ mb: '15px' }}>
@@ -1786,7 +1671,8 @@ const ResumePreview: React.FC<{ data?: Resume; forcedId?: string }> = ({
       }
     }
     return elements
-  }, [])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []) // NEVER include resume here - it causes infinite loops!
 
   // Now use pagination with the flattened content elements
   const { pages, measureRef } = usePagination(contentSections)

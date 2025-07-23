@@ -37,7 +37,7 @@ export const useDraftResume = (resumeId?: string | null) => {
       }
 
       localStorage.setItem(draftKey, JSON.stringify(draftWithTimestamp))
-      console.log('Draft saved to localStorage')
+
     } catch (error) {
       console.error('Error saving draft to localStorage:', error)
     }
@@ -49,7 +49,7 @@ export const useDraftResume = (resumeId?: string | null) => {
 
     try {
       localStorage.removeItem(draftKey)
-      console.log('Draft cleared from localStorage')
+
     } catch (error) {
       console.error('Error clearing draft from localStorage:', error)
     }

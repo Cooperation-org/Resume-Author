@@ -9,9 +9,7 @@ import {
   Checkbox,
   FormControlLabel,
   Button,
-  IconButton,
-  Dialog,
-  DialogContent
+  IconButton
 } from '@mui/material'
 import {
   SVGSectionIcon,
@@ -25,10 +23,7 @@ import { useDispatch, useSelector } from 'react-redux'
 import { updateSection } from '../../../redux/slices/resume'
 import { RootState } from '../../../redux/store'
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline'
-import CloseIcon from '@mui/icons-material/Close'
 import CredentialOverlay from '../../CredentialsOverlay'
-import AttachFileIcon from '@mui/icons-material/AttachFile'
-import MinimalCredentialViewer from '../../MinimalCredentialViewer'
 import VerifiedCredentialsList from '../../common/VerifiedCredentialsList'
 import AttachedFilesList from '../../common/AttachedFilesList'
 import VerifiedIcon from '@mui/icons-material/Verified'
@@ -109,8 +104,7 @@ export default function WorkExperience({
   const [showCredentialsOverlay, setShowCredentialsOverlay] = useState(false)
   const [activeSectionIndex, setActiveSectionIndex] = useState<number | null>(null)
   const [activeItemId, setActiveItemId] = useState<string | null>(null)
-  const [openCredDialog, setOpenCredDialog] = useState(false)
-  const [dialogCredObj, setDialogCredObj] = useState<any>(null)
+
 
   // Generate initial unique ID
   const initialId = `work-exp-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
@@ -618,7 +612,7 @@ export default function WorkExperience({
   useEffect(() => {
     // Add event listener for opening credentials overlay
     const handleOpenCredentialsEvent = (event: CustomEvent) => {
-      const { sectionId, itemIndex, selectedText } = event.detail
+      const { sectionId, itemIndex } = event.detail
       if (sectionId === 'experience') {
         setActiveSectionIndex(itemIndex)
         setShowCredentialsOverlay(true)
@@ -643,7 +637,8 @@ export default function WorkExperience({
     if (onFocus) {
       onFocus()
     }
-  }, []) // Remove onFocus from dependencies to prevent re-renders
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []) // Intentionally omit onFocus to prevent re-renders
 
   // Sync evidence (files) with work experience items
   useEffect(() => {
@@ -698,35 +693,7 @@ export default function WorkExperience({
     [onRemoveFile]
   )
 
-  function getCredentialName(claim: any): string {
-    try {
-      if (!claim || typeof claim !== 'object') {
-        return 'Invalid Credential'
-      }
-      const credentialSubject = claim.credentialSubject
-      if (!credentialSubject || typeof credentialSubject !== 'object') {
-        return 'Unknown Credential'
-      }
-      if (credentialSubject.employeeName) {
-        return `Performance Review: ${credentialSubject.employeeJobTitle || 'Unknown Position'}`
-      }
-      if (credentialSubject.volunteerWork) {
-        return `Volunteer: ${credentialSubject.volunteerWork}`
-      }
-      if (credentialSubject.role) {
-        return `Employment: ${credentialSubject.role}`
-      }
-      if (credentialSubject.credentialName) {
-        return credentialSubject.credentialName
-      }
-      if (credentialSubject.achievement && credentialSubject.achievement[0]?.name) {
-        return credentialSubject.achievement[0].name
-      }
-      return 'Credential'
-    } catch {
-      return 'Credential'
-    }
-  }
+
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>

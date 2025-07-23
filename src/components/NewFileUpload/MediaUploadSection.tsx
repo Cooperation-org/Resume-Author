@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useRef, useState, useCallback, useEffect } from 'react'
+import React, { useRef, useState, useCallback } from 'react'
 import { Box, Typography, styled, Card, Snackbar, Alert } from '@mui/material'
 import FileListDisplay from './FileList'
 import { SVGUploadMedia } from '../../assets/svgs'
@@ -156,7 +156,6 @@ const MediaUploadSection: React.FC<Props> = ({
     }
     setUploadingId(fileItem.id)
     try {
-      const ext = fileItem.file.name.split('.').pop() ?? ''
       const newName = fileItem.name
       const renamedFile = new File([fileItem.file], newName, { type: fileItem.file.type })
       const result = await instances.storage.uploadBinaryFile({ file: renamedFile })

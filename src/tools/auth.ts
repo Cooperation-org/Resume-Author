@@ -121,7 +121,7 @@ export const refreshAccessToken = async (
       const clientId = process.env.REACT_APP_GOOGLE_CLIENT_ID ?? ''
       const clientSecret = process.env.REACT_APP_GOOGLE_CLIENT_SECRET ?? ''
 
-      console.log('Attempting to refresh access token...')
+
 
       const res = await fetch('https://oauth2.googleapis.com/token', {
         method: 'POST',
@@ -143,7 +143,7 @@ export const refreshAccessToken = async (
       const { access_token } = await res.json()
       if (!access_token) throw new Error('No new access token returned')
 
-      console.log('Access token refreshed successfully')
+
 
       saveItem(ACCESS_TOKEN_KEY, access_token)
 
@@ -178,7 +178,7 @@ export const authenticatedFetch = async (
   let response = await fetch(url, { ...options, headers })
 
   if (response.status === 401) {
-    console.log('Received 401, attempting to refresh token...')
+
 
     try {
       const newAccessToken = await refreshAccessToken(undefined, onTokenUpdate)
@@ -216,7 +216,7 @@ const fetchUserInfo = async (token: string) => {
   const profile = await res.json()
 
   saveItem(USER_INFO_KEY, JSON.stringify(profile))
-  console.log('User info saved:', profile)
+
 }
 
 export const logout = () => {
