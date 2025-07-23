@@ -263,7 +263,7 @@ export default function WorkExperience({
                   try {
                     const vc = JSON.parse(vcJson)
                     return {
-                      id: vc?.originalItem?.id || vc?.id || fileId,
+                      id: fileId,  // Always use fileId as the id for proper matching
                       url: '',
                       name: vc?.credentialSubject?.achievement?.[0]?.name || `Credential`,
                       vc: vc,
@@ -482,15 +482,20 @@ export default function WorkExperience({
           reduxUpdateTimeoutRef.current = null
         }
         const selectedCredentials = selectedCredentialIDs.map(id => {
-          const credential = vcs?.find((c: any) => (c?.originalItem?.id || c.id) === id)
-          console.log('Found credential for id', id, ':', credential)
+          // The id from CredentialOverlay should be the file ID
+          const credential = vcs?.find((c: any) => {
+            // Check if c.id (without urn:) matches the id
+            const credFileId = c.id && typeof c.id === 'string' && !c.id.startsWith('urn:') ? c.id : ''
+            return credFileId === id || c?.originalItem?.id === id
+          })
+          console.log('Looking for credential with id', id)
+          console.log('Found credential:', credential)
           
-          let fileId = ''
-          if (credential && credential.id && typeof credential.id === 'string') {
-            fileId = credential.id.startsWith('urn:') ? '' : credential.id
-          }
+          // Use the id passed from CredentialOverlay as the fileId
+          const fileId = id
+          
           return {
-            id: id,
+            id: fileId,  // Use fileId as the id
             url: '',
             name:
               credential?.credentialSubject?.achievement?.[0]?.name ||

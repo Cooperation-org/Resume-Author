@@ -554,17 +554,29 @@ function getCredentialName(claim: any): string {
 
 // Helper to get credential links as array (handles both new and old formats)
 function getCredentialLinks(credentialLink: string | string[] | undefined): string[] {
-  
+  console.log('getCredentialLinks input:', credentialLink, 'type:', typeof credentialLink)
   
   if (!credentialLink) return []
   if (Array.isArray(credentialLink)) return credentialLink
   if (typeof credentialLink === 'string') {
     try {
+      // Check if it's the wrapper format first
+      if (credentialLink.trim().startsWith('{') && credentialLink.includes('"fileId"')) {
+        // This is the wrapper format, return it as-is
+        return [credentialLink]
+      }
+      // Check for array format (from edit mode)
       if (credentialLink.trim().startsWith('[')) {
         const parsed = JSON.parse(credentialLink)
-        
+        console.log('Parsed array format:', parsed)
         return parsed
       }
+      // Check if it's a JSON object (but not wrapper format)
+      if (credentialLink.trim().startsWith('{')) {
+        // Single credential object, wrap in array
+        return [credentialLink]
+      }
+      // Otherwise it's a plain string
       return [credentialLink]
     } catch (e) {
       console.error('Error parsing credential link:', e)
@@ -583,8 +595,30 @@ function parseCredentialLink(link: string): { credObj: any; credId: string; file
   console.log('parseCredentialLink input:', link)
   
   try {
-    if (link.match(/^([\w-]+),\{.*\}$/)) {
-      // Format: 'fileid,{json}'
+    // Check if this is an object wrapper with fileId
+    if (link.startsWith('{') && link.includes('"fileId"')) {
+      // Format: '{"credentialLink":"...","fileId":"..."}'
+      const wrapper = JSON.parse(link)
+      if (wrapper.fileId) {
+        fileId = wrapper.fileId
+        // Parse the actual credential from credentialLink
+        if (wrapper.credentialLink) {
+          const innerLink = wrapper.credentialLink
+          if (innerLink.includes(',{')) {
+            // Format: 'url,{json}' inside wrapper
+            const commaIdx = innerLink.indexOf(',')
+            const jsonStr = innerLink.slice(commaIdx + 1)
+            credObj = JSON.parse(jsonStr)
+            credObj.credentialId = fileId
+          } else if (innerLink.startsWith('{')) {
+            credObj = JSON.parse(innerLink)
+            credObj.credentialId = fileId
+          }
+        }
+        console.log('Parsed wrapped credential:', { fileId, credObj })
+      }
+    } else if (link.match(/^([\w-]+),\{.*\}$/)) {
+      // Format: 'fileid,{json}' (native credentials)
       const commaIdx = link.indexOf(',')
       fileId = link.slice(0, commaIdx)
       credId = fileId // For native credentials, credId and fileId are the same
@@ -592,6 +626,24 @@ function parseCredentialLink(link: string): { credObj: any; credId: string; file
       credObj = JSON.parse(jsonStr)
       credObj.credentialId = fileId
       console.log('Parsed native credential:', { fileId, credObj })
+    } else if (link.includes(',{')) {
+      // Format: 'url,{json}' (external credentials with URL)
+      const commaIdx = link.indexOf(',')
+      const urlPart = link.slice(0, commaIdx)
+      const jsonStr = link.slice(commaIdx + 1)
+      credObj = JSON.parse(jsonStr)
+      // For external credentials, we need to extract the ID from somewhere
+      // Check if there's an ID in the credential object
+      if (credObj.id) {
+        fileId = credObj.id
+      } else if (credObj.credentialId) {
+        fileId = credObj.credentialId
+      } else {
+        // Generate a fallback ID from the URL
+        fileId = urlPart.split('/').pop() || urlPart
+      }
+      credObj.credentialId = fileId
+      console.log('Parsed external credential with URL:', { fileId, credObj, url: urlPart })
     } else if (link.startsWith('{')) {
       // Format: '{json}'
       credObj = JSON.parse(link)
@@ -599,19 +651,10 @@ function parseCredentialLink(link: string): { credObj: any; credId: string; file
       fileId = credId // For this format, use credId as fileId
       console.log('Parsed JSON credential:', { fileId, credObj })
     } else if (link) {
-      // Format: just an ID (external credential) or "fileId,{json}" that needs parsing
-      if (link.includes(',{')) {
-        // This is actually "fileId,{json}" format stored as a string
-        const commaIdx = link.indexOf(',')
-        fileId = link.substring(0, commaIdx)
-        credId = fileId
-        console.log('Parsed fileId from comma-separated:', fileId)
-      } else {
-        // Just a plain ID
-        credId = link
-        fileId = link
-        console.log('Using plain ID as fileId:', fileId)
-      }
+      // Just a plain ID
+      credId = link
+      fileId = link
+      console.log('Using plain ID as fileId:', fileId)
       // Create a minimal credential object for external credentials
       credObj = { id: fileId, credentialId: fileId }
     }
@@ -1372,8 +1415,14 @@ const SkillsSection: React.FC<{
   if (!items?.length) return null
   
   // Collect all credential links from all skill items
-  const allCredLinks = items.flatMap(item => item.credentialLink || [])
+  const allCredLinks = items.flatMap(item => {
+    const links = getCredentialLinks(item.credentialLink)
+    console.log('Skill item credentialLink:', item.credentialLink)
+    console.log('Parsed links:', links)
+    return links
+  })
   const combinedCredentialLink = allCredLinks.length > 0 ? allCredLinks : undefined
+  console.log('Combined credential links for skills:', combinedCredentialLink)
   
   return (
     <Box sx={{ mb: '15px' }}>

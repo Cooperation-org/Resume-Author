@@ -80,7 +80,13 @@ const VerifiedCredentialsList: React.FC<VerifiedCredentialsListProps> = ({
               }}
               onClick={() => {
                 if (credential && (credential.vc || credential)) {
-                  setDialogCredObj(credential.vc || credential)
+                  // Create a new object with the fileId set as credentialId
+                  const originalCred = credential.vc || credential
+                  const credToShow = {
+                    ...originalCred,
+                    credentialId: credential.fileId || credential.id || originalCred.credentialId
+                  }
+                  setDialogCredObj(credToShow)
                   setOpenDialog(true)
                 }
               }}

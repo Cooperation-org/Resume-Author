@@ -61,9 +61,12 @@ export const fetchVCs = createAsyncThunk('vc/fetchVCs', async () => {
     .filter(item => item.data && item.data.fileName)
     .map(item => {
       const parsedBody = JSON.parse(item.data.body)
+      // Store the Google Drive file ID separately from the credential ID
       return {
-        id: parsedBody.id,
+        id: item.id, // Use the Google Drive file ID as the main ID
         ...parsedBody,
+        credentialId: item.id, // Also store it as credentialId for the viewer
+        urnId: parsedBody.id, // Keep the URN ID separately if needed
         originalItem: item // Keep original item if needed
       }
     })
