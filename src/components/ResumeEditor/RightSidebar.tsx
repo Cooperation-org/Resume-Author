@@ -118,7 +118,7 @@ const RightSidebar = ({
 
     const allFiles = [...localFiles, ...convertedRemoteFiles]
     return allFiles
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [files, remoteFiles]) // accessToken is not needed here
 
   useEffect(() => {
@@ -197,7 +197,7 @@ const RightSidebar = ({
       ) {
         return credentialSubject.achievement[0].name
       }
-      
+
       // Handle OpenBadge format where achievement is an object, not array
       if (
         credentialSubject.achievement &&
@@ -207,7 +207,7 @@ const RightSidebar = ({
       ) {
         return credentialSubject.achievement.name
       }
-      
+
       // Check for credential name at root level (OpenBadge/external format)
       if (vc.name && typeof vc.name === 'string') {
         return vc.name
@@ -249,17 +249,34 @@ const RightSidebar = ({
   // Check if a credential is currently being used in the resume
   const isCredentialInUse = (vcId: string): boolean => {
     if (!resume || !vcId) return false
-    
+
     // Check all sections that can have credentials
-    const sections = ['experience', 'education', 'skills', 'certifications', 'projects', 'professionalAffiliations', 'volunteerWork']
-    
+    const sections = [
+      'experience',
+      'education',
+      'skills',
+      'certifications',
+      'projects',
+      'professionalAffiliations',
+      'volunteerWork'
+    ]
+
     for (const sectionName of sections) {
       const section = resume[sectionName as keyof typeof resume]
-      if (section && typeof section === 'object' && 'items' in section && Array.isArray(section.items)) {
+      if (
+        section &&
+        typeof section === 'object' &&
+        'items' in section &&
+        Array.isArray(section.items)
+      ) {
         for (const item of section.items) {
           // Check selectedCredentials array
           if (item.selectedCredentials && Array.isArray(item.selectedCredentials)) {
-            if (item.selectedCredentials.some((cred: any) => cred.id === vcId || cred.fileId === vcId)) {
+            if (
+              item.selectedCredentials.some(
+                (cred: any) => cred.id === vcId || cred.fileId === vcId
+              )
+            ) {
               return true
             }
           }
@@ -272,7 +289,7 @@ const RightSidebar = ({
         }
       }
     }
-    
+
     return false
   }
 
@@ -289,7 +306,9 @@ const RightSidebar = ({
           fontFamily: 'Nunito Sans',
           cursor: 'pointer'
         }}
-        onClick={() => {/* No action needed - just for visual feedback */}}
+        onClick={() => {
+          /* No action needed - just for visual feedback */
+        }}
       >
         {credentialName}
       </Typography>
@@ -350,7 +369,7 @@ const RightSidebar = ({
   return (
     <Box
       sx={{
-        width: '29%',
+        // width: '29%',
         display: 'flex',
         flexDirection: 'column',
         gap: '30px',

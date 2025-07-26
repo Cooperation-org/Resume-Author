@@ -36,6 +36,8 @@ import { prepareResumeForVC } from '../tools/resumeAdapter'
 import FileSelectorOverlay from './NewFileUpload/FileSelectorOverlay'
 import { FileItem } from './NewFileUpload/FileList'
 import { fetchUserResumes } from '../redux/slices/myresumes'
+import MenuIcon from '@mui/icons-material/Menu'
+import Drawer from '@mui/material/Drawer'
 
 const ButtonStyles = {
   border: '2px solid #3A35A2',
@@ -145,6 +147,8 @@ const ResumeEditor: React.FC = () => {
   const [files, setFiles] = useState<FileItem[]>([])
   const [allFiles, setAllFiles] = useState<FileItem[]>([])
   const [activeItemIndex, setActiveItemIndex] = useState<number | undefined>(undefined)
+  const [leftDrawerOpen, setLeftDrawerOpen] = useState(false)
+  const [rightDrawerOpen, setRightDrawerOpen] = useState(false)
 
   // Reference to store the original resume state for comparison
   const originalResumeRef = useRef<string | null>(null)
@@ -242,8 +246,6 @@ const ResumeEditor: React.FC = () => {
               } catch (e) {
                 setResumeName('Untitled Resume')
               }
-
-              
             } else {
               console.error('Retrieved resume data is empty')
             }
@@ -266,13 +268,12 @@ const ResumeEditor: React.FC = () => {
       // Only update if state actually changes to prevent unnecessary re-renders
       setIsDirty(prev => {
         if (prev !== newDirtyState) {
-          
           return newDirtyState
         }
         return prev
       })
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentResumeHash]) // NEVER include resume here - it causes infinite loops!
 
   // Handle browser's built-in beforeunload dialog for page reloads
@@ -299,7 +300,7 @@ const ResumeEditor: React.FC = () => {
     return () => {
       window.removeEventListener('beforeunload', handleBeforeUnload)
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isDirty, resumeId]) // Intentionally omitting resume to prevent loops
 
   useEffect(() => {
@@ -417,8 +418,6 @@ const ResumeEditor: React.FC = () => {
           type: 'unsigned'
         })
 
-        
-
         // Update our original reference so it's no longer dirty
         originalResumeRef.current = computeResumeHash(resume)
         setIsDirty(false)
@@ -493,9 +492,6 @@ const ResumeEditor: React.FC = () => {
 
   const handleAddCredential = useCallback(
     (text: string) => {
-      
-      
-      
       if (!activeSection) {
         console.error('No active section found')
         return
@@ -583,7 +579,6 @@ const ResumeEditor: React.FC = () => {
           [activeSectionId]: prevArr
         }
 
-        
         return newEvidence
       })
     }
@@ -593,8 +588,6 @@ const ResumeEditor: React.FC = () => {
   }
 
   const handleRemoveFile = (sectionId: string, itemIndex: number, fileIndex: number) => {
-    
-
     setSectionEvidence(prev => {
       const section = prev[sectionId] || []
       const newSection = [...section]
@@ -610,13 +603,11 @@ const ResumeEditor: React.FC = () => {
         [sectionId]: newSection
       }
 
-      
       return newEvidence
     })
   }
 
   const handlePreview = () => {
-    
     // If we have a resumeId, pass it to the preview page
     if (resumeId) {
       handleNavigate(`/resume/view?id=${resumeId}`)
@@ -637,23 +628,21 @@ const ResumeEditor: React.FC = () => {
       // Save to Google Drive
       // IMPORTANT: Include the resumeId if we have one to update the existing file
       const resumeToSave = preparedResume || resume
-      
+
       // Log whether we're updating or creating
       if (resumeId && !resumeId.startsWith('temp-')) {
-
       } else {
-
       }
-      
+
       const saveData: any = {
         resume: resumeToSave,
         type: 'unsigned',
         // Pass the ID if we have one to update the existing file
         ...(resumeId && !resumeId.startsWith('temp-') ? { id: resumeId } : {})
       }
-      
+
       const savedResume = await instances?.resumeManager?.saveResume(saveData)
-      
+
       console.log('Save result:', {
         requestedId: resumeId,
         savedId: savedResume?.id,
@@ -665,9 +654,9 @@ const ResumeEditor: React.FC = () => {
         // IMPORTANT: Update Redux state with the saved resume data
         // This ensures the UI reflects the credential links that were replaced with JSON
         // The savedResume might have the data nested, so check both possibilities
-        const resumeDataToStore = savedResume.data || resumeToSave;
+        const resumeDataToStore = savedResume.data || resumeToSave
         dispatch(setSelectedResume(resumeDataToStore))
-        
+
         const newHash = computeResumeHash(resumeDataToStore)
         console.log('Updating resume hash after save', {
           oldHash: originalResumeRef.current?.substring(0, 20),
@@ -677,7 +666,10 @@ const ResumeEditor: React.FC = () => {
         setIsDirty(false)
 
         // If this was a temporary import OR the saved resume has a different ID, update the URL
-        if ((resumeId && resumeId.startsWith('temp-')) || (savedResume.id && savedResume.id !== resumeId)) {
+        if (
+          (resumeId && resumeId.startsWith('temp-')) ||
+          (savedResume.id && savedResume.id !== resumeId)
+        ) {
           // Clean up the temporary localStorage entry if it exists
           if (resumeId && resumeId.startsWith('temp-')) {
             const draftKey = `resume_draft_${resumeId}`
@@ -688,16 +680,11 @@ const ResumeEditor: React.FC = () => {
           if (savedResume.id) {
             const newUrl = `/resume/new?id=${savedResume.id}`
             window.history.replaceState({}, '', newUrl)
-            console.log(
-              'Updated URL to use correct resume ID:',
-              savedResume.id
-            )
+            console.log('Updated URL to use correct resume ID:', savedResume.id)
           }
         }
       }
       dispatch(fetchUserResumes() as any)
-
-      
     } catch (error) {
       console.error('Error saving draft:', error)
     } finally {
@@ -737,12 +724,9 @@ const ResumeEditor: React.FC = () => {
         return
       }
 
-      
       // Prepare resume for signing
-      
+
       const preparedResume = await prepareResumeForVC(resume, sectionEvidence, allFiles)
-      
-      
 
       // PATCH: Ensure processed employmentHistory is used in credentialSubject
       if (
@@ -877,15 +861,13 @@ const ResumeEditor: React.FC = () => {
         if (file.id) {
           const newUrl = `/resume/new?id=${file.id}`
           window.history.replaceState({}, '', newUrl)
-          
         }
       }
       dispatch(fetchUserResumes() as any)
-      
+
       // Navigate to view the signed resume
       // The file.id contains the Google Drive ID of the newly signed resume
       navigate(`/resume/view/${file.id}`)
-      
     } catch (error) {
       console.error('Error signing and saving:', error)
     } finally {
@@ -935,7 +917,6 @@ const ResumeEditor: React.FC = () => {
 
   const handleSectionFocus = useCallback(
     (sectionId: string) => {
-      
       dispatch(setActiveSection(sectionId))
     },
     [dispatch]
@@ -1137,15 +1118,70 @@ const ResumeEditor: React.FC = () => {
           >
             Any section left blank will not appear on your resume.
           </Typography>
-          <Box sx={{ display: 'flex', gap: 4, mt: 2 }}>
-            <LeftSidebar />
+          <Box
+            sx={{
+              display: 'flex',
+              gap: 4,
+              mt: 2,
+              flexWrap: 'nowrap',
+              minWidth: 0,
+              maxWidth: '100vw'
+            }}
+          >
+            {/* Left Sidebar: hide on <lg, show Drawer button */}
+            <Box
+              sx={{
+                display: { xs: 'none', lg: 'flex' },
+                flexDirection: 'column',
+                width: { lg: 72, xl: 96 },
+                minWidth: 0,
+                maxWidth: '100vw'
+              }}
+            >
+              <LeftSidebar />
+            </Box>
+            {/* Left Sidebar Drawer button (only <lg) */}
+            <Box
+              sx={{
+                display: { xs: 'block', lg: 'none' },
+                position: 'absolute',
+                top: 24,
+                left: 16,
+                zIndex: 1201
+              }}
+            >
+              <IconButton onClick={() => setLeftDrawerOpen(true)} size='large'>
+                <MenuIcon />
+              </IconButton>
+            </Box>
+            {/* Left Sidebar Drawer */}
+            <Drawer
+              anchor='left'
+              open={leftDrawerOpen}
+              onClose={() => setLeftDrawerOpen(false)}
+              PaperProps={{
+                sx: {
+                  width: { xs: 72, sm: 96, md: 240 },
+                  maxWidth: '90vw',
+                  minWidth: 56
+                }
+              }}
+            >
+              <Box sx={{ width: '100%', minWidth: 0 }}>
+                <LeftSidebar />
+              </Box>
+            </Drawer>
 
             {/* Main Content */}
             <Box
               sx={{
                 display: 'flex',
                 flexDirection: 'column',
-                flex: 1
+                flex: 1,
+                minWidth: 0,
+                maxWidth: '100vw',
+                px: { xs: 0, sm: 1, md: 2, lg: 3 },
+                position: 'relative'
               }}
             >
               {sectionOrder.map(sectionId => {
@@ -1179,13 +1215,55 @@ const ResumeEditor: React.FC = () => {
               />
             </Box>
 
-            <RightSidebar
-              files={files}
-              onFilesSelected={handleFilesSelected}
-              onFileDelete={handleFileDelete}
-              onFileNameChange={handleFileNameChange}
-              onAllFilesUpdate={handleAllFilesUpdate}
-            />
+            {/* Right Sidebar: hide on <xl, show Drawer button */}
+            <Box
+              sx={{ display: { xs: 'none', xl: 'block' }, minWidth: 320, maxWidth: 400 }}
+            >
+              <RightSidebar
+                files={files}
+                onFilesSelected={handleFilesSelected}
+                onFileDelete={handleFileDelete}
+                onFileNameChange={handleFileNameChange}
+                onAllFilesUpdate={handleAllFilesUpdate}
+              />
+            </Box>
+            {/* Right Sidebar Drawer button (only <xl) */}
+            <Box
+              sx={{
+                display: { xs: 'block', xl: 'none' },
+                position: 'absolute',
+                top: 24,
+                right: 16,
+                zIndex: 1201
+              }}
+            >
+              <IconButton onClick={() => setRightDrawerOpen(true)} size='large'>
+                <MenuIcon />
+              </IconButton>
+            </Box>
+            {/* Right Sidebar Drawer */}
+            <Drawer
+              anchor='right'
+              open={rightDrawerOpen}
+              onClose={() => setRightDrawerOpen(false)}
+              PaperProps={{
+                sx: {
+                  width: { xs: '90vw', sm: 320, md: 400 },
+                  maxWidth: '100vw',
+                  minWidth: 200
+                }
+              }}
+            >
+              <Box sx={{ width: '100%', minWidth: 0 }}>
+                <RightSidebar
+                  files={files}
+                  onFilesSelected={handleFilesSelected}
+                  onFileDelete={handleFileDelete}
+                  onFileNameChange={handleFileNameChange}
+                  onAllFilesUpdate={handleAllFilesUpdate}
+                />
+              </Box>
+            </Drawer>
           </Box>
         </>
       )}
@@ -1288,7 +1366,6 @@ const ResumeEditor: React.FC = () => {
       <FileSelectorOverlay
         open={fileSelectorOpen}
         onClose={() => {
-          
           setFileSelectorOpen(false)
           setActiveSectionId(null)
           setActiveItemIndex(undefined)

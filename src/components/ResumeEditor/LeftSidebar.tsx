@@ -128,9 +128,16 @@ const LeftSidebar = () => {
       display='flex'
       flexDirection='column'
       bgcolor='#FFFFFF'
-      sx={{ width: '25%', gap: '30px' }}
+      sx={{
+        width: { xs: '100vw', sm: 320, md: 400 },
+        maxWidth: '100vw',
+        gap: '30px',
+        minWidth: 0,
+        overflowX: 'auto',
+        boxSizing: 'border-box'
+      }}
     >
-      <Paper sx={paperStyle}>
+      <Paper sx={{ ...paperStyle, width: '100%' }}>
         <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
           <SVGSectionIcon />
           <Typography sx={{ ...labelStyles, fontSize: '18px' }} variant='h6'>
@@ -212,7 +219,7 @@ const LeftSidebar = () => {
         </Box>
       </Paper>
 
-      <Paper sx={paperStyle}>
+      <Paper sx={{ ...paperStyle, width: '100%' }}>
         <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
           <SVGSectionIcon />
           <Typography sx={{ ...labelStyles, fontSize: '18px' }} variant='h6'>
@@ -296,7 +303,7 @@ const LeftSidebar = () => {
         </Box>
       </Paper>
 
-      <Paper sx={paperStyle}>
+      <Paper sx={{ ...paperStyle, width: '100%' }}>
         <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
           <SVGSectionIcon />
           <Typography sx={{ ...labelStyles, fontSize: '18px' }} variant='h6'>
@@ -308,7 +315,7 @@ const LeftSidebar = () => {
         </Box>
       </Paper>
 
-      <Paper sx={paperStyle}>
+      <Paper sx={{ ...paperStyle, width: '100%' }}>
         <Typography sx={{ ...labelStyles, fontSize: '18px' }} variant='h6'>
           Add Custom Section
         </Typography>

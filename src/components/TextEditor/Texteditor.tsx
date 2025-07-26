@@ -188,13 +188,30 @@ function TextEditor({
 
   return (
     <Box
-      sx={{ width: '100%', borderRadius: '8px', height: 'auto', position: 'relative' }}
+      sx={{
+        width: '100%',
+        minWidth: 0,
+        maxWidth: '100vw',
+        borderRadius: '8px',
+        height: 'auto',
+        position: 'relative',
+        overflowX: 'auto',
+        boxSizing: 'border-box'
+      }}
       onFocus={onFocus}
       data-editor-id={editorIdRef.current}
     >
       <Box
         className='text-editor-container'
-        sx={{ borderRadius: '8px', height: 'auto' }}
+        sx={{
+          borderRadius: '8px',
+          height: 'auto',
+          width: '100%',
+          minWidth: 0,
+          maxWidth: '100vw',
+          overflowX: 'auto',
+          boxSizing: 'border-box'
+        }}
         onFocus={onFocus}
       >
         <ReactQuill
@@ -205,9 +222,17 @@ function TextEditor({
           modules={modules}
           formats={formats}
           placeholder={
-            'Add and edit text here \n\nUse the toolbar to markup your text as follows:\n• Bold\n• Italic\n• Add links\n• Unordered lists\n• Undo / redo\n• Add credentials'
+            'Add and edit text here \n\nUse the toolbar to markup your text as follows:\n 202 Bold\n  2 Italic\n  2 Add links\n  2 Unordered lists\n  2 Undo / redo\n  2 Add credentials'
           }
-          style={{ marginTop: '4px', borderRadius: '8px', height: 'auto' }}
+          style={{
+            marginTop: '4px',
+            borderRadius: '8px',
+            height: 'auto',
+            width: '100%',
+            minWidth: 0,
+            maxWidth: '100vw',
+            boxSizing: 'border-box'
+          }}
           onFocus={onFocus}
         />
       </Box>
