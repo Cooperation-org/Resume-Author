@@ -8,7 +8,7 @@ import {
   IconButton,
   Tooltip
 } from '@mui/material'
-import { GoogleDriveStorage } from '@linked-claims/vc-storage'
+import { GoogleDriveStorage } from '@cooperation/vc-storage'
 import { getLocalStorage } from '../tools/cookie'
 import ResumePreview from './resumePreview'
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf'

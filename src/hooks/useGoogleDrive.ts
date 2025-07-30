@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { GoogleDriveStorage, Resume, ResumeVC } from '@linked-claims/vc-storage' //NOSONAR
+import { GoogleDriveStorage, Resume, ResumeVC } from '@cooperation/vc-storage' //NOSONAR
 import { useDispatch } from 'react-redux'
 import { setAuth } from '../redux/slices/auth'
 import { getLocalStorage } from '../tools/cookie'

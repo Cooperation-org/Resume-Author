@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { Box, CircularProgress, Typography, IconButton } from '@mui/material'
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf'
-import { GoogleDriveStorage } from '@linked-claims/vc-storage'
+import { GoogleDriveStorage } from '@cooperation/vc-storage'
 import { getLocalStorage } from '../tools/cookie'
 import ResumePreview from '../components/resumePreview'
 import ResumePreviewTopbar from '../components/ResumePreviewTopbar'
