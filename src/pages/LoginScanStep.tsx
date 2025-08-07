@@ -5,6 +5,9 @@ import QRCode from 'react-qr-code'
 import ErrorIcon from '@mui/icons-material/Error'
 import { v4 as uuidv4 } from 'uuid'
 import { getOrCreateAppInstanceDid } from '@cooperation/vc-storage'
+import { SERVER_URL, LCW_DEEP_LINK } from '../app.config'
+import { pollExchange } from '../utils/exchanges'
+
 
 export default function LoginScanStep() {
   const [qrData, setQrData] = useState('')
@@ -12,40 +15,54 @@ export default function LoginScanStep() {
   const [error, setError] = useState('')
 
   useEffect(() => {
-    (async () => {
-      const sessionId = uuidv4()
+    const sessionId = uuidv4()
+    const exchangeUrl = `${SERVER_URL}/api/exchanges/${sessionId}`
+    let intervalId: NodeJS.Timeout
+    ;(async () => {
       const { did: resumeDid } = await getOrCreateAppInstanceDid()
-
-      const SERVER_URL = 'http://192.168.1.26:3000'
-      const WALLET_DEEP_LINK = 'walletapp://import'
-      const exchangeUrl = `${SERVER_URL}/api/exchanges/${sessionId}`
-
+  
       const res = await fetch(exchangeUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ appInstanceDid: resumeDid })
       })
-
+  
       if (!res.ok) {
         setError('Failed to connect to the wallet')
         setIsLoading(false)
         return
       }
-
+  
       const chapiRequest = {
         credentialRequestOrigin: SERVER_URL,
         protocols: {
           vcapi: exchangeUrl
         }
       }
-
+  
       const encodedRequest = encodeURIComponent(JSON.stringify(chapiRequest))
-      const lcwRequestUrl = `${WALLET_DEEP_LINK}?request=${encodedRequest}`
-
+      const lcwRequestUrl = `${LCW_DEEP_LINK}?request=${encodedRequest}`
+  
       setQrData(lcwRequestUrl)
       setIsLoading(false)
+  
+      // Start polling using imported utility
+      intervalId = setInterval(() => {
+        pollExchange({
+          exchangeUrl,
+          onFetchVP: (vp: any) => {
+            console.log('[LoginScanStep] ✅ Got VP:', vp)
+            clearInterval(intervalId)
+            
+          },
+          stopPolling: () => clearInterval(intervalId)
+        })
+      }, 3000)
     })()
-  }, [])
+  
+    return () => clearInterval(intervalId)
+  }, [])  
+  
 
   return (
     <Box sx={{ width: '100%', bgcolor: '#FFFFFF', minHeight: '100vh' }}>
@@ -84,7 +101,7 @@ export default function LoginScanStep() {
               fontFamily: 'Poppins'
             }}
           >
-            Connect with Learner Credential Wallet
+            Login with Learner Credential Wallet
           </Typography>
         </Box>
       </Box>
