@@ -26,15 +26,9 @@ import Faq from './pages/FAQ'
 import SignUpStep2 from './pages/signUpStep2'
 import PreviewPageFromDrive from './pages/PreviewPageFromDrive'
 import RawPreview from './pages/credential-raw'
-import { getOrCreateAppInstanceDid } from '@cooperation/vc-storage'
 
 const App = () => {
   const dispatch: AppDispatch = useDispatch()
-  useEffect(() => {
-    ;(async () => {
-      await getOrCreateAppInstanceDid()
-    })()
-  }, [])
 
   useEffect(() => {
     const storageService = StorageService.getInstance()
