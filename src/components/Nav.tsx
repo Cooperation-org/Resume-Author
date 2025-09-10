@@ -66,7 +66,6 @@ const Nav = () => {
   }
 
   const handleLogin = () => {
-    
     if (!isLogged) {
       login('/resume/import')
     } else {
@@ -78,6 +77,13 @@ const Nav = () => {
     { label: 'Why Resume Author?', action: () => setMobileMenuOpen(false) },
     { label: 'How it works', action: () => setMobileMenuOpen(false) },
     { label: 'Benefits', action: () => setMobileMenuOpen(false) },
+    {
+      label: 'Help & FAQ',
+      action: () => {
+        navigate('/faq')
+        setMobileMenuOpen(false)
+      }
+    },
     { label: 'Learn More', action: () => setMobileMenuOpen(false) }
   ]
 
