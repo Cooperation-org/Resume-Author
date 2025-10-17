@@ -1,12 +1,11 @@
 import React from 'react'
 import { Box, Typography, Divider, Button, useTheme, useMediaQuery } from '@mui/material'
+import { Link as RouterLink } from 'react-router-dom'
 import { SVGGitHub, SVGlisence, SVGCopyWriter } from '../../assets/svgs'
 
 const StyledButton = ({ href, startIcon, children }) => (
   <Button
     href={href}
-    target='_blank'
-    rel='noopener noreferrer'
     startIcon={startIcon}
     sx={{
       color: '#2563EB',
@@ -100,7 +99,30 @@ const Footer = () => {
 
         {!isMobile && <Divider orientation='vertical' flexItem />}
 
-        <StyledButton href='/privacy-policy'>Privacy Policy</StyledButton>
+        <Button
+          component={RouterLink}
+          to='/privacy-policy'
+          sx={{
+            color: '#2563EB',
+            fontFamily: 'Nunito Sans',
+            fontSize: { xs: '12px', sm: '14px' },
+            fontWeight: 500,
+            lineHeight: '40px',
+            letterSpacing: '-0.26px',
+            textDecoration: 'underline',
+            textDecorationSkipInk: 'auto',
+            textUnderlineOffset: 'auto',
+            textUnderlinePosition: 'from-font',
+            textTransform: 'none',
+            padding: 0,
+            minWidth: 0,
+            '&:hover': {
+              background: 'transparent'
+            }
+          }}
+        >
+          Privacy Policy
+        </Button>
 
         {!isMobile && <Divider orientation='vertical' flexItem />}
 

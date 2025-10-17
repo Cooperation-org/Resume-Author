@@ -26,6 +26,7 @@ import Faq from './pages/FAQ'
 import SignUpStep2 from './pages/signUpStep2'
 import PreviewPageFromDrive from './pages/PreviewPageFromDrive'
 import RawPreview from './pages/credential-raw'
+import PrivacyPolicy from './pages/PrivacyPolicy'
 import { getOrCreateAppInstanceDid } from '@cooperation/vc-storage'
 
 const App = () => {
@@ -52,7 +53,6 @@ const App = () => {
           await refreshAccessToken(refreshToken, (token: string) => {
             dispatch(setAuth({ accessToken: token }))
           })
-          
         } catch (error) {
           console.error('Failed to refresh token on app startup:', error)
         }
@@ -84,6 +84,7 @@ const App = () => {
         <Route path='/signup' element={<SignUpStep />} />
         <Route path='/login-scan' element={<LoginScanStep />} />
         <Route path='/faq' element={<Faq />} />
+        <Route path='/privacy-policy' element={<PrivacyPolicy />} />
         <Route path='/SignUp2' element={<SignUpStep2 />} />
         <Route path='/credential-raw/*' element={<RawPreview />} />
       </Routes>
