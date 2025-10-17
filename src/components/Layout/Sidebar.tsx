@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Box, IconButton, Typography } from '@mui/material'
+import { Box, IconButton, Typography, useTheme, useMediaQuery } from '@mui/material'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import {
   SVGRightLine,
@@ -31,6 +31,8 @@ const Sidebar = ({ onToggle, isExpanded }: SidebarProps) => {
   const navigate = useNavigate()
   const location = useLocation()
   const [showNotification, setShowNotification] = useState(false)
+  const theme = useTheme()
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'))
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const dispatch = useDispatch() //NOSONAR
   const isAuthenticated = useSelector((state: RootState) => state.auth.isAuthenticated)
@@ -44,11 +46,16 @@ const Sidebar = ({ onToggle, isExpanded }: SidebarProps) => {
     else setSelectedItem('')
   }, [location.pathname])
 
+  const sidebarWidth = {
+    collapsed: isMobile ? 30 : 48,
+    expanded: isMobile ? 160 : 200
+  }
+
   const boxStyles = {
     display: 'flex',
     alignItems: 'center',
-    gap: '20px',
-    width: isExpanded ? '200px' : '48px',
+    gap: isMobile ? '10px' : '20px',
+    width: isExpanded ? sidebarWidth.expanded : sidebarWidth.collapsed,
     justifyContent: 'flex-start',
     borderRadius: '8px'
   }
@@ -84,10 +91,12 @@ const Sidebar = ({ onToggle, isExpanded }: SidebarProps) => {
   const getIconStyles = (key: string) => ({
     '& svg path': { fill: selectedItem === key ? '#361F7D' : undefined }
   })
+
   const getTextStyles = (key: string) => ({
     ...ui,
     color: selectedItem === key ? '#361F7D' : '#FFF'
   })
+
   const getButtonStyles = (key: string) => ({
     backgroundColor: selectedItem === key ? '#F3F4F6' : 'transparent',
     borderRadius: '8px',
@@ -105,7 +114,14 @@ const Sidebar = ({ onToggle, isExpanded }: SidebarProps) => {
         {isExpanded && (
           <Link to='/' style={{ display: 'flex', alignItems: 'center' }}>
             <img src={logo} alt='Résumé Author' style={{ height: '50px' }} />
-            <Typography sx={{ ...ui, fontSize: '20px', mx: '10px', color: '#FFF' }}>
+            <Typography
+              sx={{
+                ...ui,
+                fontSize: { xs: '14px', md: '20px' },
+                mx: '10px',
+                color: '#FFF'
+              }}
+            >
               Resume Author
             </Typography>
           </Link>
@@ -158,8 +174,8 @@ const Sidebar = ({ onToggle, isExpanded }: SidebarProps) => {
         sx={{
           display: 'flex',
           flexDirection: 'column',
-          gap: '15px',
-          width: isExpanded ? '200px' : '48px',
+          gap: isMobile ? '10px' : '15px',
+          width: isExpanded ? sidebarWidth.expanded : sidebarWidth.collapsed,
           transition: 'width 0.3s ease'
         }}
       >

@@ -1,4 +1,4 @@
-import { Box, Typography, Button } from '@mui/material'
+import { Box, Typography, Button, useTheme, useMediaQuery } from '@mui/material'
 import ResumeCard from './ResumeCard'
 import { Link, useNavigate } from 'react-router-dom'
 import { useSelector, useDispatch } from 'react-redux'
@@ -9,6 +9,7 @@ import useDraftResume from '../hooks/useDraftResume'
 import { logout } from '../tools/auth'
 import AuthErrorDisplay from './common/AuthErrorDisplay'
 import { clearAuth } from '../redux/slices/auth'
+
 const buttonStyles = {
   background: '#3A35A2',
   padding: '10px 31px',
@@ -27,6 +28,9 @@ const buttonStyles = {
 const ResumeScreen: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>()
   const navigate = useNavigate()
+  const theme = useTheme()
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'))
+
   const { signed, unsigned, status, error } = useSelector(
     (state: RootState) => state.myresumes
   )
@@ -56,9 +60,11 @@ const ResumeScreen: React.FC = () => {
       setFriendlyError(null)
     } else if (status === 'failed') {
       // Handle specific error messages from fetchUserResumes
-      if (error?.includes('No authentication token found') ||
-          error?.includes('Authentication expired') ||
-          error?.includes('Session expired')) {
+      if (
+        error?.includes('No authentication token found') ||
+        error?.includes('Authentication expired') ||
+        error?.includes('Session expired')
+      ) {
         setFriendlyError(error)
         if (isAuthenticated) {
           handleLogout()
@@ -78,9 +84,7 @@ const ResumeScreen: React.FC = () => {
         setFriendlyError('Please log in to view your resumes.')
       } else {
         // For any other errors, show the error message if available
-        setFriendlyError(
-          error || 'An error occurred while loading your resumes.'
-        )
+        setFriendlyError(error || 'An error occurred while loading your resumes.')
       }
     } else if (status === 'succeeded') {
       setFriendlyError(null)
@@ -104,29 +108,54 @@ const ResumeScreen: React.FC = () => {
     <Box
       sx={{
         mx: 'auto',
-        p: 3,
+        p: { xs: 0, md: 3 },
         display: 'flex',
         flexDirection: 'column',
-        marginInline: 3,
+        marginInline: { xs: 1, md: 3 },
         gap: 2
       }}
     >
       <Box
         sx={{
           display: 'flex',
+          flexDirection: { xs: 'column', md: 'row' },
           justifyContent: 'space-between',
-          alignItems: 'center',
-          mb: 4,
-          mt: 2
+          alignItems: { xs: 'flex-start', md: 'center' },
+          mb: { xs: 2, md: 4 },
+          mt: 2,
+          gap: { xs: 2, md: 0 }
         }}
       >
-        <Typography variant='h4' sx={{ color: '#2E2E48', fontWeight: 700 }}>
+        <Typography
+          variant='h4'
+          sx={{
+            color: '#2E2E48',
+            fontWeight: 700,
+            fontSize: { xs: '24px', sm: '28px', md: '32px' }
+          }}
+        >
           My Resumes
         </Typography>
-        <Box sx={{ display: 'flex', gap: 2 }}>
+        <Box
+          sx={{
+            display: 'flex',
+            gap: { xs: 1, md: 2 },
+            flexDirection: { xs: 'column', sm: 'row' },
+            width: { xs: '100%', sm: 'auto' }
+          }}
+        >
           {isAuthenticated && (
             <>
-              <Link style={buttonStyles} to='/resume/new'>
+              <Link
+                style={{
+                  ...buttonStyles,
+                  padding: isMobile ? '8px 20px' : '10px 31px',
+                  fontSize: isMobile ? '14px' : '16px',
+                  textAlign: 'center',
+                  display: 'block'
+                }}
+                to='/resume/new'
+              >
                 Create new resume
               </Link>
               <Button
@@ -134,6 +163,9 @@ const ResumeScreen: React.FC = () => {
                 sx={{
                   ...buttonStyles,
                   textTransform: 'capitalize',
+                  padding: isMobile ? '8px 20px' : '10px 31px',
+                  fontSize: isMobile ? '14px' : '16px',
+                  width: { xs: '100%', sm: 'auto' },
                   '&:hover': {
                     background: '#322e8e',
                     border: '3px solid #322e8e'
@@ -159,7 +191,15 @@ const ResumeScreen: React.FC = () => {
         (status === 'succeeded' || status === 'idle') &&
         signed.length > 0 && (
           <>
-            <Typography variant='h6' sx={{ color: '#2E2E48', fontWeight: 600, mt: 2 }}>
+            <Typography
+              variant='h6'
+              sx={{
+                color: '#2E2E48',
+                fontWeight: 600,
+                mt: 2,
+                fontSize: { xs: '18px', md: '20px' }
+              }}
+            >
               Signed Resumes
             </Typography>
             {signed.map(resume => (
@@ -180,7 +220,15 @@ const ResumeScreen: React.FC = () => {
         (status === 'succeeded' || status === 'idle') &&
         draftResumes.length > 0 && (
           <>
-            <Typography variant='h6' sx={{ color: '#2E2E48', fontWeight: 600, mt: 2 }}>
+            <Typography
+              variant='h6'
+              sx={{
+                color: '#2E2E48',
+                fontWeight: 600,
+                mt: 2,
+                fontSize: { xs: '18px', md: '20px' }
+              }}
+            >
               Draft Resumes
             </Typography>
             {draftResumes.map(resume => (

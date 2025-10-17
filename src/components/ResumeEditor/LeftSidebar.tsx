@@ -128,7 +128,7 @@ const LeftSidebar = () => {
       display='flex'
       flexDirection='column'
       bgcolor='#FFFFFF'
-      sx={{ width: '25%', gap: '30px' }}
+      sx={{ width: { xs: '100%', md: '25%' }, gap: '30px' }}
     >
       <Paper sx={paperStyle}>
         <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
