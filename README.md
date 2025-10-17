@@ -48,12 +48,14 @@ Resume Author is part of the **T3 Innovation Network** initiative, designed to c
 ### Installation
 
 1. **Clone the repository**
+
    ```bash
    git clone https://github.com/your-org/resume-author.git
    cd resume-author
    ```
 
 2. **Install dependencies**
+
    ```bash
    npm install
    # or
@@ -61,20 +63,21 @@ Resume Author is part of the **T3 Innovation Network** initiative, designed to c
    ```
 
 3. **Environment Configuration**
-   
+
    Create a `.env` file in the root directory with the following variables:
+
    ```env
    # Google OAuth
    REACT_APP_GOOGLE_CLIENT_ID=your_google_client_id
    REACT_APP_GOOGLE_REDIRECT_URI=http://localhost:3000/auth/callback
-   
+
    # Auth0 Configuration
    REACT_APP_AUTH0_DOMAIN=your_auth0_domain
    REACT_APP_AUTH0_CLIENT_ID=your_auth0_client_id
-   
+
    # Backend Server
    REACT_APP_SERVER_URL=https://linkedcreds.allskillscount.org
-   
+
    # Firebase Configuration
    REACT_APP_FIREBASE_API_KEY=your_firebase_api_key
    REACT_APP_FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
@@ -82,6 +85,7 @@ Resume Author is part of the **T3 Innovation Network** initiative, designed to c
    ```
 
 4. **Start the development server**
+
    ```bash
    npm start
    # or
@@ -202,7 +206,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 ## 📞 Support
 
-- **Live Demo**: [https://resume-author.vercel.app/](https://resume-author.vercel.app/)
+- **Live Demo**: [https://resume.allskillscount.org/](https://resume.allskillscount.org/)
 - **Documentation**: Check the `/docs` folder for detailed documentation
 - **Issues**: Report bugs and feature requests in the GitHub Issues section
 - **FAQ**: Visit `/faq` route in the application for frequently asked questions
@@ -210,6 +214,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 ## 🔄 Changelog
 
 ### Version 0.1.0
+
 - Initial release with core resume editing functionality
 - Google Drive integration for storage
 - Verifiable credentials support
@@ -221,4 +226,4 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 **Built with ❤️ by the T3 Innovation Network team**
 
-*Empowering individuals to showcase their skills and experiences securely in the digital age.*
+_Empowering individuals to showcase their skills and experiences securely in the digital age._

@@ -147,15 +147,31 @@ const Nav = () => {
                   </IconButton>
                 </Box>
                 <List>
+                  {/* Always show Help & FAQ */}
+                  <ListItem disablePadding>
+                    <Button
+                      fullWidth
+                      onClick={() => {
+                        navigate('/faq')
+                        setMobileMenuOpen(false)
+                      }}
+                      sx={mobileNavStyles}
+                    >
+                      Help & FAQ
+                    </Button>
+                  </ListItem>
+
                   {!isLogged ? (
                     <>
-                      {navItems.map((item, index) => (
-                        <ListItem key={index} disablePadding>
-                          <Button fullWidth onClick={item.action} sx={mobileNavStyles}>
-                            {item.label}
-                          </Button>
-                        </ListItem>
-                      ))}
+                      {navItems
+                        .filter(item => item.label !== 'Help & FAQ')
+                        .map((item, index) => (
+                          <ListItem key={index} disablePadding>
+                            <Button fullWidth onClick={item.action} sx={mobileNavStyles}>
+                              {item.label}
+                            </Button>
+                          </ListItem>
+                        ))}
                       <ListItem disablePadding>
                         <Button fullWidth onClick={handleLogin} sx={mobileNavStyles}>
                           Login
@@ -174,19 +190,34 @@ const Nav = () => {
             </>
           ) : !isLogged ? (
             <Stack direction='row' spacing={{ sm: 2, md: 5 }}>
-              {navItems.map((item, index) => (
-                <Button key={index} color='inherit' sx={navStyles} onClick={item.action}>
-                  {item.label}
-                </Button>
-              ))}
+              {navItems
+                .filter(item => item.label !== 'Help & FAQ')
+                .map((item, index) => (
+                  <Button
+                    key={index}
+                    color='inherit'
+                    sx={navStyles}
+                    onClick={item.action}
+                  >
+                    {item.label}
+                  </Button>
+                ))}
+              <Button color='inherit' sx={navStyles} onClick={() => navigate('/faq')}>
+                Help & FAQ
+              </Button>
               <Button onClick={handleLogin} color='inherit' sx={navStyles}>
                 Login
               </Button>
             </Stack>
           ) : (
-            <Button onClick={handleLogout} color='inherit' sx={navStyles}>
-              Logout
-            </Button>
+            <Stack direction='row' spacing={{ sm: 2, md: 5 }}>
+              <Button color='inherit' sx={navStyles} onClick={() => navigate('/faq')}>
+                Help & FAQ
+              </Button>
+              <Button onClick={handleLogout} color='inherit' sx={navStyles}>
+                Logout
+              </Button>
+            </Stack>
           )}
         </Toolbar>
       </AppBar>
