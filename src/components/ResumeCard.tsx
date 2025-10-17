@@ -39,8 +39,19 @@ const ActionButton = styled(Button)(({ theme }) => ({
   padding: '6px 12px',
   borderRadius: 8,
   color: '#3c4599',
+  fontSize: '14px',
   '& .MuiButton-startIcon': {
     marginRight: 4
+  },
+  [theme.breakpoints.down('md')]: {
+    padding: '4px 8px',
+    fontSize: '12px',
+    '& .MuiButton-startIcon': {
+      marginRight: 2,
+      '& > svg': {
+        fontSize: '16px'
+      }
+    }
   }
 }))
 
@@ -56,11 +67,14 @@ interface ResumeCardProps {
   localDraftTime?: string | null
 }
 
-const StyledCard = styled(Card)(() => ({
+const StyledCard = styled(Card)(({ theme }) => ({
   border: `1px solid #001aff`,
   boxShadow: 'none',
   borderRadius: '12px',
-  '&:hover': { backgroundColor: '#f9f9f9' }
+  '&:hover': { backgroundColor: '#f9f9f9' },
+  [theme.breakpoints.down('md')]: {
+    borderRadius: '8px'
+  }
 }))
 
 // Add a styled component for the resume title
@@ -69,8 +83,12 @@ const ResumeTitle = styled(Typography)(({ theme }) => ({
   color: '#3c4599',
   cursor: 'pointer',
   textDecoration: 'underline',
+  fontSize: '16px',
   '&:hover': {
     textDecoration: 'underline'
+  },
+  [theme.breakpoints.down('md')]: {
+    fontSize: '14px'
   }
 }))
 
@@ -161,6 +179,7 @@ const ResumeCard: React.FC<ResumeCardProps> = ({
   const [previewDialogOpen, setPreviewDialogOpen] = useState(false)
   const theme = useTheme()
   const fullScreen = useMediaQuery(theme.breakpoints.down('md'))
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'))
 
   // Format the date
   const formattedDate = formatDate(date)
@@ -222,7 +241,6 @@ const ResumeCard: React.FC<ResumeCardProps> = ({
 
           const newFileName = `${editedTitle}.json`
           await storage.updateFileData(id, { fileName: newFileName })
-
         } catch (error) {
           console.error('❌ Error renaming file:', error)
         }
@@ -489,7 +507,13 @@ const ResumeCard: React.FC<ResumeCardProps> = ({
   return (
     <>
       <StyledCard>
-        <Box position='relative' sx={{ p: 2, opacity: isLoading ? 0.5 : 1 }}>
+        <Box
+          position='relative'
+          sx={{
+            p: { xs: 1.5, md: 2 },
+            opacity: isLoading ? 0.5 : 1
+          }}
+        >
           {/* Loading Spinner */}
           {isLoading && (
             <Box
@@ -503,9 +527,15 @@ const ResumeCard: React.FC<ResumeCardProps> = ({
           )}
 
           {/* Main Content */}
-          <Box display='flex' justifyContent='space-between' alignItems='center'>
+          <Box
+            display='flex'
+            flexDirection={{ xs: 'column', sm: 'row' }}
+            justifyContent='space-between'
+            alignItems={{ xs: 'flex-start', sm: 'center' }}
+            gap={{ xs: 2, sm: 0 }}
+          >
             {/* Left Side: Title and Metadata */}
-            <Box display='flex' gap={1.5}>
+            <Box display='flex' gap={{ xs: 1, md: 1.5 }}>
               {isSigned() ? (
                 <Tooltip title='Signed Resume' placement='top'>
                   <Box>
@@ -587,20 +617,34 @@ const ResumeCard: React.FC<ResumeCardProps> = ({
             </Box>
 
             {/* Right Side: Action Buttons */}
-            <Box display='flex' alignItems='center' color={'#3c4599'} gap={0.5}>
-              <Box className='resume-card-actions'>
+            <Box
+              display='flex'
+              alignItems='center'
+              color={'#3c4599'}
+              gap={0.5}
+              width={{ xs: '100%', sm: 'auto' }}
+              justifyContent={{ xs: 'space-between', sm: 'flex-end' }}
+            >
+              <Box
+                className='resume-card-actions'
+                sx={{
+                  display: 'flex',
+                  gap: { xs: 0.5, md: 1 },
+                  flexWrap: 'wrap'
+                }}
+              >
                 {isDraft || isCompletedUnsigned() ? (
                   <>
                     <ActionButton
                       size='small'
-                      startIcon={<EditOutlinedIcon />}
+                      startIcon={!isMobile && <EditOutlinedIcon />}
                       onClick={handleEditTitle}
                     >
                       Edit
                     </ActionButton>
                     <ActionButton
                       size='small'
-                      startIcon={<VisibilityOutlinedIcon />}
+                      startIcon={!isMobile && <VisibilityOutlinedIcon />}
                       onClick={handlePreviewResume}
                     >
                       Preview
@@ -611,22 +655,22 @@ const ResumeCard: React.FC<ResumeCardProps> = ({
                     <Tooltip title={showCopiedTooltip ? 'Copied!' : 'Copy Link'}>
                       <ActionButton
                         size='small'
-                        startIcon={<LinkIcon />}
+                        startIcon={!isMobile && <LinkIcon size={16} />}
                         onClick={handleCopyLink}
                       >
-                        Copy Link
+                        {isMobile ? 'Link' : 'Copy Link'}
                       </ActionButton>
                     </Tooltip>
                     <ActionButton
                       onClick={() => setPreviewDialogOpen(true)}
                       size='small'
-                      startIcon={<DownloadIcon />}
+                      startIcon={!isMobile && <DownloadIcon />}
                     >
-                      Download PDF
+                      {isMobile ? 'PDF' : 'Download PDF'}
                     </ActionButton>
                     <ActionButton
                       size='small'
-                      startIcon={<VisibilityOutlinedIcon />}
+                      startIcon={!isMobile && <VisibilityOutlinedIcon />}
                       onClick={handlePreviewResume}
                     >
                       Preview
@@ -635,7 +679,7 @@ const ResumeCard: React.FC<ResumeCardProps> = ({
                 )}
               </Box>
               <StyledMoreButton size='small' onClick={handleMenuOpen}>
-                <MoreVertIcon sx={{ fontSize: 18 }} />
+                <MoreVertIcon sx={{ fontSize: { xs: 16, md: 18 } }} />
               </StyledMoreButton>
             </Box>
           </Box>

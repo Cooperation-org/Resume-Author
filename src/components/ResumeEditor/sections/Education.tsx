@@ -12,7 +12,9 @@ import {
   Button,
   IconButton,
   Dialog,
-  DialogContent
+  DialogContent,
+  useTheme,
+  useMediaQuery
 } from '@mui/material'
 import {
   SVGSectionIcon,
@@ -141,6 +143,8 @@ export default function Education({
   const vcs = useSelector((state: any) => state.vcReducer.vcs)
   const reduxUpdateTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const initialLoadRef = useRef(true)
+  const theme = useTheme()
+  const isSmallMobile = useMediaQuery(theme.breakpoints.down('sm'))
   const [showCredentialsOverlay, setShowCredentialsOverlay] = useState(false)
   const [activeSectionIndex, setActiveSectionIndex] = useState<number | null>(null)
   const [openCredDialog, setOpenCredDialog] = useState(false)
@@ -533,7 +537,7 @@ export default function Education({
       setEducations(prev => {
         const updated = [...prev]
         let hasChanges = false
-        
+
         evidence.forEach((itemFiles, index) => {
           if (updated[index] && itemFiles && itemFiles.length > 0) {
             // Convert file IDs to URLs
@@ -546,8 +550,10 @@ export default function Education({
               }
               return fileId
             })
-            
-            if (JSON.stringify(updated[index].attachedFiles) !== JSON.stringify(fileUrls)) {
+
+            if (
+              JSON.stringify(updated[index].attachedFiles) !== JSON.stringify(fileUrls)
+            ) {
               updated[index] = {
                 ...updated[index],
                 attachedFiles: fileUrls
@@ -556,7 +562,7 @@ export default function Education({
             }
           }
         })
-        
+
         if (hasChanges) {
           // Dispatch to Redux
           dispatch(
@@ -566,7 +572,7 @@ export default function Education({
             })
           )
         }
-        
+
         return hasChanges ? updated : prev
       })
     }
@@ -814,14 +820,16 @@ export default function Education({
                 <AttachedFilesList
                   files={evidence[index].map(fileId => {
                     const file = allFiles.find(f => f.id === fileId)
-                    return file || {
-                      id: fileId,
-                      name: `File ${evidence[index].indexOf(fileId) + 1}`,
-                      url: '',
-                      uploaded: false,
-                      fileExtension: '',
-                      file: new File([], '')
-                    }
+                    return (
+                      file || {
+                        id: fileId,
+                        name: `File ${evidence[index].indexOf(fileId) + 1}`,
+                        url: '',
+                        uploaded: false,
+                        fileExtension: '',
+                        file: new File([], '')
+                      }
+                    )
                   })}
                   onRemove={fileIndex => handleRemoveFile(index, fileIndex)}
                 />
@@ -830,27 +838,52 @@ export default function Education({
               <Box
                 sx={{
                   display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
+                  flexDirection: { xs: 'column', sm: 'row' },
+                  justifyContent: { xs: 'stretch', sm: 'space-between' },
+                  alignItems: { xs: 'stretch', sm: 'stretch' },
                   mt: 2,
-                  gap: 2
+                  gap: { xs: '10px', md: '15px' }
                 }}
               >
                 <StyledButton
-                  startIcon={<SVGAddFiles />}
+                  startIcon={!isSmallMobile && <SVGAddFiles />}
                   onClick={() => onAddFiles && onAddFiles(index)}
+                  sx={{
+                    fontSize: { xs: '14px', md: '16px' },
+                    padding: { xs: '8px 16px', md: '10px 20px' },
+                    height: { xs: 'auto', sm: '56px' },
+                    flex: { sm: 1 },
+                    minHeight: { sm: '56px' },
+                    whiteSpace: { sm: 'nowrap' }
+                  }}
                 >
                   Add file(s)
                 </StyledButton>
                 <StyledButton
-                  startIcon={<SVGAddFiles />}
+                  startIcon={!isSmallMobile && <SVGAddFiles />}
                   onClick={() => handleOpenCredentialsOverlay(index)}
+                  sx={{
+                    fontSize: { xs: '14px', md: '16px' },
+                    padding: { xs: '8px 16px', md: '10px 20px' },
+                    height: { xs: 'auto', sm: '56px' },
+                    flex: { sm: 1 },
+                    minHeight: { sm: '56px' },
+                    whiteSpace: { sm: 'nowrap' }
+                  }}
                 >
                   Add credential
                 </StyledButton>
                 <StyledButton
-                  startIcon={<SVGDeleteSection />}
+                  startIcon={!isSmallMobile && <SVGDeleteSection />}
                   onClick={() => handleDeleteEducation(index)}
+                  sx={{
+                    fontSize: { xs: '14px', md: '16px' },
+                    padding: { xs: '8px 16px', md: '10px 20px' },
+                    height: { xs: 'auto', sm: '56px' },
+                    flex: { sm: 1 },
+                    minHeight: { sm: '56px' },
+                    whiteSpace: { sm: 'nowrap' }
+                  }}
                 >
                   Delete this item
                 </StyledButton>

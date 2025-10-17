@@ -9,7 +9,9 @@ import {
   IconButton,
   Tooltip,
   Dialog,
-  DialogContent
+  DialogContent,
+  useTheme,
+  useMediaQuery
 } from '@mui/material'
 import {
   SVGSectionIcon,
@@ -84,6 +86,8 @@ export default function CertificationsAndLicenses({
   const resume = useSelector((state: RootState) => state.resume.resume)
   const reduxUpdateTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const initialLoadRef = useRef(true)
+  const theme = useTheme()
+  const isSmallMobile = useMediaQuery(theme.breakpoints.down('sm'))
   const [showCredentialsOverlay, setShowCredentialsOverlay] = useState(false)
   const [activeSectionIndex, setActiveSectionIndex] = useState<number | null>(null)
   const vcs = useSelector((state: any) => state.vcReducer.vcs)
@@ -630,21 +634,38 @@ export default function CertificationsAndLicenses({
                 <Box
                   sx={{
                     display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
+                    flexDirection: { xs: 'column', sm: 'row' },
+                    justifyContent: { xs: 'stretch', sm: 'space-between' },
+                    alignItems: { xs: 'stretch', sm: 'stretch' },
                     marginTop: '20px',
-                    gap: '15px'
+                    gap: { xs: '10px', md: '15px' }
                   }}
                 >
                   <StyledButton
-                    startIcon={<SVGAddFiles />}
+                    startIcon={!isSmallMobile && <SVGAddFiles />}
                     onClick={() => onAddFiles && onAddFiles(index)}
+                    sx={{
+                      fontSize: { xs: '14px', md: '16px' },
+                      padding: { xs: '8px 16px', md: '10px 20px' },
+                      height: { xs: 'auto', sm: '56px' },
+                      flex: { sm: 1 },
+                      minHeight: { sm: '56px' },
+                      whiteSpace: { sm: 'nowrap' }
+                    }}
                   >
                     Add file(s)
                   </StyledButton>
                   <StyledButton
-                    startIcon={<SVGDeleteSection />}
+                    startIcon={!isSmallMobile && <SVGDeleteSection />}
                     onClick={() => handleDeleteCertification(index)}
+                    sx={{
+                      fontSize: { xs: '14px', md: '16px' },
+                      padding: { xs: '8px 16px', md: '10px 20px' },
+                      height: { xs: 'auto', sm: '56px' },
+                      flex: { sm: 1 },
+                      minHeight: { sm: '56px' },
+                      whiteSpace: { sm: 'nowrap' }
+                    }}
                   >
                     Delete this item
                   </StyledButton>

@@ -32,6 +32,7 @@ const StyledButton = styled(Button)({
   textDecorationLine: 'underline',
   marginTop: '30px',
   textTransform: 'none',
+  pt: 2,
   '&:hover': {
     backgroundColor: 'transparent',
     color: '#1d4ed8'
@@ -63,7 +64,7 @@ export default function ImportPage(props: any) {
             textAlign: 'center',
             mb: 8,
             fontFamily: 'Poppins',
-            fontSize: '38px',
+            fontSize: { xs: '28px', md: '38px' },
             fontWeight: 600
           }}
         >
@@ -124,37 +125,6 @@ export default function ImportPage(props: any) {
           </StyledButton>{' '}
         </Box>
       </InnerContainer>
-      <Box
-        sx={{
-          width: '100%',
-          bgcolor: '#FFF',
-          height: '80px',
-          boxShadow: ' 4px -4px 10px 2px rgba(20, 86, 255, 0.25)',
-          display: 'flex',
-          justifyContent: 'flex-end',
-          alignItems: 'center'
-        }}
-      >
-        <Button
-          variant='contained'
-          sx={{
-            backgroundColor: '#B5B5B5',
-            color: '#2E2E48',
-            textTransform: 'none',
-            px: 4,
-            py: 1.5,
-            mr: 6,
-            borderRadius: '100px',
-            border: '3px solid  #B5B5B5',
-            '&:hover': {
-              backgroundColor: '#1E40AF',
-              border: '3px solid  #1E40AF'
-            }
-          }}
-        >
-          Continue
-        </Button>
-      </Box>
     </Box>
   )
 }
