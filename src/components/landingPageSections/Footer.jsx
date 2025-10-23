@@ -73,7 +73,9 @@ const Footer = () => {
 
         <Box display='flex' justifyContent='center' alignItems='center' gap={1}>
           <SVGlisence />
-          <StyledButton>Apache 2 License</StyledButton>
+          <StyledButton href='https://www.apache.org/licenses/LICENSE-2.0'>
+            Apache 2 License
+          </StyledButton>
         </Box>
 
         {!isMobile && <Divider orientation='vertical' flexItem />}
