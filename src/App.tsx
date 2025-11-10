@@ -28,6 +28,7 @@ import PreviewPageFromDrive from './pages/PreviewPageFromDrive'
 import RawPreview from './pages/credential-raw'
 import PrivacyPolicy from './pages/PrivacyPolicy'
 import { getOrCreateAppInstanceDid } from '@cooperation/vc-storage'
+import ProtectedRoute from './components/ProtectedRoute'
 
 const App = () => {
   const dispatch: AppDispatch = useDispatch()
@@ -68,13 +69,15 @@ const App = () => {
       <Routes>
         <Route element={<Layout />}>
           <Route path='/' element={<Home />} />
-          <Route path='/resume/new' element={<Resume />} />
-          <Route path='/resume/import' element={<ImportPage />} />
-          <Route path='/resume/upload' element={<ResumeUploadPage />} />
-          <Route path='/resume/view' element={<PreviewPage />} />
-          <Route path='/resume/view/:id' element={<PreviewPageFromDrive />} />
           <Route path='/auth/callback' element={<AuthCallback />} />
-          <Route path='/myresumes' element={<MyResumes />} />
+          <Route element={<ProtectedRoute />}>
+            <Route path='/resume/new' element={<Resume />} />
+            <Route path='/resume/import' element={<ImportPage />} />
+            <Route path='/resume/upload' element={<ResumeUploadPage />} />
+            <Route path='/resume/view' element={<PreviewPage />} />
+            <Route path='/resume/view/:id' element={<PreviewPageFromDrive />} />
+            <Route path='/myresumes' element={<MyResumes />} />
+          </Route>
           <Route path='*' element={<Error404 />} />
         </Route>
         {/* Landing page outside of Layout */}
