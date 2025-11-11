@@ -1,6 +1,22 @@
-import React, { useState, useEffect, useRef } from 'react'
-import { Box, CircularProgress, Typography, IconButton } from '@mui/material'
+import React, { useState, useEffect, useRef, useMemo } from 'react'
+import {
+  Box,
+  Typography,
+  IconButton,
+  Tooltip,
+  Menu,
+  MenuItem,
+  Divider,
+  Snackbar,
+  Alert,
+  Skeleton
+} from '@mui/material'
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf'
+import MoreVertIcon from '@mui/icons-material/MoreVert'
+import ZoomInIcon from '@mui/icons-material/ZoomIn'
+import ZoomOutIcon from '@mui/icons-material/ZoomOut'
+import FitScreenIcon from '@mui/icons-material/FitScreen'
+import RestartAltIcon from '@mui/icons-material/RestartAlt'
 import { GoogleDriveStorage } from '@cooperation/vc-storage'
 import { getLocalStorage } from '../tools/cookie'
 import ResumePreview from '../components/resumePreview'
@@ -15,9 +31,16 @@ const PreviewPage = () => {
   const [isDraftSaving, setIsDraftSaving] = useState(false)
   const [isSigningSaving, setIsSigningSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [zoom, setZoom] = useState(1)
+  const [exportAnchorEl, setExportAnchorEl] = useState<null | HTMLElement>(null)
+  const [snackbar, setSnackbar] = useState<{
+    open: boolean
+    message: string
+    severity: 'success' | 'info' | 'error'
+  }>({ open: false, message: '', severity: 'success' })
   const location = useLocation()
   const dispatch = useDispatch<AppDispatch>()
-  
+
   // Get the resume from Redux state first
   const reduxResume = useSelector((state: RootState) => state.resume?.resume)
 
@@ -40,7 +63,7 @@ const PreviewPage = () => {
   useEffect(() => {
     const fetchResumeFromDrive = async () => {
       if (!resumeId) return
-      
+
       try {
         const accessToken = getLocalStorage('auth')
         if (!accessToken) throw new Error('No authentication token found')
@@ -75,7 +98,27 @@ const PreviewPage = () => {
     fetchResumeFromDrive()
   }, [resumeId, dispatch])
 
-  const exportResumeToPDF = () => {
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'p') {
+        e.preventDefault()
+        window.print()
+      } else if (e.key === '+' || e.key === '=') {
+        e.preventDefault()
+        setZoom(z => Math.min(1.5, parseFloat((z + 0.1).toFixed(2))))
+      } else if (e.key === '-') {
+        e.preventDefault()
+        setZoom(z => Math.max(0.7, parseFloat((z - 0.1).toFixed(2))))
+      } else if (e.key === '0') {
+        e.preventDefault()
+        setZoom(1)
+      }
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [])
+
+  const exportResumeToPDF = async () => {
     if (!resumeData) return
 
     const element = document.getElementById('resume-preview')
@@ -97,8 +140,51 @@ const PreviewPage = () => {
       custom: { resumeData: JSON.stringify(resumeData) }
     }
 
-    html2pdf().set(metadata).from(element).set(options).save()
+    // Temporarily reset zoom for export to avoid scaled capture
+    const prevZoom = zoom
+    setZoom(1)
+    try {
+      await html2pdf().set(metadata).from(element).set(options).save()
+    } finally {
+      setZoom(prevZoom)
+    }
   }
+
+  const handleCopyLink = async () => {
+    try {
+      const url = resumeId
+        ? `${window.location.origin}${window.location.pathname}?id=${resumeId}`
+        : window.location.href
+      await navigator.clipboard.writeText(url)
+      setSnackbar({
+        open: true,
+        message: 'Link copied to clipboard',
+        severity: 'success'
+      })
+    } catch {
+      setSnackbar({ open: true, message: 'Failed to copy link', severity: 'error' })
+    }
+  }
+
+  const handleDownloadJson = () => {
+    if (!resumeData) return
+    const blob = new Blob([JSON.stringify(resumeData, null, 2)], {
+      type: 'application/json'
+    })
+    const a = document.createElement('a')
+    a.href = URL.createObjectURL(blob)
+    a.download = `${resumeData.contact?.fullName ?? 'Resume'}.json`
+    document.body.appendChild(a)
+    a.click()
+    URL.revokeObjectURL(a.href)
+    document.body.removeChild(a)
+  }
+
+  const fitToWidthZoom = useMemo(() => {
+    // Approximate: page width 210mm; container likely full width; we'll scale down on small screens
+    // Leave as 1 on desktop, clamp to 0.9 on smaller; user can tap Fit control as needed
+    return 0.9
+  }, [])
 
   if (isLoading) {
     return (
@@ -106,14 +192,19 @@ const PreviewPage = () => {
         sx={{
           p: 4,
           display: 'flex',
-          justifyContent: 'center',
+          flexDirection: 'column',
           alignItems: 'center',
           gap: 2
         }}
       >
-        <CircularProgress size={24} />
+        <Box sx={{ width: '100%', maxWidth: '900px' }}>
+          <Skeleton variant='rectangular' height={64} sx={{ mb: 2, borderRadius: 1 }} />
+          <Skeleton variant='rectangular' height={24} sx={{ mb: 1, borderRadius: 1 }} />
+          <Skeleton variant='rectangular' height={680} sx={{ mb: 2, borderRadius: 1 }} />
+          <Skeleton variant='rectangular' height={680} sx={{ mb: 2, borderRadius: 1 }} />
+        </Box>
         <Typography variant='body1' color='text.secondary'>
-          Loading resume data...
+          Loading resume preview…
         </Typography>
       </Box>
     )
@@ -152,47 +243,139 @@ const PreviewPage = () => {
         resumeId={resumeId}
       />
 
+      {/* Controls: Zoom and Export */}
       <Box
         sx={{
           position: 'fixed',
           bottom: '20px',
           right: '20px',
           zIndex: 1000,
-          display: { xs: 'none', sm: 'block' },
-          '@media print': {
-            display: 'none'
-          }
+          display: { xs: 'none', sm: 'flex' },
+          flexDirection: 'column',
+          gap: 1,
+          '@media print': { display: 'none' }
         }}
       >
         <Box
           sx={{
             display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            gap: '8px'
+            gap: 1,
+            bgcolor: 'background.paper',
+            borderRadius: 1,
+            p: 0.5,
+            boxShadow: 2
           }}
         >
-          <IconButton
-            onClick={exportResumeToPDF}
-            sx={{
-              width: '36px',
-              height: '36px',
-              borderRadius: '4px',
-              transition: 'transform, background-color',
-              '&:hover': {
-                bgcolor: 'action.hover',
-                transform: 'scale(1)'
-              },
-              '&:active': {
-                transform: 'scale(0.95)'
+          <Tooltip title='Zoom out (-)'>
+            <IconButton
+              aria-label='Zoom out'
+              onClick={() =>
+                setZoom(z => Math.max(0.7, parseFloat((z - 0.1).toFixed(2))))
               }
+            >
+              <ZoomOutIcon />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title='Reset zoom (0)'>
+            <IconButton aria-label='Reset zoom' onClick={() => setZoom(1)}>
+              <RestartAltIcon />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title='Zoom in (+)'>
+            <IconButton
+              aria-label='Zoom in'
+              onClick={() =>
+                setZoom(z => Math.min(1.5, parseFloat((z + 0.1).toFixed(2))))
+              }
+            >
+              <ZoomInIcon />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title='Fit'>
+            <IconButton aria-label='Fit to width' onClick={() => setZoom(fitToWidthZoom)}>
+              <FitScreenIcon />
+            </IconButton>
+          </Tooltip>
+        </Box>
+        <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+          <Tooltip title='Export & Share'>
+            <IconButton
+              aria-label='Export menu'
+              onClick={e => setExportAnchorEl(e.currentTarget)}
+              sx={{ bgcolor: 'background.paper', boxShadow: 2 }}
+            >
+              <MoreVertIcon />
+            </IconButton>
+          </Tooltip>
+        </Box>
+        <Menu
+          anchorEl={exportAnchorEl}
+          open={Boolean(exportAnchorEl)}
+          onClose={() => setExportAnchorEl(null)}
+        >
+          <MenuItem
+            onClick={() => {
+              setExportAnchorEl(null)
+              exportResumeToPDF()
             }}
           >
-            <PictureAsPdfIcon sx={{ width: '36px', height: '36px' }} />
-          </IconButton>
-        </Box>
+            <PictureAsPdfIcon sx={{ mr: 1 }} /> Download PDF
+          </MenuItem>
+          <MenuItem
+            onClick={() => {
+              setExportAnchorEl(null)
+              window.print()
+            }}
+          >
+            Print
+          </MenuItem>
+          <MenuItem
+            disabled={!resumeId}
+            onClick={() => {
+              setExportAnchorEl(null)
+              handleCopyLink()
+            }}
+          >
+            Copy Share Link
+          </MenuItem>
+          <Divider />
+          <MenuItem
+            onClick={() => {
+              setExportAnchorEl(null)
+              handleDownloadJson()
+            }}
+          >
+            Download JSON
+          </MenuItem>
+        </Menu>
       </Box>
-      <ResumePreview data={resumeData} />
+
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'center',
+          transition: 'transform 120ms ease',
+          transform: `scale(${zoom})`,
+          transformOrigin: 'top center'
+        }}
+      >
+        <ResumePreview data={resumeData} />
+      </Box>
+
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={2200}
+        onClose={() => setSnackbar(s => ({ ...s, open: false }))}
+      >
+        <Alert
+          onClose={() => setSnackbar(s => ({ ...s, open: false }))}
+          severity={snackbar.severity}
+          variant='filled'
+          sx={{ width: '100%' }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Box>
   )
 }
