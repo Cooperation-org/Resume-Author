@@ -23,7 +23,7 @@ const PAGE_SIZE = {
   width: '210mm',
   height: '297mm'
 }
-const HEADER_HEIGHT_PX = 120
+const HEADER_HEIGHT_PX = 150
 const FOOTER_HEIGHT_PX = 60 // Footer height including padding (60px + 30px py)
 const CONTENT_PADDING_TOP = 20
 const CONTENT_PADDING_BOTTOM = 15
@@ -32,12 +32,14 @@ const mmToPx = (mm: number) => mm * 3.779527559
 
 const SectionTitle: React.FC<{ children: ReactNode }> = ({ children }) => (
   <Typography
+    className='rs-section-title'
     variant='h6'
     sx={{
       fontWeight: 700,
-      mb: '6px', // Further reduced
-      lineHeight: '18px',
-      fontSize: '16px', // Reduced from 18px
+      mb: '8px',
+      lineHeight: '20px',
+      fontSize: '17px',
+      letterSpacing: 0.1,
       color: '#000'
     }}
   >
@@ -130,7 +132,7 @@ const FirstPageHeader: React.FC<{
         display: 'flex',
         justifyContent: 'space-between',
         backgroundColor: '#F7F9FC',
-        height: `${HEADER_HEIGHT_PX}px`
+        height: `fit-content`
       }}
     >
       <Box
@@ -221,7 +223,7 @@ const FirstPageHeader: React.FC<{
                         fontWeight: 400,
                         fontFamily: 'Arial',
                         '&:hover': {
-                        textDecoration: 'underline'
+                          textDecoration: 'underline'
                         }
                       }}
                     >
@@ -239,13 +241,20 @@ const FirstPageHeader: React.FC<{
         )}
       </Box>
 
-      <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
+      <Box
+        sx={{
+          display: 'flex',
+          flexDirection: 'row',
+          alignItems: 'center',
+          height: '100%'
+        }}
+      >
         <Box
           sx={{
             textAlign: 'center',
             py: '20px',
             mr: '15px',
-            display: hasValidId ? 'block' : 'none' // Hide when no valid ID
+            display: hasValidId ? 'block' : 'none'
           }}
         >
           <Link
@@ -309,8 +318,6 @@ const SubsequentPageHeader: React.FC<{ fullName: string }> = ({ fullName }) => {
     </Box>
   )
 }
-
-
 
 // Updated PageFooter component
 const PageFooter: React.FC<{
@@ -404,8 +411,6 @@ const SummarySection: React.FC<{ summary?: string }> = ({ summary }) => {
   )
 }
 
-
-
 // Helper to get credential name
 function getCredentialName(claim: any): string {
   try {
@@ -439,8 +444,6 @@ function getCredentialName(claim: any): string {
 
 // Helper to get credential links as array (handles both new and old formats)
 function getCredentialLinks(credentialLink: string | string[] | undefined): string[] {
-
-  
   if (!credentialLink) return []
   if (Array.isArray(credentialLink)) return credentialLink
   if (typeof credentialLink === 'string') {
@@ -472,13 +475,13 @@ function getCredentialLinks(credentialLink: string | string[] | undefined): stri
 }
 
 // Helper function to parse a single credential link and extract credential data
-function parseCredentialLink(link: string): { credObj: any; credId: string; fileId: string } | null {
+function parseCredentialLink(
+  link: string
+): { credObj: any; credId: string; fileId: string } | null {
   let credObj: any = null
   let credId = ''
   let fileId = ''
-  
 
-  
   try {
     // Check if this is an object wrapper with fileId
     if (link.startsWith('{') && link.includes('"fileId"')) {
@@ -500,7 +503,6 @@ function parseCredentialLink(link: string): { credObj: any; credId: string; file
             credObj.credentialId = fileId
           }
         }
-
       }
     } else if (link.match(/^([\w-]+),\{.*\}$/)) {
       // Format: 'fileid,{json}' (native credentials)
@@ -510,7 +512,6 @@ function parseCredentialLink(link: string): { credObj: any; credId: string; file
       const jsonStr = link.slice(commaIdx + 1)
       credObj = JSON.parse(jsonStr)
       credObj.credentialId = fileId
-
     } else if (link.includes(',{')) {
       // Format: 'url,{json}' (external credentials with URL)
       const commaIdx = link.indexOf(',')
@@ -528,13 +529,11 @@ function parseCredentialLink(link: string): { credObj: any; credId: string; file
         fileId = urlPart.split('/').pop() || urlPart
       }
       credObj.credentialId = fileId
-
     } else if (link.startsWith('{')) {
       // Format: '{json}'
       credObj = JSON.parse(link)
       credId = credObj.credentialId || credObj.id || ''
       fileId = credId // For this format, use credId as fileId
-
     } else if (link) {
       // Just a plain ID
       credId = link
@@ -543,14 +542,14 @@ function parseCredentialLink(link: string): { credObj: any; credId: string; file
       // Create a minimal credential object for external credentials
       credObj = { id: fileId, credentialId: fileId }
     }
-    
+
     if (credObj || fileId) {
       return { credObj, credId, fileId }
     }
   } catch (e) {
     console.error('Error parsing credential link:', e)
   }
-  
+
   return null
 }
 
@@ -563,11 +562,11 @@ function renderSectionCredentials(
 ): ReactNode {
   // Get credential links as array
   const credLinks = getCredentialLinks(credentialLink)
-  
+
   // Parse and deduplicate credentials
   const dedupedCreds: { credObj: any; credId: string; fileId: string }[] = []
   const seen = new Set<string>()
-  
+
   credLinks.forEach(link => {
     const parsed = parseCredentialLink(link)
     if (parsed && !seen.has(parsed.fileId)) {
@@ -575,13 +574,16 @@ function renderSectionCredentials(
       seen.add(parsed.fileId)
     }
   })
-  
+
   // If no credentials, return null
   if (dedupedCreds.length === 0) return null
-  
+
   // Render the credentials section
   return (
-    <Box sx={{ mt: 1, display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+    <Box
+      className='rs-avoid-break'
+      sx={{ mt: 1, display: 'flex', flexWrap: 'wrap', gap: 1 }}
+    >
       {dedupedCreds.map(({ credObj, credId, fileId }, idx) => (
         <Typography
           key={fileId || idx}
@@ -594,20 +596,32 @@ function renderSectionCredentials(
             alignItems: 'center',
             mr: 2,
             cursor: 'pointer',
-            gap: '4px'
+            gap: '6px',
+            '&:hover': { opacity: 0.85 },
+            '&:focus-visible': { outline: '2px solid #2563EB', outlineOffset: '2px' }
           }}
           onClick={() => {
-            openCredentialDialog(credObj, fileId, setDialogCredObj, setDialogImageUrl, setOpenCredDialog)
+            openCredentialDialog(
+              credObj,
+              fileId,
+              setDialogCredObj,
+              setDialogImageUrl,
+              setOpenCredDialog
+            )
           }}
         >
-          <WorkspacePremiumIcon sx={{ fontSize: 16, color: '#2563EB' }} />
+          <WorkspacePremiumIcon
+            sx={{ fontSize: 16, color: '#2563EB', flex: '0 0 auto' }}
+          />
           {credObj &&
             (credObj.credentialStatus === 'verified' ||
               credObj.credentialStatus?.status === 'verified') && (
-              <BlueVerifiedBadge />
+              <span style={{ display: 'inline-flex', alignItems: 'center' }}>
+                <BlueVerifiedBadge />
+              </span>
             )}
-          {credObj && getCredentialName(credObj) !== 'Credential' 
-            ? getCredentialName(credObj) 
+          {credObj && getCredentialName(credObj) !== 'Credential'
+            ? getCredentialName(credObj)
             : `External Credential ${fileId.substring(0, 8)}...`}
         </Typography>
       ))}
@@ -616,10 +630,12 @@ function renderSectionCredentials(
 }
 
 // Helper to extract portfolio from credential link (for sections that need it)
-function getPortfolioFromCredentialLink(credentialLink: string | string[] | undefined): any[] | undefined {
+function getPortfolioFromCredentialLink(
+  credentialLink: string | string[] | undefined
+): any[] | undefined {
   const credLinks = getCredentialLinks(credentialLink)
   if (credLinks.length === 0) return undefined
-  
+
   const firstCred = parseCredentialLink(credLinks[0])
   return firstCred?.credObj?.credentialSubject?.portfolio
 }
@@ -632,7 +648,6 @@ function openCredentialDialog(
   setDialogImageUrl: any,
   setOpenCredDialog: any
 ) {
-
   const credentialToShow = credObj || {}
   // Ensure credentialId is always set to the file ID
   credentialToShow.credentialId = fileId
@@ -641,8 +656,6 @@ function openCredentialDialog(
   setDialogImageUrl(null)
   setOpenCredDialog(true)
 }
-
-
 
 // Helper to render portfolio links/images
 function renderPortfolio(portfolio: any[] | undefined) {
@@ -670,7 +683,7 @@ function renderPortfolio(portfolio: any[] | undefined) {
 // Helper to render attached files
 function renderAttachedFiles(attachedFiles: string[] | undefined) {
   if (!attachedFiles || attachedFiles.length === 0) return null
-  
+
   return (
     <Box sx={{ mt: 1, display: 'flex', flexWrap: 'wrap', gap: 1 }}>
       {attachedFiles.map((fileUrl: string, idx: number) => {
@@ -691,7 +704,7 @@ function renderAttachedFiles(attachedFiles: string[] | undefined) {
         } catch (e) {
           console.error('Error parsing file URL:', e)
         }
-        
+
         return (
           <Box
             key={`file-${idx}`}
@@ -768,21 +781,15 @@ const ExperienceItem: React.FC<{
   setDialogCredObj: (obj: any) => void
   setDialogImageUrl: (url: string | null) => void
   setOpenCredDialog: (open: boolean) => void
-}> = ({
-  item,
-  index,
-  setDialogCredObj,
-  setDialogImageUrl,
-  setOpenCredDialog
-}) => {
+}> = ({ item, index, setDialogCredObj, setDialogImageUrl, setOpenCredDialog }) => {
   const dateText = renderDateOrDuration({
     duration: item.duration,
     startDate: item.startDate,
     endDate: item.endDate
   })
-  
+
   return (
-    <Box key={item.id || `exp-${index}`} sx={{ mb: '10px' }}>
+    <Box key={item.id || `exp-${index}`} className='rs-avoid-break' sx={{ mb: '12px' }}>
       {/* Further reduced to prevent overlap */}
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
         <Typography
@@ -838,7 +845,12 @@ const ExperienceItem: React.FC<{
       {/* Portfolio */}
       {renderPortfolio(getPortfolioFromCredentialLink(item.credentialLink))}
       {/* Render credentials */}
-      {renderSectionCredentials(item.credentialLink, setDialogCredObj, setDialogImageUrl, setOpenCredDialog)}
+      {renderSectionCredentials(
+        item.credentialLink,
+        setDialogCredObj,
+        setDialogImageUrl,
+        setOpenCredDialog
+      )}
       {/* Render attached files */}
       {renderAttachedFiles(item.attachedFiles)}
     </Box>
@@ -851,19 +863,14 @@ const EducationItem: React.FC<{
   setDialogCredObj: (obj: any) => void
   setDialogImageUrl: (url: string | null) => void
   setOpenCredDialog: (open: boolean) => void
-}> = ({
-  item,
-  setDialogCredObj,
-  setDialogImageUrl,
-  setOpenCredDialog
-}) => {
+}> = ({ item, setDialogCredObj, setDialogImageUrl, setOpenCredDialog }) => {
   const dateText = renderDateOrDuration({
     duration: item.duration,
     startDate: item.startDate,
     endDate: item.endDate,
     currentlyVolunteering: item.currentlyEnrolled
   })
-  
+
   // Fix for empty degree and program name
   let educationTitle = ''
   if (item.type && item.programName) {
@@ -878,9 +885,9 @@ const EducationItem: React.FC<{
   } else if (item.institution) {
     educationTitle = item.institution
   }
-  
+
   return (
-    <Box key={item.id} sx={{ mb: '10px' }}>
+    <Box key={item.id} className='rs-avoid-break' sx={{ mb: '12px' }}>
       <Box sx={{ display: 'flex', alignItems: 'flex-start' }}>
         <Box sx={{ ml: 0 }}>
           <Typography
@@ -919,7 +926,12 @@ const EducationItem: React.FC<{
           {/* Portfolio */}
           {renderPortfolio(getPortfolioFromCredentialLink(item.credentialLink))}
           {/* Render credentials */}
-          {renderSectionCredentials(item.credentialLink, setDialogCredObj, setDialogImageUrl, setOpenCredDialog)}
+          {renderSectionCredentials(
+            item.credentialLink,
+            setDialogCredObj,
+            setDialogImageUrl,
+            setOpenCredDialog
+          )}
           {/* Render attached files */}
           {renderAttachedFiles(item.attachedFiles)}
         </Box>
@@ -934,12 +946,7 @@ const CertificationItem: React.FC<{
   setDialogCredObj: (obj: any) => void
   setDialogImageUrl: (url: string | null) => void
   setOpenCredDialog: (open: boolean) => void
-}> = ({
-  item,
-  setDialogCredObj,
-  setDialogImageUrl,
-  setOpenCredDialog
-}) => {
+}> = ({ item, setDialogCredObj, setDialogImageUrl, setOpenCredDialog }) => {
   let displayDate = ''
   if (item.noExpiration) {
     displayDate = 'No Expiration'
@@ -951,9 +958,9 @@ const CertificationItem: React.FC<{
       displayDate = `Issued on ${item.issueDate}`
     }
   }
-  
+
   return (
-    <Box key={item.id || item.name} sx={{ mb: '10px' }}>
+    <Box key={item.id || item.name} className='rs-avoid-break' sx={{ mb: '12px' }}>
       <Box sx={{ ml: 0 }}>
         <Typography
           variant='subtitle1'
@@ -1003,7 +1010,12 @@ const CertificationItem: React.FC<{
         {/* Portfolio */}
         {renderPortfolio(getPortfolioFromCredentialLink(item.credentialLink))}
         {/* Render credentials */}
-        {renderSectionCredentials(item.credentialLink, setDialogCredObj, setDialogImageUrl, setOpenCredDialog)}
+        {renderSectionCredentials(
+          item.credentialLink,
+          setDialogCredObj,
+          setDialogImageUrl,
+          setOpenCredDialog
+        )}
       </Box>
     </Box>
   )
@@ -1015,16 +1027,11 @@ const ProjectItem: React.FC<{
   setDialogCredObj: (obj: any) => void
   setDialogImageUrl: (url: string | null) => void
   setOpenCredDialog: (open: boolean) => void
-}> = ({
-  item,
-  setDialogCredObj,
-  setDialogImageUrl,
-  setOpenCredDialog
-}) => {
+}> = ({ item, setDialogCredObj, setDialogImageUrl, setOpenCredDialog }) => {
   const dateText = renderDateOrDuration({})
-  
+
   return (
-    <Box key={item.id} sx={{ mb: '10px' }}>
+    <Box key={item.id} className='rs-avoid-break' sx={{ mb: '12px' }}>
       <Box sx={{ display: 'flex', alignItems: 'flex-start' }}>
         <Box sx={{ ml: 0 }}>
           <Typography
@@ -1061,7 +1068,12 @@ const ProjectItem: React.FC<{
           {/* Portfolio */}
           {renderPortfolio(getPortfolioFromCredentialLink(item.credentialLink))}
           {/* Render credentials */}
-          {renderSectionCredentials(item.credentialLink, setDialogCredObj, setDialogImageUrl, setOpenCredDialog)}
+          {renderSectionCredentials(
+            item.credentialLink,
+            setDialogCredObj,
+            setDialogImageUrl,
+            setOpenCredDialog
+          )}
         </Box>
       </Box>
     </Box>
@@ -1074,20 +1086,15 @@ const ProfessionalAffiliationItem: React.FC<{
   setDialogCredObj: (obj: any) => void
   setDialogImageUrl: (url: string | null) => void
   setOpenCredDialog: (open: boolean) => void
-}> = ({
-  item,
-  setDialogCredObj,
-  setDialogImageUrl,
-  setOpenCredDialog
-}) => {
+}> = ({ item, setDialogCredObj, setDialogImageUrl, setOpenCredDialog }) => {
   const dateText = renderDateOrDuration({
     duration: item.duration,
     startDate: item.startDate,
     endDate: item.endDate
   })
-  
+
   return (
-    <Box key={item.id} sx={{ mb: '10px' }}>
+    <Box key={item.id} className='rs-avoid-break' sx={{ mb: '12px' }}>
       <Box sx={{ display: 'flex', alignItems: 'flex-start' }}>
         <Box sx={{ ml: 0 }}>
           <Typography
@@ -1126,7 +1133,12 @@ const ProfessionalAffiliationItem: React.FC<{
           {/* Portfolio */}
           {renderPortfolio(getPortfolioFromCredentialLink(item.credentialLink))}
           {/* Render credentials */}
-          {renderSectionCredentials(item.credentialLink, setDialogCredObj, setDialogImageUrl, setOpenCredDialog)}
+          {renderSectionCredentials(
+            item.credentialLink,
+            setDialogCredObj,
+            setDialogImageUrl,
+            setOpenCredDialog
+          )}
         </Box>
       </Box>
     </Box>
@@ -1139,19 +1151,14 @@ const VolunteerWorkItem: React.FC<{
   setDialogCredObj: (obj: any) => void
   setDialogImageUrl: (url: string | null) => void
   setOpenCredDialog: (open: boolean) => void
-}> = ({
-  item,
-  setDialogCredObj,
-  setDialogImageUrl,
-  setOpenCredDialog
-}) => {
+}> = ({ item, setDialogCredObj, setDialogImageUrl, setOpenCredDialog }) => {
   const dateText = renderDateOrDuration({
     duration: item.duration,
     startDate: item.startDate,
     endDate: item.endDate,
     currentlyVolunteering: item.currentlyVolunteering
   })
-  
+
   return (
     <Box key={item.id} sx={{ mb: '10px' }}>
       <Box sx={{ display: 'flex', alignItems: 'flex-start' }}>
@@ -1189,7 +1196,12 @@ const VolunteerWorkItem: React.FC<{
           {/* Portfolio */}
           {renderPortfolio(getPortfolioFromCredentialLink(item.credentialLink))}
           {/* Render credentials */}
-          {renderSectionCredentials(item.credentialLink, setDialogCredObj, setDialogImageUrl, setOpenCredDialog)}
+          {renderSectionCredentials(
+            item.credentialLink,
+            setDialogCredObj,
+            setDialogImageUrl,
+            setOpenCredDialog
+          )}
         </Box>
       </Box>
     </Box>
@@ -1291,37 +1303,32 @@ const SkillsSection: React.FC<{
   setDialogCredObj: (obj: any) => void
   setDialogImageUrl: (url: string | null) => void
   setOpenCredDialog: (open: boolean) => void
-}> = ({
-  items,
-  setDialogCredObj,
-  setDialogImageUrl,
-  setOpenCredDialog
-}) => {
+}> = ({ items, setDialogCredObj, setDialogImageUrl, setOpenCredDialog }) => {
   if (!items?.length) return null
-  
+
   // Collect all credential links from all skill items
   const allCredLinks = items.flatMap(item => {
     const links = getCredentialLinks(item.credentialLink)
-
 
     return links
   })
   const combinedCredentialLink = allCredLinks.length > 0 ? allCredLinks : undefined
 
-  
   return (
     <Box sx={{ mb: '15px' }}>
       <SectionTitle>Skills</SectionTitle>
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
         {items.map(item => (
-          <SkillItem
-            key={item.id}
-            item={item}
-          />
+          <SkillItem key={item.id} item={item} />
         ))}
       </Box>
       {/* Render all credentials at the end of the section */}
-      {renderSectionCredentials(combinedCredentialLink, setDialogCredObj, setDialogImageUrl, setOpenCredDialog)}
+      {renderSectionCredentials(
+        combinedCredentialLink,
+        setDialogCredObj,
+        setDialogImageUrl,
+        setOpenCredDialog
+      )}
     </Box>
   )
 }
@@ -1484,8 +1491,6 @@ const ResumePreview: React.FC<{ data?: Resume; forcedId?: string }> = ({
   const [dialogCredObj, setDialogCredObj] = useState<any>(null)
   const [dialogImageUrl, setDialogImageUrl] = useState<string | null>(null)
 
-
-
   useEffect(() => {
     const timeoutId = setTimeout(() => {
       setInitialRenderComplete(true)
@@ -1517,9 +1522,9 @@ const ResumePreview: React.FC<{ data?: Resume; forcedId?: string }> = ({
       // Experience section - add title then each item separately
       if (resume.experience?.items?.length) {
         elements.push(
-        <Box key='experience-title' sx={{ mb: '6px' }}>
-        <SectionTitle>Work Experience</SectionTitle>
-        </Box>
+          <Box key='experience-title' sx={{ mb: '6px' }}>
+            <SectionTitle>Work Experience</SectionTitle>
+          </Box>
         )
         resume.experience.items.forEach((item, index) => {
           elements.push(
@@ -1538,9 +1543,9 @@ const ResumePreview: React.FC<{ data?: Resume; forcedId?: string }> = ({
       // Certifications section - add title then each item separately
       if (resume.certifications?.items?.length) {
         elements.push(
-        <Box key='certifications-title' sx={{ mb: '6px' }}>
-        <SectionTitle>Certifications</SectionTitle>
-        </Box>
+          <Box key='certifications-title' sx={{ mb: '6px' }}>
+            <SectionTitle>Certifications</SectionTitle>
+          </Box>
         )
         resume.certifications.items.forEach(item => {
           elements.push(
@@ -1558,9 +1563,9 @@ const ResumePreview: React.FC<{ data?: Resume; forcedId?: string }> = ({
       // Education section - add title then each item separately
       if (resume.education?.items?.length) {
         elements.push(
-        <Box key='education-title' sx={{ mb: '6px' }}>
-        <SectionTitle>Education</SectionTitle>
-        </Box>
+          <Box key='education-title' sx={{ mb: '6px' }}>
+            <SectionTitle>Education</SectionTitle>
+          </Box>
         )
         resume.education.items.forEach(item => {
           elements.push(
@@ -1671,7 +1676,7 @@ const ResumePreview: React.FC<{ data?: Resume; forcedId?: string }> = ({
       }
     }
     return elements
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []) // NEVER include resume here - it causes infinite loops!
 
   // Now use pagination with the flattened content elements
@@ -1771,7 +1776,7 @@ const ResumePreview: React.FC<{ data?: Resume; forcedId?: string }> = ({
             <Box
               key={`page-${pageIndex}`}
               id={`page-${pageIndex}`}
-              className="resume-page"
+              className='resume-page'
               sx={{
                 width: PAGE_SIZE.width,
                 height: PAGE_SIZE.height,

@@ -5,20 +5,34 @@
     print-color-adjust: exact !important;
     color-adjust: exact !important;
   }
-  
+
   body {
     margin: 0 !important;
     padding: 0 !important;
   }
-  
+
   .resume-page {
     margin: 0 !important;
     page-break-after: always;
     page-break-inside: avoid;
+    box-shadow: none !important;
+    border: 0 !important;
   }
-  
+
   .resume-page:last-child {
     page-break-after: auto;
+  }
+
+  /* Avoid breaking key blocks */
+  .rs-avoid-break {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  /* Ensure headings are not orphaned */
+  .rs-section-title {
+    break-after: avoid;
+    page-break-after: avoid;
   }
 }
 
