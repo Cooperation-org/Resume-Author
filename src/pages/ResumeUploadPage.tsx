@@ -1,16 +1,20 @@
-import React, { useState } from 'react'
+import React, { useState, useRef } from 'react'
 import {
   Box,
   Button,
   TextField,
   Typography,
   CircularProgress,
-  Alert
+  Alert,
+  Tabs,
+  Tab
 } from '@mui/material'
 import { styled } from '@mui/system'
 import { useNavigate } from 'react-router-dom'
 import { useDispatch } from 'react-redux'
 import { setSelectedResume } from '../redux/slices/resume'
+import { extractTextFromPDF } from '../utils/pdfExtractor'
+import { parseResumeWithGemini } from '../services/geminiService'
 
 const Container = styled(Box)(() => ({
   display: 'flex',
@@ -51,6 +55,171 @@ const StyledButton = styled(Button)(() => ({
     color: '#FFFFFF'
   }
 }))
+
+// Function to generate unique ID for resume items
+const generateId = (prefix: string) => `${prefix}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+
+// Function to transform Gemini response to resume format
+const transformGeminiResponseToResume = (geminiData: any) => {
+  // Ensure we have a valid structure
+  if (!geminiData) {
+    throw new Error('Invalid response from Gemini API')
+  }
+
+  const transformedResume = {
+    id: geminiData.id || '',
+    lastUpdated: geminiData.lastUpdated || new Date().toISOString(),
+    name: geminiData.name || geminiData.contact?.fullName || 'Untitled Resume',
+    version: geminiData.version || 1,
+    contact: {
+      fullName: geminiData.contact?.fullName || '',
+      email: geminiData.contact?.email || '',
+      phone: geminiData.contact?.phone || '',
+      location: {
+        street: geminiData.contact?.location?.street || '',
+        city: geminiData.contact?.location?.city || '',
+        state: geminiData.contact?.location?.state || '',
+        country: geminiData.contact?.location?.country || '',
+        postalCode: geminiData.contact?.location?.postalCode || ''
+      },
+      socialLinks: {
+        linkedin: geminiData.contact?.socialLinks?.linkedin || '',
+        github: geminiData.contact?.socialLinks?.github || '',
+        portfolio: geminiData.contact?.socialLinks?.portfolio || '',
+        instagram: geminiData.contact?.socialLinks?.instagram || ''
+      }
+    },
+    summary: geminiData.summary || '',
+    experience: {
+      items: (geminiData.experience?.items || []).map((exp: any) => ({
+        id: exp.id || generateId('exp'),
+        title: exp.title || exp.position || '',
+        position: exp.position || exp.title || '',
+        company: exp.company || '',
+        description: exp.description || '',
+        startDate: exp.startDate || '',
+        endDate: exp.endDate || '',
+        stillEmployed: exp.stillEmployed || exp.currentlyEmployed || false,
+        currentlyEmployed: exp.currentlyEmployed || exp.stillEmployed || false,
+        duration: exp.duration || '',
+        location: exp.location || '',
+        verificationStatus: exp.verificationStatus || 'unverified'
+      }))
+    },
+    education: {
+      items: (geminiData.education?.items || []).map((edu: any) => ({
+        id: edu.id || generateId('edu'),
+        institution: edu.institution || '',
+        degree: edu.degree || edu.type || '',
+        type: edu.type || edu.degree || '',
+        programName: edu.programName || edu.field || '',
+        field: edu.field || edu.programName || '',
+        startDate: edu.startDate || '',
+        endDate: edu.endDate || '',
+        duration: edu.duration || '',
+        inProgress: edu.inProgress || edu.currentlyEnrolled || false,
+        currentlyEnrolled: edu.currentlyEnrolled || edu.inProgress || false,
+        awardEarned: edu.awardEarned || false,
+        description: edu.description || '',
+        verificationStatus: edu.verificationStatus || 'unverified'
+      }))
+    },
+    skills: {
+      items: (geminiData.skills?.items || []).map((skill: any) => ({
+        id: skill.id || generateId('skill'),
+        skills: skill.skills || skill.name || '',
+        verificationStatus: skill.verificationStatus || 'unverified',
+        credentialLink: skill.credentialLink || ''
+      }))
+    },
+    projects: {
+      items: (geminiData.projects?.items || []).map((project: any) => ({
+        id: project.id || generateId('proj'),
+        name: project.name || '',
+        description: project.description || '',
+        url: project.url || '',
+        technologies: project.technologies || [],
+        credentialLink: project.credentialLink || '',
+        verificationStatus: project.verificationStatus || 'unverified'
+      }))
+    },
+    certifications: {
+      items: (geminiData.certifications?.items || []).map((cert: any) => ({
+        id: cert.id || generateId('cert'),
+        name: cert.name || '',
+        issuer: cert.issuer || '',
+        issueDate: cert.issueDate || cert.date || '',
+        expiryDate: cert.expiryDate || '',
+        noExpiration: cert.noExpiration || false,
+        url: cert.url || '',
+        verificationStatus: cert.verificationStatus || 'unverified'
+      }))
+    },
+    awards: {
+      items: (geminiData.awards?.items || []).map((award: any) => ({
+        id: award.id || generateId('award'),
+        title: award.title || award.name || '',
+        issuer: award.issuer || '',
+        date: award.date || '',
+        description: award.description || '',
+        verificationStatus: award.verificationStatus || 'unverified'
+      }))
+    },
+    publications: {
+      items: (geminiData.publications?.items || []).map((pub: any) => ({
+        id: pub.id || generateId('pub'),
+        title: pub.title || '',
+        type: pub.type || 'Other',
+        publisher: pub.publisher || '',
+        publishedDate: pub.publishedDate || pub.date || '',
+        authors: pub.authors || [],
+        url: pub.url || '',
+        verificationStatus: pub.verificationStatus || 'unverified'
+      }))
+    },
+    professionalAffiliations: {
+      items: (geminiData.professionalAffiliations?.items || []).map((aff: any) => ({
+        id: aff.id || generateId('aff'),
+        name: aff.name || '',
+        organization: aff.organization || '',
+        role: aff.role || '',
+        startDate: aff.startDate || '',
+        endDate: aff.endDate || '',
+        duration: aff.duration || '',
+        activeAffiliation: aff.activeAffiliation || false,
+        verificationStatus: aff.verificationStatus || 'unverified'
+      }))
+    },
+    volunteerWork: {
+      items: (geminiData.volunteerWork?.items || []).map((vol: any) => ({
+        id: vol.id || generateId('vol'),
+        organization: vol.organization || '',
+        role: vol.role || '',
+        startDate: vol.startDate || '',
+        endDate: vol.endDate || '',
+        duration: vol.duration || '',
+        currentlyVolunteering: vol.currentlyVolunteering || false,
+        description: vol.description || '',
+        location: vol.location || '',
+        verificationStatus: vol.verificationStatus || 'unverified'
+      }))
+    },
+    languages: {
+      items: (geminiData.languages?.items || []).map((lang: any) => ({
+        id: lang.id || generateId('lang'),
+        name: lang.name || '',
+        proficiency: lang.proficiency || 'Basic',
+        verificationStatus: lang.verificationStatus || 'unverified'
+      }))
+    },
+    hobbiesAndInterests: geminiData.hobbiesAndInterests || [],
+    testimonials: {
+      items: geminiData.testimonials?.items || []
+    }
+  }
+
+  return transformedResume
+}
 
 // Function to transform VC data to resume format
 const transformVCToResume = (vcData: any) => {
@@ -181,9 +350,13 @@ const transformVCToResume = (vcData: any) => {
 }
 
 export default function ResumeUploadPage() {
+  const [uploadMode, setUploadMode] = useState<'url' | 'pdf'>('url')
   const [url, setUrl] = useState('')
+  const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
+  const [loadingStep, setLoadingStep] = useState<string>('')
+  const fileInputRef = useRef<HTMLInputElement>(null)
   const navigate = useNavigate()
   const dispatch = useDispatch()
 
@@ -327,6 +500,113 @@ export default function ResumeUploadPage() {
     navigate('/resume/import')
   }
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      // Validate file type
+      if (file.type !== 'application/pdf') {
+        setError('Please select a valid PDF file')
+        return
+      }
+      // Validate file size (max 20MB)
+      if (file.size > 20 * 1024 * 1024) {
+        setError('File size must be less than 20MB')
+        return
+      }
+      setSelectedFile(file)
+      setError('')
+    }
+  }
+
+  const handlePDFUpload = async () => {
+    if (!selectedFile) {
+      setError('Please select a PDF file')
+      return
+    }
+
+    setIsLoading(true)
+    setError('')
+    setLoadingStep('Extracting text from PDF...')
+
+    try {
+      // Step 1: Extract text from PDF
+      const pdfText = await extractTextFromPDF(selectedFile)
+      
+      if (!pdfText || pdfText.trim().length === 0) {
+        throw new Error('No text could be extracted from the PDF. The PDF may be scanned or image-based.')
+      }
+
+      setLoadingStep('Parsing resume with AI...')
+
+      // Step 2: Parse with Gemini API
+      const geminiResponse = await parseResumeWithGemini(pdfText)
+
+      setLoadingStep('Processing resume data...')
+
+      // Step 3: Transform Gemini response to resume format
+      const transformedResume = transformGeminiResponseToResume(geminiResponse)
+
+      // Step 4: Store in Redux
+      dispatch(setSelectedResume(transformedResume))
+
+      // Step 5: Generate temporary ID and save to localStorage
+      const tempId = `temp-${Date.now()}`
+      const draftKey = `resume_draft_${tempId}`
+      const draftWithTimestamp = {
+        ...transformedResume,
+        localStorageLastUpdated: new Date().toISOString(),
+        isTemporaryImport: true,
+        originalFile: selectedFile.name
+      }
+      localStorage.setItem(draftKey, JSON.stringify(draftWithTimestamp))
+
+      // Step 6: Navigate to editor
+      navigate(`/resume/new?id=${tempId}`)
+    } catch (err) {
+      console.error('Error processing PDF:', err)
+      let errorMessage = 'Failed to process PDF resume'
+
+      if (err instanceof Error) {
+        if (err.message.includes('API key') || err.message.includes('Gemini API key')) {
+          errorMessage =
+            'Gemini API key is not configured. Please contact the administrator or check your environment variables.'
+        } else if (err.message.includes('password') || err.message.includes('encrypted')) {
+          errorMessage =
+            'This PDF is password-protected. Please provide an unencrypted PDF file.'
+        } else if (err.message.includes('Invalid PDF') || err.message.includes('No text')) {
+          errorMessage = err.message
+        } else if (err.message.includes('Rate limit')) {
+          errorMessage =
+            'API rate limit exceeded. Please wait a moment and try again.'
+        } else if (err.message.includes('Network error') || err.message.includes('fetch')) {
+          errorMessage =
+            'Network error: Unable to connect to the AI service. Please check your internet connection and try again.'
+        } else if (err.message.includes('parse') || err.message.includes('JSON')) {
+          errorMessage =
+            'Failed to parse the resume. The PDF may be in an unsupported format or contain complex layouts. Please try a different PDF or manually enter your resume.'
+        } else {
+          errorMessage = err.message
+        }
+      }
+
+      setError(errorMessage)
+      setLoadingStep('')
+    } finally {
+      setIsLoading(false)
+      setLoadingStep('')
+    }
+  }
+
+  const handleTabChange = (_event: React.SyntheticEvent, newValue: 'url' | 'pdf') => {
+    setUploadMode(newValue)
+    setError('')
+    setUrl('')
+    setSelectedFile(null)
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ''
+    }
+  }
+
   return (
     <Container>
       <FormContainer>
@@ -341,114 +621,237 @@ export default function ResumeUploadPage() {
             mb: 2
           }}
         >
-          Upload Resume from URL
+          Upload Resume
         </Typography>
 
-        <Typography
-          variant='body1'
-          sx={{
-            color: '#1F2937',
-            textAlign: 'center',
-            fontSize: '16px',
-            mb: 3
-          }}
-        >
-          Enter the URL of your verifiable credential to import your resume data
-        </Typography>
-
-        <Box sx={{ mb: 3, p: 2, backgroundColor: '#F3F4F6', borderRadius: '8px' }}>
-          <Typography variant='body2' sx={{ color: '#374151', mb: 1, fontWeight: 600 }}>
-            💡 Tips for success:
-          </Typography>
-          <Typography variant='body2' sx={{ color: '#6B7280', fontSize: '14px', mb: 1 }}>
-            • Make sure the URL is publicly accessible
-          </Typography>
-          <Typography variant='body2' sx={{ color: '#6B7280', fontSize: '14px', mb: 1 }}>
-            • The URL should return a verifiable credential in JSON format
-          </Typography>
-          <Typography variant='body2' sx={{ color: '#6B7280', fontSize: '14px' }}>
-            • If you encounter CORS errors, the system will automatically try proxy
-            solutions
-          </Typography>
+        <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
+          <Tabs value={uploadMode} onChange={handleTabChange} centered>
+            <Tab label='From URL' value='url' disabled={isLoading} />
+            <Tab label='From PDF File' value='pdf' disabled={isLoading} />
+          </Tabs>
         </Box>
 
-        <form onSubmit={handleSubmit}>
-          <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
-            <TextField
-              fullWidth
-              label='Resume URL'
-              placeholder='https://example.com/api/credential-raw/your-credential-id'
-              value={url}
-              onChange={e => setUrl(e.target.value)}
-              disabled={isLoading}
-              variant='outlined'
+        {uploadMode === 'url' ? (
+          <>
+            <Typography
+              variant='body1'
               sx={{
-                '& .MuiOutlinedInput-root': {
-                  borderRadius: '8px'
-                }
-              }}
-            />
-            <Button
-              type='button'
-              onClick={handleTestSample}
-              disabled={isLoading}
-              sx={{
-                minWidth: '120px',
-                backgroundColor: '#F3F4F6',
-                color: '#374151',
-                textTransform: 'none',
-                fontSize: '14px',
-                fontWeight: 500,
-                padding: '12px 16px',
-                borderRadius: '8px',
-                border: '1px solid #D1D5DB',
-                '&:hover': {
-                  backgroundColor: '#E5E7EB'
-                }
-              }}
-            >
-              Use Sample
-            </Button>
-          </Box>
-
-          {error && (
-            <Alert severity='error' sx={{ mb: 2 }}>
-              {error}
-            </Alert>
-          )}
-
-          <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center' }}>
-            <Button
-              type='button'
-              onClick={handleCancel}
-              sx={{
-                color: '#6B7280',
-                textTransform: 'none',
+                color: '#1F2937',
+                textAlign: 'center',
                 fontSize: '16px',
-                fontWeight: 600,
-                padding: '12px 24px',
-                borderRadius: '8px',
-                border: '1px solid #D1D5DB',
-                '&:hover': {
-                  backgroundColor: '#F9FAFB'
-                }
+                mb: 3
               }}
-              disabled={isLoading}
             >
-              Cancel
-            </Button>
+              Enter the URL of your verifiable credential to import your resume data
+            </Typography>
 
-            <StyledButton
-              type='submit'
-              disabled={isLoading || !url.trim()}
-              startIcon={
-                isLoading ? <CircularProgress size={20} color='inherit' /> : null
-              }
+            <Box sx={{ mb: 3, p: 2, backgroundColor: '#F3F4F6', borderRadius: '8px' }}>
+              <Typography variant='body2' sx={{ color: '#374151', mb: 1, fontWeight: 600 }}>
+                💡 Tips for success:
+              </Typography>
+              <Typography variant='body2' sx={{ color: '#6B7280', fontSize: '14px', mb: 1 }}>
+                • Make sure the URL is publicly accessible
+              </Typography>
+              <Typography variant='body2' sx={{ color: '#6B7280', fontSize: '14px', mb: 1 }}>
+                • The URL should return a verifiable credential in JSON format
+              </Typography>
+              <Typography variant='body2' sx={{ color: '#6B7280', fontSize: '14px' }}>
+                • If you encounter CORS errors, the system will automatically try proxy
+                solutions
+              </Typography>
+            </Box>
+
+            <form onSubmit={handleSubmit}>
+              <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
+                <TextField
+                  fullWidth
+                  label='Resume URL'
+                  placeholder='https://example.com/api/credential-raw/your-credential-id'
+                  value={url}
+                  onChange={e => setUrl(e.target.value)}
+                  disabled={isLoading}
+                  variant='outlined'
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      borderRadius: '8px'
+                    }
+                  }}
+                />
+                <Button
+                  type='button'
+                  onClick={handleTestSample}
+                  disabled={isLoading}
+                  sx={{
+                    minWidth: '120px',
+                    backgroundColor: '#F3F4F6',
+                    color: '#374151',
+                    textTransform: 'none',
+                    fontSize: '14px',
+                    fontWeight: 500,
+                    padding: '12px 16px',
+                    borderRadius: '8px',
+                    border: '1px solid #D1D5DB',
+                    '&:hover': {
+                      backgroundColor: '#E5E7EB'
+                    }
+                  }}
+                >
+                  Use Sample
+                </Button>
+              </Box>
+
+              {error && (
+                <Alert severity='error' sx={{ mb: 2 }}>
+                  {error}
+                </Alert>
+              )}
+
+              <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center' }}>
+                <Button
+                  type='button'
+                  onClick={handleCancel}
+                  sx={{
+                    color: '#6B7280',
+                    textTransform: 'none',
+                    fontSize: '16px',
+                    fontWeight: 600,
+                    padding: '12px 24px',
+                    borderRadius: '8px',
+                    border: '1px solid #D1D5DB',
+                    '&:hover': {
+                      backgroundColor: '#F9FAFB'
+                    }
+                  }}
+                  disabled={isLoading}
+                >
+                  Cancel
+                </Button>
+
+                <StyledButton
+                  type='submit'
+                  disabled={isLoading || !url.trim()}
+                  startIcon={
+                    isLoading ? <CircularProgress size={20} color='inherit' /> : null
+                  }
+                >
+                  {isLoading ? 'Loading...' : 'Import Resume'}
+                </StyledButton>
+              </Box>
+            </form>
+          </>
+        ) : (
+          <>
+            <Typography
+              variant='body1'
+              sx={{
+                color: '#1F2937',
+                textAlign: 'center',
+                fontSize: '16px',
+                mb: 3
+              }}
             >
-              {isLoading ? 'Loading...' : 'Import Resume'}
-            </StyledButton>
-          </Box>
-        </form>
+              Upload a PDF resume file and we'll automatically extract and parse your information
+            </Typography>
+
+            <Box sx={{ mb: 3, p: 2, backgroundColor: '#F3F4F6', borderRadius: '8px' }}>
+              <Typography variant='body2' sx={{ color: '#374151', mb: 1, fontWeight: 600 }}>
+                💡 Tips for best results:
+              </Typography>
+              <Typography variant='body2' sx={{ color: '#6B7280', fontSize: '14px', mb: 1 }}>
+                • Use a text-based PDF (not scanned images)
+              </Typography>
+              <Typography variant='body2' sx={{ color: '#6B7280', fontSize: '14px', mb: 1 }}>
+                • PDFs in any language are supported
+              </Typography>
+              <Typography variant='body2' sx={{ color: '#6B7280', fontSize: '14px', mb: 1 }}>
+                • Maximum file size: 20MB
+              </Typography>
+              <Typography variant='body2' sx={{ color: '#6B7280', fontSize: '14px' }}>
+                • The AI will extract contact info, experience, education, skills, and more
+              </Typography>
+            </Box>
+
+            <Box sx={{ mb: 2 }}>
+              <input
+                type='file'
+                accept='application/pdf'
+                onChange={handleFileChange}
+                ref={fileInputRef}
+                disabled={isLoading}
+                style={{ display: 'none' }}
+                id='pdf-file-input'
+              />
+              <label htmlFor='pdf-file-input'>
+                <Button
+                  component='span'
+                  variant='outlined'
+                  fullWidth
+                  disabled={isLoading}
+                  sx={{
+                    py: 2,
+                    borderStyle: 'dashed',
+                    borderWidth: 2,
+                    borderColor: selectedFile ? '#2563EB' : '#D1D5DB',
+                    color: selectedFile ? '#2563EB' : '#6B7280',
+                    textTransform: 'none',
+                    fontSize: '16px',
+                    '&:hover': {
+                      borderColor: '#2563EB',
+                      backgroundColor: '#F3F4F6'
+                    }
+                  }}
+                >
+                  {selectedFile ? selectedFile.name : 'Choose PDF File'}
+                </Button>
+              </label>
+            </Box>
+
+            {error && (
+              <Alert severity='error' sx={{ mb: 2 }}>
+                {error}
+              </Alert>
+            )}
+
+            {loadingStep && (
+              <Alert severity='info' sx={{ mb: 2 }}>
+                {loadingStep}
+              </Alert>
+            )}
+
+            <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center' }}>
+              <Button
+                type='button'
+                onClick={handleCancel}
+                sx={{
+                  color: '#6B7280',
+                  textTransform: 'none',
+                  fontSize: '16px',
+                  fontWeight: 600,
+                  padding: '12px 24px',
+                  borderRadius: '8px',
+                  border: '1px solid #D1D5DB',
+                  '&:hover': {
+                    backgroundColor: '#F9FAFB'
+                  }
+                }}
+                disabled={isLoading}
+              >
+                Cancel
+              </Button>
+
+              <StyledButton
+                type='button'
+                onClick={handlePDFUpload}
+                disabled={isLoading || !selectedFile}
+                startIcon={
+                  isLoading ? <CircularProgress size={20} color='inherit' /> : null
+                }
+              >
+                {isLoading ? 'Processing...' : 'Upload & Parse Resume'}
+              </StyledButton>
+            </Box>
+          </>
+        )}
       </FormContainer>
     </Container>
   )
