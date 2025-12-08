@@ -553,6 +553,29 @@ function parseCredentialLink(
   return null
 }
 
+// Helper function to extract or construct credential URL from link string
+function getCredentialUrl(link: string, fileId: string): string {
+  try {
+    // Check if link contains a URL (external credentials with format 'url,{json}')
+    if (link.includes(',{')) {
+      const commaIdx = link.indexOf(',')
+      const urlPart = link.slice(0, commaIdx).trim()
+      // If urlPart looks like a URL, use it
+      if (urlPart.startsWith('http://') || urlPart.startsWith('https://')) {
+        return urlPart
+      }
+    }
+
+    // For native credentials or other formats, construct URL using fileId
+    // Use the same base URL as in MinimalCredentialViewer
+    return `https://linked-creds-author-businees-enhancement.vercel.app/view/${fileId}`
+  } catch (e) {
+    console.error('Error extracting credential URL:', e)
+    // Fallback: construct URL with fileId
+    return `https://linked-creds-author-businees-enhancement.vercel.app/view/${fileId}`
+  }
+}
+
 // Single function to handle ALL credential rendering for any section
 function renderSectionCredentials(
   credentialLink: string | string[] | undefined,
@@ -563,14 +586,19 @@ function renderSectionCredentials(
   // Get credential links as array
   const credLinks = getCredentialLinks(credentialLink)
 
-  // Parse and deduplicate credentials
-  const dedupedCreds: { credObj: any; credId: string; fileId: string }[] = []
+  // Parse and deduplicate credentials, keeping track of original link for URL extraction
+  const dedupedCreds: {
+    credObj: any
+    credId: string
+    fileId: string
+    originalLink: string
+  }[] = []
   const seen = new Set<string>()
 
   credLinks.forEach(link => {
     const parsed = parseCredentialLink(link)
     if (parsed && !seen.has(parsed.fileId)) {
-      dedupedCreds.push(parsed)
+      dedupedCreds.push({ ...parsed, originalLink: link })
       seen.add(parsed.fileId)
     }
   })
@@ -584,47 +612,61 @@ function renderSectionCredentials(
       className='rs-avoid-break'
       sx={{ mt: 1, display: 'flex', flexWrap: 'wrap', gap: 1 }}
     >
-      {dedupedCreds.map(({ credObj, credId, fileId }, idx) => (
-        <Typography
-          key={fileId || idx}
-          variant='body2'
-          sx={{
-            color: '#2563EB',
-            textDecoration: 'underline',
-            fontWeight: 600,
-            display: 'inline-flex',
-            alignItems: 'center',
-            mr: 2,
-            cursor: 'pointer',
-            gap: '6px',
-            '&:hover': { opacity: 0.85 },
-            '&:focus-visible': { outline: '2px solid #2563EB', outlineOffset: '2px' }
-          }}
-          onClick={() => {
-            openCredentialDialog(
-              credObj,
-              fileId,
-              setDialogCredObj,
-              setDialogImageUrl,
-              setOpenCredDialog
-            )
-          }}
-        >
-          <WorkspacePremiumIcon
-            sx={{ fontSize: 16, color: '#2563EB', flex: '0 0 auto' }}
-          />
-          {credObj &&
-            (credObj.credentialStatus === 'verified' ||
-              credObj.credentialStatus?.status === 'verified') && (
-              <span style={{ display: 'inline-flex', alignItems: 'center' }}>
-                <BlueVerifiedBadge />
-              </span>
-            )}
-          {credObj && getCredentialName(credObj) !== 'Credential'
-            ? getCredentialName(credObj)
-            : `External Credential ${fileId.substring(0, 8)}...`}
-        </Typography>
-      ))}
+      {dedupedCreds.map(({ credObj, credId, fileId, originalLink }, idx) => {
+        const credentialUrl = getCredentialUrl(originalLink, fileId)
+
+        return (
+          <Link
+            key={fileId || idx}
+            href={credentialUrl}
+            target='_blank'
+            rel='noopener noreferrer'
+            onClick={e => {
+              // Allow direct navigation on middle-click, Ctrl+click, or Cmd+click
+              // Regular clicks open the dialog instead
+              if (e.button === 1 || e.ctrlKey || e.metaKey) {
+                // Allow default navigation for middle-click or modifier keys
+                return
+              }
+              // Prevent default navigation in web preview to open dialog instead
+              e.preventDefault()
+              openCredentialDialog(
+                credObj,
+                fileId,
+                setDialogCredObj,
+                setDialogImageUrl,
+                setOpenCredDialog
+              )
+            }}
+            sx={{
+              color: '#2563EB',
+              textDecoration: 'underline',
+              fontWeight: 600,
+              display: 'inline-flex',
+              alignItems: 'center',
+              mr: 2,
+              cursor: 'pointer',
+              gap: '6px',
+              '&:hover': { opacity: 0.85 },
+              '&:focus-visible': { outline: '2px solid #2563EB', outlineOffset: '2px' }
+            }}
+          >
+            <WorkspacePremiumIcon
+              sx={{ fontSize: 16, color: '#2563EB', flex: '0 0 auto' }}
+            />
+            {credObj &&
+              (credObj.credentialStatus === 'verified' ||
+                credObj.credentialStatus?.status === 'verified') && (
+                <span style={{ display: 'inline-flex', alignItems: 'center' }}>
+                  <BlueVerifiedBadge />
+                </span>
+              )}
+            {credObj && getCredentialName(credObj) !== 'Credential'
+              ? getCredentialName(credObj)
+              : `External Credential ${fileId.substring(0, 8)}...`}
+          </Link>
+        )
+      })}
     </Box>
   )
 }
